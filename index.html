@@ -76,31 +76,39 @@ function startAmbience(){
     if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();
     if(ac.state==='suspended')ac.resume();
     ambOn=true;
-    const buf=ac.createBuffer(1,ac.sampleRate*3,ac.sampleRate),ch=buf.getChannelData(0);
-    for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1);
+    const len=ac.sampleRate*4,buf=ac.createBuffer(1,len,ac.sampleRate),ch=buf.getChannelData(0);
+    let b0=0,b1=0,b2=0;
+    for(let i=0;i<len;i++){
+      const w=Math.random()*2-1;
+      b0=0.997*b0+w*0.029;b1=0.985*b1+w*0.032;b2=0.950*b2+w*0.048;
+      const wave=0.75+0.25*Math.sin((i/len)*Math.PI*4);
+      ch[i]=(b0+b1+b2)*wave;
+    }
     const ns=ac.createBufferSource();ns.buffer=buf;ns.loop=true;
-    const flt=ac.createBiquadFilter();flt.type='bandpass';flt.frequency.value=360;flt.Q.value=1.5;
-    const gn=ac.createGain();gn.gain.value=0.032;
+    const flt=ac.createBiquadFilter();flt.type='bandpass';flt.frequency.value=440;flt.Q.value=0.75;
+    const gn=ac.createGain();gn.gain.value=0.22;
     ns.connect(flt);flt.connect(gn);gn.connect(ac.destination);ns.start();
   }catch(e){}
 }
+window.addEventListener('pointerdown',startAmbience,{once:true});
 
 function snd(type){
   startAmbience();
   try{
     const now=ac.currentTime,osc=ac.createOscillator(),og=ac.createGain();
-    osc.frequency.setValueAtTime(140,now);osc.frequency.exponentialRampToValueAtTime(40,now+0.12);
-    og.gain.setValueAtTime(0.45,now);og.gain.exponentialRampToValueAtTime(0.01,now+0.12);
-    osc.connect(og);og.connect(ac.destination);osc.start(now);osc.stop(now+0.13);
-    const dur=type==='cheer'?1.6:1.1,buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate),ch=buf.getChannelData(0);
+    osc.frequency.setValueAtTime(125,now);osc.frequency.exponentialRampToValueAtTime(38,now+0.13);
+    og.gain.setValueAtTime(0.45,now);og.gain.exponentialRampToValueAtTime(0.01,now+0.13);
+    osc.connect(og);og.connect(ac.destination);osc.start(now);osc.stop(now+0.14);
+
+    const dur=type==='cheer'?1.9:1.3,buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate),ch=buf.getChannelData(0);
     for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*Math.sin(Math.PI*(i/ch.length));
     const src=ac.createBufferSource(),flt=ac.createBiquadFilter(),gn=ac.createGain();
-    src.buffer=buf;flt.type='bandpass';flt.Q.value=type==='cheer'?0.9:2.2;
-    flt.frequency.setValueAtTime(type==='cheer'?550:520,now+0.1);
-    flt.frequency.exponentialRampToValueAtTime(type==='cheer'?1250:190,now+0.1+dur);
-    gn.gain.setValueAtTime(type==='cheer'?0.38:0.28,now+0.1);
-    gn.gain.exponentialRampToValueAtTime(0.01,now+0.1+dur);
-    src.connect(flt);flt.connect(gn);gn.connect(ac.destination);src.start(now+0.1);
+    src.buffer=buf;flt.type='bandpass';flt.Q.value=type==='cheer'?0.8:2.0;
+    flt.frequency.setValueAtTime(type==='cheer'?580:460,now+0.08);
+    flt.frequency.exponentialRampToValueAtTime(type==='cheer'?1150:180,now+0.08+dur);
+    gn.gain.setValueAtTime(type==='cheer'?0.42:0.30,now+0.08);
+    gn.gain.exponentialRampToValueAtTime(0.01,now+0.08+dur);
+    src.connect(flt);flt.connect(gn);gn.connect(ac.destination);src.start(now+0.08);
   }catch(e){}
 }
 
@@ -108,31 +116,30 @@ const ctx=c3d.getContext('2d');let W=300,H=300;
 function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=c3d.width=r.width;H=c3d.height=r.height}}
 window.addEventListener('resize',rsz3D);
 
-// Камера за спиною гравця (z = -5.5, висота очей y = 2.4) дивиться на ворота (z = 11)
 function proj(x,y,z){
-  const camZ=-5.5,camY=2.35,pitch=0.07;
+  const camZ=-10.5,camY=12.2,pitch=0.785;
   const dz=z-camZ,dy=y-camY;
   const rz=dz*Math.cos(pitch)-dy*Math.sin(pitch);
   const ry=dz*Math.sin(pitch)+dy*Math.cos(pitch);
-  const f=Math.min(W,H)*1.15;
-  const sc=f/Math.max(0.5,rz);
-  return{x:W/2+x*sc,y:H*0.44-ry*sc,s:sc};
+  const f=Math.min(W,H)*1.28;
+  const sc=f/Math.max(1.0,rz);
+  return{x:W/2+x*sc,y:H*0.50-ry*sc,s:sc};
 }
 
-// Вболівальники на трибунах за воротами і по боках (поза межами поля!)
-const FANS=Array.from({length:220},(_,i)=>({
-  x:-18+(i%44)*0.84,
-  row:Math.floor(i/44),
-  ph:Math.random()*6.28,
-  col:(i%3===0)?'#ffffff':((i%2===0)?'#1b4f72':'#0b1a2a')
-}));
+const FANS=Array.from({length:240},(_,i)=>{
+  const row=Math.floor(i/48),colIdx=i%48;
+  const skins=['#f5cba7','#e0ac69','#8d5524','#ffdbac'];
+  const hairs=['#1c1c1c','#4a2c11','#8d6e63','#d4ac0d'];
+  const jerseys=['#154360','#ffffff','#1b4f72','#111822','#2471a3'];
+  return{x:-21+colIdx*0.89+(row%2)*0.4,row:row,ph:Math.random()*6.28,skin:skins[i%4],hair:hairs[(i*3)%4],shirt:jerseys[(i*7)%5],scarf:(i%4===0)};
+});
 
 let ball={x:0,y:0.22,z:0,sx:0,sy:0.22,sz:0,tx:0,ty:0.22,tz:0,t:1,active:false};
 let gk={x:0,y:0,tx:0,ty:0,dive:0,tdive:0};
-let kicker={x:-1.3,z:-2.2,sx:-1.3,sz:-2.2,tx:-0.35,tz:-0.3,run:0,running:false,kickPose:0};
+let kicker={x:-1.4,z:-2.6,sx:-1.4,sz:-2.6,tx:-0.32,tz:-0.25,run:0,running:false,kickPose:0};
 let busy=false,tAnim=0;
 function save(){try{localStorage.setItem('pc_3d8',JSON.stringify(p))}catch(e){}}
-function getItem(id){return SHOP.find(x=>x.id===id)||SHOP}
+function getItem(id){return SHOP.find(x=>x.id===id)||SHOP[0]}
 
 function tab(n){
   t1.className=n===1?'tab act':'tab';
@@ -146,7 +153,7 @@ function updUI(){
   lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
   const nxXp=p.lv*100;pt.textContent=p.pt;nx.textContent=nxXp;
   xb.style.width=Math.min(100,(p.pt/nxXp)*100)+'%';
-  const cur=ST[p.st]||ST;
+  const cur=ST[p.st]||ST[0];
   op.textContent=`${cur.n}: ${cur.o}`;
   Array.from(sb.children).forEach((el,i)=>{el.className=i<p.st?'done':(i===p.st?'act':'')});
   pd.textContent=Array.from({length:5},(_,i)=>pS[i]===1?'🟢':(pS[i]===0?'🔴':'⚪')).join('');
@@ -175,13 +182,13 @@ function renderCtrl(){
 
 function zoneCoords(z){
   const col=(z%3)-1,row=z<3?1:0;
-  return{x:col*2.85,y:row===1?1.95:0.42,dive:col};
+  return{x:col*3.05,y:row===1?2.05:0.42,dive:col};
 }
 
 function resetPositions(){
   ball={x:0,y:0.22,z:0,sx:0,sy:0.22,sz:0,tx:0,ty:0.22,tz:0,t:1,active:false};
   gk={x:0,y:0,tx:0,ty:0,dive:0,tdive:0};
-  kicker={x:-1.3,z:-2.2,sx:-1.3,sz:-2.2,tx:-0.35,tz:-0.3,run:0,running:false,kickPose:0};
+  kicker={x:-1.4,z:-2.6,sx:-1.4,sz:-2.6,tx:-0.32,tz:-0.25,run:0,running:false,kickPose:0};
 }
 
 function act(z){
@@ -191,13 +198,11 @@ function act(z){
   const shotZ=isPlayerShoot?z:botZ,saveZ=isPlayerShoot?botZ:z;
   const sc=zoneCoords(shotZ),kc=zoneCoords(saveZ);
 
-  // Спочатку нападник розбігається до м'яча (380 мс)
   kicker.running=true;kicker.run=0;
 
   setTimeout(()=>{
     kicker.running=false;kicker.kickPose=1;
-    // Політ м'яча у ворота (z = 11.0) та стрибок воротаря
-    ball={x:0,y:0.22,z:0,sx:0,sy:0.22,sz:0,tx:sc.x,ty:sc.y,tz:11.0,t:0,active:true};
+    ball={x:0,y:0.22,z:0,sx:0,sy:0.22,sz:0,tx:sc.x,ty:sc.y,tz:10.5,t:0,active:true};
     gk.tx=kc.x*0.88;gk.ty=kc.y>1?0.55:0.08;gk.tdive=kc.dive;
     snd('kick');
 
@@ -279,144 +284,152 @@ function buyOrWear(id){
   if(item.t==='b')p.eb=id;else p.ek=id;
   save();updUI();renderShop();
 }
-function drawPlayerModel(px,py,sc,jerseyCol,shortsCol,socksCol,gloveCol,diveAng,runPhase,isKicker){
+function drawRealisticPlayer(px,py,sc,jerseyCol,shortsCol,socksCol,gloveCol,diveAng,runPhase,isKicker){
   ctx.save();
   ctx.translate(px,py);
   ctx.rotate(diveAng);
 
-  const swing=Math.sin(runPhase)*6*sc;
-  // Ноги та гетри
-  ctx.fillStyle='#f1c40f'; // бутси
-  ctx.fillRect(-7*sc,-3*sc+swing,5*sc,3*sc);
-  ctx.fillRect(2*sc,-3*sc-swing,5*sc,3*sc);
+  const swing=Math.sin(runPhase)*8*sc;
+  const kneeBend=Math.abs(Math.sin(runPhase))*4*sc;
+  const skin='#e0ac69';
 
-  ctx.fillStyle=socksCol; // гетри
-  ctx.fillRect(-6*sc,-14*sc+swing,4*sc,11*sc);
-  ctx.fillRect(2*sc,-14*sc-swing,4*sc,11*sc);
+  [-1,1].forEach(side=>{
+    const legOff=side===-1?swing:-swing;
+    const footY=-2*sc+legOff;
 
-  // Шорти
-  ctx.fillStyle=shortsCol;
-  ctx.fillRect(-8*sc,-24*sc,16*sc,11*sc);
+    ctx.fillStyle=shortsCol;
+    ctx.beginPath();ctx.roundRect((side===-1?-8.5:1.5)*sc,-27*sc,7*sc,12*sc,3*sc);ctx.fill();
 
-  // Футболка
-  ctx.fillStyle=jerseyCol;
-  ctx.fillRect(-10*sc,-42*sc,20*sc,19*sc);
-  // Номер на спині нападника
-  if(isKicker){
-    ctx.fillStyle='rgba(255,255,255,0.85)';
-    ctx.font=`bold ${Math.max(6,9*sc)}px sans-serif`;
-    ctx.textAlign='center';
-    ctx.fillText('10',0,-29*sc);
-  }
+    ctx.fillStyle=skin;
+    ctx.fillRect((side===-1?-7.5:2.5)*sc,-16*sc+legOff*0.5,5*sc,4*sc);
 
-  // Руки та рукавиці
-  ctx.strokeStyle=jerseyCol;ctx.lineWidth=4*sc;ctx.lineCap='round';
+    ctx.fillStyle=socksCol;
+    ctx.beginPath();ctx.roundRect((side===-1?-7.5:2.5)*sc,-13*sc+legOff*0.7,5*sc,11*sc-kneeBend*0.3,2*sc);ctx.fill();
+
+    ctx.fillStyle='#111111';
+    ctx.beginPath();ctx.ellipse((side===-1?-5:5)*sc,footY,4.2*sc,2.2*sc,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#1dd1a1';
+    ctx.fillRect((side===-1?-7:3)*sc,footY-0.8*sc,4*sc,1*sc);
+  });
+
+  const bodyGrad=ctx.createLinearGradient(-12*sc,-48*sc,12*sc,-26*sc);
+  bodyGrad.addColorStop(0,jerseyCol);bodyGrad.addColorStop(1,'#0b131e');
+  ctx.fillStyle=bodyGrad;
   ctx.beginPath();
-  if(Math.abs(diveAng)>0.15){
-    // Руки витягнуті у стрибку воротаря
-    ctx.moveTo(-10*sc,-38*sc);ctx.lineTo(-22*sc,-48*sc);
-    ctx.moveTo(10*sc,-38*sc);ctx.lineTo(22*sc,-48*sc);
-  }else{
-    ctx.moveTo(-10*sc,-39*sc);ctx.lineTo(-15*sc,-26*sc-swing);
-    ctx.moveTo(10*sc,-39*sc);ctx.lineTo(15*sc,-26*sc+swing);
-  }
-  ctx.stroke();
+  ctx.moveTo(-11.5*sc,-47*sc);ctx.lineTo(11.5*sc,-47*sc);
+  ctx.lineTo(8.5*sc,-26*sc);ctx.lineTo(-8.5*sc,-26*sc);
+  ctx.closePath();ctx.fill();
 
-  if(gloveCol){
-    ctx.fillStyle=gloveCol;
-    const gx=Math.abs(diveAng)>0.15?22*sc:15*sc;
-    const gy=Math.abs(diveAng)>0.15?-48*sc:-26*sc;
-    ctx.beginPath();ctx.arc(-gx,gy,4.2*sc,0,Math.PI*2);ctx.arc(gx,gy,4.2*sc,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.beginPath();ctx.arc(0,-47*sc,3.5*sc,0,Math.PI);ctx.fill();
+  if(isKicker){
+    ctx.font=`bold ${Math.max(7,10.5*sc)}px sans-serif`;ctx.textAlign='center';
+    ctx.fillText('10',0,-33*sc);
   }
 
-  // Голова та зачіска
-  ctx.fillStyle='#f5cba7';
-  ctx.beginPath();ctx.arc(0,-49*sc,6.5*sc,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#2c3e50';
-  ctx.beginPath();ctx.arc(0,-51*sc,6.5*sc,Math.PI,Math.PI*2);ctx.fill();
+  [-1,1].forEach(side=>{
+    const armSwing=(side===-1?-swing:swing)*0.8;
+    const isDiving=Math.abs(diveAng)>0.15;
+    const shX=side*11*sc,shY=-45*sc;
+    const elX=isDiving?side*18*sc:side*14*sc,elY=isDiving?-52*sc:-36*sc+armSwing*0.5;
+    const hdX=isDiving?side*25*sc:side*15.5*sc,hdY=isDiving?-58*sc:-27*sc+armSwing;
+
+    ctx.strokeStyle=jerseyCol;ctx.lineWidth=4.8*sc;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(elX,elY);ctx.stroke();
+
+    ctx.strokeStyle=skin;ctx.lineWidth=3.6*sc;
+    ctx.beginPath();ctx.moveTo(elX,elY);ctx.lineTo(hdX,hdY);ctx.stroke();
+
+    ctx.fillStyle=gloveCol||skin;
+    ctx.beginPath();ctx.arc(hdX,hdY,gloveCol?4.5*sc:2.6*sc,0,Math.PI*2);ctx.fill();
+  });
+
+  ctx.fillStyle=skin;ctx.fillRect(-2.5*sc,-51*sc,5*sc,4*sc);
+  ctx.beginPath();ctx.ellipse(0,-56*sc,5.8*sc,6.8*sc,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#1f2933';
+  ctx.beginPath();ctx.ellipse(0,-58.5*sc,6*sc,4.5*sc,0,Math.PI,Math.PI*2);ctx.fill();
 
   ctx.restore();
 }
 
+function drawRealisticFan(fx,fy,sc,fan,jump){
+  const y=fy-jump;
+  ctx.fillStyle=fan.shirt;
+  ctx.beginPath();ctx.roundRect(fx-4.5*sc,y-11*sc,9*sc,11*sc,2.5*sc);ctx.fill();
+
+  if(crowdMood===1){
+    ctx.strokeStyle=fan.skin;ctx.lineWidth=2*sc;ctx.lineCap='round';
+    ctx.beginPath();
+    ctx.moveTo(fx-4*sc,y-9*sc);ctx.lineTo(fx-6.5*sc,y-17*sc);
+    ctx.moveTo(fx+4*sc,y-9*sc);ctx.lineTo(fx+6.5*sc,y-17*sc);
+    ctx.stroke();
+    if(fan.scarf){ctx.fillStyle='#1dd1a1';ctx.fillRect(fx-7*sc,y-19*sc,14*sc,2.5*sc);}
+  }
+
+  ctx.fillStyle=fan.skin;ctx.beginPath();ctx.arc(fx,y-14.5*sc,3.2*sc,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=fan.hair;ctx.beginPath();ctx.arc(fx,y-15.5*sc,3.3*sc,Math.PI,Math.PI*2);ctx.fill();
+}
 function draw3D(){
   tAnim+=0.07;
   ctx.clearRect(0,0,W,H);
 
-  // 1. Небо та гора на задньому плані
-  const sky=ctx.createLinearGradient(0,0,0,H*0.46);
-  sky.addColorStop(0,'#b0bec5');sky.addColorStop(0.65,'#78909c');sky.addColorStop(1,'#37474f');
-  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H*0.5);
+  const sky=ctx.createLinearGradient(0,0,0,H*0.35);
+  sky.addColorStop(0,'#b0bec5');sky.addColorStop(1,'#546e7a');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H*0.35);
 
   ctx.fillStyle='#456360';
   ctx.beginPath();
-  ctx.moveTo(0,H*0.36);ctx.lineTo(W*0.18,H*0.21);ctx.lineTo(W*0.36,H*0.19);
-  ctx.lineTo(W*0.56,H*0.04);ctx.lineTo(W*0.72,H*0.08);ctx.lineTo(W*0.9,H*0.18);
-  ctx.lineTo(W,H*0.15);ctx.lineTo(W,H*0.42);ctx.lineTo(0,H*0.42);ctx.closePath();ctx.fill();
+  ctx.moveTo(0,H*0.24);ctx.lineTo(W*0.22,H*0.12);ctx.lineTo(W*0.42,H*0.10);
+  ctx.lineTo(W*0.58,H*0.02);ctx.lineTo(W*0.76,H*0.06);ctx.lineTo(W,H*0.13);
+  ctx.lineTo(W,H*0.30);ctx.lineTo(0,H*0.30);ctx.closePath();ctx.fill();
 
-  // 2. Повноекранний газон (від горизонту до низу екрана без обрізання!)
-  const horizonY=proj(0,0,15.5).y;
-  ctx.fillStyle='#235d23';
-  ctx.fillRect(0,horizonY,W,H-horizonY);
+  const horizonY=proj(0,0,15.2).y;
+  ctx.fillStyle='#246124';ctx.fillRect(0,horizonY,W,H-horizonY);
 
-  // 3D смуги трави на всю ширину арени
-  for(let z=-5;z<15.5;z+=1.5){
-    const y1=proj(0,0,z).y,y2=proj(0,0,z+1.5).y;
-    ctx.fillStyle=(Math.floor((z+5)*10)%2===0)?'#2d7a2d':'#388e3c';
+  for(let z=-6;z<15.2;z+=1.6){
+    const y1=proj(0,0,z).y,y2=proj(0,0,z+1.6).y;
+    ctx.fillStyle=(Math.floor((z+6)*10)%2===0)?'#2d7a2d':'#388e3c';
     ctx.fillRect(0,Math.min(y1,y2),W,Math.abs(y1-y2)+1);
   }
 
-  // 3. Повноцінна чаша трибун за воротами (від краю до краю екрана)
-  const standTop=horizonY-H*0.17;
-  ctx.fillStyle='#0d1520';
-  ctx.fillRect(0,standTop,W,horizonY-standTop);
+  const standTop=Math.max(12,horizonY-H*0.21);
+  ctx.fillStyle='#0d1520';ctx.fillRect(0,standTop,W,horizonY-standTop);
 
-  // Синьо-білі яруси сидінь
-  for(let r=0;r<4;r++){
-    const ry=standTop+6+r*((horizonY-standTop-14)/4);
-    ctx.fillStyle=r%2===0?'#154360':'#1f618d';
-    ctx.fillRect(0,ry,W,7);
-    ctx.fillStyle='rgba(255,255,255,0.7)';
-    for(let sx=10;sx<W;sx+=28)ctx.fillRect(sx+(r*9)%14,ry+1,11,4);
+  for(let r=0;r<5;r++){
+    const ry=standTop+6+r*((horizonY-standTop-10)/5);
+    ctx.fillStyle=r%2===0?'#152232':'#1c2d42';
+    ctx.fillRect(0,ry,W,3);
   }
 
-  // Анімовані фанати на трибунах (строго вище лінії поля!)
   FANS.forEach(f=>{
-    const pt=proj(f.x,0.35+f.row*0.42,14.5+f.row*0.3);
-    const jump=crowdMood===1?Math.abs(Math.sin(tAnim*2.5+f.ph))*6:Math.sin(tAnim+f.ph)*1.2;
-    if(pt.x>0&&pt.x<W){
-      ctx.fillStyle=f.col;
-      ctx.beginPath();ctx.arc(pt.x,pt.y-jump,Math.max(2,0.16*pt.s),0,Math.PI*2);ctx.fill();
-    }
+    const pt=proj(f.x,0.3+f.row*0.55,14.2+f.row*0.45);
+    const jump=crowdMood===1?Math.abs(Math.sin(tAnim*2.5+f.ph))*7:Math.sin(tAnim+f.ph)*1.2;
+    if(pt.x>-20&&pt.x<W+20)drawRealisticFan(pt.x,pt.y,pt.s*0.032,f,jump);
   });
 
-  // 4. Металевий дах стадіону зверху
-  ctx.strokeStyle='#eceff1';ctx.lineWidth=4;
-  ctx.beginPath();ctx.moveTo(0,standTop-8);ctx.quadraticCurveTo(W*0.5,standTop+12,W,standTop-6);ctx.stroke();
+  ctx.strokeStyle='#eceff1';ctx.lineWidth=4.5;
+  ctx.beginPath();ctx.moveTo(0,standTop-4);ctx.quadraticCurveTo(W*0.5,standTop+14,W,standTop-4);ctx.stroke();
 
-  // Рекламні борти за лицьовою лінією
-  const adL=proj(-14,0,13.2),adR=proj(14,0,13.2),adTop=proj(0,0.75,13.2).y;
+  const adL=proj(-18,0,12.6),adTop=proj(0,0.8,12.6).y;
   ctx.fillStyle='#0b131e';ctx.fillRect(0,adTop,W,adL.y-adTop);
   ctx.fillStyle='#1dd1a1';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
-  ctx.fillText('⚽ 3D PENALTY CUP  •  TELEGRAM ARENA  •  CHAMPIONSHIP ⚽',W/2,(adTop+adL.y)/2+4);
+  ctx.fillText('⚽ 3D PENALTY CUP  •  TELEGRAM STADIUM  •  LIVE ⚽',W/2,(adTop+adL.y)/2+4);
 
-  // 5. Розмітка штрафного майданчика та точка пенальті
-  ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=2.5;
-  const pBL=proj(-6.5,0,11.0),pFL=proj(-6.5,0,4.5),pFR=proj(6.5,0,4.5),pBR=proj(6.5,0,11.0);
+  ctx.strokeStyle='rgba(255,255,255,0.88)';ctx.lineWidth=2.5;
+  const pBL=proj(-8.2,0,10.5),pFL=proj(-8.2,0,3.2),pFR=proj(8.2,0,3.2),pBR=proj(8.2,0,10.5);
   ctx.beginPath();ctx.moveTo(pBL.x,pBL.y);ctx.lineTo(pFL.x,pFL.y);ctx.lineTo(pFR.x,pFR.y);ctx.lineTo(pBR.x,pBR.y);ctx.stroke();
-  // Лицьова лінія
-  const endL=proj(-16,0,11.0),endR=proj(16,0,11.0);
+  const gBL=proj(-4.6,0,10.5),gFL=proj(-4.6,0,7.8),gFR=proj(4.6,0,7.8),gBR=proj(4.6,0,10.5);
+  ctx.beginPath();ctx.moveTo(gBL.x,gBL.y);ctx.lineTo(gFL.x,gFL.y);ctx.lineTo(gFR.x,gFR.y);ctx.lineTo(gBR.x,gBR.y);ctx.stroke();
+  const endL=proj(-18,0,10.5),endR=proj(18,0,10.5);
   ctx.beginPath();ctx.moveTo(endL.x,endL.y);ctx.lineTo(endR.x,endR.y);ctx.stroke();
-  // Точка 11 метрів
   const spot=proj(0,0,0);
-  ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(spot.x,spot.y,0.22*spot.s,0.09*spot.s,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(spot.x,spot.y,0.22*spot.s,0.11*spot.s,0,0,Math.PI*2);ctx.fill();
 
-  // 6. Великі реалістичні 3D Ворота (на z = 11.0, ширина 7.3м, висота 2.44м)
-  const gw=3.65,gh=2.44,gz=11.0,gd=1.5;
-  const gFL=proj(-gw,0,gz),gTL=proj(-gw,gh,gz),gTR=proj(gw,gh,gz),gFR=proj(gw,0,gz);
-  const gBL=proj(-gw,0,gz+gd),gBTL=proj(-gw,gh*0.85,gz+gd),gBTR=proj(gw,gh*0.85,gz+gd),gBR=proj(gw,0,gz+gd);
+  const gw=3.65,gh=2.44,gz=10.5,gd=1.5;
+  const gFL2=proj(-gw,0,gz),gTL=proj(-gw,gh,gz),gTR=proj(gw,gh,gz),gFR2=proj(gw,0,gz);
+  const gBL2=proj(-gw,0,gz+gd),gBTL=proj(-gw,gh*0.85,gz+gd),gBTR=proj(gw,gh*0.85,gz+gd),gBR2=proj(gw,0,gz+gd);
 
-  // Сітка
-  ctx.strokeStyle='rgba(255,255,255,0.32)';ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=1;
   for(let i=0;i<=12;i++){
     const t=i/12,t1=proj(-gw+gw*2*t,gh,gz),t2=proj(-gw+gw*2*t,gh*0.85,gz+gd),b2=proj(-gw+gw*2*t,0,gz+gd);
     ctx.beginPath();ctx.moveTo(t1.x,t1.y);ctx.lineTo(t2.x,t2.y);ctx.lineTo(b2.x,b2.y);ctx.stroke();
@@ -425,23 +438,20 @@ function draw3D(){
     const hy=gh*(h/5),l1=proj(-gw,hy,gz),l2=proj(-gw,hy*0.85,gz+gd),r2=proj(gw,hy*0.85,gz+gd),r1=proj(gw,hy,gz);
     ctx.beginPath();ctx.moveTo(l1.x,l1.y);ctx.lineTo(l2.x,l2.y);ctx.lineTo(r2.x,r2.y);ctx.lineTo(r1.x,r1.y);ctx.stroke();
   }
-  // Каркас воріт
   ctx.strokeStyle='#ffffff';ctx.lineWidth=5;ctx.lineJoin='round';
-  ctx.beginPath();ctx.moveTo(gFL.x,gFL.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gFR.x,gFR.y);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(gFL2.x,gFL2.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gFR2.x,gFR2.y);ctx.stroke();
 
-  // 7. Воротар (реалістична фігура в центрі воріт)
   gk.x+=(gk.tx-gk.x)*0.18;gk.y+=(gk.ty-gk.y)*0.18;gk.dive+=(gk.tdive-gk.dive)*0.18;
   const gp=proj(gk.x,gk.y,gz-0.1),gSh=proj(gk.x,0,gz-0.1);
-  ctx.fillStyle='rgba(0,0,0,0.4)';
-  ctx.beginPath();ctx.ellipse(gSh.x,gSh.y,0.45*gSh.s,0.14*gSh.s,0,0,Math.PI*2);ctx.fill();
-  drawPlayerModel(gp.x,gp.y,gp.s*0.036,'#ff6b00','#1e272e','#ff6b00',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false);
+  ctx.fillStyle='rgba(0,0,0,0.42)';
+  ctx.beginPath();ctx.ellipse(gSh.x,gSh.y,0.5*gSh.s,0.2*gSh.s,0,0,Math.PI*2);ctx.fill();
+  drawRealisticPlayer(gp.x,gp.y,gp.s*0.036,'#ff6b00','#1e272e','#ff6b00',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false);
 
-  // 8. Політ м'яча та тінь
   if(ball.active&&ball.t<1){
     ball.t=Math.min(1,ball.t+0.048);
     const ease=1-Math.pow(1-ball.t,2);
     const curveX=Math.sin(ball.t*Math.PI)*(ball.tx*0.18);
-    const arcY=Math.sin(ball.t*Math.PI)*0.75;
+    const arcY=Math.sin(ball.t*Math.PI)*0.85;
     ball.x=ball.sx+(ball.tx-ball.sx)*ease+curveX;
     ball.y=ball.sy+(ball.ty-ball.sy)*ease+arcY;
     ball.z=ball.sz+(ball.tz-ball.sz)*ease;
@@ -449,14 +459,13 @@ function draw3D(){
 
   const bSh=proj(ball.x,0,ball.z);
   ctx.fillStyle='rgba(0,0,0,0.45)';
-  ctx.beginPath();ctx.ellipse(bSh.x,bSh.y,0.22*bSh.s,0.08*bSh.s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(bSh.x,bSh.y,0.24*bSh.s,0.11*bSh.s,0,0,Math.PI*2);ctx.fill();
 
-  const bp=proj(ball.x,ball.y,ball.z),rad=Math.max(4,0.21*bp.s),bCol=getItem(p.eb).col;
+  const bp=proj(ball.x,ball.y,ball.z),rad=Math.max(4,0.22*bp.s),bCol=getItem(p.eb).col;
   const bGrad=ctx.createRadialGradient(bp.x-rad*0.3,bp.y-rad*0.3,rad*0.1,bp.x,bp.y,rad);
   bGrad.addColorStop(0,'#ffffff');bGrad.addColorStop(0.55,bCol);bGrad.addColorStop(1,'#1e272e');
   ctx.fillStyle=bGrad;ctx.beginPath();ctx.arc(bp.x,bp.y,rad,0,Math.PI*2);ctx.fill();
 
-  // 9. Нападник (б'ючий гравець, який розбігається і б'є по м'ячу)
   if(kicker.running){
     kicker.run=Math.min(1,kicker.run+0.08);
     kicker.x=kicker.sx+(kicker.tx-kicker.sx)*kicker.run;
@@ -464,9 +473,9 @@ function draw3D(){
   }
   const kp=proj(kicker.x,0,kicker.z);
   ctx.fillStyle='rgba(0,0,0,0.42)';
-  ctx.beginPath();ctx.ellipse(kp.x,kp.y,0.45*kp.s,0.14*kp.s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(kp.x,kp.y,0.5*kp.s,0.2*kp.s,0,0,Math.PI*2);ctx.fill();
   const kJersey=(ph==='sh')?'#1dd1a1':'#ff4757';
-  drawPlayerModel(kp.x,kp.y,kp.s*0.036,kJersey,'#ffffff',kJersey,null,kicker.kickPose*-0.18,kicker.running?tAnim*3:0,true);
+  drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kJersey,'#ffffff',kJersey,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true);
 
   requestAnimationFrame(draw3D);
 }
