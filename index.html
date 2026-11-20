@@ -70,15 +70,15 @@ body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; pad
 
   <div class="upg">
     <div><b>👆 Сила збору (Lvl <span id="tLvl">1</span>)</b><div style="font-size:12px;color:#8a8f9e;">+1 до базового кліку</div></div>
-    <button type="button" class="btn" id="bTap">25 💎</button>
+    <button type="button" class="btn" id="bTap" disabled>25 💎</button>
   </div>
   <div class="upg">
     <div><b>🤖 Авто-збирач (Lvl <span id="aLvl">0</span>)</b><div style="font-size:12px;color:#8a8f9e;">+2 рубіни щосекунди</div></div>
-    <button type="button" class="btn" id="bAuto">50 💎</button>
+    <button type="button" class="btn" id="bAuto" disabled>50 💎</button>
   </div>
   <div class="upg">
     <div><b>🔋 Батарея (Lvl <span id="eLvl">1</span>)</b><div style="font-size:12px;color:#8a8f9e;">+50 енергії та швидший заряд</div></div>
-    <button type="button" class="btn" id="bEn">40 💎</button>
+    <button type="button" class="btn" id="bEn" disabled>40 💎</button>
   </div>
 </div>
 
@@ -185,3 +185,48 @@ document.getElementById('tabGame').onclick = function() {
   document.getElementById('tabTop').classList.remove('active');
 };
 
+document.getElementById('tabTop').onclick = function() {
+document.getElementById('screenGame').style.display = 'none';
+document.getElementById('screenTop').style.display = 'block';
+document.getElementById('tabGame').classList.remove('active');
+document.getElementById('tabTop').classList.add('active');
+syncScore().then(loadLeaderboard);
+};
+document.getElementById('btnRefresh').onclick = loadLeaderboard;
+async function syncScore() {
+try {
+await fetch(SB_URL, {
+method: 'POST',
+headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
+body: JSON.stringify({ id: userId, name: userName, score: Math.floor(s.bal), level: s.lvl })
+});
+} catch (e) {}
+}
+async function loadLeaderboard() {
+const list = document.getElementById('leaderList');
+list.innerHTML = 'Оновлення...';
+try {
+const res = await fetch(SB_URL + '?select=*&order=score.desc&limit=20', { headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY } });
+if (!res.ok) { list.innerHTML = 'Помилка бази (' + res.status + '): ' + await res.text(); return; }
+const data = await res.json();
+if (!data || data.length === 0) { list.innerHTML = 'Поки що нікого немає. Станьте першим!'; return; }
+list.innerHTML = '';
+data.forEach((p, idx) => {
+const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '#' + (idx + 1);
+const row = document.createElement('div');
+row.className = 'leader-row' + (p.id === userId ? ' me' : '');
+row.innerHTML = '' + medal + ' ' + p.name + ' (Lvl ' + p.level + ')' + Number(p.score).toLocaleString() + ' 💎';
+list.appendChild(row);
+});
+} catch (e) { list.innerHTML = 'Помилка з’єднання.'; }
+}
+let tick = 0;
+setInterval(function() {
+if (autoPower() > 0) { s.bal += autoPower(); addXp(1); }
+if (s.en < maxEn()) { s.en = Math.min(maxEn(), s.en + 1 + Math.floor(s.eLvl / 2)); }
+render();
+tick++;
+if (tick % 10 === 0) syncScore();
+}, 1000);
+render();
+syncScore();
