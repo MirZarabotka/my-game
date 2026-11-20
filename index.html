@@ -130,8 +130,7 @@ function proj(x,y,z){
 }
 
 const SIDE_FANS=Array.from({length:160},(_,i)=>({
-  side:i<80?-1:1,row:Math.floor((i%80)/16),idx:i%16,
-  shirt:['#ff4757','#feca57','#1e90ff','#ffffff','#2ed573','#ff9ff3'][i%6],ph:Math.random()*6.28
+  side:i<80?-1:1,row:Math.floor((i%80)/16),idx:i%16,ph:Math.random()*6.28
 }));
 
 let ball={x:0,y:0.25,z:0,sx:0,sy:0.25,sz:0,tx:0,ty:0.25,tz:0,t:1,active:false};
@@ -282,43 +281,107 @@ function draw3D(){
   tAnim+=0.06;
   ctx.clearRect(0,0,W,H);
 
+  // Сутінково-хмарне небо
   const sky=ctx.createLinearGradient(0,0,0,H*0.45);
-  sky.addColorStop(0,'#050811');sky.addColorStop(1,'#132238');
-  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  sky.addColorStop(0,'#cfd8dc');
+  sky.addColorStop(0.6,'#90a4ae');
+  sky.addColorStop(1,'#455a64');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H*0.5);
 
-  [W*0.18,W*0.82].forEach(lx=>{
-    const gl=ctx.createRadialGradient(lx,H*0.12,4,lx,H*0.12,W*0.35);
-    gl.addColorStop(0,'rgba(255,255,255,0.22)');gl.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.fillStyle=gl;ctx.fillRect(0,0,W,H*0.6);
-  });
+  // Гора на фоні
+  ctx.fillStyle='#4f6d6a';
+  ctx.beginPath();
+  ctx.moveTo(0,H*0.42);
+  ctx.lineTo(W*0.15,H*0.26);
+  ctx.lineTo(W*0.32,H*0.23);
+  ctx.lineTo(W*0.56,H*0.06);
+  ctx.lineTo(W*0.68,H*0.09);
+  ctx.lineTo(W*0.86,H*0.21);
+  ctx.lineTo(W,H*0.18);
+  ctx.lineTo(W,H*0.45);
+  ctx.lineTo(0,H*0.45);
+  ctx.closePath();
+  ctx.fill();
 
-  for(let z=-2;z<12;z+=1.4){
-    const p1=proj(-8,0,z),p2=proj(8,0,z),p3=proj(8,0,z+1.4),p4=proj(-8,0,z+1.4);
-    ctx.fillStyle=(Math.floor(z*10)%2===0)?'#145a32':'#196f3d';
+  // Легкий туман біля підніжжя
+  const mist=ctx.createLinearGradient(0,H*0.15,0,H*0.4);
+  mist.addColorStop(0,'rgba(207,216,220,0)');
+  mist.addColorStop(1,'rgba(207,216,220,0.45)');
+  ctx.fillStyle=mist;ctx.fillRect(0,H*0.15,W,H*0.25);
+
+  // Багатоярусні трибуни (синьо-біло-чорні)
+  const bowlTop=H*0.24,bowlBot=H*0.46;
+  ctx.fillStyle='#101820';
+  ctx.fillRect(0,bowlTop,W,bowlBot-bowlTop);
+
+  for(let row=0;row<4;row++){
+    const ry=bowlTop+8+row*16;
+    ctx.fillStyle=row%2===0?'#154360':'#1b4f72';
+    ctx.fillRect(W*0.04,ry,W*0.92,10);
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    for(let sx=W*0.08;sx<W*0.9;sx+=26){
+      ctx.fillRect(sx+(row*7)%12,ry+2,10,5);
+    }
+  }
+
+  // Табло між ярусами
+  ctx.fillStyle='#0b1319';
+  ctx.fillRect(0,bowlTop+36,W,12);
+  ctx.fillStyle='rgba(29,209,161,0.45)';
+  ctx.font='bold 8px sans-serif';
+  ctx.fillText('3D PENALTY CUP • ARENA',W*0.58,bowlTop+45);
+
+  // Хвилеподібний металевий дах
+  ctx.strokeStyle='#dce4e7';
+  ctx.lineWidth=5;
+  ctx.beginPath();
+  ctx.moveTo(0,H*0.14);
+  ctx.bezierCurveTo(W*0.28,H*0.27,W*0.65,H*0.28,W,H*0.21);
+  ctx.stroke();
+
+  ctx.strokeStyle='rgba(236,240,241,0.65)';
+  ctx.lineWidth=1.5;
+  for(let i=0;i<=24;i++){
+    const t=i/24,rx=W*t;
+    const ry=H*0.14+Math.sin(t*Math.PI)*H*0.11;
+    ctx.beginPath();
+    ctx.moveTo(rx,ry-8);
+    ctx.lineTo(rx+8,ry+4);
+    ctx.lineTo(rx+16,ry-8);
+    ctx.stroke();
+  }
+
+  // Футбольне поле зі смугами
+  for(let z=-2;z<12;z+=1.35){
+    const p1=proj(-8.5,0,z),p2=proj(8.5,0,z),p3=proj(8.5,0,z+1.35),p4=proj(-8.5,0,z+1.35);
+    ctx.fillStyle=(Math.floor(z*10)%2===0)?'#2e6f28':'#3b8732';
     ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.lineTo(p3.x,p3.y);ctx.lineTo(p4.x,p4.y);ctx.closePath();ctx.fill();
   }
 
+  // Анімовані фанати
   SIDE_FANS.forEach(f=>{
     const fz=-1+f.idx*0.75,fx=f.side*(4.6+f.row*0.55);
     const jump=crowdMood===1?Math.abs(Math.sin(tAnim*2.5+f.ph))*0.28:Math.sin(tAnim+f.ph)*0.04;
     const fy=0.3+f.row*0.45+jump,pt=proj(fx,fy,fz);
     if(pt.s>0){
-      ctx.fillStyle=f.shirt;
+      ctx.fillStyle=(f.idx%3===0)?'#ffffff':((f.idx%2===0)?'#1b4f72':'#17202a');
       ctx.beginPath();ctx.arc(pt.x,pt.y,Math.max(2,4.5*pt.s),0,Math.PI*2);ctx.fill();
     }
   });
 
-  ctx.strokeStyle='rgba(255,255,255,0.65)';ctx.lineWidth=2;
+  // Розмітка
+  ctx.strokeStyle='rgba(255,255,255,0.8)';ctx.lineWidth=2;
   const b1=proj(-4.5,0,8.5),b2=proj(-4.5,0,4.2),b3=proj(4.5,0,4.2),b4=proj(4.5,0,8.5);
   ctx.beginPath();ctx.moveTo(b1.x,b1.y);ctx.lineTo(b2.x,b2.y);ctx.lineTo(b3.x,b3.y);ctx.lineTo(b4.x,b4.y);ctx.stroke();
   const spot=proj(0,0,0);
   ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(spot.x,spot.y,5*spot.s,2.5*spot.s,0,0,Math.PI*2);ctx.fill();
 
+  // 3D Ворота та сітка
   const gw=2.8,gh=2.3,gz=8.5,gd=1.2;
   const gFL=proj(-gw,0,gz),gTL=proj(-gw,gh,gz),gTR=proj(gw,gh,gz),gFR=proj(gw,0,gz);
   const gBL=proj(-gw,0,gz+gd),gBTL=proj(-gw,gh*0.85,gz+gd),gBTR=proj(gw,gh*0.85,gz+gd),gBR=proj(gw,0,gz+gd);
 
-  ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=1;
+  ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=1;
   for(let i=0;i<=8;i++){
     const t=i/8,top1=proj(-gw+gw*2*t,gh,gz),top2=proj(-gw+gw*2*t,gh*0.85,gz+gd),bot2=proj(-gw+gw*2*t,0,gz+gd);
     ctx.beginPath();ctx.moveTo(top1.x,top1.y);ctx.lineTo(top2.x,top2.y);ctx.lineTo(bot2.x,bot2.y);ctx.stroke();
@@ -328,10 +391,10 @@ function draw3D(){
   ctx.strokeStyle='#ffffff';ctx.lineWidth=4;
   ctx.beginPath();ctx.moveTo(gFL.x,gFL.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gFR.x,gFR.y);ctx.stroke();
 
+  // Воротар
   gk.x+=(gk.tx-gk.x)*0.18;gk.y+=(gk.ty-gk.y)*0.18;gk.dive+=(gk.tdive-gk.dive)*0.18;
-
   const gp=proj(gk.x,gk.y,gz-0.15),gSh=proj(gk.x,0,gz-0.15);
-  ctx.fillStyle='rgba(0,0,0,0.4)';
+  ctx.fillStyle='rgba(0,0,0,0.35)';
   ctx.beginPath();ctx.ellipse(gSh.x,gSh.y,18*gSh.s,6*gSh.s,0,0,Math.PI*2);ctx.fill();
 
   ctx.save();ctx.translate(gp.x,gp.y-22*gp.s);ctx.rotate(gk.dive*0.85);
@@ -341,6 +404,7 @@ function draw3D(){
   ctx.fillStyle=kCol;ctx.beginPath();ctx.arc(-16*gp.s,-10*gp.s,6*gp.s,0,Math.PI*2);ctx.arc(16*gp.s,-10*gp.s,6*gp.s,0,Math.PI*2);ctx.fill();
   ctx.restore();
 
+  // М'яч
   if(ball.active&&ball.t<1){
     ball.t=Math.min(1,ball.t+0.048);
     const ease=1-Math.pow(1-ball.t,2);
@@ -352,7 +416,7 @@ function draw3D(){
   }
 
   const bSh=proj(ball.x,0,ball.z);
-  ctx.fillStyle='rgba(0,0,0,0.45)';
+  ctx.fillStyle='rgba(0,0,0,0.4)';
   ctx.beginPath();ctx.ellipse(bSh.x,bSh.y,11*bSh.s,4.5*bSh.s,0,0,Math.PI*2);ctx.fill();
 
   const bp=proj(ball.x,ball.y,ball.z),rad=Math.max(4,11*bp.s),bCol=getItem(p.eb).col;
