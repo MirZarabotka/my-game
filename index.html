@@ -60,17 +60,23 @@ const U='https://supabase.co';
 let uid='g_'+Math.floor(Math.random()*999999),un='Гравець';
 try{const tg=window.Telegram.WebApp;tg.ready();tg.expand();const u=tg.initDataUnsafe.user;if(u){uid=String(u.id);un=u.first_name||'Гравець'}}catch(e){}
 let s={b:0,x:0,l:1,t:1,a:0,e:1,n:100};
-try{const v=JSON.parse(localStorage.getItem('b6'));if(v)s=Object.assign(s,v)}catch(e){}
-const rk=()=>s.l>=15?['🌌 Імператор','👑',5]:s.l>=10?['💎 Магнат','🍓',3.5]:s.l>=6?['🥇 Плантатор','🍓',2.2]:s.l>=3?['🥈 Фермер','🍓',1.5]:['🥉 Садівник','🍓',1];
-const nx=()=>Math.floor(100*Math.pow(1.45,s.l-1)),me=()=>100+(s.e-1)*50,tp=()=>Math.max(1,Math.floor(s.t*rk()[2])),ap=()=>s.a?Math.floor(s.a*2*rk()[2]):0;
+try{const v=JSON.parse(localStorage.getItem('b7'));if(v)s=Object.assign(s,v)}catch(e){}
+function rk(){
+  if(s.l>=15)return{n:'🌌 Імператор',e:'👑',m:5};
+  if(s.l>=10)return{n:'💎 Магнат',e:'🍓',m:3.5};
+  if(s.l>=6)return{n:'🥇 Плантатор',e:'🍓',m:2.2};
+  if(s.l>=3)return{n:'🥈 Фермер',e:'🍓',m:1.5};
+  return{n:'🥉 Садівник',e:'🍓',m:1};
+}
+const nx=()=>Math.floor(100*Math.pow(1.45,s.l-1)),me=()=>100+(s.e-1)*50,tp=()=>Math.max(1,Math.floor(s.t*rk().m)),ap=()=>s.a?Math.floor(s.a*2*rk().m):0;
 const c1=()=>Math.floor(25*Math.pow(1.4,s.t-1)),c2=()=>Math.floor(50*Math.pow(1.45,s.a)),c3=()=>Math.floor(40*Math.pow(1.5,s.e-1));
 function ax(v){s.x+=v;while(s.x>=nx()){s.x-=nx();s.l++;s.n=me()}}
 function ui(){
-  const r=rk();rn.innerText=r[0];em.innerText=r[1];ml.innerText=r[2].toFixed(1);lv.innerText=s.l;xp.innerText=Math.floor(s.x);nx.innerText=nx();
+  const r=rk();rn.innerText=r.n;em.innerText=r.e;ml.innerText=r.m.toFixed(1);lv.innerText=s.l;xp.innerText=Math.floor(s.x);nx.innerText=nx();
   xb.style.width=Math.min(100,s.x/nx()*100)+'%';bl.innerText=Math.floor(s.b);ai.innerText=ap();ti.innerText=tp();en.innerText=Math.floor(s.n);
   me.innerText=me();eb.style.width=(s.n/me()*100)+'%';tl.innerText=s.t;al.innerText=s.a;el.innerText=s.e;
   bt.innerText=c1()+' 💎';bt.disabled=s.b<c1();ba.innerText=c2()+' 💎';ba.disabled=s.b<c2();be.innerText=c3()+' 💎';be.disabled=s.b<c3();
-  try{localStorage.setItem('b6',JSON.stringify(s))}catch(e){}
+  try{localStorage.setItem('b7',JSON.stringify(s))}catch(e){}
 }
 function hit(){
   if(s.n<1)return;s.n--;const g=tp();s.b+=g;ax(2);
@@ -92,7 +98,7 @@ async function topLoad(){
     if(!r.ok){ll.innerText='Помилка '+r.status+': '+await r.text();return}
     const d=await r.json();ll.innerHTML=d.length?'':'Поки порожньо!';
     d.forEach((p,i)=>ll.innerHTML+=`<div class="lrow"><b>${i<3?['🥇','🥈','🥉'][i]:'#'+(i+1)} ${p.name} (Lvl ${p.level})</b><b style="color:#ffd32a">${p.score} 💎</b></div>`);
-  }catch(e){ll.innerText='Помилка мережі'}
+  }catch(e){ll.innerText='Помилка мережі: '+e.message}
 }
 let k=0;setInterval(()=>{if(ap()>0){s.b+=ap();ax(1)}if(s.n<me())s.n=Math.min(me(),s.n+1+Math.floor(s.e/2));ui();if(++k%10===0)sync()},1000);
 ui();sync();
