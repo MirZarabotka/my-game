@@ -293,3 +293,76 @@
                     slot.innerHTML = `<span style="color: #484f58; font-size: 12px;">Порожній слот</span>`;
                 }
                 grid.appendChild(slot);
+
+            }
+}
+// Оновлення інтерфейсу
+function updateUI() {
+document.getElementById('balance').innerText = state.balance.toFixed(2);
+document.getElementById('hashrate').innerText = getTotalHashrate();
+document.getElementById('slotsCount').innerText = ${state.gpus.length} / ${MAX_SLOTS};
+document.getElementById('gpuCost').innerText = ${state.gpuPrice} GRM;
+// Кнопка покупки
+const buyBtn = document.getElementById('buyBtn');
+buyBtn.disabled = state.balance < state.gpuPrice || state.gpus.length >= MAX_SLOTS;
+if (state.gpus.length >= MAX_SLOTS) {
+document.getElementById('gpuCost').innerText = 'Немає місць';
+}
+// Кнопка крафту
+const mergeLvl = findMergeableLevel();
+const mergeBtn = document.getElementById('mergeBtn');
+const mergeInfo = document.getElementById('mergeInfo');
+if (mergeLvl) {
+mergeBtn.disabled = false;
+mergeInfo.innerText = 2x Lvl ${mergeLvl} ➔ Lvl ${mergeLvl + 1};
+} else {
+mergeBtn.disabled = true;
+mergeInfo.innerText = 'Немає пар';
+}
+// Температура
+const tempText = document.getElementById('tempText');
+const tempBar = document.getElementById('tempBar');
+const statusText = document.getElementById('statusText');
+tempText.innerText = ${Math.floor(state.temp)}°C;
+tempBar.style.width = ${Math.min(100, state.temp)}%;
+if (isOverheated) {
+tempBar.style.background = 'var(--red)';
+statusText.innerText = 'ПЕРЕГРІВ! Майнінг зупинено';
+statusText.style.color = 'var(--red)';
+} else if (state.temp > 75) {
+tempBar.style.background = 'var(--orange)';
+statusText.innerText = 'Висока температура';
+statusText.style.color = 'var(--orange)';
+} else {
+tempBar.style.background = 'var(--green)';
+statusText.innerText = 'Працює стабільно';
+statusText.style.color = 'var(--green)';
+}
+}
+function saveAndRender() {
+localStorage.setItem('gram_miner_save', JSON.stringify(state));
+renderGrid();
+updateUI();
+}
+// Ігровий цикл (раз на секунду)
+setInterval(() => {
+if (state.gpus.length > 0 && !isOverheated) {
+// Нарахування монет (1 H/s = 0.05 монети в секунду)
+const mined = getTotalHashrate() * 0.05;
+state.balance += mined;
+// Нагрівання залежно від кількості карт
+state.temp += state.gpus.length * 0.4;
+if (state.temp >= 100) {
+state.temp = 100;
+isOverheated = true;
+tg.HapticFeedback.notificationOccurred('error');
+}
+} else if (state.gpus.length === 0 && state.temp > 25) {
+state.temp = Math.max(25, state.temp - 0.5);
+}
+localStorage.setItem('gram_miner_save', JSON.stringify(state));
+updateUI();
+}, 1000);
+// Запуск
+renderGrid();
+updateUI();
