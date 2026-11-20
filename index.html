@@ -69,34 +69,22 @@ let guestId = 'g_' + (localStorage.getItem('p_uid') || Math.floor(Math.random()*
 localStorage.setItem('p_uid', guestId.replace('g_',''));
 let uid = guestId;
 let un = localStorage.getItem('custom_nick') || ('Гравець #' + uid.slice(-4));
-let isTgUser = false;
 
-function getTgUser() {
-  try {
-    const tg = window.Telegram && window.Telegram.WebApp;
-    if (!tg) return null;
-    tg.ready();
-    tg.expand();
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) return tg.initDataUnsafe.user;
-    if (tg.initData) {
-      const params = new URLSearchParams(tg.initData);
-      const uStr = params.get('user');
-      if (uStr) return JSON.parse(uStr);
+try {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (tg) {
+    tg.ready(); tg.expand();
+    let u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+    if (!u && tg.initData) {
+      const uStr = new URLSearchParams(tg.initData).get('user');
+      if (uStr) u = JSON.parse(uStr);
     }
-  } catch(e) {}
-  return null;
-}
-
-const tgUser = getTgUser();
-if (tgUser && tgUser.id) {
-  isTgUser = true;
-  uid = 'u_' + tgUser.id;
-  if (tgUser.username) {
-    un = '@' + tgUser.username;
-  } else {
-    un = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || ('User ' + tgUser.id);
+    if (u && u.id) {
+      uid = 'u_' + u.id;
+      un = localStorage.getItem('custom_nick') || (u.username ? '@' + u.username : [u.first_name, u.last_name].filter(Boolean).join(' '));
+    }
   }
-}
+} catch(e) {}
 
 function changeName() {
   const n = prompt('Введіть ваш нікнейм:', un);
@@ -108,7 +96,7 @@ function changeName() {
 }
 
 let s = {b:0, x:0, l:1, t:1, a:0, e:1, n:100};
-try { const v = JSON.parse(localStorage.getItem('b15')); if (v) s = Object.assign(s, v); } catch(e) {}
+try { const v = JSON.parse(localStorage.getItem('b16')); if (v) s = Object.assign(s, v); } catch(e) {}
 
 function rk() {
   if(s.l>=15) return {n:'🌌 Імператор', e:'👑', m:5};
@@ -130,7 +118,7 @@ function ui() {
   bt.innerText = c1() + ' 💎'; bt.disabled = s.b < c1();
   ba.innerText = c2() + ' 💎'; ba.disabled = s.b < c2();
   be.innerText = c3() + ' 💎'; be.disabled = s.b < c3();
-  try { localStorage.setItem('b15', JSON.stringify(s)); } catch(e) {}
+  try { localStorage.setItem('b16', JSON.stringify(s)); } catch(e) {}
 }
 
 function hit() {
@@ -157,23 +145,27 @@ function tab(i) {
 async function syncAndLoad() {
   ll.innerText = 'Оновлення рейтингу...';
   try {
-    let data = {};
-    const getRes = await fetch(API + '?t=' + Date.now());
-    if (getRes.ok) {
-      const txt = await getRes.text();
-      if (txt.trim().startsWith('{')) data = JSON.parse(txt);
-    }
+    const myEntry = {};
+    myEntry[uid] = { id: uid, name: un, score: Math.floor(s.b), level: s.l };
 
-    if (isTgUser && data[guestId]) delete data[guestId];
-    data[uid] = { id: uid, name: un, score: Math.floor(s.b), level: s.l };
-
-    await fetch(API, {
-      method: 'POST',
+    // PUT оновлює тільки ключ поточного гравця і повертає весь список
+    const putRes = await fetch(API, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify(myEntry)
     });
 
+    let data = {};
+    if (putRes.ok) {
+      data = await putRes.json();
+    } else {
+      const getRes = await fetch(API + '?t=' + Date.now());
+      if (getRes.ok) data = await getRes.json();
+    }
+
     const list = Object.values(data).filter(p => p && p.name).sort((a,b) => b.score - a.score).slice(0, 30);
+    if (!list.length) { ll.innerText = 'Поки порожньо!'; return; }
+
     ll.innerHTML = '';
     list.forEach((p, i) => {
       const medal = i < 3 ? ['🥇','🥈','🥉'][i] : '#' + (i+1);
@@ -184,16 +176,13 @@ async function syncAndLoad() {
   }
 }
 
-let k = 0;
 setInterval(() => {
   if(ap() > 0) { s.b += ap(); ax(1); }
   if(s.n < me()) s.n = Math.min(me(), s.n + 1 + Math.floor(s.e/2));
   ui();
-  if(++k % 15 === 0 && t.style.display === 'block') syncAndLoad();
 }, 1000);
 
 ui();
-syncAndLoad();
 </script>
 </body>
 </html>
