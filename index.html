@@ -146,7 +146,7 @@ async function syncAndLoad() {
   ll.innerText = 'Оновлення рейтингу...';
   try {
     const url = `${GAS_URL}?uid=${encodeURIComponent(uid)}&name=${encodeURIComponent(un)}&score=${Math.floor(s.b)}&level=${s.l}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { method: 'GET', redirect: 'follow' });
     const list = await res.json();
 
     list.sort((a,b) => b.score - a.score);
