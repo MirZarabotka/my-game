@@ -161,7 +161,7 @@ function draw3D(t){
   ctx.beginPath();ctx.arc(bp.x,bp.y,rad*0.6,spin,spin+2.2);ctx.stroke();
 }
 
-const nx=()=>p.lv*100,getIt=id=>SHOP.find(x=>x.id===id)||SHOP;
+const nx=()=>p.lv*100,getIt=id=>SHOP.find(x=>x.id===id)||SHOP[0];
 const dots=a=>Array.from({length:Math.max(5,a.length)},(_,i)=>a[i]===1?'🟢':a[i]===0?'🔴':'⚪').join('');
 function addP(v){p.pt+=v;p.cn+=v;while(p.pt>=nx()){p.pt-=nx();p.lv++}}
 function tab(n){gScr.style.display=n===1?'flex':'none';sScr.style.display=n===2?'grid':'none';t1.classList.toggle('act',n===1);t2.classList.toggle('act',n===2);if(n===1)rsz3D();else rShop()}
@@ -177,7 +177,7 @@ function buy(id,t,pr){if(p.cn>=pr){p.cn-=pr;p.ow.push(id);eq(id,t)}}
 function eq(id,t){if(t==='b')p.eb=id;else p.ek=id;ui();rShop()}
 function ui(){
   lv.innerText=p.lv;cp.innerText=p.cp;cn.innerText=p.cn;pt.innerText=p.pt;nx.innerText=nx();xb.style.width=Math.min(100,p.pt/nx()*100)+'%';
-  const cur=ST[p.st]||ST;op.innerText=cur.n+': '+cur.o;
+  const cur=ST[p.st]||ST[0];op.innerText=cur.n+': '+cur.o;
   sb.querySelectorAll('span').forEach((s,i)=>s.className=i<p.st?'done':i===p.st?'act':'');
   ps.innerText=pS.filter(x=>x).length;bs.innerText=bS.filter(x=>x).length;pd.innerText=dots(pS);bd.innerText=dots(bS);
   try{localStorage.setItem('pc_3d2',JSON.stringify(p))}catch(e){}
