@@ -8,20 +8,20 @@
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
-.tabs{display:flex;gap:6px;margin-bottom:6px}
+.tabs{display:flex;gap:6px;margin-bottom:6px;flex-shrink:0}
 .tab{flex:1;padding:8px;background:#131b26;border:1px solid #243347;color:#8395a7;border-radius:10px;font-weight:bold;cursor:pointer}
 .tab.act{background:#1dd1a1;color:#000;border-color:#1dd1a1}
-.box{background:#131b26;border:1px solid #243347;border-radius:12px;padding:7px 12px;margin-bottom:6px}
+.box{background:#131b26;border:1px solid #243347;border-radius:12px;padding:7px 12px;margin-bottom:6px;flex-shrink:0}
 .row{display:flex;justify-content:space-between;align-items:center}
 .bar{width:100%;height:5px;background:#1e2b3c;border-radius:4px;overflow:hidden;margin:4px 0}
 .fill{height:100%;background:#1dd1a1;transition:width .3s}
 .stgs{display:flex;justify-content:space-between;font-size:10px;font-weight:bold;color:#576574;margin-top:2px}
 .stgs .act{color:#feca57;text-decoration:underline}.stgs .done{color:#1dd1a1}
-.arena{flex:1;position:relative;border-radius:14px;overflow:hidden;border:2px solid #243347;margin-bottom:8px;background:#070b14}
+.arena{flex:1;min-height:0;position:relative;border-radius:14px;overflow:hidden;border:2px solid #243347;margin-bottom:8px;background:#070b14}
 #c3d{width:100%;height:100%;display:block}
 .hud-top{position:absolute;top:8px;left:10px;right:10px;display:flex;justify-content:space-between;background:rgba(7,11,20,.75);padding:6px 12px;border-radius:10px;font-size:12px;pointer-events:none}
 .msg{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.92);padding:7px 14px;border-radius:16px;font-weight:bold;font-size:13px;border:1px solid #feca57;text-align:center;white-space:nowrap}
-.ctrl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ctrl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex-shrink:0}
 .btn{background:#182230;border:2px solid #3c4f66;color:#fff;padding:12px 4px;border-radius:12px;font-weight:bold;font-size:13px;cursor:pointer}
 .btn:active{transform:scale(.95)}.btn:disabled{opacity:.4}
 .full{grid-column:span 3;border:none;font-size:14px;padding:13px}
@@ -43,7 +43,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
   <div class="row" style="font-size:11px;color:#8395a7"><span>XP: <span id="pt">0</span>/<span id="nx">100</span></span><span id="op" style="color:#ff9ff3">1/32: ФК Двір</span></div>
   <div class="stgs" id="sb"><span>1/32</span><span>1/16</span><span>1/8</span><span>1/4</span><span>1/2</span><span>ФІНАЛ</span></div>
 </div>
-<div id="gScr" style="display:flex;flex-direction:column;flex:1">
+<div id="gScr" style="display:flex;flex-direction:column;flex:1;min-height:0">
   <div class="arena" id="ar">
     <div class="hud-top">
       <span>Ти: <span id="pd">⚪⚪⚪⚪⚪</span></span>
@@ -106,20 +106,17 @@ function draw3D(t){
   const gr=ctx.createLinearGradient(0,H*0.56,0,H);gr.addColorStop(0,'#145a32');gr.addColorStop(1,'#27ae60');
   ctx.fillStyle=gr;ctx.fillRect(0,H*0.56,W,H*0.44);
 
-  // Прожектори стадіону
   [-0.85,0.85].forEach(sx=>{
     const lx=W/2+sx*W*0.42,ly=H*0.14;
     const lg=ctx.createRadialGradient(lx,ly,2,lx,ly,W*0.25);lg.addColorStop(0,'rgba(255,255,255,0.7)');lg.addColorStop(1,'rgba(255,255,255,0)');
     ctx.fillStyle=lg;ctx.beginPath();ctx.arc(lx,ly,W*0.25,0,6.28);ctx.fill();
   });
 
-  // 3D розмітка поля
   ctx.strokeStyle='rgba(255,255,255,0.55)';ctx.lineWidth=2;
   const p1=proj(-6.5,0,10),p2=proj(6.5,0,10),p3=proj(8,0,0),p4=proj(-8,0,0);
   ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.lineTo(p3.x,p3.y);ctx.lineTo(p4.x,p4.y);ctx.closePath();ctx.stroke();
   const sp=proj(0,0,2.2);ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(sp.x,sp.y,6*sp.s,3*sp.s,0,0,6.28);ctx.fill();
 
-  // 3D Ворота та сітка (глибина z=10..11.8)
   const gBL=proj(-3.2,0,10),gBR=proj(3.2,0,10),gTL=proj(-3.2,2.4,10),gTR=proj(3.2,2.4,10);
   const nBL=proj(-3.2,0,11.8),nBR=proj(3.2,0,11.8),nTL=proj(-3.2,2.4,11.8),nTR=proj(3.2,2.4,11.8);
   ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=1;
@@ -139,7 +136,6 @@ function draw3D(t){
   }else if(kTargetX===0){kTargetX=Math.sin(t*0.005)*0.35}
   kX+=(kTargetX-kX)*0.18;kRot+=(kTargetRot-kRot)*0.18;
 
-  // Малювання 3D-воротаря
   const kp=proj(kX,0,9.8);
   ctx.save();ctx.translate(kp.x,kp.y);ctx.rotate(kRot);
   ctx.fillStyle='rgba(0,0,0,0.35)';ctx.beginPath();ctx.ellipse(0,0,22*kp.s,6*kp.s,0,0,6.28);ctx.fill();
@@ -150,7 +146,6 @@ function draw3D(t){
   ctx.beginPath();ctx.arc(24*kp.s,-46*kp.s,9*kp.s,0,6.28);ctx.fill();
   ctx.restore();
 
-  // Тінь і 3D-м'яч
   const sh=proj(bPos.x,0,bPos.z),bp=proj(bPos.x,bPos.y,bPos.z),rad=18*bp.s;
   ctx.fillStyle='rgba(0,0,0,0.4)';ctx.beginPath();ctx.ellipse(sh.x,sh.y,rad,rad*0.4,0,0,6.28);ctx.fill();
   const bCol=getIt(p.eb).col;
@@ -161,8 +156,8 @@ function draw3D(t){
   ctx.beginPath();ctx.arc(bp.x,bp.y,rad*0.6,spin,spin+2.2);ctx.stroke();
 }
 
-const nx=()=>p.lv*100,getIt=id=>SHOP.find(x=>x.id===id)||SHOP[0];
-const dots=a=>Array.from({length:Math.max(5,a.length)},(_,i)=>a[i]===1?'🟢':a[i]===0?'🔴':'⚪').join('');
+const nx=()=>p.lv*100,getIt=id=>SHOP.find(x=>x.id===id)||SHOP.at(0);
+const dots=a=>Array.from({length:Math.max(5,a.length)},(_,i)=>a.at(i)===1?'🟢':a.at(i)===0?'🔴':'⚪').join('');
 function addP(v){p.pt+=v;p.cn+=v;while(p.pt>=nx()){p.pt-=nx();p.lv++}}
 function tab(n){gScr.style.display=n===1?'flex':'none';sScr.style.display=n===2?'grid':'none';t1.classList.toggle('act',n===1);t2.classList.toggle('act',n===2);if(n===1)rsz3D();else rShop()}
 function rShop(){
@@ -177,25 +172,25 @@ function buy(id,t,pr){if(p.cn>=pr){p.cn-=pr;p.ow.push(id);eq(id,t)}}
 function eq(id,t){if(t==='b')p.eb=id;else p.ek=id;ui();rShop()}
 function ui(){
   lv.innerText=p.lv;cp.innerText=p.cp;cn.innerText=p.cn;pt.innerText=p.pt;nx.innerText=nx();xb.style.width=Math.min(100,p.pt/nx()*100)+'%';
-  const cur=ST[p.st]||ST[0];op.innerText=cur.n+': '+cur.o;
+  const cur=ST.at(p.st)||ST.at(0);op.innerText=cur.n+': '+cur.o;
   sb.querySelectorAll('span').forEach((s,i)=>s.className=i<p.st?'done':i===p.st?'act':'');
   ps.innerText=pS.filter(x=>x).length;bs.innerText=bS.filter(x=>x).length;pd.innerText=dots(pS);bd.innerText=dots(bS);
   try{localStorage.setItem('pc_3d2',JSON.stringify(p))}catch(e){}
-  if(ph==='win')return ct.innerHTML=`<button class="btn full" style="background:#1dd1a1;color:#000" onclick="rst()">➡️ Далі: ${ST[p.st].n}</button>`;
+  if(ph==='win')return ct.innerHTML=`<button class="btn full" style="background:#1dd1a1;color:#000" onclick="rst()">➡️ Далі: ${ST.at(p.st).n}</button>`;
   if(ph==='cup')return ct.innerHTML=`<button class="btn full" style="background:#feca57;color:#000" onclick="rst()">🏆 Новий кубок (з 1/32)</button>`;
   if(ph==='los')return ct.innerHTML=`<button class="btn full" style="background:#ff6b6b" onclick="rst()">🔄 Виліт! Почати з 1/32</button>`;
   const s=ph==='sh',c=s?'#ff9f43':'#54a0ff',t=s?['⬅️ Вліво','⬆️ Центр','➡️ Вправо']:['🧤 Вліво','🧤 Центр','🧤 Вправо'];
-  ct.innerHTML=Array.from({length:3},(_,i)=>`<button class="btn" style="border-color:${c}" onclick="go(${i})" ${bz?'disabled':''}>${t[i]}</button>`).join('');
+  ct.innerHTML=Array.from({length:3},(_,i)=>`<button class="btn" style="border-color:${c}" onclick="go(${i})" ${bz?'disabled':''}>${t.at(i)}</button>`).join('');
 }
 function kick3D(bIdx,kIdx){
   const xs=[-2.2,0,2.2],rots=[-0.55,0,0.55];
-  bStart={x:0,y:0.35,z:2.2};bEnd={x:xs[bIdx],y:1.1,z:10.4};
-  kTargetX=xs[kIdx];kTargetRot=rots[kIdx];animT=0;
+  bStart={x:0,y:0.35,z:2.2};bEnd={x:xs.at(bIdx),y:1.1,z:10.4};
+  kTargetX=xs.at(kIdx);kTargetRot=rots.at(kIdx);animT=0;
 }
 function rstPos(){bPos={x:0,y:0.35,z:2.2};bStart={x:0,y:0.35,z:2.2};bEnd={x:0,y:0.35,z:2.2};kTargetX=0;kTargetRot=0;animT=1}
 function chk(){
   if(pS.length>=5&&pS.length===bS.length){
-    const pg=pS.filter(x=>x).length,bg=bS.filter(x=>x).length,cur=ST[p.st];
+    const pg=pS.filter(x=>x).length,bg=bS.filter(x=>x).length,cur=ST.at(p.st);
     if(pg>bg){addP(cur.r);if(p.st>=5){p.cp++;p.st=0;ph='cup';ms.innerText=`🏆 ЧЕМПІОН 3D! +${cur.r} 💰`}else{p.st++;ph='win';ms.innerText=`✅ Перемога ${pg}:${bg}! +${cur.r} 💰`}return 1}
     if(bg>pg){addP(5);p.st=0;ph='los';ms.innerText=`❌ Виліт у ${cur.n} (${pg}:${bg})`;return 1}
     ms.innerText=`🔥 Нічия ${pg}:${bg}! До промаху!`;
