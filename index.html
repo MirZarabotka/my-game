@@ -121,7 +121,6 @@ const ctx=c3d.getContext('2d');let W=300,H=300;
 function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=c3d.width=r.width;H=c3d.height=r.height}}
 window.addEventListener('resize',rsz3D);
 
-// Камера під кутом ~45 градусів зверху
 function proj(x,y,z){
   const fov=W*0.95,camZ=5.5,camY=6.8,ang=0.68;
   const dz=z+camZ,dy=y-camY;
@@ -136,7 +135,6 @@ const FANS=Array.from({length:64},(_,i)=>({
   shirt:['#ff4757','#feca57','#1e90ff','#ffffff','#2ed573','#ff9ff3'].at(i%6),
   phase:Math.random()*6.28,flag:i%7===0
 }));
-
 function drawHuman(x,z,opt){
   const pt=proj(x,0,z),s=pt.s;
   ctx.save();ctx.translate(pt.x,pt.y);if(opt.rot)ctx.rotate(opt.rot);
@@ -190,6 +188,7 @@ function drawHuman(x,z,opt){
   }
   ctx.restore();
 }
+
 let bPos={x:0,y:0.35,z:2.2},bStart={x:0,y:0.35,z:2.2},bEnd={x:0,y:0.35,z:2.2};
 let kX=0,kTargetX=0,kRot=0,kTargetRot=0,animT=1,spin=0,plPos={x:-0.9,z:0.4},plLeg=0,plRun=0;
 
@@ -207,7 +206,6 @@ function draw3D(t){
     ctx.fillStyle=lg;ctx.beginPath();ctx.arc(lx,ly,W*0.24,0,6.28);ctx.fill();
   });
 
-  // Трибуна під кутом 45°
   const stL=proj(-12,0,13.5),stR=proj(12,0,13.5),stTL=proj(-12,4.5,16.5),stTR=proj(12,4.5,16.5);
   ctx.fillStyle='#101824';ctx.beginPath();ctx.moveTo(stL.x,stL.y);ctx.lineTo(stR.x,stR.y);ctx.lineTo(stTR.x,stTR.y);ctx.lineTo(stTL.x,stTL.y);ctx.closePath();ctx.fill();
 
@@ -223,8 +221,6 @@ function draw3D(t){
     ctx.moveTo(fp.x+5*fs,fp.y-12*fs);ctx.lineTo(fp.x+10*fs,fp.y-(20-wave*6)*fs);ctx.stroke();
     if(f.flag){ctx.fillStyle='#feca57';ctx.fillRect(fp.x+10*fs,fp.y-(28-wave*6)*fs,12*fs,7*fs)}
   });
-
-  // Газон зі смугами стрижки (вид 45° зверху)
   const gr=ctx.createLinearGradient(0,horY,0,H);gr.addColorStop(0,'#145a32');gr.addColorStop(1,'#27ae60');
   ctx.fillStyle=gr;ctx.fillRect(0,horY,W,H-horY);
   for(let z=0;z<12;z+=2){
@@ -232,7 +228,6 @@ function draw3D(t){
     ctx.fillStyle='rgba(255,255,255,0.04)';ctx.beginPath();ctx.moveTo(s1.x,s1.y);ctx.lineTo(s2.x,s2.y);ctx.lineTo(s3.x,s3.y);ctx.lineTo(s4.x,s4.y);ctx.closePath();ctx.fill();
   }
 
-  // Чітка розмітка штрафного і воротарського майданчиків
   ctx.strokeStyle='rgba(255,255,255,0.65)';ctx.lineWidth=2.2;
   const p1=proj(-7.2,0,10),p2=proj(7.2,0,10),p3=proj(7.2,0,-1.5),p4=proj(-7.2,0,-1.5);
   ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.lineTo(p3.x,p3.y);ctx.lineTo(p4.x,p4.y);ctx.closePath();ctx.stroke();
@@ -240,7 +235,6 @@ function draw3D(t){
   ctx.beginPath();ctx.moveTo(v1.x,v1.y);ctx.lineTo(v2.x,v2.y);ctx.lineTo(v3.x,v3.y);ctx.lineTo(v4.x,v4.y);ctx.stroke();
   const sp=proj(0,0,2.2);ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(sp.x,sp.y,6*sp.s,3.5*sp.s,0,0,6.28);ctx.fill();
 
-  // Об'ємні 3D Ворота із сіткою (вид зверху під 45°)
   const gBL=proj(-3.2,0,10),gBR=proj(3.2,0,10),gTL=proj(-3.2,2.4,10),gTR=proj(3.2,2.4,10);
   const nBL=proj(-3.2,0,11.8),nBR=proj(3.2,0,11.8),nTL=proj(-3.2,2.4,11.8),nTR=proj(3.2,2.4,11.8);
   ctx.strokeStyle='rgba(255,255,255,0.28)';ctx.lineWidth=1;
@@ -250,7 +244,7 @@ function draw3D(t){
     ctx.beginPath();ctx.moveTo(x1,gTL.y);ctx.lineTo(x2,nTL.y);ctx.lineTo(x2,nBL.y);ctx.stroke();
   }
   for(let r=1;r<=4;r++){
-    const f=r/4,y1=gTL.y+(gBL.y-gTL.y)*f,y2=nTL.y+(nBL.y-nTL.y)*f;
+    const f=r/4,y2=nTL.y+(nBL.y-nTL.y)*f;
     ctx.beginPath();ctx.moveTo(nTL.x,y2);ctx.lineTo(nTR.x,y2);ctx.stroke();
   }
   ctx.strokeStyle='#fff';ctx.lineWidth=5;ctx.lineCap='round';
@@ -339,3 +333,7 @@ function go(c){
   }
 }
 function rst(){ph='sh';pS=[];bS=[];bz=0;rstPos();ms.innerText='⚽ Твій удар! Вибери кут';ui()}
+setTimeout(()=>{rsz3D();rstPos();ui();requestAnimationFrame(draw3D)},100);
+</script>
+</body>
+</html>
