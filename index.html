@@ -150,21 +150,41 @@ function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=
 window.addEventListener('resize',rsz3D);
 
 function proj(x,y,z){
-  const camZ=-12.5,camY=13.0,pitch=0.68;
+  const camZ=-11.8,camY=12.4,pitch=0.66;
   const dz=z-camZ,dy=y-camY;
   const rz=dz*Math.cos(pitch)-dy*Math.sin(pitch);
   const ry=dz*Math.sin(pitch)+dy*Math.cos(pitch);
-  const f=Math.min(W,H)*1.22;
+  const f=Math.min(W,H)*1.24;
   const sc=f/Math.max(1.0,rz);
   return{x:W/2+x*sc,y:H*0.58-ry*sc,s:sc};
 }
 
-const FANS=Array.from({length:240},(_,i)=>{
-  const row=Math.floor(i/48),colIdx=i%48;
-  const skins=['#f5cba7','#e0ac69','#8d5524','#ffdbac'];
-  const hairs=['#1c1c1c','#4a2c11','#8d6e63','#d4ac0d'];
-  const jerseys=['#154360','#ffffff','#1b4f72','#111822','#2471a3'];
-  return{x:-24+colIdx*1.02+(row%2)*0.45,row:row,ph:Math.random()*6.28,skin:skins[i%4],hair:hairs[(i*3)%4],shirt:jerseys[(i*7)%5],scarf:(i%4===0)};
+const skins=['#f5cba7','#e0ac69','#8d5524','#ffdbac'];
+const hairs=['#1c1c1c','#4a2c11','#8d6e63','#d4ac0d'];
+const jerseys=['#154360','#ffffff','#1b4f72','#111822','#2471a3'];
+
+// Фанати на дальній трибуні (за воротами)
+const FANS=Array.from({length:190},(_,i)=>{
+  const row=Math.floor(i/38),colIdx=i%38;
+  return{x:-16.5+colIdx*0.89+(row%2)*0.4,row:row,ph:Math.random()*6.28,skin:skins[i%4],hair:hairs[(i*3)%4],shirt:jerseys[(i*7)%5],scarf:(i%4===0)};
+});
+
+// Фанати на лівій та правій бокових трибунах (160 осіб по 4 яруси з кожного боку)
+const SIDE_FANS=Array.from({length:160},(_,i)=>{
+  const side=i<80?-1:1;
+  const local=i%80;
+  const row=Math.floor(local/20);
+  const idx=local%20;
+  return{
+    side:side,
+    row:row,
+    z:-3.5+idx*0.92+(row%2)*0.4,
+    ph:Math.random()*6.28,
+    skin:skins[i%4],
+    hair:hairs[(i*5)%4],
+    shirt:jerseys[(i*3)%5],
+    scarf:(i%5===0)
+  };
 });
 
 let ball={x:0,y:0.22,z:0,sx:0,sy:0.22,sz:0,tx:0,ty:0.22,tz:0,t:1,active:false};
@@ -172,7 +192,7 @@ let gk={x:0,y:0,tx:0,ty:0,dive:0,tdive:0};
 let kicker={x:-1.5,z:-2.8,sx:-1.5,sz:-2.8,tx:-0.35,tz:-0.25,run:0,running:false,kickPose:0};
 let busy=false,tAnim=0;
 function save(){try{localStorage.setItem('pc_3d8',JSON.stringify(p))}catch(e){}}
-function getItem(id){return SHOP.find(x=>x.id===id)||SHOP[0]}
+function getItem(id){return SHOP.find(x=>x.id===id)||SHOP}
 
 function tab(n){
   t1.className=n===1?'tab act':'tab';
@@ -186,7 +206,7 @@ function updUI(){
   lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
   const nxXp=p.lv*100;pt.textContent=p.pt;nx.textContent=nxXp;
   xb.style.width=Math.min(100,(p.pt/nxXp)*100)+'%';
-  const cur=ST[p.st]||ST[0];
+  const cur=ST[p.st]||ST;
   op.textContent=`${cur.n}: ${cur.o}`;
   Array.from(sb.children).forEach((el,i)=>{el.className=i<p.st?'done':(i===p.st?'act':'')});
   pd.textContent=Array.from({length:5},(_,i)=>pS[i]===1?'🟢':(pS[i]===0?'🔴':'⚪')).join('');
@@ -213,9 +233,10 @@ function renderCtrl(){
   });
 }
 
+// Зони ударів розширені під великі ворота (ширина воріт 9.2м, висота 3.05м)
 function zoneCoords(z){
   const col=(z%3)-1,row=z<3?1:0;
-  return{x:col*3.05,y:row===1?2.05:0.42,dive:col};
+  return{x:col*3.85,y:row===1?2.55:0.48,dive:col};
 }
 
 function resetPositions(){
@@ -236,7 +257,7 @@ function act(z){
   setTimeout(()=>{
     kicker.running=false;kicker.kickPose=1;
     ball={x:0,y:0.22,z:0,sx:0,sy:0.22,sz:0,tx:sc.x,ty:sc.y,tz:10.5,t:0,active:true};
-    gk.tx=kc.x*0.88;gk.ty=kc.y>1?0.55:0.08;gk.tdive=kc.dive;
+    gk.tx=kc.x*0.92;gk.ty=kc.y>1?0.75:0.1;gk.tdive=kc.dive;
     snd('kick');
 
     setTimeout(()=>{
@@ -483,6 +504,7 @@ function draw3D(){
   const horizonY=proj(0,0,15.5).y;
   const standTop=Math.max(46,horizonY-H*0.20);
 
+  // 1. Небо, гора та прожектори стадіону
   const sky=ctx.createLinearGradient(0,0,0,horizonY);
   sky.addColorStop(0,'#90a4ae');sky.addColorStop(1,'#455a64');
   ctx.fillStyle=sky;ctx.fillRect(0,0,W,horizonY);
@@ -493,15 +515,18 @@ function draw3D(){
   ctx.lineTo(W*0.56,standTop-52);ctx.lineTo(W*0.74,standTop-38);ctx.lineTo(W*0.92,standTop-20);
   ctx.lineTo(W,standTop-24);ctx.lineTo(W,horizonY);ctx.lineTo(0,horizonY);ctx.closePath();ctx.fill();
 
+  // 2. Повноекранний газон зі смугами трави
   ctx.fillStyle='#246124';ctx.fillRect(0,horizonY,W,H-horizonY);
-
   for(let z=-6;z<15.5;z+=1.6){
     const y1=proj(0,0,z).y,y2=proj(0,0,z+1.6).y;
     ctx.fillStyle=(Math.floor((z+6)*10)%2===0)?'#2d7a2d':'#388e3c';
     ctx.fillRect(0,Math.min(y1,y2),W,Math.abs(y1-y2)+1);
   }
 
-  ctx.fillStyle='#0d1520';ctx.fillRect(0,standTop,W,horizonY-standTop);
+  // 3. Дальня центральна трибуна (за воротами)
+  const backL=proj(-17.5,0,15.5),backR=proj(17.5,0,15.5);
+  ctx.fillStyle='#0d1520';
+  ctx.fillRect(0,standTop,W,horizonY-standTop);
 
   for(let r=0;r<5;r++){
     const ry=standTop+5+r*((horizonY-standTop-8)/5);
@@ -515,51 +540,140 @@ function draw3D(){
     if(pt.x>-20&&pt.x<W+20)drawRealisticFan(pt.x,pt.y,pt.s*0.032,f,jump);
   });
 
+  // 4. ЛІВА ТА ПРАВА БОКОВІ 3D-ТРИБУНИ (замикають стадіон в єдину арену!)
+  [-1,1].forEach(side=>{
+    const baseNear=proj(side*13.5,0,-4.5);
+    const baseFar=proj(side*13.5,0,15.5);
+    const topFar=proj(side*17.5,3.4,15.5);
+    const topNear=proj(side*18.5,3.8,-4.5);
+
+    // Бетонна основа бокової трибуни
+    const grad=ctx.createLinearGradient(baseNear.x,baseNear.y,topNear.x,topNear.y);
+    grad.addColorStop(0,'#0b121c');
+    grad.addColorStop(1,'#182638');
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    ctx.moveTo(baseNear.x,baseNear.y);
+    ctx.lineTo(baseFar.x,baseFar.y);
+    ctx.lineTo(topFar.x,topFar.y);
+    ctx.lineTo(topNear.x,topNear.y);
+    ctx.closePath();
+    ctx.fill();
+
+    // Сходинки ярусів на бокових трибунах
+    ctx.strokeStyle='rgba(255,255,255,0.14)';ctx.lineWidth=1.2;
+    for(let r=1;r<=4;r++){
+      const t=r/5;
+      const pN=proj(side*(13.5+t*4.5),t*3.6,-4.5);
+      const pF=proj(side*(13.5+t*4.0),t*3.3,15.5);
+      ctx.beginPath();ctx.moveTo(pN.x,pN.y);ctx.lineTo(pF.x,pF.y);ctx.stroke();
+    }
+
+    // Боковий рекламний LED-борт
+    const adN=proj(side*12.8,0,-4.5),adF=proj(side*12.8,0,12.6);
+    const adNT=proj(side*12.8,0.85,-4.5),adFT=proj(side*12.8,0.85,12.6);
+    ctx.fillStyle='#09131f';
+    ctx.beginPath();
+    ctx.moveTo(adN.x,adN.y);ctx.lineTo(adF.x,adF.y);ctx.lineTo(adFT.x,adFT.y);ctx.lineTo(adNT.x,adNT.y);
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#1dd1a1';ctx.lineWidth=1.5;ctx.stroke();
+
+    // Козирок даху над боковою трибуною
+    ctx.strokeStyle='#dce4e7';ctx.lineWidth=3.5;
+    ctx.beginPath();ctx.moveTo(topNear.x,topNear.y);ctx.lineTo(topFar.x,topFar.y);ctx.stroke();
+  });
+
+  // Малюємо бокових вболівальників на лівій та правій трибунах
+  SIDE_FANS.forEach(f=>{
+    const fx=f.side*(14.1+f.row*0.95);
+    const fy=0.45+f.row*0.72;
+    const pt=proj(fx,fy,f.z);
+    const jump=crowdMood===1?Math.abs(Math.sin(tAnim*2.5+f.ph))*7:Math.sin(tAnim+f.ph)*1.2;
+    if(pt.x>-30&&pt.x<W+30&&pt.y>-20&&pt.y<H+20){
+      drawRealisticFan(pt.x,pt.y,pt.s*0.032,f,jump);
+    }
+  });
+
+  // Центральний козирок даху
   ctx.strokeStyle='#eceff1';ctx.lineWidth=4;
   ctx.beginPath();ctx.moveTo(0,standTop-3);ctx.quadraticCurveTo(W*0.5,standTop+12,W,standTop-3);ctx.stroke();
 
-  const adL=proj(-18,0,12.6),adTop=proj(0,0.75,12.6).y;
-  ctx.fillStyle='#0b131e';ctx.fillRect(0,adTop,W,adL.y-adTop);
+  // Центральний LED-борт за лицьовою лінією
+  const adL=proj(-12.8,0,12.6),adR=proj(12.8,0,12.6),adTop=proj(0,0.85,12.6).y;
+  ctx.fillStyle='#0b131e';ctx.fillRect(adL.x,adTop,adR.x-adL.x,adL.y-adTop);
   ctx.fillStyle='#1dd1a1';ctx.font='bold 10px sans-serif';ctx.textAlign='center';
   ctx.fillText('⚽ 3D PENALTY CUP  •  TELEGRAM STADIUM  •  LIVE ⚽',W/2,(adTop+adL.y)/2+3.5);
 
+  // 5. Розмітка поля, бокові лінії, штрафний майданчик та кутові прапорці
   ctx.strokeStyle='rgba(255,255,255,0.88)';ctx.lineWidth=2.5;
-  const pBL=proj(-8.2,0,10.5),pFL=proj(-8.2,0,3.2),pFR=proj(8.2,0,3.2),pBR=proj(8.2,0,10.5);
+  // Великий штрафний майданчик (пропорційно збільшений під великі ворота)
+  const pBL=proj(-9.5,0,10.5),pFL=proj(-9.5,0,2.8),pFR=proj(9.5,0,2.8),pBR=proj(9.5,0,10.5);
   ctx.beginPath();ctx.moveTo(pBL.x,pBL.y);ctx.lineTo(pFL.x,pFL.y);ctx.lineTo(pFR.x,pFR.y);ctx.lineTo(pBR.x,pBR.y);ctx.stroke();
-  const gBL=proj(-4.6,0,10.5),gFL=proj(-4.6,0,7.8),gFR=proj(4.6,0,7.8),gBR=proj(4.6,0,10.5);
+  // Малий воротарський майданчик
+  const gBL=proj(-5.6,0,10.5),gFL=proj(-5.6,0,7.5),gFR=proj(5.6,0,7.5),gBR=proj(5.6,0,10.5);
   ctx.beginPath();ctx.moveTo(gBL.x,gBL.y);ctx.lineTo(gFL.x,gFL.y);ctx.lineTo(gFR.x,gFR.y);ctx.lineTo(gBR.x,gBR.y);ctx.stroke();
-  const endL=proj(-22,0,10.5),endR=proj(22,0,10.5);
-  ctx.beginPath();ctx.moveTo(endL.x,endL.y);ctx.lineTo(endR.x,endR.y);ctx.stroke();
+  // Лицьова та бокові лінії поля
+  const cFL=proj(-11.8,0,-4.5),cBL=proj(-11.8,0,10.5),cBR=proj(11.8,0,10.5),cFR=proj(11.8,0,-4.5);
+  ctx.beginPath();ctx.moveTo(cFL.x,cFL.y);ctx.lineTo(cBL.x,cBL.y);ctx.lineTo(cBR.x,cBR.y);ctx.lineTo(cFR.x,cFR.y);ctx.stroke();
+
+  // Кутові прапорці
+  [-11.8,11.8].forEach(cx=>{
+    const fBot=proj(cx,0,10.5),fTop=proj(cx,1.1,10.5);
+    ctx.strokeStyle='#ffffff';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(fBot.x,fBot.y);ctx.lineTo(fTop.x,fTop.y);ctx.stroke();
+    ctx.fillStyle='#ff4757';
+    ctx.beginPath();ctx.moveTo(fTop.x,fTop.y);ctx.lineTo(fTop.x+10,fTop.y+3);ctx.lineTo(fTop.x,fTop.y+7);ctx.closePath();ctx.fill();
+  });
+
+  // Точка пенальті
   const spot=proj(0,0,0);
-  ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(spot.x,spot.y,0.22*spot.s,0.11*spot.s,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(spot.x,spot.y,0.24*spot.s,0.12*spot.s,0,0,Math.PI*2);ctx.fill();
 
-  const gw=3.65,gh=2.44,gz=10.5,gd=1.5;
+  // 6. ВЕЛИКІ 3D ВОРОТА ТА СІТКА (ширина 9.2м, висота 3.05м)
+  const gw=4.6,gh=3.05,gz=10.5,gd=1.8;
   const gFL2=proj(-gw,0,gz),gTL=proj(-gw,gh,gz),gTR=proj(gw,gh,gz),gFR2=proj(gw,0,gz);
-  const gBL2=proj(-gw,0,gz+gd),gBTL=proj(-gw,gh*0.85,gz+gd),gBTR=proj(gw,gh*0.85,gz+gd),gBR2=proj(gw,0,gz+gd);
+  const gBL2=proj(-gw,0,gz+gd),gBTL=proj(-gw,gh*0.86,gz+gd),gBTR=proj(gw,gh*0.86,gz+gd),gBR2=proj(gw,0,gz+gd);
 
-  ctx.strokeStyle='rgba(255,255,255,0.35)';ctx.lineWidth=1;
-  for(let i=0;i<=12;i++){
-    const t=i/12,t1=proj(-gw+gw*2*t,gh,gz),t2=proj(-gw+gw*2*t,gh*0.85,gz+gd),b2=proj(-gw+gw*2*t,0,gz+gd);
+  // Тінь від воріт на газоні
+  ctx.fillStyle='rgba(0,0,0,0.22)';
+  ctx.beginPath();
+  ctx.moveTo(gFL2.x,gFL2.y);ctx.lineTo(gBL2.x,gBL2.y);ctx.lineTo(gBR2.x,gBR2.y);ctx.lineTo(gFR2.x,gFR2.y);
+  ctx.closePath();ctx.fill();
+
+  // Сітка воріт (вертикальні, горизонтальні та бокові комірки)
+  ctx.strokeStyle='rgba(255,255,255,0.38)';ctx.lineWidth=1;
+  for(let i=0;i<=16;i++){
+    const t=i/16,t1=proj(-gw+gw*2*t,gh,gz),t2=proj(-gw+gw*2*t,gh*0.86,gz+gd),b2=proj(-gw+gw*2*t,0,gz+gd);
     ctx.beginPath();ctx.moveTo(t1.x,t1.y);ctx.lineTo(t2.x,t2.y);ctx.lineTo(b2.x,b2.y);ctx.stroke();
   }
-  for(let h=1;h<=4;h++){
-    const hy=gh*(h/5),l1=proj(-gw,hy,gz),l2=proj(-gw,hy*0.85,gz+gd),r2=proj(gw,hy*0.85,gz+gd),r1=proj(gw,hy,gz);
+  for(let h=1;h<=5;h++){
+    const hy=gh*(h/6),l1=proj(-gw,hy,gz),l2=proj(-gw,hy*0.86,gz+gd),r2=proj(gw,hy*0.86,gz+gd),r1=proj(gw,hy,gz);
     ctx.beginPath();ctx.moveTo(l1.x,l1.y);ctx.lineTo(l2.x,l2.y);ctx.lineTo(r2.x,r2.y);ctx.lineTo(r1.x,r1.y);ctx.stroke();
   }
-  ctx.strokeStyle='#ffffff';ctx.lineWidth=5;ctx.lineJoin='round';
+  // Задні опори сітки
+  ctx.strokeStyle='rgba(255,255,255,0.55)';ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(gTL.x,gTL.y);ctx.lineTo(gBTL.x,gBTL.y);ctx.lineTo(gBL2.x,gBL2.y);
+  ctx.moveTo(gTR.x,gTR.y);ctx.lineTo(gBTR.x,gBTR.y);ctx.lineTo(gBR2.x,gBR2.y);
+  ctx.stroke();
+
+  // Масивні білі штанги та поперечина
+  ctx.strokeStyle='#ffffff';ctx.lineWidth=6.5;ctx.lineJoin='round';
   ctx.beginPath();ctx.moveTo(gFL2.x,gFL2.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gFR2.x,gFR2.y);ctx.stroke();
 
+  // 7. Воротар
   gk.x+=(gk.tx-gk.x)*0.18;gk.y+=(gk.ty-gk.y)*0.18;gk.dive+=(gk.tdive-gk.dive)*0.18;
   const gp=proj(gk.x,gk.y,gz-0.1),gSh=proj(gk.x,0,gz-0.1);
   ctx.fillStyle='rgba(0,0,0,0.42)';
-  ctx.beginPath();ctx.ellipse(gSh.x,gSh.y,0.5*gSh.s,0.2*gSh.s,0,0,Math.PI*2);ctx.fill();
-  drawRealisticPlayer(gp.x,gp.y,gp.s*0.036,'#ff6b00','#1e272e','#ff6b00',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false);
+  ctx.beginPath();ctx.ellipse(gSh.x,gSh.y,0.55*gSh.s,0.22*gSh.s,0,0,Math.PI*2);ctx.fill();
+  drawRealisticPlayer(gp.x,gp.y,gp.s*0.041,'#ff6b00','#1e272e','#ff6b00',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false);
 
+  // 8. Політ м'яча та тінь
   if(ball.active&&ball.t<1){
     ball.t=Math.min(1,ball.t+0.048);
     const ease=1-Math.pow(1-ball.t,2);
     const curveX=Math.sin(ball.t*Math.PI)*(ball.tx*0.18);
-    const arcY=Math.sin(ball.t*Math.PI)*0.85;
+    const arcY=Math.sin(ball.t*Math.PI)*0.95;
     ball.x=ball.sx+(ball.tx-ball.sx)*ease+curveX;
     ball.y=ball.sy+(ball.ty-ball.sy)*ease+arcY;
     ball.z=ball.sz+(ball.tz-ball.sz)*ease;
@@ -567,13 +681,14 @@ function draw3D(){
 
   const bSh=proj(ball.x,0,ball.z);
   ctx.fillStyle='rgba(0,0,0,0.45)';
-  ctx.beginPath();ctx.ellipse(bSh.x,bSh.y,0.24*bSh.s,0.11*bSh.s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(bSh.x,bSh.y,0.25*bSh.s,0.12*bSh.s,0,0,Math.PI*2);ctx.fill();
 
-  const bp=proj(ball.x,ball.y,ball.z),rad=Math.max(4,0.22*bp.s),bCol=getItem(p.eb).col;
+  const bp=proj(ball.x,ball.y,ball.z),rad=Math.max(4,0.24*bp.s),bCol=getItem(p.eb).col;
   const bGrad=ctx.createRadialGradient(bp.x-rad*0.3,bp.y-rad*0.3,rad*0.1,bp.x,bp.y,rad);
   bGrad.addColorStop(0,'#ffffff');bGrad.addColorStop(0.55,bCol);bGrad.addColorStop(1,'#1e272e');
   ctx.fillStyle=bGrad;ctx.beginPath();ctx.arc(bp.x,bp.y,rad,0,Math.PI*2);ctx.fill();
 
+  // 9. Нападник
   if(kicker.running){
     kicker.run=Math.min(1,kicker.run+0.08);
     kicker.x=kicker.sx+(kicker.tx-kicker.sx)*kicker.run;
@@ -581,9 +696,9 @@ function draw3D(){
   }
   const kp=proj(kicker.x,0,kicker.z);
   ctx.fillStyle='rgba(0,0,0,0.42)';
-  ctx.beginPath();ctx.ellipse(kp.x,kp.y,0.5*kp.s,0.2*kp.s,0,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.ellipse(kp.x,kp.y,0.55*kp.s,0.22*kp.s,0,0,Math.PI*2);ctx.fill();
   const kJersey=(ph==='sh')?'#1dd1a1':'#ff4757';
-  drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kJersey,'#ffffff',kJersey,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true);
+  drawRealisticPlayer(kp.x,kp.y,kp.s*0.038,kJersey,'#ffffff',kJersey,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true);
 
   requestAnimationFrame(draw3D);
 }
