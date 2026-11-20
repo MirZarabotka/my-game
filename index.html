@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>3D Penalty Cup</title>
 <script src="https://telegram.org"></script>
-<script src="https://cloudflare.com"></script>
+<script src="https://unpkg.com"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
@@ -125,7 +125,7 @@ const ballMat=new THREE.MeshPhongMaterial({color:0xffffff,shininess:80});
 const ball=new THREE.Mesh(new THREE.SphereGeometry(0.34,20,20),ballMat);
 ball.position.set(0,0.34,4.5);scene.add(ball);
 let bStart={x:0,y:0.34,z:4.5},bEnd={x:0,y:0.34,z:4.5},kTargetX=0,kTargetRot=0,animT=1;
-function rsz3D(){const r=ar.getBoundingClientRect();cam.aspect=r.width/r.height;cam.updateProjectionMatrix();ren.setSize(r.width,r.height)}
+function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){cam.aspect=r.width/r.height;cam.updateProjectionMatrix();ren.setSize(r.width,r.height)}}
 window.addEventListener('resize',rsz3D);
 
 function renderLoop(t){
@@ -148,7 +148,7 @@ function renderLoop(t){
   }
 }
 
-const nx=()=>p.lv*100,getIt=id=>SHOP.find(x=>x.id===id)||SHOP.at(0);
+const nx=()=>p.lv*100,getIt=id=>SHOP.find(x=>x.id===id)||SHOP[0];
 const dots=a=>Array.from({length:Math.max(5,a.length)},(_,i)=>a[i]===1?'🟢':a[i]===0?'🔴':'⚪').join('');
 function addP(v){p.pt+=v;p.cn+=v;while(p.pt>=nx()){p.pt-=nx();p.lv++}}
 function tab(n){gScr.style.display=n===1?'flex':'none';sScr.style.display=n===2?'grid':'none';t1.classList.toggle('act',n===1);t2.classList.toggle('act',n===2);if(n===1)rsz3D();else rShop()}
@@ -164,26 +164,26 @@ function buy(id,t,pr){if(p.cn>=pr){p.cn-=pr;p.ow.push(id);eq(id,t)}}
 function eq(id,t){if(t==='b')p.eb=id;else p.ek=id;ui();rShop()}
 function ui(){
   lv.innerText=p.lv;cp.innerText=p.cp;cn.innerText=p.cn;pt.innerText=p.pt;nx.innerText=nx();xb.style.width=Math.min(100,p.pt/nx()*100)+'%';
-  const cur=ST.at(p.st)||ST.at(0);op.innerText=cur.n+': '+cur.o;
+  const cur=ST[p.st]||ST[0];op.innerText=cur.n+': '+cur.o;
   sb.querySelectorAll('span').forEach((s,i)=>s.className=i<p.st?'done':i===p.st?'act':'');
   ps.innerText=pS.filter(x=>x).length;bs.innerText=bS.filter(x=>x).length;pd.innerText=dots(pS);bd.innerText=dots(bS);
   ballMat.color.setHex(getIt(p.eb).col);gloveMat.color.setHex(getIt(p.ek).col);
   try{localStorage.setItem('pc_3d',JSON.stringify(p))}catch(e){}
-  if(ph==='win')return ct.innerHTML=`<button class="btn full" style="background:#1dd1a1;color:#000" onclick="rst()">➡️ Далі: ${ST.at(p.st).n}</button>`;
+  if(ph==='win')return ct.innerHTML=`<button class="btn full" style="background:#1dd1a1;color:#000" onclick="rst()">➡️ Далі: ${ST[p.st].n}</button>`;
   if(ph==='cup')return ct.innerHTML=`<button class="btn full" style="background:#feca57;color:#000" onclick="rst()">🏆 Новий кубок (з 1/32)</button>`;
   if(ph==='los')return ct.innerHTML=`<button class="btn full" style="background:#ff6b6b" onclick="rst()">🔄 Виліт! Почати з 1/32</button>`;
   const s=ph==='sh',c=s?'#ff9f43':'#54a0ff',t=s?['⬅️ Вліво','⬆️ Центр','➡️ Вправо']:['🧤 Вліво','🧤 Центр','🧤 Вправо'];
-  ct.innerHTML=Array.from({length:3},(_,i)=>`<button class="btn" style="border-color:${c}" onclick="go(${i})" ${bz?'disabled':''}>${t.at(i)}</button>`).join('');
+  ct.innerHTML=Array.from({length:3},(_,i)=>`<button class="btn" style="border-color:${c}" onclick="go(${i})" ${bz?'disabled':''}>${t[i]}</button>`).join('');
 }
 function kick3D(bIdx,kIdx){
   const xs=[-2.2,0,2.2],rots=[0.65,0,-0.65];
-  bStart={x:0,y:0.34,z:4.5};bEnd={x:xs.at(bIdx),y:1.25,z:-5.2};
-  kTargetX=xs.at(kIdx);kTargetRot=rots.at(kIdx);animT=0;
+  bStart={x:0,y:0.34,z:4.5};bEnd={x:xs[bIdx],y:1.25,z:-5.2};
+  kTargetX=xs[kIdx];kTargetRot=rots[kIdx];animT=0;
 }
 function rstPos(){ball.position.set(0,0.34,4.5);kTargetX=0;kTargetRot=0;animT=1}
 function chk(){
   if(pS.length>=5&&pS.length===bS.length){
-    const pg=pS.filter(x=>x).length,bg=bS.filter(x=>x).length,cur=ST.at(p.st);
+    const pg=pS.filter(x=>x).length,bg=bS.filter(x=>x).length,cur=ST[p.st];
     if(pg>bg){addP(cur.r);if(p.st>=5){p.cp++;p.st=0;ph='cup';ms.innerText=`🏆 ЧЕМПІОН 3D! +${cur.r} 💰`}else{p.st++;ph='win';ms.innerText=`✅ Перемога ${pg}:${bg}! +${cur.r} 💰`}return 1}
     if(bg>pg){addP(5);p.st=0;ph='los';ms.innerText=`❌ Виліт у ${cur.n} (${pg}:${bg})`;return 1}
     ms.innerText=`🔥 Нічия ${pg}:${bg}! До промаху!`;
@@ -202,7 +202,7 @@ function go(c){
   }
 }
 function rst(){ph='sh';pS=[];bS=[];bz=0;rstPos();ms.innerText='⚽ Твій удар! Вибери кут';ui()}
-rsz3D();ui();requestAnimationFrame(renderLoop);
+setTimeout(()=>{rsz3D();ui();requestAnimationFrame(renderLoop)},100);
 </script>
 </body>
 </html>
