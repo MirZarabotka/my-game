@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Berry Tycoon</title>
 <script src="https://telegram.org"></script>
-<script src="https://jsdelivr.net"></script>
 <style>
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; padding: 16px; display: flex; flex-direction: column; min-height: 100vh; user-select: none; touch-action: manipulation; }
@@ -34,8 +33,8 @@ body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; pad
 <body>
 
 <div class="tabs">
-  <button type="button" class="tab-btn active" id="tabGame" onclick="switchTab('game')">🍓 Гра</button>
-  <button type="button" class="tab-btn" id="tabTop" onclick="switchTab('top')">🏆 Турнірна таблиця</button>
+  <button type="button" class="tab-btn active" id="tabGame">🍓 Гра</button>
+  <button type="button" class="tab-btn" id="tabTop">🏆 Турнірна таблиця</button>
 </div>
 
 <div id="screenGame">
@@ -86,41 +85,30 @@ body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; pad
 <div id="screenTop" style="display:none;">
   <div class="row" style="margin-bottom:10px;">
     <b style="font-size:16px;">Топ-20 збирачів малини</b>
-    <button type="button" class="btn" style="padding:6px 10px; min-width:auto;" onclick="loadLeaderboard()">🔄 Оновити</button>
+    <button type="button" class="btn" id="btnRefresh" style="padding:6px 10px; min-width:auto;">🔄 Оновити</button>
   </div>
-  <div id="leaderList" style="font-size:14px; color:#8a8f9e;">Завантаження рейтингу...</div>
+  <div id="leaderList" style="font-size:14px; color:#8a8f9e;">Завантаження...</div>
 </div>
 
 <script>
-const SUPABASE_URL = 'https://dgonmimcllbmqqibowft.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_G9DDEnZ6nMeipKo958XR4w_nez-byXE';
-
-let db = null;
-try {
-  if (window.supabase) {
-    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  }
-} catch (e) {}
+const SB_URL = 'https://supabase.co';
+const SB_KEY = 'sb_publishable_G9DDEnZ6nMeipKo958XR4w_nez-byXE';
 
 let userId = 'guest_' + (localStorage.getItem('guest_id') || Math.floor(Math.random() * 1000000));
 localStorage.setItem('guest_id', userId.replace('guest_', ''));
 let userName = 'Гравець';
 
-if (window.Telegram && window.Telegram.WebApp) {
-  window.Telegram.WebApp.ready();
-  window.Telegram.WebApp.expand();
-  if (window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
-    const u = window.Telegram.WebApp.initDataUnsafe.user;
-    userId = String(u.id);
-    userName = u.first_name || u.username || 'Гравець';
+try {
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
+    const u = window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user;
+    if (u) { userId = String(u.id); userName = u.first_name || u.username || 'Гравець'; }
   }
-}
+} catch (e) {}
 
 let s = { bal: 0, xp: 0, lvl: 1, tLvl: 1, aLvl: 0, eLvl: 1, en: 100 };
-try {
-  const saved = JSON.parse(localStorage.getItem('tycoon_save'));
-  if (saved) s = Object.assign(s, saved);
-} catch (e) {}
+try { const saved = JSON.parse(localStorage.getItem('tycoon_save')); if (saved) s = Object.assign(s, saved); } catch (e) {}
 
 function getRank() {
   if (s.lvl >= 15) return { n: '🌌 Ягідний Імператор', e: '👑', m: 5.0 };
@@ -140,11 +128,7 @@ function costEn() { return Math.floor(40 * Math.pow(1.5, s.eLvl - 1)); }
 
 function addXp(v) {
   s.xp += v;
-  while (s.xp >= nextXp()) {
-    s.xp -= nextXp();
-    s.lvl++;
-    s.en = maxEn();
-  }
+  while (s.xp >= nextXp()) { s.xp -= nextXp(); s.lvl++; s.en = maxEn(); }
 }
 
 function render() {
@@ -166,17 +150,9 @@ function render() {
   document.getElementById('aLvl').innerText = s.aLvl;
   document.getElementById('eLvl').innerText = s.eLvl;
 
-  const bt = document.getElementById('bTap');
-  bt.innerText = costTap() + ' 💎';
-  bt.disabled = s.bal < costTap();
-
-  const ba = document.getElementById('bAuto');
-  ba.innerText = costAuto() + ' 💎';
-  ba.disabled = s.bal < costAuto();
-
-  const be = document.getElementById('bEn');
-  be.innerText = costEn() + ' 💎';
-  be.disabled = s.bal < costEn();
+  const bt = document.getElementById('bTap'); bt.innerText = costTap() + ' 💎'; bt.disabled = s.bal < costTap();
+  const ba = document.getElementById('bAuto'); ba.innerText = costAuto() + ' 💎'; ba.disabled = s.bal < costAuto();
+  const be = document.getElementById('bEn'); be.innerText = costEn() + ' 💎'; be.disabled = s.bal < costEn();
 
   try { localStorage.setItem('tycoon_save', JSON.stringify(s)); } catch (e) {}
 }
@@ -187,7 +163,6 @@ document.getElementById('mainBtn').onclick = function() {
   const gain = tapPower();
   s.bal += gain;
   addXp(2);
-
   const z = document.getElementById('zone');
   const el = document.createElement('div');
   el.className = 'float';
@@ -196,17 +171,17 @@ document.getElementById('mainBtn').onclick = function() {
   el.style.top = '20%';
   z.appendChild(el);
   setTimeout(() => el.remove(), 600);
-
   render();
 };
 
-document.getElementById('bTap').onclick = function() {
-  if (s.bal >= costTap()) { s.bal -= costTap(); s.tLvl++; addXp(15); render(); syncScore(); }
-};
-document.getElementById('bAuto').onclick = function() {
-  if (s.bal >= costAuto()) { s.bal -= costAuto(); s.aLvl++; addXp(15); render(); syncScore(); }
-};
-document.getElementById('bEn').onclick = function() {
-  if (s.bal >= costEn()) { s.bal -= costEn(); s.eLvl++; s.en = maxEn(); addXp(15); render(); syncScore(); }
+document.getElementById('bTap').onclick = function() { if (s.bal >= costTap()) { s.bal -= costTap(); s.tLvl++; addXp(15); render(); syncScore(); } };
+document.getElementById('bAuto').onclick = function() { if (s.bal >= costAuto()) { s.bal -= costAuto(); s.aLvl++; addXp(15); render(); syncScore(); } };
+document.getElementById('bEn').onclick = function() { if (s.bal >= costEn()) { s.bal -= costEn(); s.eLvl++; s.en = maxEn(); addXp(15); render(); syncScore(); } };
+
+document.getElementById('tabGame').onclick = function() {
+  document.getElementById('screenGame').style.display = 'block';
+  document.getElementById('screenTop').style.display = 'none';
+  document.getElementById('tabGame').classList.add('active');
+  document.getElementById('tabTop').classList.remove('active');
 };
 
