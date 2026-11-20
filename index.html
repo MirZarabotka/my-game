@@ -56,11 +56,12 @@ body{font-family:sans-serif;background:#0f1015;color:#fff;margin:0;padding:14px;
   <div id="ll" style="color:#8a8f9e">Завантаження...</div>
 </div>
 <script>
-const U='https://supabase.co';
+const U = 'https://supabase.co';
+const K = 'sb_publishable_G9DDEnZ6nMeipKo958XR4w_nez-byXE';
 let uid='g_'+Math.floor(Math.random()*999999),un='Гравець';
 try{const tg=window.Telegram.WebApp;tg.ready();tg.expand();const u=tg.initDataUnsafe.user;if(u){uid=String(u.id);un=u.first_name||'Гравець'}}catch(e){}
 let s={b:0,x:0,l:1,t:1,a:0,e:1,n:100};
-try{const v=JSON.parse(localStorage.getItem('b7'));if(v)s=Object.assign(s,v)}catch(e){}
+try{const v=JSON.parse(localStorage.getItem('b8'));if(v)s=Object.assign(s,v)}catch(e){}
 function rk(){
   if(s.l>=15)return{n:'🌌 Імператор',e:'👑',m:5};
   if(s.l>=10)return{n:'💎 Магнат',e:'🍓',m:3.5};
@@ -76,7 +77,7 @@ function ui(){
   xb.style.width=Math.min(100,s.x/nx()*100)+'%';bl.innerText=Math.floor(s.b);ai.innerText=ap();ti.innerText=tp();en.innerText=Math.floor(s.n);
   me.innerText=me();eb.style.width=(s.n/me()*100)+'%';tl.innerText=s.t;al.innerText=s.a;el.innerText=s.e;
   bt.innerText=c1()+' 💎';bt.disabled=s.b<c1();ba.innerText=c2()+' 💎';ba.disabled=s.b<c2();be.innerText=c3()+' 💎';be.disabled=s.b<c3();
-  try{localStorage.setItem('b7',JSON.stringify(s))}catch(e){}
+  try{localStorage.setItem('b8',JSON.stringify(s))}catch(e){}
 }
 function hit(){
   if(s.n<1)return;s.n--;const g=tp();s.b+=g;ax(2);
