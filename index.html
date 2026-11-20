@@ -27,6 +27,7 @@ body{font-family:sans-serif;background:#0f1015;color:#fff;margin:0;padding:14px;
 .flt{position:absolute;font-size:22px;font-weight:bold;color:#ffd32a;pointer-events:none;animation:up .6s forwards}
 @keyframes up{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-45px)}}
 .lrow{display:flex;justify-content:space-between;padding:10px;background:#181a22;border:1px solid #2a2d3a;border-radius:10px;margin-bottom:6px}
+.lrow.me{border-color:#ffd32a;background:rgba(255,211,42,.08)}
 </style>
 </head>
 <body>
@@ -56,12 +57,13 @@ body{font-family:sans-serif;background:#0f1015;color:#fff;margin:0;padding:14px;
   <div id="ll" style="color:#8a8f9e">Завантаження...</div>
 </div>
 <script>
-const U = 'https://supabase.co';
-const K = 'sb_publishable_G9DDEnZ6nMeipKo958XR4w_nez-byXE';
-let uid='g_'+Math.floor(Math.random()*999999),un='Гравець';
-try{const tg=window.Telegram.WebApp;tg.ready();tg.expand();const u=tg.initDataUnsafe.user;if(u){uid=String(u.id);un=u.first_name||'Гравець'}}catch(e){}
+const DB = 'https://firebasedatabase.app';
+let uid='g_'+(localStorage.getItem('fb_uid')||Math.floor(Math.random()*999999));
+localStorage.setItem('fb_uid',uid.replace('g_',''));
+let un='Гравець';
+try{const tg=window.Telegram.WebApp;tg.ready();tg.expand();const u=tg.initDataUnsafe.user;if(u){uid='u_'+u.id;un=u.first_name||'Гравець'}}catch(e){}
 let s={b:0,x:0,l:1,t:1,a:0,e:1,n:100};
-try{const v=JSON.parse(localStorage.getItem('b9'));if(v)s=Object.assign(s,v)}catch(e){}
+try{const v=JSON.parse(localStorage.getItem('b11'));if(v)s=Object.assign(s,v)}catch(e){}
 function rk(){
   if(s.l>=15)return{n:'🌌 Імператор',e:'👑',m:5};
   if(s.l>=10)return{n:'💎 Магнат',e:'🍓',m:3.5};
@@ -77,7 +79,7 @@ function ui(){
   xb.style.width=Math.min(100,s.x/nx()*100)+'%';bl.innerText=Math.floor(s.b);ai.innerText=ap();ti.innerText=tp();en.innerText=Math.floor(s.n);
   me.innerText=me();eb.style.width=(s.n/me()*100)+'%';tl.innerText=s.t;al.innerText=s.a;el.innerText=s.e;
   bt.innerText=c1()+' 💎';bt.disabled=s.b<c1();ba.innerText=c2()+' 💎';ba.disabled=s.b<c2();be.innerText=c3()+' 💎';be.disabled=s.b<c3();
-  try{localStorage.setItem('b9',JSON.stringify(s))}catch(e){}
+  try{localStorage.setItem('b11',JSON.stringify(s))}catch(e){}
 }
 function hit(){
   if(s.n<1)return;s.n--;const g=tp();s.b+=g;ax(2);
@@ -91,15 +93,20 @@ function buy(i){
   ui();sync();
 }
 function tab(i){g.style.display=i===1?'block':'none';t.style.display=i===2?'block':'none';t1.classList.toggle('active',i===1);t2.classList.toggle('active',i===2);if(i===2)sync().then(topLoad)}
-async function sync(){try{await fetch(U,{method:'POST',headers:{apikey:K,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:uid,name:un,score:Math.floor(s.b),level:s.l})})}catch(e){}}
+async function sync(){
+  try{await fetch(DB+'players/'+uid+'.json',{method:'PUT',body:JSON.stringify({id:uid,name:un,score:Math.floor(s.b),level:s.l})})}catch(e){}
+}
 async function topLoad(){
   ll.innerText='Оновлення...';
   try{
-    const r=await fetch(U+'?select=*&order=score.desc&limit=20',{headers:{apikey:K}});
-    if(!r.ok){ll.innerText='Помилка '+r.status+': '+await r.text();return}
-    const d=await r.json();ll.innerHTML=d.length?'':'Поки порожньо!';
-    d.forEach((p,i)=>ll.innerHTML+=`<div class="lrow"><b>${i<3?['🥇','🥈','🥉'][i]:'#'+(i+1)} ${p.name} (Lvl ${p.level})</b><b style="color:#ffd32a">${p.score} 💎</b></div>`);
-  }catch(e){ll.innerText='Помилка мережі: '+e.message}
+    const r=await fetch(DB+'players.json');
+    const obj=await r.json();
+    if(!obj){ll.innerHTML='Поки порожньо!';return}
+    if(obj.error){ll.innerText='Помилка доступу: '+obj.error;return}
+    const d=Object.values(obj).sort((a,b)=>b.score-a.score).slice(0,20);
+    ll.innerHTML='';
+    d.forEach((p,i)=>ll.innerHTML+=`<div class="lrow${p.id===uid?' me':''}"><b>${i<3?['🥇','🥈','🥉'][i]:'#'+(i+1)} ${p.name} (Lvl ${p.level})</b><b style="color:#ffd32a">${p.score} 💎</b></div>`);
+  }catch(e){ll.innerText='Помилка: '+e.message}
 }
 let k=0;setInterval(()=>{if(ap()>0){s.b+=ap();ax(1)}if(s.n<me())s.n=Math.min(me(),s.n+1+Math.floor(s.e/2));ui();if(++k%10===0)sync()},1000);
 ui();sync();
