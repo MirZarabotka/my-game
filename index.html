@@ -96,7 +96,7 @@ function changeName() {
 }
 
 let s = {b:0, x:0, l:1, t:1, a:0, e:1, n:100};
-try { const v = JSON.parse(localStorage.getItem('b16')); if (v) s = Object.assign(s, v); } catch(e) {}
+try { const v = JSON.parse(localStorage.getItem('b17')); if (v) s = Object.assign(s, v); } catch(e) {}
 
 function rk() {
   if(s.l>=15) return {n:'🌌 Імператор', e:'👑', m:5};
@@ -118,7 +118,7 @@ function ui() {
   bt.innerText = c1() + ' 💎'; bt.disabled = s.b < c1();
   ba.innerText = c2() + ' 💎'; ba.disabled = s.b < c2();
   be.innerText = c3() + ' 💎'; be.disabled = s.b < c3();
-  try { localStorage.setItem('b16', JSON.stringify(s)); } catch(e) {}
+  try { localStorage.setItem('b17', JSON.stringify(s)); } catch(e) {}
 }
 
 function hit() {
@@ -131,7 +131,7 @@ function buy(i) {
   if(i===1 && s.b>=c1()) { s.b-=c1(); s.t++; ax(15); }
   if(i===2 && s.b>=c2()) { s.b-=c2(); s.a++; ax(15); }
   if(i===3 && s.b>=c3()) { s.b-=c3(); s.e++; s.n=me(); ax(15); }
-  ui(); syncAndLoad();
+  ui();
 }
 
 function tab(i) {
@@ -145,34 +145,29 @@ function tab(i) {
 async function syncAndLoad() {
   ll.innerText = 'Оновлення рейтингу...';
   try {
-    const myEntry = {};
-    myEntry[uid] = { id: uid, name: un, score: Math.floor(s.b), level: s.l };
-
-    // PUT оновлює тільки ключ поточного гравця і повертає весь список
-    const putRes = await fetch(API, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(myEntry)
-    });
-
     let data = {};
-    if (putRes.ok) {
-      data = await putRes.json();
-    } else {
-      const getRes = await fetch(API + '?t=' + Date.now());
-      if (getRes.ok) data = await getRes.json();
+    const getRes = await fetch(API);
+    if (getRes.ok) {
+      const txt = await getRes.text();
+      if (txt.trim().startsWith('{')) data = JSON.parse(txt);
     }
 
-    const list = Object.values(data).filter(p => p && p.name).sort((a,b) => b.score - a.score).slice(0, 30);
-    if (!list.length) { ll.innerText = 'Поки порожньо!'; return; }
+    data[uid] = { id: uid, name: un, score: Math.floor(s.b), level: s.l };
 
+    await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const list = Object.values(data).filter(p => p && p.name).sort((a,b) => b.score - a.score).slice(0, 30);
     ll.innerHTML = '';
     list.forEach((p, i) => {
       const medal = i < 3 ? ['🥇','🥈','🥉'][i] : '#' + (i+1);
       ll.innerHTML += `<div class="lrow${p.id===uid?' me':''}"><b>${medal} ${p.name} (Lvl ${p.level})</b><b style="color:#ffd32a">${Number(p.score).toLocaleString()} 💎</b></div>`;
     });
   } catch(e) {
-    ll.innerText = 'Помилка з’єднання: ' + e.message;
+    ll.innerText = 'Зачекайте 3 секунди і натисніть 🔄 ще раз';
   }
 }
 
