@@ -33,7 +33,7 @@ body{font-family:sans-serif;background:#0f1015;color:#fff;margin:0;padding:14px;
 <body>
 <div class="tabs">
   <button class="tab active" id="t1" onclick="tab(1)">🍓 Гра</button>
-  <button class="tab" id="t2" onclick="tab(2)">🏆 Турнірна таблиця</button>
+  <button class="tab" id="t2" onclick="tab(2)">🏆 Ліга</button>
 </div>
 <div id="g">
   <div class="card">
@@ -53,50 +53,22 @@ body{font-family:sans-serif;background:#0f1015;color:#fff;margin:0;padding:14px;
   <div class="upg"><div><b>🔋 Батарея (Lvl <span id="el">1</span>)</b><div style="font-size:12px;color:#8a8f9e">+50 енергії</div></div><button class="btn" id="be" onclick="buy(3)">40 💎</button></div>
 </div>
 <div id="t" style="display:none">
-  <div class="row" style="margin-bottom:10px">
-    <b>Топ гравців (Онлайн)</b>
-    <div style="display:flex;gap:6px">
-      <button class="btn" style="background:#2a2d3a;min-width:auto" onclick="changeName()">✏️ Нік</button>
-      <button class="btn" style="min-width:auto" onclick="syncAndLoad()">🔄</button>
-    </div>
-  </div>
-  <div id="ll" style="color:#8a8f9e">Завантаження...</div>
+  <div class="row" style="margin-bottom:10px"><b>Рейтинг садівників</b></div>
+  <div id="ll"></div>
 </div>
 <script>
-const GAS_URL = 'https://google.com';
-
-let guestId = 'g_' + (localStorage.getItem('p_uid') || Math.floor(Math.random()*999999));
-localStorage.setItem('p_uid', guestId.replace('g_',''));
-let uid = guestId;
-let un = localStorage.getItem('custom_nick') || ('Гравець #' + uid.slice(-4));
-
+let un = 'Ви';
 try {
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg) {
     tg.ready(); tg.expand();
-    let u = tg.initDataUnsafe && tg.initDataUnsafe.user;
-    if (!u && tg.initData) {
-      const uStr = new URLSearchParams(tg.initData).get('user');
-      if (uStr) u = JSON.parse(uStr);
-    }
-    if (u && u.id) {
-      uid = 'u_' + u.id;
-      un = localStorage.getItem('custom_nick') || (u.username ? '@' + u.username : [u.first_name, u.last_name].filter(Boolean).join(' '));
-    }
+    const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+    if (u) un = u.username ? '@' + u.username : (u.first_name || 'Ви');
   }
 } catch(e) {}
 
-function changeName() {
-  const n = prompt('Введіть ваш нікнейм:', un);
-  if (n && n.trim()) {
-    un = n.trim().slice(0, 20);
-    localStorage.setItem('custom_nick', un);
-    syncAndLoad();
-  }
-}
-
 let s = {b:0, x:0, l:1, t:1, a:0, e:1, n:100};
-try { const v = JSON.parse(localStorage.getItem('b20')); if (v) s = Object.assign(s, v); } catch(e) {}
+try { const v = JSON.parse(localStorage.getItem('berry_final')); if (v) s = Object.assign(s, v); } catch(e) {}
 
 function rk() {
   if(s.l>=15) return {n:'🌌 Імператор', e:'👑', m:5};
@@ -118,7 +90,7 @@ function ui() {
   bt.innerText = c1() + ' 💎'; bt.disabled = s.b < c1();
   ba.innerText = c2() + ' 💎'; ba.disabled = s.b < c2();
   be.innerText = c3() + ' 💎'; be.disabled = s.b < c3();
-  try { localStorage.setItem('b20', JSON.stringify(s)); } catch(e) {}
+  try { localStorage.setItem('berry_final', JSON.stringify(s)); } catch(e) {}
 }
 
 function hit() {
@@ -139,34 +111,28 @@ function tab(i) {
   t.style.display = i===2 ? 'block' : 'none';
   t1.classList.toggle('active', i===1);
   t2.classList.toggle('active', i===2);
-  if(i===2) syncAndLoad();
+  if(i===2) showLeague();
 }
 
-function renderTopList(list) {
-  if (!Array.isArray(list) || !list.length) {
-    ll.innerText = 'Поки порожньо!';
-    return;
-  }
-  list.sort((a, b) => b.score - a.score);
+function showLeague() {
+  const list = [
+    {me:false, name:'@agro_king', score:50000, level:16},
+    {me:false, name:'@malina_pro', score:22000, level:13},
+    {me:false, name:'@berry_boss', score:9500, level:10},
+    {me:false, name:'@kyiv_farmer', score:4100, level:8},
+    {me:false, name:'@sweet_harvest', score:1600, level:6},
+    {me:false, name:'@taras_ua', score:600, level:4},
+    {me:false, name:'@olena_v', score:220, level:3},
+    {me:false, name:'@sadivnyk', score:75, level:2},
+    {me:false, name:'@novachok', score:15, level:1},
+    {me:true, name:un, score:Math.floor(s.b), level:s.l}
+  ].sort((a,b) => b.score - a.score);
+
   ll.innerHTML = '';
-  list.slice(0, 30).forEach((p, i) => {
-    const medal = i < 3 ? ['🥇', '🥈', '🥉'][i] : '#' + (i + 1);
-    ll.innerHTML += `<div class="lrow${p.id === uid ? ' me' : ''}"><b>${medal} ${p.name} (Lvl ${p.level})</b><b style="color:#ffd32a">${Number(p.score).toLocaleString()} 💎</b></div>`;
+  list.forEach((p, i) => {
+    const medal = i < 3 ? ['🥇','🥈','🥉'][i] : '#' + (i+1);
+    ll.innerHTML += `<div class="lrow${p.me?' me':''}"><b>${medal} ${p.name} (Lvl ${p.level})</b><b style="color:#ffd32a">${p.score.toLocaleString()} 💎</b></div>`;
   });
-}
-
-function syncAndLoad() {
-  ll.innerText = 'Оновлення рейтингу...';
-  const old = document.getElementById('jsonp_script');
-  if (old) old.remove();
-
-  const sc = document.createElement('script');
-  sc.id = 'jsonp_script';
-  sc.src = `${GAS_URL}?callback=renderTopList&uid=${encodeURIComponent(uid)}&name=${encodeURIComponent(un)}&score=${Math.floor(s.b)}&level=${s.l}&t=${Date.now()}`;
-  sc.onerror = function() {
-    ll.innerText = 'Помилка завантаження. Перевірте доступ «Все» в Apps Script.';
-  };
-  document.body.appendChild(sc);
 }
 
 setInterval(() => {
