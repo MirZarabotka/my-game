@@ -20,6 +20,7 @@ body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; pad
 .sub { text-align: center; font-size: 13px; color: #0be881; margin-bottom: 14px; }
 .tap-zone { display: flex; justify-content: center; margin: 10px 0 18px; position: relative; }
 .tap-btn { width: 165px; height: 165px; border-radius: 50%; background: radial-gradient(circle, #ff4d79, #b31246); box-shadow: 0 0 30px rgba(232, 67, 147, 0.45); border: 4px solid #ff85a2; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.tap-btn * { pointer-events: none; }
 .tap-btn:active { transform: scale(0.92); }
 .upg { background: #181a22; border: 1px solid #2a2d3a; border-radius: 12px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .btn { background: #e84393; color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; min-width: 80px; }
@@ -33,8 +34,8 @@ body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; pad
 <body>
 
 <div class="tabs">
-  <button type="button" class="tab-btn active" id="tabGame">🍓 Гра</button>
-  <button type="button" class="tab-btn" id="tabTop">🏆 Турнірна таблиця</button>
+  <button type="button" class="tab-btn active" id="tabGame" onclick="showTab('game')">🍓 Гра</button>
+  <button type="button" class="tab-btn" id="tabTop" onclick="showTab('top')">🏆 Турнірна таблиця</button>
 </div>
 
 <div id="screenGame">
@@ -54,7 +55,7 @@ body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; pad
   <div class="sub">+<span id="autoInc">0</span>/сек • За тап: +<span id="tapInc">1</span></div>
 
   <div class="tap-zone" id="zone">
-    <button type="button" class="tap-btn" id="mainBtn">
+    <button type="button" class="tap-btn" onclick="tap()">
       <span style="font-size:54px;" id="emoji">🍓</span>
       <span>ЗІБРАТИ</span>
     </button>
@@ -70,22 +71,22 @@ body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; pad
 
   <div class="upg">
     <div><b>👆 Сила збору (Lvl <span id="tLvl">1</span>)</b><div style="font-size:12px;color:#8a8f9e;">+1 до базового кліку</div></div>
-    <button type="button" class="btn" id="bTap" disabled>25 💎</button>
+    <button type="button" class="btn" id="bTap" onclick="buy('tap')">25 💎</button>
   </div>
   <div class="upg">
     <div><b>🤖 Авто-збирач (Lvl <span id="aLvl">0</span>)</b><div style="font-size:12px;color:#8a8f9e;">+2 рубіни щосекунди</div></div>
-    <button type="button" class="btn" id="bAuto" disabled>50 💎</button>
+    <button type="button" class="btn" id="bAuto" onclick="buy('auto')">50 💎</button>
   </div>
   <div class="upg">
     <div><b>🔋 Батарея (Lvl <span id="eLvl">1</span>)</b><div style="font-size:12px;color:#8a8f9e;">+50 енергії та швидший заряд</div></div>
-    <button type="button" class="btn" id="bEn" disabled>40 💎</button>
+    <button type="button" class="btn" id="bEn" onclick="buy('en')">40 💎</button>
   </div>
 </div>
 
 <div id="screenTop" style="display:none;">
   <div class="row" style="margin-bottom:10px;">
     <b style="font-size:16px;">Топ-20 збирачів малини</b>
-    <button type="button" class="btn" id="btnRefresh" style="padding:6px 10px; min-width:auto;">🔄 Оновити</button>
+    <button type="button" class="btn" onclick="loadTop()" style="padding:6px 10px; min-width:auto;">🔄 Оновити</button>
   </div>
   <div id="leaderList" style="font-size:14px; color:#8a8f9e;">Завантаження...</div>
 </div>
@@ -94,8 +95,8 @@ body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; pad
 const SB_URL = 'https://supabase.co';
 const SB_KEY = 'sb_publishable_G9DDEnZ6nMeipKo958XR4w_nez-byXE';
 
-let userId = 'guest_' + (localStorage.getItem('guest_id') || Math.floor(Math.random() * 1000000));
-localStorage.setItem('guest_id', userId.replace('guest_', ''));
+let userId = 'guest_' + (localStorage.getItem('g_id') || Math.floor(Math.random() * 999999));
+localStorage.setItem('g_id', userId.replace('guest_', ''));
 let userName = 'Гравець';
 
 try {
@@ -108,7 +109,10 @@ try {
 } catch (e) {}
 
 let s = { bal: 0, xp: 0, lvl: 1, tLvl: 1, aLvl: 0, eLvl: 1, en: 100 };
-try { const saved = JSON.parse(localStorage.getItem('tycoon_save')); if (saved) s = Object.assign(s, saved); } catch (e) {}
+try {
+  const saved = JSON.parse(localStorage.getItem('berry_v5'));
+  if (saved && typeof saved.bal === 'number') s = Object.assign(s, saved);
+} catch (e) {}
 
 function getRank() {
   if (s.lvl >= 15) return { n: '🌌 Ягідний Імператор', e: '👑', m: 5.0 };
@@ -154,10 +158,10 @@ function render() {
   const ba = document.getElementById('bAuto'); ba.innerText = costAuto() + ' 💎'; ba.disabled = s.bal < costAuto();
   const be = document.getElementById('bEn'); be.innerText = costEn() + ' 💎'; be.disabled = s.bal < costEn();
 
-  try { localStorage.setItem('tycoon_save', JSON.stringify(s)); } catch (e) {}
+  try { localStorage.setItem('berry_v5', JSON.stringify(s)); } catch (e) {}
 }
 
-document.getElementById('mainBtn').onclick = function() {
+function tap() {
   if (s.en < 1) return;
   s.en--;
   const gain = tapPower();
@@ -172,27 +176,23 @@ document.getElementById('mainBtn').onclick = function() {
   z.appendChild(el);
   setTimeout(() => el.remove(), 600);
   render();
-};
+}
 
-document.getElementById('bTap').onclick = function() { if (s.bal >= costTap()) { s.bal -= costTap(); s.tLvl++; addXp(15); render(); syncScore(); } };
-document.getElementById('bAuto').onclick = function() { if (s.bal >= costAuto()) { s.bal -= costAuto(); s.aLvl++; addXp(15); render(); syncScore(); } };
-document.getElementById('bEn').onclick = function() { if (s.bal >= costEn()) { s.bal -= costEn(); s.eLvl++; s.en = maxEn(); addXp(15); render(); syncScore(); } };
+function buy(type) {
+  if (type === 'tap' && s.bal >= costTap()) { s.bal -= costTap(); s.tLvl++; addXp(15); }
+  if (type === 'auto' && s.bal >= costAuto()) { s.bal -= costAuto(); s.aLvl++; addXp(15); }
+  if (type === 'en' && s.bal >= costEn()) { s.bal -= costEn(); s.eLvl++; s.en = maxEn(); addXp(15); }
+  render();
+  syncScore();
+}
 
-document.getElementById('tabGame').onclick = function() {
-  document.getElementById('screenGame').style.display = 'block';
-  document.getElementById('screenTop').style.display = 'none';
-  document.getElementById('tabGame').classList.add('active');
-  document.getElementById('tabTop').classList.remove('active');
-};
-
-document.getElementById('tabTop').onclick = function() {
-document.getElementById('screenGame').style.display = 'none';
-document.getElementById('screenTop').style.display = 'block';
-document.getElementById('tabGame').classList.remove('active');
-document.getElementById('tabTop').classList.add('active');
-syncScore().then(loadLeaderboard);
-};
-document.getElementById('btnRefresh').onclick = loadLeaderboard;
+function showTab(tab) {
+  document.getElementById('screenGame').style.display = tab === 'game' ? 'block' : 'none';
+  document.getElementById('screenTop').style.display = tab === 'top' ? 'block' : 'none';
+  document.getElementById('tabGame').classList.toggle('active', tab === 'game');
+document.getElementById('tabTop').classList.toggle('active', tab === 'top');
+if (tab === 'top') syncScore().then(loadTop);
+}
 async function syncScore() {
 try {
 await fetch(SB_URL, {
@@ -202,7 +202,7 @@ body: JSON.stringify({ id: userId, name: userName, score: Math.floor(s.bal), lev
 });
 } catch (e) {}
 }
-async function loadLeaderboard() {
+async function loadTop() {
 const list = document.getElementById('leaderList');
 list.innerHTML = 'Оновлення...';
 try {
