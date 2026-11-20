@@ -64,11 +64,11 @@ const SHOP=[
   {id:'b2',t:'b',n:'Вогняний',i:'🔥',p:20,bn:5,col:'#ff5e57',d:'+5 💰 за гол (червоний)'},
   {id:'b3',t:'b',n:'Блискавка',i:'⚡',p:60,bn:12,col:'#00d2ff',d:'+12 💰 за гол (неоновий)'},
   {id:'b4',t:'b',n:'Золотий',i:'🏆',p:150,bn:25,col:'#feca57',d:'+25 💰 за гол (золотий)'},
-  {id:'k1',t:'k',n:'Базові',i:'🧤',p:0,bn:0,col:'#1dd1a1',d:'Звичайні 3D рукавиці'},
+  {id:'k1',t:'k',n:'Базові',i:'🧤',p:0,bn:0,col:'#1dd1a1',d:'Звичайні рукавиці'},
   {id:'k2',t:'k',n:'Кібер-хват',i:'🦾',p:50,bn:10,col:'#ff9ff3',d:'+10 💰 за сейв (рожеві)'}
 ];
 let p={pt:0,lv:1,cp:0,st:0,cn:20,ow:['b1','k1'],eb:'b1',ek:'k1'};
-try{const v=JSON.parse(localStorage.getItem('pc_3d2'));if(v)p=Object.assign(p,v)}catch(e){}
+try{const v=JSON.parse(localStorage.getItem('pc_3d4'));if(v)p=Object.assign(p,v)}catch(e){}
 let ph='sh',pS=[],bS=[],bz=0,ac=null;
 
 function snd(type){
@@ -96,7 +96,49 @@ function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=
 window.addEventListener('resize',rsz3D);
 function proj(x,y,z){const fov=W*0.85,sc=fov/(fov+z*55);return{x:W/2+x*55*sc,y:H*0.56-(y*55-85)*sc,s:sc}}
 
-let bPos={x:0,y:0.35,z:1},bStart={x:0,y:0.35,z:1},bEnd={x:0,y:0.35,z:1},kX=0,kTargetX=0,kRot=0,kTargetRot=0,animT=1,spin=0;
+function drawPerson(x,z,opt){
+  const pt=proj(x,0,z),s=pt.s;
+  ctx.save();ctx.translate(pt.x,pt.y);if(opt.rot)ctx.rotate(opt.rot);
+  // Тінь під ногами
+  ctx.fillStyle='rgba(0,0,0,0.4)';ctx.beginPath();ctx.ellipse(0,0,22*s,6*s,0,0,6.28);ctx.fill();
+  // Ноги (гетри + бутси)
+  const drawLeg=(lx,ang)=>{
+    ctx.save();ctx.translate(lx*s,-28*s);ctx.rotate(ang);
+    ctx.fillStyle='#f1c27d';ctx.fillRect(-3.5*s,0,7*s,12*s);
+    ctx.fillStyle=opt.socks;ctx.fillRect(-3.8*s,10*s,7.6*s,14*s);
+    ctx.fillStyle='#111';ctx.beginPath();ctx.roundRect(-4.5*s,22*s,10*s,6*s,3*s);ctx.fill();
+    ctx.restore();
+  };
+  drawLeg(-6.5,-(opt.run||0));
+  drawLeg(6.5,(opt.run||0)-(opt.kick||0));
+  // Шорти
+  ctx.fillStyle=opt.shorts;ctx.beginPath();ctx.roundRect(-13*s,-36*s,26*s,13*s,4*s);ctx.fill();
+  // Руки (за спиною/перед собою + кисті або рукавиці)
+  const drawArm=(ax,ang)=>{
+    ctx.save();ctx.translate(ax*s,-62*s);ctx.rotate(ang);
+    ctx.fillStyle=opt.shirt;ctx.beginPath();ctx.roundRect(-3.5*s,0,7*s,11*s,3*s);ctx.fill();
+    ctx.fillStyle='#f1c27d';ctx.fillRect(-3*s,10*s,6*s,12*s);
+    ctx.fillStyle=opt.gloves||'#f1c27d';ctx.beginPath();ctx.arc(0,23*s,opt.gloves?6.5*s:4*s,0,6.28);ctx.fill();
+    ctx.restore();
+  };
+  drawArm(-15,opt.armL||0.18);drawArm(15,opt.armR||-0.18);
+  // Футболка (торс) + номер на спині
+  ctx.fillStyle=opt.shirt;ctx.beginPath();ctx.roundRect(-13*s,-65*s,26*s,31*s,6*s);ctx.fill();
+  if(opt.num){ctx.fillStyle='rgba(255,255,255,0.85)';ctx.font=`bold ${Math.max(8,Math.round(13*s))}px sans-serif`;ctx.textAlign='center';ctx.fillText(opt.num,0,-46*s)}
+  // Шия і голова з волоссям
+  ctx.fillStyle='#e0ac69';ctx.fillRect(-3.5*s,-70*s,7*s,6*s);
+  ctx.fillStyle='#f1c27d';ctx.beginPath();ctx.arc(0,-78*s,10*s,0,6.28);ctx.fill();
+  ctx.fillStyle=opt.hair||'#2c221e';
+  if(opt.back){ctx.beginPath();ctx.arc(0,-79*s,10.5*s,0,6.28);ctx.fill()}
+  else{
+    ctx.beginPath();ctx.arc(0,-80*s,10.5*s,3.05,6.38);ctx.fill();
+    ctx.fillStyle='#111';ctx.beginPath();ctx.arc(-3.5*s,-78*s,1.3*s,0,6.28);ctx.arc(3.5*s,-78*s,1.3*s,0,6.28);ctx.fill();
+  }
+  ctx.restore();
+}
+let bPos={x:0,y:0.35,z:2.2},bStart={x:0,y:0.35,z:2.2},bEnd={x:0,y:0.35,z:2.2};
+let kX=0,kTargetX=0,kRot=0,kTargetRot=0,animT=1,spin=0,plPos={x:-0.9,z:0.4},plLeg=0,plRun=0;
+
 function draw3D(t){
   requestAnimationFrame(draw3D);
   if(gScr.style.display==='none'||W<10)return;
@@ -127,33 +169,36 @@ function draw3D(t){
   }
   ctx.strokeStyle='#fff';ctx.lineWidth=5;
   ctx.beginPath();ctx.moveTo(gBL.x,gBL.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gBR.x,gBR.y);ctx.stroke();
+
   if(animT<1){
-    animT=Math.min(1,animT+0.048);
-    bPos.x=bStart.x+(bEnd.x-bStart.x)*animT;
-    bPos.z=bStart.z+(bEnd.z-bStart.z)*animT;
-    bPos.y=bStart.y+(bEnd.y-bStart.y)*animT+Math.sin(animT*Math.PI)*1.15;
-    spin+=0.35;
+    animT=Math.min(1,animT+0.036);
+    if(animT<0.32){
+      const rt=animT/0.32;
+      plPos.x=-0.9+0.68*rt;plPos.z=0.4+1.5*rt;
+      plRun=Math.sin(rt*12)*0.45;plLeg=rt>0.75?(rt-0.75)*4:0;
+    }else{
+      const bt=(animT-0.32)/0.68;
+      plLeg=Math.max(0,1-(bt*3));
+      bPos.x=bStart.x+(bEnd.x-bStart.x)*bt;bPos.z=bStart.z+(bEnd.z-bStart.z)*bt;
+      bPos.y=bStart.y+(bEnd.y-bStart.y)*bt+Math.sin(bt*Math.PI)*1.15;spin+=0.38;
+    }
   }else if(kTargetX===0){kTargetX=Math.sin(t*0.005)*0.35}
   kX+=(kTargetX-kX)*0.18;kRot+=(kTargetRot-kRot)*0.18;
 
-  const kp=proj(kX,0,9.8);
-  ctx.save();ctx.translate(kp.x,kp.y);ctx.rotate(kRot);
-  ctx.fillStyle='rgba(0,0,0,0.35)';ctx.beginPath();ctx.ellipse(0,0,22*kp.s,6*kp.s,0,0,6.28);ctx.fill();
-  ctx.fillStyle='#3742fa';ctx.fillRect(-14*kp.s,-58*kp.s,28*kp.s,38*kp.s);
-  ctx.fillStyle='#ffccaa';ctx.beginPath();ctx.arc(0,-70*kp.s,11*kp.s,0,6.28);ctx.fill();
-  ctx.fillStyle=getIt(p.ek).col;
-  ctx.beginPath();ctx.arc(-24*kp.s,-46*kp.s,9*kp.s,0,6.28);ctx.fill();
-  ctx.beginPath();ctx.arc(24*kp.s,-46*kp.s,9*kp.s,0,6.28);ctx.fill();
-  ctx.restore();
+  const isMe=ph==='sh'||(bz&&pS.length>bS.length);
+  // Воротар (людина в рукавицях)
+  drawPerson(kX,9.8,{shirt:isMe?'#2ed573':'#ffa502',shorts:'#1e272e',socks:'#fff',gloves:getIt(p.ek).col,rot:kRot,armL:Math.abs(kRot)>0.1?2.3:0.35,armR:Math.abs(kRot)>0.1?-2.3:-0.35,hair:'#3d2b1f'});
 
+  // Тінь і 3D-м'яч
   const sh=proj(bPos.x,0,bPos.z),bp=proj(bPos.x,bPos.y,bPos.z),rad=18*bp.s;
   ctx.fillStyle='rgba(0,0,0,0.4)';ctx.beginPath();ctx.ellipse(sh.x,sh.y,rad,rad*0.4,0,0,6.28);ctx.fill();
-  const bCol=getIt(p.eb).col;
-  const bg=ctx.createRadialGradient(bp.x-rad*0.3,bp.y-rad*0.3,rad*0.1,bp.x,bp.y,rad);
+  const bCol=getIt(p.eb).col,bg=ctx.createRadialGradient(bp.x-rad*0.3,bp.y-rad*0.3,rad*0.1,bp.x,bp.y,rad);
   bg.addColorStop(0,'#ffffff');bg.addColorStop(0.6,bCol);bg.addColorStop(1,'#111111');
   ctx.fillStyle=bg;ctx.beginPath();ctx.arc(bp.x,bp.y,rad,0,6.28);ctx.fill();
-  ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.arc(bp.x,bp.y,rad*0.6,spin,spin+2.2);ctx.stroke();
+  ctx.strokeStyle='rgba(0,0,0,0.35)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(bp.x,bp.y,rad*0.6,spin,spin+2.2);ctx.stroke();
+
+  // Пенальтист (людина зі спини: Гравець у червоному №10, Бот у синьому №9)
+  drawPerson(plPos.x,plPos.z,{shirt:isMe?'#ff4757':'#1e90ff',shorts:isMe?'#fff':'#1e272e',socks:isMe?'#ff4757':'#1e90ff',num:isMe?'10':'9',back:true,run:plRun,kick:plLeg,armL:0.35-plRun*0.5,armR:-0.35+plRun*0.5,hair:isMe?'#2c221e':'#d4a359'});
 }
 
 const nx=()=>p.lv*100,getIt=id=>SHOP.find(x=>x.id===id)||SHOP.at(0);
@@ -175,7 +220,7 @@ function ui(){
   const cur=ST.at(p.st)||ST.at(0);op.innerText=cur.n+': '+cur.o;
   sb.querySelectorAll('span').forEach((s,i)=>s.className=i<p.st?'done':i===p.st?'act':'');
   ps.innerText=pS.filter(x=>x).length;bs.innerText=bS.filter(x=>x).length;pd.innerText=dots(pS);bd.innerText=dots(bS);
-  try{localStorage.setItem('pc_3d2',JSON.stringify(p))}catch(e){}
+  try{localStorage.setItem('pc_3d4',JSON.stringify(p))}catch(e){}
   if(ph==='win')return ct.innerHTML=`<button class="btn full" style="background:#1dd1a1;color:#000" onclick="rst()">➡️ Далі: ${ST.at(p.st).n}</button>`;
   if(ph==='cup')return ct.innerHTML=`<button class="btn full" style="background:#feca57;color:#000" onclick="rst()">🏆 Новий кубок (з 1/32)</button>`;
   if(ph==='los')return ct.innerHTML=`<button class="btn full" style="background:#ff6b6b" onclick="rst()">🔄 Виліт! Почати з 1/32</button>`;
@@ -187,7 +232,7 @@ function kick3D(bIdx,kIdx){
   bStart={x:0,y:0.35,z:2.2};bEnd={x:xs.at(bIdx),y:1.1,z:10.4};
   kTargetX=xs.at(kIdx);kTargetRot=rots.at(kIdx);animT=0;
 }
-function rstPos(){bPos={x:0,y:0.35,z:2.2};bStart={x:0,y:0.35,z:2.2};bEnd={x:0,y:0.35,z:2.2};kTargetX=0;kTargetRot=0;animT=1}
+function rstPos(){bPos={x:0,y:0.35,z:2.2};bStart={x:0,y:0.35,z:2.2};bEnd={x:0,y:0.35,z:2.2};kTargetX=0;kTargetRot=0;plPos={x:-0.9,z:0.4};plLeg=0;plRun=0;animT=1}
 function chk(){
   if(pS.length>=5&&pS.length===bS.length){
     const pg=pS.filter(x=>x).length,bg=bS.filter(x=>x).length,cur=ST.at(p.st);
@@ -199,13 +244,15 @@ function chk(){
 function go(c){
   if(bz)return;bz=1;ui();const bot=Math.floor(Math.random()*3);
   if(ph==='sh'){
-    kick3D(c,bot);const g=c!==bot;pS.push(g?1:0);snd(g?'cheer':'groan');
+    kick3D(c,bot);const g=c!==bot;pS.push(g?1:0);
+    setTimeout(()=>snd(g?'cheer':'groan'),350);
     if(g){const bn=getIt(p.eb).bn;p.cn+=bn;ms.innerText=bn?`⚽ ГОООЛ! (+${bn}💰)`:'⚽ ГОООЛ! Стадіон реве!'}else ms.innerText='🧤 Сейв воротаря! Ууу...';
-    setTimeout(()=>{rstPos();ph='sv';bz=0;ms.innerText='🧤 Ти на воротах! Куди стрибати?';ui()},1150);
+    setTimeout(()=>{rstPos();ph='sv';bz=0;ms.innerText='🧤 Ти на воротах! Куди стрибати?';ui()},1300);
   }else{
-    kick3D(bot,c);const g=bot!==c;bS.push(g?1:0);snd(g?'groan':'cheer');
+    kick3D(bot,c);const g=bot!==c;bS.push(g?1:0);
+    setTimeout(()=>snd(g?'groan':'cheer'),350);
     if(!g){const bn=getIt(p.ek).bn;p.cn+=bn;ms.innerText=bn?`🔥 СЕЙВ! (+${bn}💰)`:'🔥 СЕЙВ! Трибуни шаленіють!'}else ms.innerText='❌ Бот забив!';
-    setTimeout(()=>{rstPos();bz=0;if(!chk()){ph='sh';ms.innerText='⚽ Твій удар! Вибери кут'}ui()},1150);
+    setTimeout(()=>{rstPos();bz=0;if(!chk()){ph='sh';ms.innerText='⚽ Твій удар! Вибери кут'}ui()},1300);
   }
 }
 function rst(){ph='sh';pS=[];bS=[];bz=0;rstPos();ms.innerText='⚽ Твій удар! Вибери кут';ui()}
