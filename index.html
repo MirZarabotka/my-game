@@ -121,7 +121,7 @@
             outline: none;
             color: white;
         }
-        .tap-circle.pressed {
+        .tap-circle:active, .tap-circle.pressed {
             transform: scale(0.92);
         }
         .tap-emoji { font-size: 50px; pointer-events: none; }
@@ -284,11 +284,12 @@
     </div>
 
     <script>
-        const tg = window.Telegram ? window.Telegram.WebApp : null;
-        if (tg) {
-            tg.ready();
-            tg.expand();
-        }
+        try {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+            }
+        } catch (e) {}
 
         const RANKS = [
             { minLvl: 1, name: '🥉 Ліга: Новачок', emoji: '🚀', mult: 1.0 },
@@ -309,7 +310,7 @@
         };
 
         try {
-            const saved = JSON.parse(localStorage.getItem('rank_tycoon_v2'));
+const saved = JSON.parse(localStorage.getItem('rank_tycoon_v3'));
 if (saved && typeof saved.balance === 'number') {
 state = Object.assign(state, saved);
 }
@@ -348,6 +349,17 @@ if (type === 'auto') return Math.floor(50 * Math.pow(1.45, state.autoLvl));
 if (type === 'energy') return Math.floor(40 * Math.pow(1.5, state.energyLvl - 1));
 return 100;
 }
+function vibrate(type) {
+try {
+if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+if (type === 'light' || type === 'medium') {
+window.Telegram.WebApp.HapticFeedback.impactOccurred(type);
+} else {
+window.Telegram.WebApp.HapticFeedback.notificationOccurred(type);
+}
+}
+} catch (e) {}
+}
 function addXp(amount) {
 state.xp += amount;
 let needed = getNextLevelXp();
@@ -356,26 +368,29 @@ state.xp -= needed;
 state.level += 1;
 state.energy = getMaxEnergy();
 needed = getNextLevelXp();
-if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+vibrate('success');
 }
 }
-// Обробка тапу (працює миттєво при дотику)
+function processTap(clientX, clientY) {
 const tapBtn = document.getElementById('tapBtn');
-tapBtn.addEventListener('pointerdown', function(e) {
-e.preventDefault();
 tapBtn.classList.add('pressed');
 setTimeout(() => tapBtn.classList.remove('pressed'), 80);
 if (state.energy < 1) {
-if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+vibrate('error');
 return;
 }
 state.energy -= 1;
 const gain = getTapPower();
 state.balance += gain;
 addXp(isTurbo ? 4 : 2);
-if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-spawnFloatingText(e.clientX, e.clientY, +${gain});
-updateUI();
+vibrate('light');
+spawnFloatingText(clientX, clientY, +${gain});
+saveAndRender();
+}
+const tapBtn = document.getElementById('tapBtn');
+tapBtn.addEventListener('pointerdown', function(e) {
+e.preventDefault();
+processTap(e.clientX, e.clientY);
 });
 function spawnFloatingText(clientX, clientY, text) {
 const zone = document.getElementById('tapZone');
@@ -401,7 +416,7 @@ state.energyLvl += 1;
 state.energy = getMaxEnergy();
 }
 addXp(15);
-if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+vibrate('medium');
 saveAndRender();
 }
 function activateTurbo() {
@@ -409,8 +424,8 @@ if (isTurbo || state.balance < 100) return;
 state.balance -= 100;
 isTurbo = true;
 turboTimer = 15;
-if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-updateUI();
+vibrate('success');
+saveAndRender();
 }
 function updateUI() {
 const rank = getCurrentRank();
@@ -455,7 +470,7 @@ btnTurbo.disabled = state.balance < 100;
 }
 function saveAndRender() {
 try {
-localStorage.setItem('rank_tycoon_v2', JSON.stringify(state));
+localStorage.setItem('rank_tycoon_v3', JSON.stringify(state));
 } catch (e) {}
 updateUI();
 }
