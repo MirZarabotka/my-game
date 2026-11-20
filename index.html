@@ -7,30 +7,48 @@
 <script src="https://telegram.org"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:sans-serif;background:#12131a;color:#fff;margin:0;padding:16px;display:flex;flex-direction:column;min-height:100vh;user-select:none;transition:background .4s}
+body{font-family:sans-serif;background:#12131a;color:#fff;margin:0;padding:14px;display:flex;flex-direction:column;min-height:100vh;user-select:none;transition:background .4s}
 body.sleep{background:#07080c}
-.header{background:#1b1d28;border:1px solid #2b2e3d;border-radius:14px;padding:12px 14px;margin-bottom:14px}
+.tabs{display:flex;gap:8px;margin-bottom:10px}
+.tab{flex:1;padding:10px;background:#1b1d28;border:1px solid #2b2e3d;color:#8395a7;border-radius:10px;font-weight:bold;cursor:pointer}
+.tab.active{background:#5f27cd;color:#fff;border-color:#5f27cd}
+.header{background:#1b1d28;border:1px solid #2b2e3d;border-radius:14px;padding:12px 14px;margin-bottom:10px}
 .row{display:flex;justify-content:space-between;align-items:center}
 .bar{width:100%;height:8px;background:#262936;border-radius:4px;overflow:hidden;margin:6px 0}
 .fill{height:100%;transition:width .3s,background .3s}
-.pet-box{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;margin:10px 0}
-.pet{font-size:110px;cursor:pointer;transition:transform .15s;filter:drop-shadow(0 10px 20px rgba(0,0,0,.5))}
-.pet:active{transform:scale(.9)}
+.pet-box{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;margin:6px 0}
+.pet-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.pet-wrap:active{transform:scale(.92)}
+.pet{font-size:110px;line-height:1;filter:drop-shadow(0 10px 20px rgba(0,0,0,.5))}
+.acc-layer{position:absolute;pointer-events:none;line-height:1;transition:all .2s}
 .bounce{animation:bnc 2s infinite ease-in-out}
 @keyframes bnc{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 .bubble{background:#262936;padding:8px 16px;border-radius:20px;font-size:14px;font-weight:bold;margin-bottom:14px;border:1px solid #383c4f}
-.stats{background:#1b1d28;border:1px solid #2b2e3d;border-radius:14px;padding:14px;margin-bottom:14px;display:flex;flex-direction:column;gap:10px}
+.stats{background:#1b1d28;border:1px solid #2b2e3d;border-radius:14px;padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
 .stat-row{font-size:13px;font-weight:bold}
 .actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.btn{background:#262936;border:1px solid #383c4f;color:#fff;padding:14px 8px;border-radius:12px;font-weight:bold;font-size:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+.btn{background:#262936;border:1px solid #383c4f;color:#fff;padding:12px 8px;border-radius:12px;font-weight:bold;font-size:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
 .btn:active{transform:scale(.95)}
 .btn.active-sleep{background:#3742fa;border-color:#5352ed}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .flt{position:absolute;font-size:24px;font-weight:bold;pointer-events:none;animation:up .7s forwards}
 @keyframes up{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
+.shop-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.item-card{background:#1b1d28;border:1px solid #2b2e3d;border-radius:14px;padding:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.item-card.equipped{border-color:#1dd1a1;background:rgba(29,209,161,.1)}
+.item-icon{font-size:42px}
+.buy-btn{width:100%;padding:8px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;background:#5f27cd;color:#fff}
+.buy-btn.wear{background:#1dd1a1;color:#000}
+.buy-btn.takeoff{background:#ff6b6b;color:#fff}
+.buy-btn:disabled{background:#262936;color:#576574;cursor:not-allowed}
 </style>
 </head>
 <body>
+
+<div class="tabs">
+  <button class="tab active" id="t1" onclick="tab(1)">🐾 Улюбленець</button>
+  <button class="tab" id="t2" onclick="tab(2)">🛍 Магазин</button>
+</div>
 
 <div class="header">
   <div class="row">
@@ -40,34 +58,48 @@ body.sleep{background:#07080c}
   <div class="bar"><div class="fill" id="xpBar" style="background:#5f27cd;width:0%"></div></div>
   <div class="row" style="font-size:11px;color:#8395a7">
     <span>Досвід: <span id="xp">0</span> / <span id="nextXp">50</span> XP</span>
-    <span>💰 Монети: <b style="color:#feca57" id="coins">20</b></span>
+    <span>💰 Монети: <b style="color:#feca57" id="coins">25</b></span>
   </div>
 </div>
 
-<div class="pet-box" id="zone">
-  <div class="bubble" id="msg">Привіт! Погладь мене!</div>
-  <div class="pet bounce" id="pet" onclick="petClick()">🥚</div>
+<!-- ЕКРАН УЛЮБЛЕНЦЯ -->
+<div id="screenPet" style="display:flex;flex-direction:column;flex:1">
+  <div class="pet-box" id="zone">
+    <div class="bubble" id="msg">Привіт! Погладь мене!</div>
+    <div class="pet-wrap bounce" id="petWrap" onclick="petClick()">
+      <div class="pet" id="pet">🥚</div>
+      <div class="acc-layer" id="accLayer"></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div>
+      <div class="row stat-row"><span>🍔 Ситість</span><span id="vFood">80%</span></div>
+      <div class="bar"><div class="fill" id="bFood" style="background:#1dd1a1;width:80%"></div></div>
+    </div>
+    <div>
+      <div class="row stat-row"><span>🎾 Настрій</span><span id="vFun">80%</span></div>
+      <div class="bar"><div class="fill" id="bFun" style="background:#ff9f43;width:80%"></div></div>
+    </div>
+    <div>
+      <div class="row stat-row"><span>⚡ Енергія</span><span id="vEn">80%</span></div>
+      <div class="bar"><div class="fill" id="bEn" style="background:#54a0ff;width:80%"></div></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="btnFeed" onclick="feed()"><span>🍔</span><span>Погодувати</span><small style="color:#feca57">-5 💰</small></button>
+    <button class="btn" id="btnPlay" onclick="play()"><span>🎾</span><span>Пограти</span><small style="color:#1dd1a1">+10 XP</small></button>
+    <button class="btn" id="btnSleep" onclick="toggleSleep()"><span>💤</span><span id="sleepTxt">Спати</span><small style="color:#54a0ff">+Енергія</small></button>
+  </div>
 </div>
 
-<div class="stats">
-  <div>
-    <div class="row stat-row"><span>🍔 Ситість</span><span id="vFood">80%</span></div>
-    <div class="bar"><div class="fill" id="bFood" style="background:#1dd1a1;width:80%"></div></div>
+<!-- ЕКРАН МАГАЗИНУ -->
+<div id="screenShop" style="display:none">
+  <div class="row" style="margin-bottom:10px;font-size:13px;color:#8395a7">
+    <span>Одягни річ, щоб отримувати бонус за погладжування!</span>
   </div>
-  <div>
-    <div class="row stat-row"><span>🎾 Настрій</span><span id="vFun">80%</span></div>
-    <div class="bar"><div class="fill" id="bFun" style="background:#ff9f43;width:80%"></div></div>
-  </div>
-  <div>
-    <div class="row stat-row"><span>⚡ Енергія</span><span id="vEn">80%</span></div>
-    <div class="bar"><div class="fill" id="bEn" style="background:#54a0ff;width:80%"></div></div>
-  </div>
-</div>
-
-<div class="actions">
-  <button class="btn" id="btnFeed" onclick="feed()"><span>🍔</span><span>Погодувати</span><small style="color:#feca57">-5 💰</small></button>
-  <button class="btn" id="btnPlay" onclick="play()"><span>🎾</span><span>Пограти</span><small style="color:#1dd1a1">+10 XP</small></button>
-  <button class="btn" id="btnSleep" onclick="toggleSleep()"><span>💤</span><span id="sleepTxt">Спати</span><small style="color:#54a0ff">+Енергія</small></button>
+  <div class="shop-grid" id="shopGrid"></div>
 </div>
 
 <script>
@@ -76,13 +108,26 @@ try {
   if (tg) { tg.ready(); tg.expand(); }
 } catch(e) {}
 
-let s = { food: 80, fun: 80, en: 80, xp: 0, lvl: 1, coins: 20, sleep: false };
+const ITEMS = [
+  { id: 'glasses', name: 'Круті окуляри', icon: '🕶️', price: 15, bonus: 1, style: 'font-size:48px; top:32px;' },
+  { id: 'bow', name: 'Стильний бант', icon: '🎀', price: 25, bonus: 2, style: 'font-size:38px; top:-10px; right:8px;' },
+  { id: 'cap', name: 'Кепка гравця', icon: '🧢', price: 40, bonus: 3, style: 'font-size:52px; top:-22px;' },
+  { id: 'headphones', name: 'Навушники', icon: '🎧', price: 65, bonus: 4, style: 'font-size:76px; top:12px;' },
+  { id: 'hat', name: 'Циліндр мага', icon: '🎩', price: 100, bonus: 6, style: 'font-size:54px; top:-30px;' },
+  { id: 'crown', name: 'Корона царя', icon: '👑', price: 200, bonus: 10, style: 'font-size:50px; top:-28px;' }
+];
+
+let s = { food: 80, fun: 80, en: 80, xp: 0, lvl: 1, coins: 25, sleep: false, owned: [], equipped: null };
 try {
-  const saved = JSON.parse(localStorage.getItem('tama_v1'));
+  const saved = JSON.parse(localStorage.getItem('tama_v2'));
   if (saved) s = Object.assign(s, saved);
 } catch(e) {}
 
 const nextXp = () => Math.floor(50 * Math.pow(1.4, s.lvl - 1));
+
+function getEquippedItem() {
+  return ITEMS.find(x => x.id === s.equipped) || null;
+}
 
 function getStage() {
   if (s.sleep) return { e: '😴', n: '💤 Спить...' };
@@ -99,7 +144,7 @@ function pop(txt, col) {
   d.innerText = txt;
   d.style.color = col || '#fff';
   d.style.left = '45%';
-  d.style.top = '35%';
+  d.style.top = '30%';
   zone.appendChild(d);
   setTimeout(() => d.remove(), 700);
 }
@@ -110,17 +155,19 @@ function addXp(v) {
     s.xp -= nextXp();
     s.lvl++;
     s.coins += 15;
-    msg.innerText = '🎉 Новий рівень ' + s.lvl + '! (+15 💰)';
+    msg.innerText = '🎉 Рівень ' + s.lvl + '! (+15 💰)';
   }
 }
 
 function petClick() {
   if (s.sleep) { msg.innerText = 'Тссс! Я сплю... 💤'; return; }
-  s.coins += 1;
+  const eq = getEquippedItem();
+  const gain = 1 + (eq ? eq.bonus : 0);
+  s.coins += gain;
   s.fun = Math.min(100, s.fun + 2);
   addXp(2);
-  pop('+1 💰', '#feca57');
-  msg.innerText = ['Мур-мур! ❤️', 'Лоскотно! 😸', 'Ще погладь! ✨'][Math.floor(Math.random() * 3)];
+  pop('+' + gain + ' 💰', '#feca57');
+  msg.innerText = ['Мур-мур! ❤️', 'Лоскотно! 😸', 'Який я стильний! ✨'][Math.floor(Math.random() * 3)];
   ui();
 }
 
@@ -155,52 +202,41 @@ function toggleSleep() {
   ui();
 }
 
-function setBar(bar, val, textEl) {
-  const v = Math.floor(val);
-  textEl.innerText = v + '%';
-  bar.style.width = v + '%';
-  bar.style.background = v < 25 ? '#ff6b6b' : v < 50 ? '#feca57' : '#1dd1a1';
+function tab(i) {
+  screenPet.style.display = i === 1 ? 'flex' : 'none';
+  screenShop.style.display = i === 2 ? 'block' : 'none';
+  t1.classList.toggle('active', i === 1);
+  t2.classList.toggle('active', i === 2);
+  if (i === 2) renderShop();
 }
 
-function ui() {
-  document.body.classList.toggle('sleep', s.sleep);
-  const st = getStage();
-  stageName.innerText = st.n;
-  pet.innerText = st.e;
-  pet.classList.toggle('bounce', !s.sleep);
+function handleItem(id) {
+  const item = ITEMS.find(x => x.id === id);
+  if (!item) return;
 
-  lvl.innerText = s.lvl;
-  xp.innerText = Math.floor(s.xp);
-  nextXp.innerText = nextXp();
-  xpBar.style.width = Math.min(100, (s.xp / nextXp()) * 100) + '%';
-  coins.innerText = s.coins;
-
-  setBar(bFood, s.food, vFood);
-  setBar(bFun, s.fun, vFun);
-  setBar(bEn, s.en, vEn);
-
-  btnFeed.disabled = s.sleep || s.coins < 5;
-  btnPlay.disabled = s.sleep || s.en < 15;
-  btnSleep.classList.toggle('active-sleep', s.sleep);
-  sleepTxt.innerText = s.sleep ? 'Розбудити' : 'Спати';
-
-  try { localStorage.setItem('tama_v1', JSON.stringify(s)); } catch(e) {}
-}
-
-setInterval(() => {
-  if (s.sleep) {
-    s.en = Math.min(100, s.en + 3);
-    s.food = Math.max(0, s.food - 0.3);
-    if (s.en >= 100) { s.sleep = false; msg.innerText = 'Я виспався! ☀️'; }
+  if (!s.owned.includes(id)) {
+    if (s.coins >= item.price) {
+      s.coins -= item.price;
+      s.owned.push(id);
+      s.equipped = id;
+    }
   } else {
-    s.food = Math.max(0, s.food - 0.6);
-    s.fun = Math.max(0, s.fun - 0.5);
-    s.en = Math.max(0, s.en - 0.4);
+    s.equipped = (s.equipped === id) ? null : id;
   }
   ui();
-}, 1000);
+  renderShop();
+}
 
-ui();
-</script>
-</body>
-</html>
+function renderShop() {
+  shopGrid.innerHTML = '';
+  ITEMS.forEach(item => {
+    const isOwned = s.owned.includes(item.id);
+    const isEq = s.equipped === item.id;
+    let btnClass = 'buy-btn';
+    let btnText = item.price + ' 💰';
+    let disabled = !isOwned && s.coins < item.price;
+
+    if (isEq) {
+      btnClass += ' takeoff';
+      btnText = 'Зняти';
+    } else if (isOwned) {
