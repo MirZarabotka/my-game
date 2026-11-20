@@ -27,7 +27,7 @@ body{font-family:sans-serif;background:#0f1015;color:#fff;margin:0;padding:14px;
 .flt{position:absolute;font-size:22px;font-weight:bold;color:#ffd32a;pointer-events:none;animation:up .6s forwards}
 @keyframes up{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-45px)}}
 .lrow{display:flex;justify-content:space-between;padding:10px;background:#181a22;border:1px solid #2a2d3a;border-radius:10px;margin-bottom:6px}
-.lrow.me{border-color:#ffd32a;background:rgba(255,211,42,.1)}
+.lrow.me{border-color:#ffd32a;background:rgba(255,211,42,.12)}
 </style>
 </head>
 <body>
@@ -53,83 +53,114 @@ body{font-family:sans-serif;background:#0f1015;color:#fff;margin:0;padding:14px;
   <div class="upg"><div><b>🔋 Батарея (Lvl <span id="el">1</span>)</b><div style="font-size:12px;color:#8a8f9e">+50 енергії</div></div><button class="btn" id="be" onclick="buy(3)">40 💎</button></div>
 </div>
 <div id="t" style="display:none">
-  <div class="row" style="margin-bottom:10px"><b id="topTitle">Топ-20 гравців</b><button class="btn" onclick="topLoad()">🔄</button></div>
+  <div class="row" style="margin-bottom:10px"><b>Топ гравців (Онлайн)</b><button class="btn" onclick="syncAndLoad()">🔄</button></div>
   <div id="ll" style="color:#8a8f9e">Завантаження...</div>
 </div>
 <script>
-const DB = 'https://firebasedatabase.app';
-let uid='g_'+(localStorage.getItem('fb_uid')||Math.floor(Math.random()*999999));
-localStorage.setItem('fb_uid',uid.replace('g_',''));
-let un='Ви (Гравець)';
-try{const tg=window.Telegram.WebApp;tg.ready();tg.expand();const u=tg.initDataUnsafe.user;if(u){uid='u_'+u.id;un=u.first_name||'Ви'}}catch(e){}
-let s={b:0,x:0,l:1,t:1,a:0,e:1,n:100};
-try{const v=JSON.parse(localStorage.getItem('b12'));if(v)s=Object.assign(s,v)}catch(e){}
-function rk(){
-  if(s.l>=15)return{n:'🌌 Імператор',e:'👑',m:5};
-  if(s.l>=10)return{n:'💎 Магнат',e:'🍓',m:3.5};
-  if(s.l>=6)return{n:'🥇 Плантатор',e:'🍓',m:2.2};
-  if(s.l>=3)return{n:'🥈 Фермер',e:'🍓',m:1.5};
-  return{n:'🥉 Садівник',e:'🍓',m:1};
+const API = 'https://getpantry.cloud';
+
+let uid = 'g_' + (localStorage.getItem('p_uid') || Math.floor(Math.random()*999999));
+localStorage.setItem('p_uid', uid.replace('g_',''));
+let un = 'Гравець #' + uid.slice(-4);
+
+try {
+  const tg = window.Telegram.WebApp;
+  tg.ready(); tg.expand();
+  const u = tg.initDataUnsafe.user;
+  if (u) { uid = 'u_' + u.id; un = u.first_name || u.username || un; }
+} catch(e) {}
+
+let s = {b:0, x:0, l:1, t:1, a:0, e:1, n:100};
+try { const v = JSON.parse(localStorage.getItem('b14')); if (v) s = Object.assign(s, v); } catch(e) {}
+
+function rk() {
+  if(s.l>=15) return {n:'🌌 Імператор', e:'👑', m:5};
+  if(s.l>=10) return {n:'💎 Магнат', e:'🍓', m:3.5};
+  if(s.l>=6) return {n:'🥇 Плантатор', e:'🍓', m:2.2};
+  if(s.l>=3) return {n:'🥈 Фермер', e:'🍓', m:1.5};
+  return {n:'🥉 Садівник', e:'🍓', m:1};
 }
-const nx=()=>Math.floor(100*Math.pow(1.45,s.l-1)),me=()=>100+(s.e-1)*50,tp=()=>Math.max(1,Math.floor(s.t*rk().m)),ap=()=>s.a?Math.floor(s.a*2*rk().m):0;
-const c1=()=>Math.floor(25*Math.pow(1.4,s.t-1)),c2=()=>Math.floor(50*Math.pow(1.45,s.a)),c3=()=>Math.floor(40*Math.pow(1.5,s.e-1));
-function ax(v){s.x+=v;while(s.x>=nx()){s.x-=nx();s.l++;s.n=me()}}
-function ui(){
-  const r=rk();rn.innerText=r.n;em.innerText=r.e;ml.innerText=r.m.toFixed(1);lv.innerText=s.l;xp.innerText=Math.floor(s.x);nx.innerText=nx();
-  xb.style.width=Math.min(100,s.x/nx()*100)+'%';bl.innerText=Math.floor(s.b);ai.innerText=ap();ti.innerText=tp();en.innerText=Math.floor(s.n);
-  me.innerText=me();eb.style.width=(s.n/me()*100)+'%';tl.innerText=s.t;al.innerText=s.a;el.innerText=s.e;
-  bt.innerText=c1()+' 💎';bt.disabled=s.b<c1();ba.innerText=c2()+' 💎';ba.disabled=s.b<c2();be.innerText=c3()+' 💎';be.disabled=s.b<c3();
-  try{localStorage.setItem('b12',JSON.stringify(s))}catch(e){}
+const nx=()=>Math.floor(100*Math.pow(1.45,s.l-1)), me=()=>100+(s.e-1)*50, tp=()=>Math.max(1,Math.floor(s.t*rk().m)), ap=()=>s.a?Math.floor(s.a*2*rk().m):0;
+const c1=()=>Math.floor(25*Math.pow(1.4,s.t-1)), c2=()=>Math.floor(50*Math.pow(1.45,s.a)), c3=()=>Math.floor(40*Math.pow(1.5,s.e-1));
+
+function ax(v) { s.x += v; while(s.x >= nx()) { s.x -= nx(); s.l++; s.n = me(); } }
+
+function ui() {
+  const r = rk(); rn.innerText = r.n; em.innerText = r.e; ml.innerText = r.m.toFixed(1); lv.innerText = s.l;
+  xp.innerText = Math.floor(s.x); nx.innerText = nx(); xb.style.width = Math.min(100, s.x/nx()*100) + '%';
+  bl.innerText = Math.floor(s.b); ai.innerText = ap(); ti.innerText = tp(); en.innerText = Math.floor(s.n);
+  me.innerText = me(); eb.style.width = (s.n/me()*100) + '%'; tl.innerText = s.t; al.innerText = s.a; el.innerText = s.e;
+  bt.innerText = c1() + ' 💎'; bt.disabled = s.b < c1();
+  ba.innerText = c2() + ' 💎'; ba.disabled = s.b < c2();
+  be.innerText = c3() + ' 💎'; be.disabled = s.b < c3();
+  try { localStorage.setItem('b14', JSON.stringify(s)); } catch(e) {}
 }
-function hit(){
-  if(s.n<1)return;s.n--;const g=tp();s.b+=g;ax(2);
-  const d=document.createElement('div');d.className='flt';d.innerText='+'+g;d.style.left='46%';d.style.top='20%';
-  zn.appendChild(d);setTimeout(()=>d.remove(),600);ui();
+
+function hit() {
+  if(s.n < 1) return; s.n--; const g = tp(); s.b += g; ax(2);
+  const d = document.createElement('div'); d.className = 'flt'; d.innerText = '+' + g; d.style.left = '46%'; d.style.top = '20%';
+  zn.appendChild(d); setTimeout(() => d.remove(), 600); ui();
 }
-function buy(i){
-  if(i===1&&s.b>=c1()){s.b-=c1();s.t++;ax(15)}
-  if(i===2&&s.b>=c2()){s.b-=c2();s.a++;ax(15)}
-  if(i===3&&s.b>=c3()){s.b-=c3();s.e++;s.n=me();ax(15)}
-  ui();sync();
+
+function buy(i) {
+  if(i===1 && s.b>=c1()) { s.b-=c1(); s.t++; ax(15); }
+  if(i===2 && s.b>=c2()) { s.b-=c2(); s.a++; ax(15); }
+  if(i===3 && s.b>=c3()) { s.b-=c3(); s.e++; s.n=me(); ax(15); }
+  ui(); syncAndLoad();
 }
-function tab(i){g.style.display=i===1?'block':'none';t.style.display=i===2?'block':'none';t1.classList.toggle('active',i===1);t2.classList.toggle('active',i===2);if(i===2)sync().then(topLoad)}
-async function sync(){
-  try{await fetch(DB+'players/'+uid+'.json',{method:'PUT',body:JSON.stringify({id:uid,name:un,score:Math.floor(s.b),level:s.l})})}catch(e){}
+
+function tab(i) {
+  g.style.display = i===1 ? 'block' : 'none';
+  t.style.display = i===2 ? 'block' : 'none';
+  t1.classList.toggle('active', i===1);
+  t2.classList.toggle('active', i===2);
+  if(i===2) syncAndLoad();
 }
-function renderList(arr){
-  ll.innerHTML='';
-  arr.sort((a,b)=>b.score-a.score).slice(0,20).forEach((p,i)=>{
-    ll.innerHTML+=`<div class="lrow${p.id===uid?' me':''}"><b>${i<3?['🥇','🥈','🥉'][i]:'#'+(i+1)} ${p.name} (Lvl ${p.level})</b><b style="color:#ffd32a">${Number(p.score).toLocaleString()} 💎</b></div>`;
-  });
-}
-async function topLoad(){
-  ll.innerText='Оновлення...';
-  try{
-    const r=await fetch(DB+'players.json');
-    const obj=await r.json();
-    const list=obj?Object.values(obj):[];
-    if(!list.some(p=>p.id===uid))list.push({id:uid,name:un,score:Math.floor(s.b),level:s.l});
-    topTitle.innerText='Топ-20 гравців (Онлайн)';
-    renderList(list);
-  }catch(e){
-    topTitle.innerText='Ліга садівників (Рейтинг)';
-    const bots=[
-      {id:'b1',name:'AgroKing',score:15000,level:14},
-      {id:'b2',name:'MalinaPro',score:8400,level:11},
-      {id:'b3',name:'BerryHunter',score:4200,level:9},
-      {id:'b4',name:'KievFarmer',score:1900,level:7},
-      {id:'b5',name:'SweetHarvest',score:850,level:5},
-      {id:'b6',name:'Taras_UA',score:320,level:4},
-      {id:'b7',name:'Olena_V',score:140,level:3},
-      {id:'b8',name:'Sadivnyk77',score:60,level:2},
-      {id:'b9',name:'Newbie_1',score:15,level:1},
-      {id:uid,name:un,score:Math.floor(s.b),level:s.l}
-    ];
-    renderList(bots);
+
+async function syncAndLoad() {
+  ll.innerText = 'Оновлення рейтингу...';
+  try {
+    const payload = {};
+    payload[uid] = { id: uid, name: un, score: Math.floor(s.b), level: s.l };
+
+    // Оновлюємо свій запис у кошику Pantry (PUT зливає об'єкти без видалення інших гравців)
+    const putRes = await fetch(API, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    let data = {};
+    if (putRes.ok) {
+      data = await putRes.json();
+    } else {
+      const getRes = await fetch(API);
+      if (getRes.ok) data = await getRes.json();
+    }
+
+    const list = Object.values(data).filter(p => p && p.name).sort((a,b) => b.score - a.score).slice(0, 30);
+    if (!list.length) { ll.innerText = 'Поки порожньо!'; return; }
+
+    ll.innerHTML = '';
+    list.forEach((p, i) => {
+      const medal = i < 3 ? ['🥇','🥈','🥉'][i] : '#' + (i+1);
+      ll.innerHTML += `<div class="lrow${p.id===uid?' me':''}"><b>${medal} ${p.name} (Lvl ${p.level})</b><b style="color:#ffd32a">${Number(p.score).toLocaleString()} 💎</b></div>`;
+    });
+  } catch(e) {
+    ll.innerText = 'Помилка з’єднання: ' + e.message;
   }
 }
-let k=0;setInterval(()=>{if(ap()>0){s.b+=ap();ax(1)}if(s.n<me())s.n=Math.min(me(),s.n+1+Math.floor(s.e/2));ui();if(++k%10===0)sync()},1000);
-ui();sync();
+
+let k = 0;
+setInterval(() => {
+  if(ap() > 0) { s.b += ap(); ax(1); }
+  if(s.n < me()) s.n = Math.min(me(), s.n + 1 + Math.floor(s.e/2));
+  ui();
+  if(++k % 15 === 0) syncAndLoad();
+}, 1000);
+
+ui();
+syncAndLoad();
 </script>
 </body>
 </html>
