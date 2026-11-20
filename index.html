@@ -82,9 +82,9 @@ const SKN=[
   {id:'kng',n:'Король Арени',i:'🤴',p:450,b:'x3 монет',m:3}
 ];
 let st={c:0,g:0,w:1,k:0,ow:['pistol'],ew:'pistol',os:['rec'],es:'rec'};
-try{const v=JSON.parse(localStorage.getItem('sh_v2'));if(v)st=Object.assign(st,v)}catch(e){}
+try{const v=JSON.parse(localStorage.getItem('sh_v3'));if(v)st=Object.assign(st,v)}catch(e){}
 function save(){
-  try{localStorage.setItem('sh_v2',JSON.stringify(st))}catch(e){}
+  try{localStorage.setItem('sh_v3',JSON.stringify(st))}catch(e){}
   uC.innerText=Math.floor(st.c);uG.innerText=st.g;uW.innerText=st.w;
   const w=WPN.find(x=>x.id===st.ew);if(w)uWp.innerText=w.n;
 }
@@ -122,7 +122,8 @@ cv.addEventListener('pointerdown',e=>mv(e.clientX));
 function loop(){
   if(s1.style.display!=='none'){
     ctx.clearRect(0,0,W,H);fr++;
-    const w=WPN.find(x=>x.id===st.ew)||WPN,sk=SKN.find(x=>x.id===st.es)||SKN;
+    const w=WPN.find(x=>x.id===st.ew)||WPN[0];
+    const sk=SKN.find(x=>x.id===st.es)||SKN[0];
     if(fr%w.r===0){
       if(w.c===1)bul.push({x:pl.x,y:pl.y-20,vx:0,vy:-8,d:w.d,col:w.col});
       else if(w.c===2){bul.push({x:pl.x-10,y:pl.y-18,vx:0,vy:-8,d:w.d,col:w.col});bul.push({x:pl.x+10,y:pl.y-18,vx:0,vy:-8,d:w.d,col:w.col})}
