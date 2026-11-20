@@ -3,23 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Rank Up Tycoon</title>
+<title>Berry Tycoon</title>
 <script src="https://telegram.org"></script>
 <style>
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; padding: 16px; display: flex; flex-direction: column; min-height: 100vh; user-select: none; touch-action: manipulation; }
 .card { background: #181a22; border: 1px solid #2a2d3a; border-radius: 14px; padding: 12px; margin-bottom: 12px; }
 .row { display: flex; justify-content: space-between; align-items: center; }
-.badge { background: rgba(108,92,231,0.2); color: #a29bfe; padding: 4px 10px; border-radius: 8px; font-weight: bold; font-size: 13px; }
+.badge { background: rgba(232,67,147,0.2); color: #fd79a8; padding: 4px 10px; border-radius: 8px; font-weight: bold; font-size: 13px; }
 .bar-bg { width: 100%; height: 8px; background: #252834; border-radius: 4px; overflow: hidden; margin: 8px 0 4px; }
-.bar-fill { height: 100%; width: 0%; background: #6c5ce7; transition: width 0.2s; }
+.bar-fill { height: 100%; width: 0%; background: #e84393; transition: width 0.2s; }
 .bal { text-align: center; font-size: 36px; font-weight: 900; color: #ffd32a; margin: 10px 0 4px; }
 .sub { text-align: center; font-size: 13px; color: #0be881; margin-bottom: 14px; }
 .tap-zone { display: flex; justify-content: center; margin: 10px 0 18px; position: relative; }
-.tap-btn { width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, #7d5fff, #3c40c6); border: 4px solid #a29bfe; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.tap-btn { width: 165px; height: 165px; border-radius: 50%; background: radial-gradient(circle, #ff4d79, #b31246); box-shadow: 0 0 30px rgba(232, 67, 147, 0.45); border: 4px solid #ff85a2; color: #fff; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .tap-btn:active { transform: scale(0.92); }
 .upg { background: #181a22; border: 1px solid #2a2d3a; border-radius: 12px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.btn { background: #6c5ce7; color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; min-width: 80px; }
+.btn { background: #e84393; color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; min-width: 80px; }
 .btn:disabled { background: #252834; color: #57606f; cursor: not-allowed; }
 .float { position: absolute; font-size: 22px; font-weight: bold; color: #ffd32a; pointer-events: none; animation: up 0.6s ease-out forwards; }
 @keyframes up { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
@@ -29,7 +29,7 @@ body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; pad
 
 <div class="card">
   <div class="row">
-    <span class="badge" id="rankName">🥉 Ліга: Новачок</span>
+    <span class="badge" id="rankName">🥉 Ліга: Садівник</span>
     <span style="color:#ffd32a; font-weight:bold;">Рівень <span id="level">1</span></span>
   </div>
   <div class="bar-bg"><div class="bar-fill" id="xpBar"></div></div>
@@ -44,8 +44,8 @@ body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; pad
 
 <div class="tap-zone" id="zone">
   <button type="button" class="tap-btn" id="mainBtn">
-    <span style="font-size:48px;" id="emoji">🚀</span>
-    <span>ПРОКАЧАТИ</span>
+    <span style="font-size:54px;" id="emoji">🍓</span>
+    <span>ЗІБРАТИ</span>
   </button>
 </div>
 
@@ -58,11 +58,11 @@ body { font-family: sans-serif; background: #0f1015; color: #fff; margin: 0; pad
 </div>
 
 <div class="upg">
-  <div><b>👆 Сила кліку (Lvl <span id="tLvl">1</span>)</b><div style="font-size:12px;color:#8a8f9e;">+1 до базового кліку</div></div>
+  <div><b>👆 Сила збору (Lvl <span id="tLvl">1</span>)</b><div style="font-size:12px;color:#8a8f9e;">+1 до базового кліку</div></div>
   <button type="button" class="btn" id="bTap">25 💎</button>
 </div>
 <div class="upg">
-  <div><b>🤖 Авто-майнер (Lvl <span id="aLvl">0</span>)</b><div style="font-size:12px;color:#8a8f9e;">+2 рубіни щосекунди</div></div>
+  <div><b>🤖 Авто-збирач (Lvl <span id="aLvl">0</span>)</b><div style="font-size:12px;color:#8a8f9e;">+2 рубіни щосекунди</div></div>
   <button type="button" class="btn" id="bAuto">50 💎</button>
 </div>
 <div class="upg">
@@ -83,11 +83,11 @@ try {
 } catch (e) {}
 
 function getRank() {
-  if (s.lvl >= 15) return { n: '🌌 Легенда Web3', e: '🛸', m: 5.0 };
-  if (s.lvl >= 10) return { n: '💎 Кібер-магнат', e: '👑', m: 3.5 };
-  if (s.lvl >= 6) return { n: '🥇 Інвестор', e: '💼', m: 2.2 };
-  if (s.lvl >= 3) return { n: '🥈 Трейдер', e: '📈', m: 1.5 };
-  return { n: '🥉 Ліга: Новачок', e: '🚀', m: 1.0 };
+  if (s.lvl >= 15) return { n: '🌌 Ягідний Імператор', e: '👑', m: 5.0 };
+  if (s.lvl >= 10) return { n: '💎 Малиновий Магнат', e: '🍓', m: 3.5 };
+  if (s.lvl >= 6) return { n: '🥇 Власник плантації', e: '🍓', m: 2.2 };
+  if (s.lvl >= 3) return { n: '🥈 Фермер', e: '🍓', m: 1.5 };
+  return { n: '🥉 Ліга: Садівник', e: '🍓', m: 1.0 };
 }
 
 function nextXp() { return Math.floor(100 * Math.pow(1.45, s.lvl - 1)); }
