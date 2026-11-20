@@ -2,164 +2,90 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Cyber Arena</title>
 <script src="https://telegram.org"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:sans-serif;background:#0b0c10;color:#fff;margin:0;padding:10px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
-.top{display:flex;justify-content:space-between;align-items:center;background:#161822;border:1px solid #2a2d3d;border-radius:12px;padding:8px 12px;margin-bottom:8px}
-.don{background:linear-gradient(45deg,#00d2ff,#3a7bd5);border:none;color:#fff;padding:6px 10px;border-radius:8px;font-weight:bold;font-size:12px;cursor:pointer}
-.tabs{display:flex;gap:6px;margin-bottom:8px}
-.tab{flex:1;padding:9px 4px;background:#161822;border:1px solid #2a2d3d;color:#8a8f9e;border-radius:10px;font-weight:bold;font-size:12px;cursor:pointer}
+body{font-family:sans-serif;background:#0b0c10;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
+.top,.tabs{display:flex;gap:6px;margin-bottom:8px}
+.top{justify-content:space-between;align-items:center;background:#161822;border:1px solid #2a2d3d;border-radius:10px;padding:8px 12px}
+.don{background:#00a8ff;border:none;color:#fff;padding:6px 10px;border-radius:8px;font-weight:bold;cursor:pointer}
+.tab{flex:1;padding:8px;background:#161822;border:1px solid #2a2d3d;color:#8a8f9e;border-radius:10px;font-weight:bold;cursor:pointer}
 .tab.active{background:#ff4757;color:#fff;border-color:#ff4757}
-.scr{flex:1;display:flex;flex-direction:column;overflow-y:auto;position:relative}
-#cw{flex:1;position:relative;border-radius:14px;overflow:hidden;border:1px solid #2a2d3d;background:radial-gradient(circle,#1b1e2b,#0b0c10)}
+.scr{flex:1;display:flex;flex-direction:column;overflow-y:auto}
+#cw{flex:1;position:relative;border-radius:12px;overflow:hidden;border:1px solid #2a2d3d;background:#13151f}
 canvas{display:block;width:100%;height:100%;touch-action:none}
 .hud{position:absolute;top:8px;left:10px;right:10px;display:flex;justify-content:space-between;font-size:12px;font-weight:bold;pointer-events:none}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding-bottom:10px}
-.card{background:#161822;border:1px solid #2a2d3d;border-radius:12px;padding:10px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:5px}
-.card.eq{border-color:#2ed573;background:rgba(46,213,115,.1)}
-.btn{width:100%;padding:8px;border:none;border-radius:8px;font-weight:bold;font-size:12px;cursor:pointer;background:#ff4757;color:#fff}
-.btn.gem{background:linear-gradient(45deg,#00d2ff,#3a7bd5)}
-.btn.wear{background:#2ed573;color:#000}
-.btn.done{background:#2f3542;color:#a4b0be;cursor:default}
-.btn:disabled{background:#2f3542;color:#57606f;cursor:not-allowed}
-.mod{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:16px;z-index:20}
-.mbox{background:#161822;border:1px solid #3a7bd5;border-radius:16px;padding:16px;width:100%;max-width:340px}
-.pack{display:flex;justify-content:space-between;align-items:center;background:#1e2130;padding:10px 12px;border-radius:10px;margin-bottom:8px;border:1px solid #2f3542}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.card{background:#161822;border:1px solid #2a2d3d;border-radius:12px;padding:10px;text-align:center}
+.card.eq{border-color:#2ed573}
+.btn{width:100%;padding:8px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;background:#ff4757;color:#fff;margin-top:6px}
+.btn.gem{background:#00a8ff}.btn.wear{background:#2ed573;color:#000}.btn:disabled{background:#2f3542;color:#57606f}
+.mod{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:16px}
+.mbox{background:#161822;border:1px solid #00a8ff;border-radius:14px;padding:16px;width:100%;max-width:320px}
+.pk{display:flex;justify-content:space-between;align-items:center;background:#1e2130;padding:10px;border-radius:8px;margin-top:8px}
 </style>
 </head>
 <body>
 <div class="top">
-  <div style="display:flex;gap:12px;font-weight:bold;font-size:14px">
-    <span>💰 <b id="uC" style="color:#ffa502">0</b></span>
-    <span>💎 <b id="uG" style="color:#00d2ff">0</b></span>
-  </div>
+  <b>💰 <span id="uC" style="color:#ffa502">0</span> &nbsp; 💎 <span id="uG" style="color:#00d2ff">0</span></b>
   <button class="don" onclick="bm.style.display='flex'">+ Купити 💎</button>
 </div>
 <div class="tabs">
   <button class="tab active" id="t1" onclick="tab(1)">🎮 Бій</button>
   <button class="tab" id="t2" onclick="tab(2)">🔫 Зброя</button>
-  <button class="tab" id="t3" onclick="tab(3)">👕 Одяг (💎)</button>
+  <button class="tab" id="t3" onclick="tab(3)">👕 Одяг</button>
 </div>
-<div class="scr" id="s1">
-  <div id="cw">
-    <div class="hud"><span>Хвиля: <b id="uW" style="color:#ff4757">1</b></span><span>Зброя: <b id="uWp" style="color:#ffa502">Пістолет</b></span></div>
-    <canvas id="cv"></canvas>
-  </div>
-</div>
+<div class="scr" id="s1"><div id="cw"><div class="hud"><span>Хвиля: <b id="uW">1</b></span><span id="uWp">Пістолет</span></div><canvas id="cv"></canvas></div></div>
 <div class="scr" id="s2" style="display:none"><div class="grid" id="wg"></div></div>
-<div class="scr" id="s3" style="display:none">
-  <div style="font-size:12px;color:#8a8f9e;margin-bottom:8px;text-align:center">Одяг дає бонус до монет за кожного ворога!</div>
-  <div class="grid" id="sg"></div>
-</div>
-<div class="mod" id="bm">
-  <div class="mbox">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <b>💎 Банк кристалів</b>
-      <button onclick="bm.style.display='none'" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">✖</button>
-    </div>
-    <div class="pack"><div><b>💎 50 Кристалів</b><div style="font-size:11px;color:#8a8f9e">Стартовий пакет</div></div><button class="btn gem" style="width:auto" onclick="don(50)">25 ⭐</button></div>
-    <div class="pack"><div><b>💎 150 Кристалів</b><div style="font-size:11px;color:#2ed573">+20% бонус</div></div><button class="btn gem" style="width:auto" onclick="don(150)">60 ⭐</button></div>
-    <div class="pack"><div><b>💎 500 Кристалів</b><div style="font-size:11px;color:#ffa502">Набір Магната</div></div><button class="btn gem" style="width:auto" onclick="don(500)">150 ⭐</button></div>
-  </div>
-</div>
+<div class="scr" id="s3" style="display:none"><div class="grid" id="sg"></div></div>
+<div class="mod" id="bm"><div class="mbox">
+  <div style="display:flex;justify-content:space-between"><b>💎 Купити кристали</b><b onclick="bm.style.display='none'" style="cursor:pointer">✖</b></div>
+  <div class="pk"><span>💎 50 шт</span><button class="btn gem" style="width:auto" onclick="don(50)">25 ⭐</button></div>
+  <div class="pk"><span>💎 150 шт</span><button class="btn gem" style="width:auto" onclick="don(150)">60 ⭐</button></div>
+  <div class="pk"><span>💎 500 шт</span><button class="btn gem" style="width:auto" onclick="don(500)">150 ⭐</button></div>
+</div></div>
 <script>
-const tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand()}
-const WPN=[
-  {id:'pistol',n:'Пістолет',i:'🔫',p:0,d:1,r:22,c:1,col:'#ffa502'},
-  {id:'dual',n:'Подвійний',i:'🔫🔫',p:60,d:1.2,r:20,c:2,col:'#2ed573'},
-  {id:'shot',n:'Дробовик',i:'🧨',p:180,d:1.5,r:28,c:3,col:'#ff4757'},
-  {id:'plas',n:'Плазмаган',i:'⚡',p:450,d:3.5,r:14,c:2,col:'#00d2ff'},
-  {id:'lasr',n:'Лазер',i:'🚀',p:1200,d:7,r:10,c:3,col:'#e056fd'}
-];
-const SKN=[
-  {id:'rec',n:'Новобранець',i:'🪖',p:0,b:'Базова форма',m:1},
-  {id:'nin',n:'Кібер-Ніндзя',i:'🥷',p:50,b:'+25% монет',m:1.25},
-  {id:'ast',n:'Космодесант',i:'🧑‍🚀',p:120,b:'+50% монет',m:1.5},
-  {id:'cyb',n:'Титан-Бот',i:'🤖',p:250,b:'x2 монет',m:2},
-  {id:'kng',n:'Король Арени',i:'🤴',p:450,b:'x3 монет',m:3}
-];
-let st={c:0,g:0,w:1,k:0,ow:['pistol'],ew:'pistol',os:['rec'],es:'rec'};
-try{const v=JSON.parse(localStorage.getItem('sh_v3'));if(v)st=Object.assign(st,v)}catch(e){}
-function save(){
-  try{localStorage.setItem('sh_v3',JSON.stringify(st))}catch(e){}
-  uC.innerText=Math.floor(st.c);uG.innerText=st.g;uW.innerText=st.w;
-  const w=WPN.find(x=>x.id===st.ew);if(w)uWp.innerText=w.n;
-}
-function tab(n){
-  s1.style.display=n===1?'flex':'none';s2.style.display=n===2?'block':'none';s3.style.display=n===3?'block':'none';
-  t1.classList.toggle('active',n===1);t2.classList.toggle('active',n===2);t3.classList.toggle('active',n===3);
-  if(n===1)rsz();if(n===2)rWpn();if(n===3)rSkn();
-}
-function rWpn(){
-  wg.innerHTML='';
-  WPN.forEach(w=>{
-    const o=st.ow.includes(w.id),e=st.ew===w.id;
-    let b=e?'<button class="btn done">Одягнено</button>':o?`<button class="btn wear" onclick="eqW('${w.id}')">Вибрати</button>`:`<button class="btn" onclick="buyW('${w.id}')" ${st.c<w.p?'disabled':''}>${w.p} 💰</button>`;
-    wg.innerHTML+=`<div class="card${e?' eq':''}"><div style="font-size:34px">${w.i}</div><b>${w.n}</b><div style="font-size:11px;color:#8a8f9e">Шкода: ${w.d} | Стволів: ${w.c}</div>${b}</div>`;
-  });
-}
-function buyW(id){const w=WPN.find(x=>x.id===id);if(w&&st.c>=w.p){st.c-=w.p;st.ow.push(id);st.ew=id;save();rWpn()}}
-function eqW(id){st.ew=id;save();rWpn()}
-function rSkn(){
-  sg.innerHTML='';
-  SKN.forEach(k=>{
-    const o=st.os.includes(k.id),e=st.es===k.id;
-    let b=e?'<button class="btn done">Вдягнено</button>':o?`<button class="btn wear" onclick="eqS('${k.id}')">Вдягнути</button>`:`<button class="btn gem" onclick="buyS('${k.id}')" ${st.g<k.p?'disabled':''}>${k.p} 💎</button>`;
-    sg.innerHTML+=`<div class="card${e?' eq':''}"><div style="font-size:34px">${k.i}</div><b>${k.n}</b><div style="font-size:11px;color:#00d2ff">${k.b}</div>${b}</div>`;
-  });
-}
-function buyS(id){const k=SKN.find(x=>x.id===id);if(k&&st.g>=k.p){st.g-=k.p;st.os.push(id);st.es=id;save();rSkn()}}
-function eqS(id){st.es=id;save();rSkn()}
-function don(amt){st.g+=amt;save();if(s3.style.display==='block')rSkn();bm.style.display='none'}
-const ctx=cv.getContext('2d');let W=300,H=400,pl={x:150,y:350},bul=[],enm=[],prt=[],fr=0;
-function rsz(){const r=cw.getBoundingClientRect();W=cv.width=r.width;H=cv.height=r.height;pl.x=W/2;pl.y=H-45}
-function mv(cx){const r=cv.getBoundingClientRect();pl.x=Math.max(24,Math.min(W-24,cx-r.left))}
+try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
+const WPN=[{id:'p1',n:'Пістолет',i:'🔫',p:0,d:1,r:22,c:1,col:'#ffa502'},{id:'p2',n:'Подвійний',i:'🔫🔫',p:60,d:1.2,r:20,c:2,col:'#2ed573'},{id:'p3',n:'Дробовик',i:'🧨',p:180,d:1.5,r:28,c:3,col:'#ff4757'},{id:'p4',n:'Плазма',i:'⚡',p:450,d:3.5,r:14,c:2,col:'#00d2ff'}];
+const SKN=[{id:'k1',n:'Боєць',i:'🪖',p:0,b:'x1 монет',m:1},{id:'k2',n:'Ніндзя',i:'🥷',p:50,b:'+25% монет',m:1.25},{id:'k3',n:'Десант',i:'🧑‍🚀',p:120,b:'+50% монет',m:1.5},{id:'k4',n:'Король',i:'🤴',p:300,b:'x2.5 монет',m:2.5}];
+let st={c:0,g:0,w:1,k:0,ow:['p1'],ew:'p1',os:['k1'],es:'k1'};
+try{const v=JSON.parse(localStorage.getItem('sh4'));if(v)st=Object.assign(st,v)}catch(e){}
+function save(){try{localStorage.setItem('sh4',JSON.stringify(st))}catch(e){}uC.innerText=Math.floor(st.c);uG.innerText=st.g;uW.innerText=st.w;uWp.innerText=(WPN.find(x=>x.id===st.ew)||WPN[0]).n}
+function tab(n){s1.style.display=n===1?'flex':'none';s2.style.display=n===2?'block':'none';s3.style.display=n===3?'block':'none';t1.classList.toggle('active',n===1);t2.classList.toggle('active',n===2);t3.classList.toggle('active',n===3);if(n===1)rsz();if(n===2)rW();if(n===3)rS()}
+function rW(){wg.innerHTML='';WPN.forEach(w=>{const o=st.ow.includes(w.id),e=st.ew===w.id;wg.innerHTML+=`<div class="card${e?' eq':''}"><div style="font-size:32px">${w.i}</div><b>${w.n}</b><div style="font-size:11px;color:#8a8f9e">Шкода: ${w.d}</div>${e?'<button class="btn" disabled>Взято</button>':o?`<button class="btn wear" onclick="st.ew='${w.id}';save();rW()">Взяти</button>`:`<button class="btn" onclick="if(st.c>=${w.p}){st.c-=${w.p};st.ow.push('${w.id}');st.ew='${w.id}';save();rW()}" ${st.c<w.p?'disabled':''}>${w.p} 💰</button>`}</div>`})}
+function rS(){sg.innerHTML='';SKN.forEach(k=>{const o=st.os.includes(k.id),e=st.es===k.id;sg.innerHTML+=`<div class="card${e?' eq':''}"><div style="font-size:32px">${k.i}</div><b>${k.n}</b><div style="font-size:11px;color:#00d2ff">${k.b}</div>${e?'<button class="btn" disabled>Одягнено</button>':o?`<button class="btn wear" onclick="st.es='${k.id}';save();rS()">Одягти</button>`:`<button class="btn gem" onclick="if(st.g>=${k.p}){st.g-=${k.p};st.os.push('${k.id}');st.es='${k.id}';save();rS()}" ${st.g<k.p?'disabled':''}>${k.p} 💎</button>`}</div>`})}
+function don(a){st.g+=a;save();if(s3.style.display==='block')rS();bm.style.display='none'}
+const ctx=cv.getContext('2d');let W=300,H=400,px=150,py=350,bul=[],enm=[],fr=0;
+function rsz(){const r=cw.getBoundingClientRect();W=cv.width=r.width;H=cv.height=r.height;px=W/2;py=H-40}
+function mv(x){const r=cv.getBoundingClientRect();px=Math.max(20,Math.min(W-20,x-r.left))}
 cv.addEventListener('pointermove',e=>{if(e.buttons>0||e.pointerType==='touch')mv(e.clientX)});
 cv.addEventListener('pointerdown',e=>mv(e.clientX));
 function loop(){
   if(s1.style.display!=='none'){
     ctx.clearRect(0,0,W,H);fr++;
-    const w=WPN.find(x=>x.id===st.ew)||WPN[0];
-    const sk=SKN.find(x=>x.id===st.es)||SKN[0];
+    const w=WPN.find(x=>x.id===st.ew)||WPN[0],sk=SKN.find(x=>x.id===st.es)||SKN[0];
     if(fr%w.r===0){
-      if(w.c===1)bul.push({x:pl.x,y:pl.y-20,vx:0,vy:-8,d:w.d,col:w.col});
-      else if(w.c===2){bul.push({x:pl.x-10,y:pl.y-18,vx:0,vy:-8,d:w.d,col:w.col});bul.push({x:pl.x+10,y:pl.y-18,vx:0,vy:-8,d:w.d,col:w.col})}
-      else{bul.push({x:pl.x,y:pl.y-20,vx:0,vy:-8,d:w.d,col:w.col});bul.push({x:pl.x-8,y:pl.y-18,vx:-1.5,vy:-7.8,d:w.d,col:w.col});bul.push({x:pl.x+8,y:pl.y-18,vx:1.5,vy:-7.8,d:w.d,col:w.col})}
+      if(w.c===1)bul.push({x:px,y:py-18,vx:0,vy:-8,d:w.d,c:w.col});
+      else if(w.c===2){bul.push({x:px-9,y:py-16,vx:0,vy:-8,d:w.d,c:w.col});bul.push({x:px+9,y:py-16,vx:0,vy:-8,d:w.d,c:w.col})}
+      else{bul.push({x:px,y:py-18,vx:0,vy:-8,d:w.d,c:w.col});bul.push({x:px-8,y:py-16,vx:-1.4,vy:-7.8,d:w.d,c:w.col});bul.push({x:px+8,y:py-16,vx:1.4,vy:-7.8,d:w.d,c:w.col})}
     }
-    if(fr%Math.max(25,65-st.w*2)===0){
-      const hp=Math.ceil(st.w*1.6),ic=['👾','🛸','👹','🤖'][Math.floor(Math.random()*4)];
-      enm.push({x:25+Math.random()*(W-50),y:-30,hp:hp,mh:hp,sp:1.1+Math.min(2.5,st.w*.12),i:ic});
-    }
-    for(let i=bul.length-1;i>=0;i--){
-      const b=bul[i];b.x+=b.vx;b.y+=b.vy;ctx.fillStyle=b.col;ctx.beginPath();ctx.arc(b.x,b.y,4,0,Math.PI*2);ctx.fill();
-      if(b.y<-10)bul.splice(i,1);
-    }
+    if(fr%Math.max(25,65-st.w*2)===0){const hp=Math.ceil(st.w*1.5);enm.push({x:25+Math.random()*(W-50),y:-25,hp:hp,mh:hp,sp:1.2+Math.min(2.2,st.w*.1),i:['👾','🛸','👹'][Math.floor(Math.random()*3)]})}
+    for(let i=bul.length-1;i>=0;i--){const b=bul[i];b.x+=b.vx;b.y+=b.vy;ctx.fillStyle=b.c;ctx.beginPath();ctx.arc(b.x,b.y,4,0,6.28);ctx.fill();if(b.y<-10)bul.splice(i,1)}
     for(let i=enm.length-1;i>=0;i--){
       const e=enm[i];e.y+=e.sp;
-      for(let j=bul.length-1;j>=0;j--){
-        const b=bul[j];
-        if(Math.hypot(e.x-b.x,e.y-b.y)<22){
-          e.hp-=b.d;bul.splice(j,1);
-          if(e.hp<=0){
-            const rw=Math.ceil((2+st.w)*sk.m);st.c+=rw;st.k++;if(st.k%10===0)st.w++;
-            prt.push({x:e.x,y:e.y,t:'+'+rw+'💰',l:30});enm.splice(i,1);save();break;
-          }
-        }
-      }
+      for(let j=bul.length-1;j>=0;j--){const b=bul[j];if(Math.hypot(e.x-b.x,e.y-b.y)<22){e.hp-=b.d;bul.splice(j,1);if(e.hp<=0){st.c+=Math.ceil((2+st.w)*sk.m);st.k++;if(st.k%10===0)st.w++;enm.splice(i,1);save();break}}}
       if(!enm[i])continue;
-      ctx.font='32px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e.i,e.x,e.y);
-      ctx.fillStyle='#2f3542';ctx.fillRect(e.x-16,e.y-24,32,4);ctx.fillStyle='#ff4757';ctx.fillRect(e.x-16,e.y-24,32*(e.hp/e.mh),4);
-      if(e.y>H-20){enm.splice(i,1);st.w=Math.max(1,st.w-1);prt.push({x:pl.x,y:pl.y-30,t:'Прорив!',l:40});save()}
+      ctx.font='30px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e.i,e.x,e.y);
+      ctx.fillStyle='#2f3542';ctx.fillRect(e.x-15,e.y-22,30,4);ctx.fillStyle='#ff4757';ctx.fillRect(e.x-15,e.y-22,30*(e.hp/e.mh),4);
+      if(e.y>H-15){enm.splice(i,1);st.w=Math.max(1,st.w-1);save()}
     }
-    for(let i=prt.length-1;i>=0;i--){
-const p=prt[i];p.y-=.8;p.l--;ctx.font='bold 13px sans-serif';ctx.fillStyle='#ffa502';ctx.fillText(p.t,p.x,p.y);
-if(p.l<=0)prt.splice(i,1);
-}
-ctx.font='40px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(sk.i,pl.x,pl.y);
-}
-requestAnimationFrame(loop);
+    ctx.font='38px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(sk.i,px,py);
+  }
+  requestAnimationFrame(loop);
 }
 rsz();window.addEventListener('resize',rsz);save();loop();
+</script>
+</body>
+</html>
