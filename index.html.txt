@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crypto Rig Miner</title>
+    <script src="https://telegram.org"></script>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --subtext: #8b949e;
+            --accent: #2f81f7;
+            --green: #3fb950;
+            --orange: #d29922;
+            --red: #f85149;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        .header {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .balance-title { font-size: 12px; color: var(--subtext); }
+        .balance-val { font-size: 24px; font-weight: 800; color: var(--green); }
+        .hashrate-box { text-align: right; }
+        .hashrate-val { font-size: 18px; font-weight: 700; color: var(--accent); }
+
+        /* Шкала температури */
+        .temp-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        .temp-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #21262d;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 20%;
+            background: var(--green);
+            transition: width 0.3s, background 0.3s;
+        }
+        .cool-btn {
+            width: 100%;
+            padding: 10px;
+            background: #1f6feb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .cool-btn:active { opacity: 0.8; }
+
+        /* Сітка майнінг-ригу (слоти для карт) */
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--subtext);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .rig-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .slot {
+            background: var(--card-bg);
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            height: 95px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 6px;
+            position: relative;
+        }
+        .slot.filled {
+            border-style: solid;
+            border-color: var(--accent);
+        }
+        .gpu-icon { font-size: 26px; margin-bottom: 4px; }
+        .gpu-lvl { font-size: 12px; font-weight: 700; }
+        .gpu-hash { font-size: 11px; color: var(--green); }
+
+        /* Кнопки дій */
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: auto;
+        }
+        .action-btn {
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .buy-gpu-btn { background: var(--green); color: #000; }
+        .merge-btn { background: var(--orange); color: #000; }
+        .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <div class="balance-title">Намайнено (<span id="username">Майнер</span>)</div>
+            <div class="balance-val"><span id="balance">50.00</span> GRM</div>
+        </div>
+        <div class="hashrate-box">
+            <div class="balance-title">Хешрейт</div>
+            <div class="hashrate-val"><span id="hashrate">0</span> H/s</div>
+        </div>
+    </div>
+
+    <div class="temp-container">
+        <div class="temp-header">
+            <span>🌡 Температура ригу: <strong id="tempText">30°C</strong></span>
+            <span id="statusText" style="color: var(--green);">Працює</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="tempBar"></div>
+        </div>
+        <button class="cool-btn" onclick="coolRig()">❄️ Охолодити ферму (-15°C)</button>
+    </div>
+
+    <div class="section-title">
+        <span>Ваш гараж (Стійка GPU)</span>
+        <span id="slotsCount">0 / 6</span>
+    </div>
+    <div class="rig-grid" id="rigGrid"></div>
+
+    <div class="actions">
+        <button class="action-btn merge-btn" id="mergeBtn" onclick="mergeGPUs()" disabled>
+            <span>⚡ Об'єднати однакові карти (Крафт)</span>
+            <span id="mergeInfo">Немає пар</span>
+        </button>
+        <button class="action-btn buy-gpu-btn" id="buyBtn" onclick="buyGPU()">
+            <span>📦 Купити GPU (Рівень 1)</span>
+            <span id="gpuCost">50 GRM</span>
+        </button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        if (tg.initDataUnsafe?.user) {
+            document.getElementById('username').innerText = tg.initDataUnsafe.user.first_name;
+        }
+
+        // Конфігурація рівнів відеокарт
+        const GPU_TIERS = {
+            1: { name: 'GTX 1060', hash: 2, icon: '📟' },
+            2: { name: 'RTX 3060', hash: 5, icon: '📼' },
+            3: { name: 'RTX 4090', hash: 14, icon: '🎛' },
+            4: { name: 'ASIC Miner', hash: 40, icon: '🖥' },
+            5: { name: 'Quantum Rig', hash: 120, icon: '⚛️' }
+        };
+
+        // Завантаження стану гри
+        let state = JSON.parse(localStorage.getItem('gram_miner_save')) || {
+            balance: 50,
+            gpus: [], // Масив рівнів карт, напр. [1, 1, 2]
+            gpuPrice: 50,
+            temp: 30
+        };
+
+        const MAX_SLOTS = 6;
+        let isOverheated = false;
+
+        // Розрахунок загального хешрейту
+        function getTotalHashrate() {
+            if (isOverheated) return 0;
+            return state.gpus.reduce((sum, lvl) => sum + (GPU_TIERS[lvl]?.hash || 0), 0);
+        }
+
+        // Покупка нової карти 1-го рівня
+        function buyGPU() {
+            if (state.balance >= state.gpuPrice && state.gpus.length < MAX_SLOTS) {
+                state.balance -= state.gpuPrice;
+                state.gpus.push(1);
+                state.gpuPrice = Math.floor(state.gpuPrice * 1.35); // Зростання ціни
+                tg.HapticFeedback.notificationOccurred('success');
+                saveAndRender();
+            }
+        }
+
+        // Перевірка наявності пар для крафту
+        function findMergeableLevel() {
+            const counts = {};
+            for (let lvl of state.gpus) {
+                if (lvl < 5) { // Максимум 5 рівень
+                    counts[lvl] = (counts[lvl] || 0) + 1;
+                    if (counts[lvl] >= 2) return lvl;
+                }
+            }
+            return null;
+        }
+
+        // Об'єднання двох однакових карт у карту вищого рівня
+        function mergeGPUs() {
+            const lvlToMerge = findMergeableLevel();
+            if (!lvlToMerge) return;
+
+            // Видаляємо 2 карти цього рівня
+            let removed = 0;
+            state.gpus = state.gpus.filter(lvl => {
+                if (lvl === lvlToMerge && removed < 2) {
+                    removed++;
+                    return false;
+                }
+                return true;
+            });
+
+            // Додаємо 1 карту наступного рівня
+            state.gpus.push(lvlToMerge + 1);
+            state.gpus.sort((a, b) => b - a); // Сортуємо від потужніших до слабших
+            tg.HapticFeedback.impactOccurred('heavy');
+            saveAndRender();
+        }
+
+        // Охолодження ферми
+        function coolRig() {
+            state.temp = Math.max(25, state.temp - 15);
+            if (state.temp < 80) isOverheated = false;
+            tg.HapticFeedback.impactOccurred('light');
+            updateUI();
+        }
+
+        // Відображення сітки слотів
+        function renderGrid() {
+            const grid = document.getElementById('rigGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < MAX_SLOTS; i++) {
+                const slot = document.createElement('div');
+                const lvl = state.gpus[i];
+
+                if (lvl) {
+                    const info = GPU_TIERS[lvl];
+                    slot.className = 'slot filled';
+                    slot.innerHTML = `
+                        <div class="gpu-icon">${info.icon}</div>
+                        <div class="gpu-lvl">Lvl ${lvl} • ${info.name}</div>
+                        <div class="gpu-hash">+${info.hash} H/s</div>
+                    `;
+                } else {
+                    slot.className = 'slot';
+                    slot.innerHTML = `<span style="color: #484f58; font-size: 12px;">Порожній слот</span>`;
+                }
+                grid.appendChild(slot);
