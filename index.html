@@ -96,7 +96,7 @@ function changeName() {
 }
 
 let s = {b:0, x:0, l:1, t:1, a:0, e:1, n:100};
-try { const v = JSON.parse(localStorage.getItem('b18')); if (v) s = Object.assign(s, v); } catch(e) {}
+try { const v = JSON.parse(localStorage.getItem('b20')); if (v) s = Object.assign(s, v); } catch(e) {}
 
 function rk() {
   if(s.l>=15) return {n:'🌌 Імператор', e:'👑', m:5};
@@ -118,7 +118,7 @@ function ui() {
   bt.innerText = c1() + ' 💎'; bt.disabled = s.b < c1();
   ba.innerText = c2() + ' 💎'; ba.disabled = s.b < c2();
   be.innerText = c3() + ' 💎'; be.disabled = s.b < c3();
-  try { localStorage.setItem('b18', JSON.stringify(s)); } catch(e) {}
+  try { localStorage.setItem('b20', JSON.stringify(s)); } catch(e) {}
 }
 
 function hit() {
@@ -142,22 +142,31 @@ function tab(i) {
   if(i===2) syncAndLoad();
 }
 
-async function syncAndLoad() {
-  ll.innerText = 'Оновлення рейтингу...';
-  try {
-    const url = `${GAS_URL}?uid=${encodeURIComponent(uid)}&name=${encodeURIComponent(un)}&score=${Math.floor(s.b)}&level=${s.l}`;
-    const res = await fetch(url, { method: 'GET', redirect: 'follow' });
-    const list = await res.json();
-
-    list.sort((a,b) => b.score - a.score);
-    ll.innerHTML = '';
-    list.slice(0, 30).forEach((p, i) => {
-      const medal = i < 3 ? ['🥇','🥈','🥉'][i] : '#' + (i+1);
-      ll.innerHTML += `<div class="lrow${p.id===uid?' me':''}"><b>${medal} ${p.name} (Lvl ${p.level})</b><b style="color:#ffd32a">${Number(p.score).toLocaleString()} 💎</b></div>`;
-    });
-  } catch(e) {
-    ll.innerText = 'Помилка завантаження: ' + e.message;
+function renderTopList(list) {
+  if (!Array.isArray(list) || !list.length) {
+    ll.innerText = 'Поки порожньо!';
+    return;
   }
+  list.sort((a, b) => b.score - a.score);
+  ll.innerHTML = '';
+  list.slice(0, 30).forEach((p, i) => {
+    const medal = i < 3 ? ['🥇', '🥈', '🥉'][i] : '#' + (i + 1);
+    ll.innerHTML += `<div class="lrow${p.id === uid ? ' me' : ''}"><b>${medal} ${p.name} (Lvl ${p.level})</b><b style="color:#ffd32a">${Number(p.score).toLocaleString()} 💎</b></div>`;
+  });
+}
+
+function syncAndLoad() {
+  ll.innerText = 'Оновлення рейтингу...';
+  const old = document.getElementById('jsonp_script');
+  if (old) old.remove();
+
+  const sc = document.createElement('script');
+  sc.id = 'jsonp_script';
+  sc.src = `${GAS_URL}?callback=renderTopList&uid=${encodeURIComponent(uid)}&name=${encodeURIComponent(un)}&score=${Math.floor(s.b)}&level=${s.l}&t=${Date.now()}`;
+  sc.onerror = function() {
+    ll.innerText = 'Помилка завантаження. Перевірте доступ «Все» в Apps Script.';
+  };
+  document.body.appendChild(sc);
 }
 
 setInterval(() => {
