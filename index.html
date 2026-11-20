@@ -3,82 +3,154 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Penalty Cup</title>
+<title>Penalty Stadium Pro</title>
 <script src="https://telegram.org"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:sans-serif;background:#0d131a;color:#fff;margin:0;padding:10px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
-.box{background:#161f29;border:1px solid #263445;border-radius:12px;padding:8px 12px;margin-bottom:8px}
+body{font-family:sans-serif;background:#0b1016;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
+.tabs{display:flex;gap:6px;margin-bottom:6px}
+.tab{flex:1;padding:9px;background:#151e29;border:1px solid #263547;color:#8395a7;border-radius:10px;font-weight:bold;cursor:pointer}
+.tab.act{background:#1dd1a1;color:#000;border-color:#1dd1a1}
+.box{background:#151e29;border:1px solid #263547;border-radius:12px;padding:8px 12px;margin-bottom:6px}
 .row{display:flex;justify-content:space-between;align-items:center}
-.bar{width:100%;height:6px;background:#222f3e;border-radius:4px;overflow:hidden;margin:5px 0}
+.bar{width:100%;height:5px;background:#222f3e;border-radius:4px;overflow:hidden;margin:4px 0}
 .fill{height:100%;background:#1dd1a1;transition:width .3s}
-.stgs{display:flex;justify-content:space-between;font-size:10px;font-weight:bold;color:#576574;margin-top:4px}
+.stgs{display:flex;justify-content:space-between;font-size:10px;font-weight:bold;color:#576574;margin-top:3px}
 .stgs .act{color:#feca57;text-decoration:underline}.stgs .done{color:#1dd1a1}
-.pitch{flex:1;position:relative;border-radius:14px;border:2px solid #2ecc71;background:linear-gradient(#1e824c,#2ecc71);margin-bottom:8px;display:flex;flex-direction:column;align-items:center;overflow:hidden}
-.goal{width:82%;height:44%;border:4px solid #fff;border-bottom:none;margin-top:14px;position:relative;background:rgba(255,255,255,.06)}
-.kp,.bl{position:absolute;left:50%;transform:translateX(-50%);transition:all .3s}
-.kp{bottom:4px;font-size:44px}.bl{bottom:16px;font-size:34px}
-.msg{position:absolute;top:52%;background:rgba(13,19,26,.9);padding:7px 14px;border-radius:16px;font-weight:bold;font-size:13px;border:1px solid #feca57;text-align:center}
+.pitch{flex:1;position:relative;border-radius:14px;border:2px solid #2ecc71;background:radial-gradient(circle at 50% 30%,#27ae60,#145a32);margin-bottom:8px;display:flex;flex-direction:column;align-items:center;overflow:hidden}
+.stands{width:100%;background:repeating-linear-gradient(90deg,#1e272e 0,#1e272e 8px,#2f3640 8px,#2f3640 16px);padding:4px 0;text-align:center;font-size:12px;letter-spacing:2px;border-bottom:2px solid #fff}
+.goal{width:82%;height:42%;border:4px solid #fff;border-bottom:none;margin-top:8px;position:relative;background:rgba(255,255,255,.07)}
+.kp,.bl{position:absolute;left:50%;transform:translateX(-50%);transition:all .32s cubic-bezier(.22,1,.36,1)}
+.kp{bottom:4px;font-size:44px}.bl{bottom:14px;font-size:34px}
+.msg{position:absolute;top:54%;background:rgba(11,16,22,.92);padding:7px 14px;border-radius:16px;font-weight:bold;font-size:13px;border:1px solid #feca57;text-align:center;max-width:90%}
 .ctrl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .btn{background:#1e272e;border:2px solid #485460;color:#fff;padding:12px 4px;border-radius:12px;font-weight:bold;font-size:13px;cursor:pointer}
 .btn:active{transform:scale(.95)}.btn:disabled{opacity:.4}
-.full{grid-column:span 3;border:none;font-size:15px;padding:13px}
+.full{grid-column:span 3;border:none;font-size:14px;padding:13px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow-y:auto;padding-bottom:10px}
+.card{background:#151e29;border:1px solid #263547;border-radius:12px;padding:10px;text-align:center}
+.card.eq{border-color:#1dd1a1;background:rgba(29,209,161,.08)}
+.sbtn{width:100%;padding:8px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;background:#feca57;color:#000;margin-top:6px}
+.sbtn.wear{background:#1dd1a1}.sbtn:disabled{background:#222f3e;color:#576574}
 </style>
 </head>
 <body>
+<div class="tabs">
+  <button class="tab act" id="t1" onclick="tab(1)">⚽ Кубок</button>
+  <button class="tab" id="t2" onclick="tab(2)">🛍 Магазин</button>
+</div>
 <div class="box">
-  <div class="row"><b style="color:#54a0ff">⚽ Кубок Пенальті</b><b style="color:#feca57">Рівень <span id="lv">1</span> • 🏆 <span id="cp">0</span></b></div>
+  <div class="row"><b style="color:#feca57">Рівень <span id="lv">1</span> • 🏆 <span id="cp">0</span></b><b style="color:#feca57">💰 <span id="cn">20</span></b></div>
   <div class="bar"><div class="fill" id="xb"></div></div>
-  <div class="row" style="font-size:11px;color:#8395a7"><span>Очки: <b style="color:#fff" id="pt">0</b>/<span id="nx">100</span></span><span id="op" style="color:#ff9ff3">1/32: ФК Двір</span></div>
+  <div class="row" style="font-size:11px;color:#8395a7"><span>XP: <span id="pt">0</span>/<span id="nx">100</span></span><span id="op" style="color:#ff9ff3">1/32: ФК Двір</span></div>
   <div class="stgs" id="sb"><span>1/32</span><span>1/16</span><span>1/8</span><span>1/4</span><span>1/2</span><span>ФІНАЛ</span></div>
 </div>
-<div class="box" style="text-align:center">
-  <div style="font-size:26px;font-weight:900;color:#feca57"><span id="ps">0</span> : <span id="bs">0</span></div>
-  <div class="row" style="font-size:12px"><span>Ти: <span id="pd">⚪⚪⚪⚪⚪</span></span><span>Бот: <span id="bd">⚪⚪⚪⚪⚪</span></span></div>
+<div id="gScr" style="display:flex;flex-direction:column;flex:1">
+  <div class="box" style="text-align:center;padding:6px">
+    <div style="font-size:24px;font-weight:900;color:#feca57"><span id="ps">0</span> : <span id="bs">0</span></div>
+    <div class="row" style="font-size:12px"><span>Ти: <span id="pd">⚪⚪⚪⚪⚪</span></span><span>Бот: <span id="bd">⚪⚪⚪⚪⚪</span></span></div>
+  </div>
+  <div class="pitch">
+    <div class="stands" id="crowd">👏🙌📣👏🙌📣👏🙌📣👏</div>
+    <div class="goal"><div class="kp" id="kp">🧤</div></div>
+    <div class="msg" id="ms">⚽ Твій удар! Вибери кут</div>
+    <div class="bl" id="bl">⚽</div>
+  </div>
+  <div class="ctrl" id="ct"></div>
 </div>
-<div class="pitch">
-  <div class="goal"><div class="kp" id="kp">🧤</div></div>
-  <div class="msg" id="ms">⚽ Твій удар! Вибери кут</div>
-  <div class="bl" id="bl">⚽</div>
-</div>
-<div class="ctrl" id="ct"></div>
+<div id="sScr" class="grid" style="display:none"></div>
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
 const ST=[{n:'1/32',o:'ФК Двір',r:30},{n:'1/16',o:'ФК Район',r:50},{n:'1/8',o:'ФК Місто',r:80},{n:'1/4',o:'ФК Титан',r:120},{n:'1/2',o:'ФК Легенда',r:180},{n:'ФІНАЛ',o:'Чемпіон',r:300}];
-let p={pt:0,lv:1,cp:0,st:0};try{const v=JSON.parse(localStorage.getItem('pc80'));if(v)p=Object.assign(p,v)}catch(e){}
-let ph='sh',pS=[],bS=[],bz=0;
-const nx=()=>p.lv*100,dots=a=>[0,1,2,3,4].concat(a.length>5?a.slice(5).map((_,i)=>i+5):[]).map(i=>a[i]===1?'🟢':a[i]===0?'🔴':'⚪').join('');
-function addP(v){p.pt+=v;while(p.pt>=nx()){p.pt-=nx();p.lv++}}
+const SHOP=[
+  {id:'b1',t:'b',n:'Класика',i:'⚽',p:0,bn:0,d:'Звичайний м’яч'},
+  {id:'b2',t:'b',n:'Вогняний',i:'🔥',p:20,bn:5,d:'+5 💰 за кожен гол'},
+  {id:'b3',t:'b',n:'Блискавка',i:'⚡',p:60,bn:12,d:'+12 💰 за кожен гол'},
+  {id:'b4',t:'b',n:'Комета',i:'☄️',p:150,bn:25,d:'+25 💰 за кожен гол'},
+  {id:'k1',t:'k',n:'Базові',i:'🧤',p:0,bn:0,d:'Звичайні рукавиці'},
+  {id:'k2',t:'k',n:'Кібер-хват',i:'🦾',p:50,bn:10,d:'+10 💰 за кожен сейв'}
+];
+let p={pt:0,lv:1,cp:0,st:0,cn:20,ow:['b1','k1'],eb:'b1',ek:'k1'};
+try{const v=JSON.parse(localStorage.getItem('pc_snd1'));if(v)p=Object.assign(p,v)}catch(e){}
+let ph='sh',pS=[],bS=[],bz=0,ac=null;
+
+function playStadium(type){
+  try{
+    if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended')ac.resume();
+    const now=ac.currentTime;
+    const osc=ac.createOscillator(),og=ac.createGain();
+    osc.frequency.setValueAtTime(140,now);osc.frequency.exponentialRampToValueAtTime(40,now+0.12);
+    og.gain.setValueAtTime(0.5,now);og.gain.exponentialRampToValueAtTime(0.01,now+0.12);
+    osc.connect(og);og.connect(ac.destination);osc.start(now);osc.stop(now+0.13);
+
+    const dur=type==='cheer'?1.6:1.1;
+    const buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate),ch=buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++)ch[i]=(Math.random()*2-1)*Math.sin(Math.PI*(i/ch.length));
+    const src=ac.createBufferSource(),flt=ac.createBiquadFilter(),gn=ac.createGain();
+    src.buffer=buf;flt.type='bandpass';flt.Q.value=type==='cheer'?0.9:2.2;
+    flt.frequency.setValueAtTime(type==='cheer'?550:520,now+0.1);
+    flt.frequency.exponentialRampToValueAtTime(type==='cheer'?1250:190,now+0.1+dur);
+    gn.gain.setValueAtTime(type==='cheer'?0.45:0.35,now+0.1);
+    gn.gain.exponentialRampToValueAtTime(0.01,now+0.1+dur);
+    src.connect(flt);flt.connect(gn);gn.connect(ac.destination);src.start(now+0.1);
+  }catch(e){}
+}
+
+const nx=()=>p.lv*100,getIt=id=>SHOP.find(x=>x.id===id)||SHOP.at(0);
+const dots=a=>Array.from({length:Math.max(5,a.length)},(_,i)=>a[i]===1?'🟢':a[i]===0?'🔴':'⚪').join('');
+function addP(v){p.pt+=v;p.cn+=v;while(p.pt>=nx()){p.pt-=nx();p.lv++}}
+function tab(n){gScr.style.display=n===1?'flex':'none';sScr.style.display=n===2?'grid':'none';t1.classList.toggle('act',n===1);t2.classList.toggle('act',n===2);if(n===2)rShop()}
+function rShop(){
+  sScr.innerHTML='';
+  SHOP.forEach(it=>{
+    const o=p.ow.includes(it.id),eq=p.eb===it.id||p.ek===it.id;
+    const btn=eq?'<button class="sbtn" disabled>Одягнено</button>':o?`<button class="sbtn wear" onclick="eq('${it.id}','${it.t}')">Вибрати</button>`:`<button class="sbtn" onclick="buy('${it.id}','${it.t}',${it.p})" ${p.cn<it.p?'disabled':''}>${it.p} 💰</button>`;
+    sScr.innerHTML+=`<div class="card${eq?' eq':''}"><div style="font-size:34px">${it.i}</div><b>${it.n}</b><div style="font-size:11px;color:#1dd1a1">${it.d}</div>${btn}</div>`;
+  });
+}
+function buy(id,t,pr){if(p.cn>=pr){p.cn-=pr;p.ow.push(id);eq(id,t)}}
+function eq(id,t){if(t==='b')p.eb=id;else p.ek=id;ui();rShop()}
 function ui(){
-  lv.innerText=p.lv;cp.innerText=p.cp;pt.innerText=p.pt;nx.innerText=nx();xb.style.width=Math.min(100,p.pt/nx()*100)+'%';
-  const cur=ST[p.st]||ST[0];op.innerText=cur.n+': '+cur.o;
+  lv.innerText=p.lv;cp.innerText=p.cp;cn.innerText=p.cn;pt.innerText=p.pt;nx.innerText=nx();xb.style.width=Math.min(100,p.pt/nx()*100)+'%';
+  const cur=ST.at(p.st)||ST.at(0);op.innerText=cur.n+': '+cur.o;
   sb.querySelectorAll('span').forEach((s,i)=>s.className=i<p.st?'done':i===p.st?'act':'');
   ps.innerText=pS.filter(x=>x).length;bs.innerText=bS.filter(x=>x).length;pd.innerText=dots(pS);bd.innerText=dots(bS);
-  try{localStorage.setItem('pc80',JSON.stringify(p))}catch(e){}
-  if(ph==='win')return ct.innerHTML=`<button class="btn full" style="background:#1dd1a1;color:#000" onclick="rst()">➡️ Далі: ${ST[p.st].n}</button>`;
+  bl.innerText=getIt(p.eb).i;kp.innerText=getIt(p.ek).i;
+  try{localStorage.setItem('pc_snd1',JSON.stringify(p))}catch(e){}
+  if(ph==='win')return ct.innerHTML=`<button class="btn full" style="background:#1dd1a1;color:#000" onclick="rst()">➡️ Далі: ${ST.at(p.st).n}</button>`;
   if(ph==='cup')return ct.innerHTML=`<button class="btn full" style="background:#feca57;color:#000" onclick="rst()">🏆 Новий кубок (з 1/32)</button>`;
   if(ph==='los')return ct.innerHTML=`<button class="btn full" style="background:#ff6b6b" onclick="rst()">🔄 Виліт! Почати з 1/32</button>`;
   const s=ph==='sh',c=s?'#ff9f43':'#54a0ff',t=s?['⬅️ Вліво','⬆️ Центр','➡️ Вправо']:['🧤 Вліво','🧤 Центр','🧤 Вправо'];
-  ct.innerHTML=[0,1,2].map(i=>`<button class="btn" style="border-color:${c}" onclick="go(${i})" ${bz?'disabled':''}>${t[i]}</button>`).join('');
+  ct.innerHTML=Array.from({length:3},(_,i)=>`<button class="btn" style="border-color:${c}" onclick="go(${i})" ${bz?'disabled':''}>${t.at(i)}</button>`).join('');
 }
 function anim(b,k){
   const x=['22%','50%','78%'],r=['-30deg','0deg','30deg'];
-  kp.style.left=x[k];kp.style.transform=`translateX(-50%) rotate(${r[k]})`;
-  bl.style.left=x[b];bl.style.bottom='68%';bl.style.transform='translateX(-50%) scale(.6)';
+  kp.style.left=x.at(k);kp.style.transform=`translateX(-50%) rotate(${r.at(k)})`;
+  bl.style.left=x.at(b);bl.style.bottom='66%';bl.style.transform='translateX(-50%) scale(.6)';
 }
-function rstPos(){bl.style.cssText='';kp.style.cssText=''}
+function rstPos(){bl.style.cssText='';kp.style.cssText='';crowd.innerText='👏🙌📣👏🙌📣👏🙌📣👏'}
 function chk(){
   if(pS.length>=5&&pS.length===bS.length){
-    const pg=pS.filter(x=>x).length,bg=bS.filter(x=>x).length,cur=ST[p.st];
-    if(pg>bg){addP(cur.r);if(p.st>=5){p.cp++;p.st=0;ph='cup';ms.innerText=`🏆 ЧЕМПІОН! +${cur.r} очок!`}else{p.st++;ph='win';ms.innerText=`✅ Перемога ${pg}:${bg}! +${cur.r} очок`}return 1}
+    const pg=pS.filter(x=>x).length,bg=bS.filter(x=>x).length,cur=ST.at(p.st);
+    if(pg>bg){addP(cur.r);if(p.st>=5){p.cp++;p.st=0;ph='cup';ms.innerText=`🏆 ЧЕМПІОН! +${cur.r} 💰`}else{p.st++;ph='win';ms.innerText=`✅ Перемога ${pg}:${bg}! +${cur.r} 💰`}return 1}
     if(bg>pg){addP(5);p.st=0;ph='los';ms.innerText=`❌ Виліт у ${cur.n} (${pg}:${bg})`;return 1}
     ms.innerText=`🔥 Нічия ${pg}:${bg}! До промаху!`;
   }return 0;
 }
 function go(c){
   if(bz)return;bz=1;ui();const bot=Math.floor(Math.random()*3);
-  if(ph==='sh'){anim(c,bot);const g=c!==bot;pS.push(g?1:0);ms.innerText=g?'⚽ ГОООЛ!':'🧤 Сейв воротаря!';setTimeout(()=>{rstPos();ph='sv';bz=0;ms.innerText='🧤 Ти на воротах! Куди стрибати?';ui()},900)}
-  else{anim(bot,c);const g=bot!==c;bS.push(g?1:0);ms.innerText=g?'❌ Бот забив!':'🔥 СЕЙВ! Відбив!';setTimeout(()=>{rstPos();bz=0;if(!chk()){ph='sh';ms.innerText='⚽ Твій удар! Вибери кут'}ui()},900)}
+  if(ph==='sh'){
+    anim(c,bot);const g=c!==bot;pS.push(g?1:0);playStadium(g?'cheer':'groan');
+    crowd.innerText=g?'🎉🔥🥳🙌🎉🔥🥳🙌🎉🔥':'😱🤦‍♂️😞👎😱🤦‍♂️😞👎😱🤦‍♂️';
+    if(g){const bn=getIt(p.eb).bn;p.cn+=bn;ms.innerText=bn?`⚽ ГОООЛ! (+${bn}💰)`:'⚽ ГОООЛ! Стадіон реве!'}else ms.innerText='🧤 Сейв воротаря! Ууу...';
+    setTimeout(()=>{rstPos();ph='sv';bz=0;ms.innerText='🧤 Ти на воротах! Куди стрибати?';ui()},1100);
+  }else{
+    anim(bot,c);const g=bot!==c;bS.push(g?1:0);playStadium(g?'groan':'cheer');
+    crowd.innerText=g?'😱🤦‍♂️😞👎😱🤦‍♂️😞👎😱🤦‍♂️':'🎉🔥🥳🙌🎉🔥🥳🙌🎉🔥';
+    if(!g){const bn=getIt(p.ek).bn;p.cn+=bn;ms.innerText=bn?`🔥 СЕЙВ! (+${bn}💰)`:'🔥 СЕЙВ! Трибуни шаленіють!'}else ms.innerText='❌ Бот забив!';
+    setTimeout(()=>{rstPos();bz=0;if(!chk()){ph='sh';ms.innerText='⚽ Твій удар! Вибери кут'}ui()},1100);
+  }
 }
 function rst(){ph='sh';pS=[];bS=[];bz=0;rstPos();ms.innerText='⚽ Твій удар! Вибери кут';ui()}
 ui();
