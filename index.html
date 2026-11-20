@@ -240,3 +240,55 @@ function renderShop() {
       btnClass += ' takeoff';
       btnText = 'Зняти';
     } else if (isOwned) {
+btnClass += ' wear';
+btnText = 'Одягнути';
+}
+shopGrid.innerHTML += <div class="item-card${isEq ? ' equipped' : ''}"> <div class="item-icon">${item.icon}</div> <b>${item.name}</b> <div style="font-size:12px;color:#1dd1a1">+${item.bonus} 💰 за клік</div> <button class="${btnClass}" onclick="handleItem('${item.id}')" ${disabled ? 'disabled' : ''}>${btnText}</button> </div>;
+});
+}
+function setBar(bar, val, textEl) {
+const v = Math.floor(val);
+textEl.innerText = v + '%';
+bar.style.width = v + '%';
+bar.style.background = v < 25 ? '#ff6b6b' : v < 50 ? '#feca57' : '#1dd1a1';
+}
+function ui() {
+document.body.classList.toggle('sleep', s.sleep);
+const st = getStage();
+stageName.innerText = st.n;
+pet.innerText = st.e;
+petWrap.classList.toggle('bounce', !s.sleep);
+const eq = getEquippedItem();
+if (eq && !s.sleep) {
+accLayer.innerText = eq.icon;
+accLayer.setAttribute('style', eq.style);
+} else {
+accLayer.innerText = '';
+}
+lvl.innerText = s.lvl;
+xp.innerText = Math.floor(s.xp);
+nextXp.innerText = nextXp();
+xpBar.style.width = Math.min(100, (s.xp / nextXp()) * 100) + '%';
+coins.innerText = s.coins;
+setBar(bFood, s.food, vFood);
+setBar(bFun, s.fun, vFun);
+setBar(bEn, s.en, vEn);
+btnFeed.disabled = s.sleep || s.coins < 5;
+btnPlay.disabled = s.sleep || s.en < 15;
+btnSleep.classList.toggle('active-sleep', s.sleep);
+sleepTxt.innerText = s.sleep ? 'Розбудити' : 'Спати';
+try { localStorage.setItem('tama_v2', JSON.stringify(s)); } catch(e) {}
+}
+setInterval(() => {
+if (s.sleep) {
+s.en = Math.min(100, s.en + 3);
+s.food = Math.max(0, s.food - 0.3);
+if (s.en >= 100) { s.sleep = false; msg.innerText = 'Я виспався! ☀️'; }
+} else {
+s.food = Math.max(0, s.food - 0.6);
+s.fun = Math.max(0, s.fun - 0.5);
+s.en = Math.max(0, s.en - 0.4);
+}
+ui();
+}, 1000);
+ui();
