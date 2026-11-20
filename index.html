@@ -6,25 +6,14 @@
     <title>Rank Up Tycoon</title>
     <script src="https://telegram.org"></script>
     <style>
-        :root {
-            --bg: #0f1015;
-            --card: #181a22;
-            --border: #2a2d3a;
-            --text: #ffffff;
-            --muted: #8a8f9e;
-            --accent: #6c5ce7;
-            --gold: #ffd32a;
-            --green: #0be881;
-            --blue: #00d8d6;
-        }
         * {
             -webkit-tap-highlight-color: transparent;
             box-sizing: border-box;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            background-color: #0f1015;
+            color: #ffffff;
             margin: 0;
             padding: 16px;
             display: flex;
@@ -36,8 +25,8 @@
             touch-action: manipulation;
         }
         .rank-card {
-            background: var(--card);
-            border: 1px solid var(--border);
+            background: #181a22;
+            border: 1px solid #2a2d3a;
             border-radius: 16px;
             padding: 14px;
             margin-bottom: 14px;
@@ -59,7 +48,7 @@
         .lvl-text {
             font-weight: 800;
             font-size: 15px;
-            color: var(--gold);
+            color: #ffd32a;
         }
         .xp-bar-bg {
             width: 100%;
@@ -71,17 +60,16 @@
         .xp-bar-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, var(--accent), var(--blue));
+            background: linear-gradient(90deg, #6c5ce7, #00d8d6);
             transition: width 0.2s;
         }
         .xp-info {
             display: flex;
             justify-content: space-between;
             font-size: 11px;
-            color: var(--muted);
+            color: #8a8f9e;
             margin-top: 4px;
         }
-
         .balance-section {
             text-align: center;
             margin: 8px 0 14px;
@@ -89,15 +77,13 @@
         .balance-amount {
             font-size: 36px;
             font-weight: 900;
-            color: var(--gold);
-            letter-spacing: 0.5px;
+            color: #ffd32a;
         }
         .passive-info {
             font-size: 13px;
-            color: var(--green);
+            color: #0be881;
             font-weight: 600;
         }
-
         .tap-zone {
             display: flex;
             justify-content: center;
@@ -106,8 +92,8 @@
             position: relative;
         }
         .tap-circle {
-            width: 160px;
-            height: 160px;
+            width: 165px;
+            height: 165px;
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, #7d5fff, #3c40c6);
             box-shadow: 0 0 30px rgba(108, 92, 231, 0.4);
@@ -117,16 +103,15 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: transform 0.06s;
+            transition: transform 0.05s;
             outline: none;
             color: white;
         }
-        .tap-circle:active, .tap-circle.pressed {
+        .tap-circle:active {
             transform: scale(0.92);
         }
-        .tap-emoji { font-size: 50px; pointer-events: none; }
-        .tap-label { font-size: 13px; font-weight: 800; margin-top: 4px; pointer-events: none; }
-
+        .tap-emoji { font-size: 52px; }
+        .tap-label { font-size: 13px; font-weight: 800; margin-top: 4px; }
         .energy-box {
             margin-bottom: 16px;
         }
@@ -147,14 +132,13 @@
         .energy-bar-fill {
             height: 100%;
             width: 100%;
-            background: var(--gold);
+            background: #ffd32a;
             transition: width 0.2s;
         }
-
         .upgrades-title {
             font-size: 14px;
             font-weight: 700;
-            color: var(--muted);
+            color: #8a8f9e;
             margin-bottom: 8px;
         }
         .upgrades-list {
@@ -163,8 +147,8 @@
             gap: 8px;
         }
         .upg-card {
-            background: var(--card);
-            border: 1px solid var(--border);
+            background: #181a22;
+            border: 1px solid #2a2d3a;
             border-radius: 12px;
             padding: 10px 14px;
             display: flex;
@@ -172,9 +156,9 @@
             align-items: center;
         }
         .upg-name { font-size: 14px; font-weight: 700; }
-        .upg-desc { font-size: 12px; color: var(--muted); }
+        .upg-desc { font-size: 12px; color: #8a8f9e; }
         .upg-btn {
-            background: var(--accent);
+            background: #6c5ce7;
             color: white;
             border: none;
             padding: 8px 14px;
@@ -194,12 +178,11 @@
             color: #000;
             font-weight: 800;
         }
-
         .floating-num {
             position: absolute;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 900;
-            color: var(--gold);
+            color: #ffd32a;
             pointer-events: none;
             z-index: 10;
             animation: floatUp 0.7s ease-out forwards;
@@ -232,7 +215,7 @@
     </div>
 
     <div class="tap-zone" id="tapZone">
-        <button type="button" class="tap-circle" id="tapBtn">
+        <button type="button" class="tap-circle" id="tapBtn" onclick="doTap(event)">
             <div class="tap-emoji" id="rankEmoji">🚀</div>
             <div class="tap-label">ПРОКАЧАТИ</div>
         </button>
@@ -261,7 +244,7 @@
         <div class="upg-card">
             <div>
                 <div class="upg-name">🤖 Авто-майнер (Lvl <span id="autoLvl">0</span>)</div>
-                <div class="upg-desc">+2 монети щосекунди автоматично</div>
+                <div class="upg-desc">+2 рубіни щосекунди автоматично</div>
             </div>
             <button type="button" class="upg-btn" id="btnAuto" onclick="buyUpgrade('auto')">50 💎</button>
         </div>
@@ -291,14 +274,6 @@
             }
         } catch (e) {}
 
-        const RANKS = [
-            { minLvl: 1, name: '🥉 Ліга: Новачок', emoji: '🚀', mult: 1.0 },
-            { minLvl: 3, name: '🥈 Ліга: Трейдер', emoji: '📈', mult: 1.5 },
-            { minLvl: 6, name: '🥇 Ліга: Інвестор', emoji: '💼', mult: 2.2 },
-            { minLvl: 10, name: '💎 Ліга: Кібер-магнат', emoji: '👑', mult: 3.5 },
-            { minLvl: 15, name: '🌌 Ліга: Легенда Web3', emoji: '🛸', mult: 5.0 }
-        ];
-
         let state = {
             balance: 0,
             xp: 0,
@@ -310,187 +285,24 @@
         };
 
         try {
-const saved = JSON.parse(localStorage.getItem('rank_tycoon_v3'));
-if (saved && typeof saved.balance === 'number') {
-state = Object.assign(state, saved);
-}
-} catch (e) {}
-let isTurbo = false;
-let turboTimer = 0;
-function getNextLevelXp() {
-return Math.floor(100 * Math.pow(1.45, state.level - 1));
-}
-function getCurrentRank() {
-let current = RANKS[0];
-for (let i = 0; i < RANKS.length; i++) {
-if (state.level >= RANKS[i].minLvl) {
-current = RANKS[i];
-}
-}
-return current;
-}
-function getMaxEnergy() {
-return 100 + (state.energyLvl - 1) * 50;
-}
-function getTapPower() {
-const rank = getCurrentRank();
-const turboMult = isTurbo ? 2 : 1;
-return Math.max(1, Math.floor(state.tapLvl * rank.mult * turboMult));
-}
-function getAutoIncome() {
-if (state.autoLvl === 0) return 0;
-const rank = getCurrentRank();
-const turboMult = isTurbo ? 2 : 1;
-return Math.floor((state.autoLvl * 2) * rank.mult * turboMult);
-}
-function getCost(type) {
-if (type === 'tap') return Math.floor(25 * Math.pow(1.4, state.tapLvl - 1));
-if (type === 'auto') return Math.floor(50 * Math.pow(1.45, state.autoLvl));
-if (type === 'energy') return Math.floor(40 * Math.pow(1.5, state.energyLvl - 1));
-return 100;
-}
-function vibrate(type) {
-try {
-if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
-if (type === 'light' || type === 'medium') {
-window.Telegram.WebApp.HapticFeedback.impactOccurred(type);
-} else {
-window.Telegram.WebApp.HapticFeedback.notificationOccurred(type);
-}
-}
-} catch (e) {}
-}
-function addXp(amount) {
-state.xp += amount;
-let needed = getNextLevelXp();
-while (state.xp >= needed) {
-state.xp -= needed;
-state.level += 1;
-state.energy = getMaxEnergy();
-needed = getNextLevelXp();
-vibrate('success');
-}
-}
-function processTap(clientX, clientY) {
-const tapBtn = document.getElementById('tapBtn');
-tapBtn.classList.add('pressed');
-setTimeout(() => tapBtn.classList.remove('pressed'), 80);
-if (state.energy < 1) {
-vibrate('error');
-return;
-}
-state.energy -= 1;
-const gain = getTapPower();
-state.balance += gain;
-addXp(isTurbo ? 4 : 2);
-vibrate('light');
-spawnFloatingText(clientX, clientY, +${gain});
-saveAndRender();
-}
-const tapBtn = document.getElementById('tapBtn');
-tapBtn.addEventListener('pointerdown', function(e) {
-e.preventDefault();
-processTap(e.clientX, e.clientY);
-});
-function spawnFloatingText(clientX, clientY, text) {
-const zone = document.getElementById('tapZone');
-const rect = zone.getBoundingClientRect();
-const el = document.createElement('div');
-el.className = 'floating-num';
-el.innerText = text;
-const x = (clientX ? clientX - rect.left : rect.width / 2) - 15;
-const y = (clientY ? clientY - rect.top : rect.height / 2) - 25;
-el.style.left = ${x}px;
-el.style.top = ${y}px;
-zone.appendChild(el);
-setTimeout(() => el.remove(), 700);
-}
-function buyUpgrade(type) {
-const cost = getCost(type);
-if (state.balance < cost) return;
-state.balance -= cost;
-if (type === 'tap') state.tapLvl += 1;
-if (type === 'auto') state.autoLvl += 1;
-if (type === 'energy') {
-state.energyLvl += 1;
-state.energy = getMaxEnergy();
-}
-addXp(15);
-vibrate('medium');
-saveAndRender();
-}
-function activateTurbo() {
-if (isTurbo || state.balance < 100) return;
-state.balance -= 100;
-isTurbo = true;
-turboTimer = 15;
-vibrate('success');
-saveAndRender();
-}
-function updateUI() {
-const rank = getCurrentRank();
-const nextXp = getNextLevelXp();
-const maxEnergy = getMaxEnergy();
-document.getElementById('rankName').innerText = rank.name;
-document.getElementById('rankEmoji').innerText = rank.emoji;
-document.getElementById('rankMult').innerText = rank.mult.toFixed(1);
-document.getElementById('level').innerText = state.level;
-document.getElementById('xp').innerText = Math.floor(state.xp);
-document.getElementById('nextXp').innerText = nextXp;
-document.getElementById('xpBar').style.width = ${Math.min(100, (state.xp / nextXp) * 100)}%;
-document.getElementById('balance').innerText = Math.floor(state.balance).toLocaleString();
-document.getElementById('autoIncome').innerText = getAutoIncome().toLocaleString();
-document.getElementById('tapPowerDisplay').innerText = getTapPower().toLocaleString();
-document.getElementById('energy').innerText = Math.floor(state.energy);
-document.getElementById('maxEnergy').innerText = maxEnergy;
-document.getElementById('energyBar').style.width = ${(state.energy / maxEnergy) * 100}%;
-document.getElementById('tapLvl').innerText = state.tapLvl;
-document.getElementById('autoLvl').innerText = state.autoLvl;
-document.getElementById('energyLvl').innerText = state.energyLvl;
-const tapCost = getCost('tap');
-const autoCost = getCost('auto');
-const energyCost = getCost('energy');
-const btnTap = document.getElementById('btnTap');
-btnTap.innerText = ${tapCost.toLocaleString()} 💎;
-btnTap.disabled = state.balance < tapCost;
-const btnAuto = document.getElementById('btnAuto');
-btnAuto.innerText = ${autoCost.toLocaleString()} 💎;
-btnAuto.disabled = state.balance < autoCost;
-const btnEnergy = document.getElementById('btnEnergy');
-btnEnergy.innerText = ${energyCost.toLocaleString()} 💎;
-btnEnergy.disabled = state.balance < energyCost;
-const btnTurbo = document.getElementById('btnTurbo');
-if (isTurbo) {
-btnTurbo.innerText = 🔥 ${turboTimer}с;
-btnTurbo.disabled = true;
-} else {
-btnTurbo.innerText = 100 💎;
-btnTurbo.disabled = state.balance < 100;
-}
-}
-function saveAndRender() {
-try {
-localStorage.setItem('rank_tycoon_v3', JSON.stringify(state));
-} catch (e) {}
-updateUI();
-}
-setInterval(() => {
-const auto = getAutoIncome();
-if (auto > 0) {
-state.balance += auto;
-addXp(1);
-}
-const maxE = getMaxEnergy();
-if (state.energy < maxE) {
-const regen = 1 + Math.floor(state.energyLvl / 2);
-state.energy = Math.min(maxE, state.energy + regen);
-}
-if (isTurbo) {
-turboTimer -= 1;
-if (turboTimer <= 0) {
-isTurbo = false;
-}
-}
-saveAndRender();
-}, 1000);
-updateUI();
+            const saved = JSON.parse(localStorage.getItem('rank_tycoon_v4'));
+            if (saved && typeof saved.balance === 'number') {
+                state = Object.assign(state, saved);
+            }
+        } catch (e) {}
+
+        let isTurbo = false;
+        let turboTimer = 0;
+
+        function getRankInfo() {
+            if (state.level >= 15) return { name: '🌌 Ліга: Легенда Web3', emoji: '🛸', mult: 5.0 };
+            if (state.level >= 10) return { name: '💎 Ліга: Кібер-магнат', emoji: '👑', mult: 3.5 };
+            if (state.level >= 6) return { name: '🥇 Ліга: Інвестор', emoji: '💼', mult: 2.2 };
+            if (state.level >= 3) return { name: '🥈 Ліга: Трейдер', emoji: '📈', mult: 1.5 };
+            return { name: '🥉 Ліга: Новачок', emoji: '🚀', mult: 1.0 };
+        }
+
+        function getNextLevelXp() {
+            return Math.floor(100 * Math.pow(1.45, state.level - 1));
+        }
+
