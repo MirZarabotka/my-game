@@ -53,22 +53,59 @@ body{font-family:sans-serif;background:#0f1015;color:#fff;margin:0;padding:14px;
   <div class="upg"><div><b>🔋 Батарея (Lvl <span id="el">1</span>)</b><div style="font-size:12px;color:#8a8f9e">+50 енергії</div></div><button class="btn" id="be" onclick="buy(3)">40 💎</button></div>
 </div>
 <div id="t" style="display:none">
-  <div class="row" style="margin-bottom:10px"><b>Топ гравців (Онлайн)</b><button class="btn" onclick="syncAndLoad()">🔄</button></div>
+  <div class="row" style="margin-bottom:10px">
+    <b>Топ гравців (Онлайн)</b>
+    <div style="display:flex;gap:6px">
+      <button class="btn" style="background:#2a2d3a;min-width:auto" onclick="changeName()">✏️ Нік</button>
+      <button class="btn" style="min-width:auto" onclick="syncAndLoad()">🔄</button>
+    </div>
+  </div>
   <div id="ll" style="color:#8a8f9e">Завантаження...</div>
 </div>
 <script>
 const API = 'https://getpantry.cloud';
 
-let uid = 'g_' + (localStorage.getItem('p_uid') || Math.floor(Math.random()*999999));
-localStorage.setItem('p_uid', uid.replace('g_',''));
-let un = 'Гравець #' + uid.slice(-4);
+let guestId = 'g_' + (localStorage.getItem('p_uid') || Math.floor(Math.random()*999999));
+localStorage.setItem('p_uid', guestId.replace('g_',''));
+let uid = guestId;
+let un = localStorage.getItem('custom_nick') || ('Гравець #' + uid.slice(-4));
+let isTgUser = false;
 
-try {
-  const tg = window.Telegram.WebApp;
-  tg.ready(); tg.expand();
-  const u = tg.initDataUnsafe.user;
-  if (u) { uid = 'u_' + u.id; un = u.first_name || u.username || un; }
-} catch(e) {}
+function getTgUser() {
+  try {
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (!tg) return null;
+    tg.ready();
+    tg.expand();
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) return tg.initDataUnsafe.user;
+    if (tg.initData) {
+      const params = new URLSearchParams(tg.initData);
+      const uStr = params.get('user');
+      if (uStr) return JSON.parse(uStr);
+    }
+  } catch(e) {}
+  return null;
+}
+
+const tgUser = getTgUser();
+if (tgUser && tgUser.id) {
+  isTgUser = true;
+  uid = 'u_' + tgUser.id;
+  if (tgUser.username) {
+    un = '@' + tgUser.username;
+  } else {
+    un = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || ('User ' + tgUser.id);
+  }
+}
+
+function changeName() {
+  const n = prompt('Введіть ваш нікнейм:', un);
+  if (n && n.trim()) {
+    un = n.trim().slice(0, 20);
+    localStorage.setItem('custom_nick', un);
+    syncAndLoad();
+  }
+}
 
 let s = {b:0, x:0, l:1, t:1, a:0, e:1, n:100};
 try { const v = JSON.parse(localStorage.getItem('b15')); if (v) s = Object.assign(s, v); } catch(e) {}
@@ -121,12 +158,13 @@ async function syncAndLoad() {
   ll.innerText = 'Оновлення рейтингу...';
   try {
     let data = {};
-    const getRes = await fetch(API);
+    const getRes = await fetch(API + '?t=' + Date.now());
     if (getRes.ok) {
       const txt = await getRes.text();
       if (txt.trim().startsWith('{')) data = JSON.parse(txt);
     }
 
+    if (isTgUser && data[guestId]) delete data[guestId];
     data[uid] = { id: uid, name: un, score: Math.floor(s.b), level: s.l };
 
     await fetch(API, {
@@ -151,7 +189,7 @@ setInterval(() => {
   if(ap() > 0) { s.b += ap(); ax(1); }
   if(s.n < me()) s.n = Math.min(me(), s.n + 1 + Math.floor(s.e/2));
   ui();
-  if(++k % 15 === 0) syncAndLoad();
+  if(++k % 15 === 0 && t.style.display === 'block') syncAndLoad();
 }, 1000);
 
 ui();
