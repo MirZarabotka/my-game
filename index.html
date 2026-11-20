@@ -17,6 +17,10 @@
             --green: #0be881;
             --blue: #00d8d6;
         }
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg);
@@ -26,11 +30,11 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            box-sizing: border-box;
             user-select: none;
+            -webkit-user-select: none;
             overflow-x: hidden;
+            touch-action: manipulation;
         }
-        /* Верхня панель з рангом та рівнем */
         .rank-card {
             background: var(--card);
             border: 1px solid var(--border);
@@ -78,7 +82,6 @@
             margin-top: 4px;
         }
 
-        /* Баланс */
         .balance-section {
             text-align: center;
             margin: 8px 0 14px;
@@ -95,7 +98,6 @@
             font-weight: 600;
         }
 
-        /* Головна кнопка тапу */
         .tap-zone {
             display: flex;
             justify-content: center;
@@ -104,8 +106,8 @@
             position: relative;
         }
         .tap-circle {
-            width: 155px;
-            height: 155px;
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, #7d5fff, #3c40c6);
             box-shadow: 0 0 30px rgba(108, 92, 231, 0.4);
@@ -115,15 +117,16 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: transform 0.08s;
+            transition: transform 0.06s;
+            outline: none;
+            color: white;
         }
-        .tap-circle:active {
-            transform: scale(0.93);
+        .tap-circle.pressed {
+            transform: scale(0.92);
         }
-        .tap-emoji { font-size: 48px; }
-        .tap-label { font-size: 13px; font-weight: 700; margin-top: 4px; }
+        .tap-emoji { font-size: 50px; pointer-events: none; }
+        .tap-label { font-size: 13px; font-weight: 800; margin-top: 4px; pointer-events: none; }
 
-        /* Смужка енергії */
         .energy-box {
             margin-bottom: 16px;
         }
@@ -148,7 +151,6 @@
             transition: width 0.2s;
         }
 
-        /* Прокачка (Апгрейди) */
         .upgrades-title {
             font-size: 14px;
             font-weight: 700;
@@ -193,18 +195,18 @@
             font-weight: 800;
         }
 
-        /* Вилітаючі цифри */
         .floating-num {
             position: absolute;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 900;
             color: var(--gold);
             pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
+            z-index: 10;
+            animation: floatUp 0.7s ease-out forwards;
         }
         @keyframes floatUp {
             0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-60px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-65px) scale(1.25); }
         }
     </style>
 </head>
@@ -230,10 +232,10 @@
     </div>
 
     <div class="tap-zone" id="tapZone">
-        <div class="tap-circle" id="tapBtn" onclick="handleTap(event)">
+        <button type="button" class="tap-circle" id="tapBtn">
             <div class="tap-emoji" id="rankEmoji">🚀</div>
             <div class="tap-label">ПРОКАЧАТИ</div>
-        </div>
+        </button>
     </div>
 
     <div class="energy-box">
@@ -253,7 +255,7 @@
                 <div class="upg-name">👆 Сила кліку (Lvl <span id="tapLvl">1</span>)</div>
                 <div class="upg-desc">+1 до базового доходу за тап</div>
             </div>
-            <button class="upg-btn" id="btnTap" onclick="buyUpgrade('tap')">25 💎</button>
+            <button type="button" class="upg-btn" id="btnTap" onclick="buyUpgrade('tap')">25 💎</button>
         </div>
 
         <div class="upg-card">
@@ -261,7 +263,7 @@
                 <div class="upg-name">🤖 Авто-майнер (Lvl <span id="autoLvl">0</span>)</div>
                 <div class="upg-desc">+2 монети щосекунди автоматично</div>
             </div>
-            <button class="upg-btn" id="btnAuto" onclick="buyUpgrade('auto')">50 💎</button>
+            <button type="button" class="upg-btn" id="btnAuto" onclick="buyUpgrade('auto')">50 💎</button>
         </div>
 
         <div class="upg-card">
@@ -269,23 +271,25 @@
                 <div class="upg-name">🔋 Батарея (Lvl <span id="energyLvl">1</span>)</div>
                 <div class="upg-desc">+50 до запасу енергії та швидший заряд</div>
             </div>
-            <button class="upg-btn" id="btnEnergy" onclick="buyUpgrade('energy')">40 💎</button>
+            <button type="button" class="upg-btn" id="btnEnergy" onclick="buyUpgrade('energy')">40 💎</button>
         </div>
 
         <div class="upg-card">
             <div>
                 <div class="upg-name">🔥 Турбо-буст (x2 на 15с)</div>
-                <div class="upg-desc" id="turboDesc">Подвоює весь прибуток та XP</div>
+                <div class="upg-desc">Подвоює весь прибуток та XP</div>
             </div>
-            <button class="upg-btn turbo-btn" id="btnTurbo" onclick="activateTurbo()">100 💎</button>
+            <button type="button" class="upg-btn turbo-btn" id="btnTurbo" onclick="activateTurbo()">100 💎</button>
         </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+        const tg = window.Telegram ? window.Telegram.WebApp : null;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
 
-        // Ліги, які відкриваються з ростом рівня
         const RANKS = [
             { minLvl: 1, name: '🥉 Ліга: Новачок', emoji: '🚀', mult: 1.0 },
             { minLvl: 3, name: '🥈 Ліга: Трейдер', emoji: '📈', mult: 1.5 },
@@ -294,8 +298,7 @@
             { minLvl: 15, name: '🌌 Ліга: Легенда Web3', emoji: '🛸', mult: 5.0 }
         ];
 
-        // Завантаження збереження
-        let state = JSON.parse(localStorage.getItem('rank_tycoon_v1')) || {
+        let state = {
             balance: 0,
             xp: 0,
             level: 1,
@@ -305,11 +308,174 @@
             energy: 100
         };
 
-        let isTurbo = false;
-        let turboTimer = 0;
-
-        function getNextLevelXp() {
-            return Math.floor(100 * Math.pow(1.45, state.level - 1));
-        }
-
-
+        try {
+            const saved = JSON.parse(localStorage.getItem('rank_tycoon_v2'));
+if (saved && typeof saved.balance === 'number') {
+state = Object.assign(state, saved);
+}
+} catch (e) {}
+let isTurbo = false;
+let turboTimer = 0;
+function getNextLevelXp() {
+return Math.floor(100 * Math.pow(1.45, state.level - 1));
+}
+function getCurrentRank() {
+let current = RANKS[0];
+for (let i = 0; i < RANKS.length; i++) {
+if (state.level >= RANKS[i].minLvl) {
+current = RANKS[i];
+}
+}
+return current;
+}
+function getMaxEnergy() {
+return 100 + (state.energyLvl - 1) * 50;
+}
+function getTapPower() {
+const rank = getCurrentRank();
+const turboMult = isTurbo ? 2 : 1;
+return Math.max(1, Math.floor(state.tapLvl * rank.mult * turboMult));
+}
+function getAutoIncome() {
+if (state.autoLvl === 0) return 0;
+const rank = getCurrentRank();
+const turboMult = isTurbo ? 2 : 1;
+return Math.floor((state.autoLvl * 2) * rank.mult * turboMult);
+}
+function getCost(type) {
+if (type === 'tap') return Math.floor(25 * Math.pow(1.4, state.tapLvl - 1));
+if (type === 'auto') return Math.floor(50 * Math.pow(1.45, state.autoLvl));
+if (type === 'energy') return Math.floor(40 * Math.pow(1.5, state.energyLvl - 1));
+return 100;
+}
+function addXp(amount) {
+state.xp += amount;
+let needed = getNextLevelXp();
+while (state.xp >= needed) {
+state.xp -= needed;
+state.level += 1;
+state.energy = getMaxEnergy();
+needed = getNextLevelXp();
+if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+}
+}
+// Обробка тапу (працює миттєво при дотику)
+const tapBtn = document.getElementById('tapBtn');
+tapBtn.addEventListener('pointerdown', function(e) {
+e.preventDefault();
+tapBtn.classList.add('pressed');
+setTimeout(() => tapBtn.classList.remove('pressed'), 80);
+if (state.energy < 1) {
+if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+return;
+}
+state.energy -= 1;
+const gain = getTapPower();
+state.balance += gain;
+addXp(isTurbo ? 4 : 2);
+if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+spawnFloatingText(e.clientX, e.clientY, +${gain});
+updateUI();
+});
+function spawnFloatingText(clientX, clientY, text) {
+const zone = document.getElementById('tapZone');
+const rect = zone.getBoundingClientRect();
+const el = document.createElement('div');
+el.className = 'floating-num';
+el.innerText = text;
+const x = (clientX ? clientX - rect.left : rect.width / 2) - 15;
+const y = (clientY ? clientY - rect.top : rect.height / 2) - 25;
+el.style.left = ${x}px;
+el.style.top = ${y}px;
+zone.appendChild(el);
+setTimeout(() => el.remove(), 700);
+}
+function buyUpgrade(type) {
+const cost = getCost(type);
+if (state.balance < cost) return;
+state.balance -= cost;
+if (type === 'tap') state.tapLvl += 1;
+if (type === 'auto') state.autoLvl += 1;
+if (type === 'energy') {
+state.energyLvl += 1;
+state.energy = getMaxEnergy();
+}
+addXp(15);
+if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+saveAndRender();
+}
+function activateTurbo() {
+if (isTurbo || state.balance < 100) return;
+state.balance -= 100;
+isTurbo = true;
+turboTimer = 15;
+if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+updateUI();
+}
+function updateUI() {
+const rank = getCurrentRank();
+const nextXp = getNextLevelXp();
+const maxEnergy = getMaxEnergy();
+document.getElementById('rankName').innerText = rank.name;
+document.getElementById('rankEmoji').innerText = rank.emoji;
+document.getElementById('rankMult').innerText = rank.mult.toFixed(1);
+document.getElementById('level').innerText = state.level;
+document.getElementById('xp').innerText = Math.floor(state.xp);
+document.getElementById('nextXp').innerText = nextXp;
+document.getElementById('xpBar').style.width = ${Math.min(100, (state.xp / nextXp) * 100)}%;
+document.getElementById('balance').innerText = Math.floor(state.balance).toLocaleString();
+document.getElementById('autoIncome').innerText = getAutoIncome().toLocaleString();
+document.getElementById('tapPowerDisplay').innerText = getTapPower().toLocaleString();
+document.getElementById('energy').innerText = Math.floor(state.energy);
+document.getElementById('maxEnergy').innerText = maxEnergy;
+document.getElementById('energyBar').style.width = ${(state.energy / maxEnergy) * 100}%;
+document.getElementById('tapLvl').innerText = state.tapLvl;
+document.getElementById('autoLvl').innerText = state.autoLvl;
+document.getElementById('energyLvl').innerText = state.energyLvl;
+const tapCost = getCost('tap');
+const autoCost = getCost('auto');
+const energyCost = getCost('energy');
+const btnTap = document.getElementById('btnTap');
+btnTap.innerText = ${tapCost.toLocaleString()} 💎;
+btnTap.disabled = state.balance < tapCost;
+const btnAuto = document.getElementById('btnAuto');
+btnAuto.innerText = ${autoCost.toLocaleString()} 💎;
+btnAuto.disabled = state.balance < autoCost;
+const btnEnergy = document.getElementById('btnEnergy');
+btnEnergy.innerText = ${energyCost.toLocaleString()} 💎;
+btnEnergy.disabled = state.balance < energyCost;
+const btnTurbo = document.getElementById('btnTurbo');
+if (isTurbo) {
+btnTurbo.innerText = 🔥 ${turboTimer}с;
+btnTurbo.disabled = true;
+} else {
+btnTurbo.innerText = 100 💎;
+btnTurbo.disabled = state.balance < 100;
+}
+}
+function saveAndRender() {
+try {
+localStorage.setItem('rank_tycoon_v2', JSON.stringify(state));
+} catch (e) {}
+updateUI();
+}
+setInterval(() => {
+const auto = getAutoIncome();
+if (auto > 0) {
+state.balance += auto;
+addXp(1);
+}
+const maxE = getMaxEnergy();
+if (state.energy < maxE) {
+const regen = 1 + Math.floor(state.energyLvl / 2);
+state.energy = Math.min(maxE, state.energy + regen);
+}
+if (isTurbo) {
+turboTimer -= 1;
+if (turboTimer <= 0) {
+isTurbo = false;
+}
+}
+saveAndRender();
+}, 1000);
+updateUI();
