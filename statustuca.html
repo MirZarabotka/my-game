@@ -30,7 +30,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 .tab{flex:1;padding:10px 6px;background:#131b26;border:1px solid #243347;color:#fff;border-radius:10px;font-weight:bold;font-size:12px;cursor:pointer;text-align:center;text-decoration:none}
 .tab.on{background:#152547;color:#70a1ff;border-color:#3867d6}
 .status{text-align:center;font-size:11px;color:#8395a7;padding:12px}
-.toast{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);background:#1dd1a1;color:#000;padding:7px 16px;border-radius:14px;font-weight:bold;font-size:12px;display:none;z-index:99}
+.toast{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);background:#1dd1a1;color:#000;padding:7px 16px;border-radius:14px;font-weight:bold;font-size:12px;display:none;z-index:99;text-align:center;max-width:90%}
 </style>
 </head>
 <body>
@@ -93,10 +93,13 @@ function esc(str){
   return String(str).replace(/[&<>"']/g,m=>map.get(m)||m);
 }
 
-function showToast(txt){
+function showToast(txt,isErr){
   const t=document.getElementById('toast');
-  t.textContent=txt;t.style.display='block';
-  setTimeout(()=>{t.style.display='none';},2200);
+  t.textContent=txt;
+  t.style.background=isErr?'#ff6b6b':'#1dd1a1';
+  t.style.color=isErr?'#fff':'#000';
+  t.style.display='block';
+  setTimeout(()=>{t.style.display='none';},2800);
 }
 
 function saveNick(){
@@ -151,17 +154,28 @@ function renderList(players){
 
 async function syncLeaderboard(notify){
   let remote=[];
+  let fetchOk=false;
   try{
     const res=await fetch(API_URL+'/latest',{
-      headers:{'X-Master-Key':API_KEY}
+      headers:{
+        'X-Master-Key':API_KEY,
+        'X-Bin-Meta':'false'
+      }
     });
     if(res.ok){
       const json=await res.json();
-      if(Array.isArray(json.record)) remote=json.record;
+      remote=Array.isArray(json)?json:(Array.isArray(json.record)?json.record:[]);
+      fetchOk=true;
+    }else{
+      showToast('⚠️ Помилка читання БД: код '+res.status,true);
     }
-  }catch(e){}
+  }catch(e){
+    showToast('⚠️ Немає зв\'язку з JSONBin',true);
+  }
 
   const updatedTop=renderList(remote);
+
+  if(!fetchOk) return;
 
   try{
     const putRes=await fetch(API_URL,{
@@ -172,9 +186,10 @@ async function syncLeaderboard(notify){
       },
       body:JSON.stringify(updatedTop)
     });
-    if(putRes.ok && notify) showToast('✅ Онлайн-рейтинг оновлено!');
+    if(putRes.ok && notify) showToast('✅ Онлайн-рейтинг оновлено!',false);
+    else if(!putRes.ok) showToast('⚠️ Помилка запису БД: код '+putRes.status,true);
   }catch(e){
-    if(notify) showToast('⚠️ Помилка з\'єднання з сервером');
+    if(notify) showToast('⚠️ Помилка запису на сервер',true);
   }
 }
 
