@@ -206,7 +206,7 @@ async function pushScoreToCloud(){
   }catch(e){}
 }
 
-function getItem(id){return SHOP.find(x=>x.id===id)||SHOP;}
+function getItem(id){return SHOP.find(x=>x.id===id)||SHOP[0];}
 
 function updUI(){
   lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
@@ -267,72 +267,10 @@ function renderShop(){
 
 function buyOrEq(id,eqKey){
   const it=getItem(id);
-  if(p.ow.includes(id)){p[eqKey]=id;playTone(440,0.12);vib(20);save();renderShop();rebuildSprite();return;}
+  if(p.ow.includes(id)){p[eqKey]=id;playTone(440,0.12);vib(20);save();renderShop();return;}
   if(p.cn<it.pr){playTone(160,0.2);return;}
-  p.cn-=it.pr;p.ow.push(id);p[eqKey]=id;playTone(620,0.22);vib(35);save();updUI();renderShop();rebuildSprite();pushScoreToCloud();
+  p.cn-=it.pr;p.ow.push(id);p[eqKey]=id;playTone(620,0.22);vib(35);save();updUI();renderShop();pushScoreToCloud();
 }
-const rawImg=new Image();
-rawImg.src='player.png';
-let spriteCanvas=null,spriteReady=false;
-
-function hexToRgb(hex){
-  const n=parseInt(hex.replace('#',''),16);
-  return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};
-}
-
-function rebuildSprite(){
-  if(!rawImg.complete||!rawImg.naturalWidth)return;
-  const w=rawImg.naturalWidth,h=rawImg.naturalHeight;
-  const c=document.createElement('canvas');c.width=w;c.height=h;
-  const x=c.getContext('2d');
-  x.drawImage(rawImg,0,0);
-
-  const imgD=x.getImageData(0,0,w,h),d=imgD.data;
-  const kitRgb=hexToRgb(getItem(p.ej).col);
-
-  // Визначаємо кольори шахового фону по кутах картинки (сірий ~204 та білий ~255)
-  const isBgColor=(r,g,b)=>{
-    const max=Math.max(r,g,b),min=Math.min(r,g,b);
-    return (max-min<14 && min>185);
-  };
-
-  // Flood-fill (заливка прозорістю) від усіх країв картинки, щоб не зачепити білі шорти/комір всередині гравця
-  const vis=new Uint8Array(w*h);
-  const stack=[];
-  for(let i=0;i<w;i++){stack.push(i,w*(h-1)+i);}
-  for(let j=0;j<h;j++){stack.push(j*w,j*w+w-1);}
-
-  while(stack.length){
-    const idx=stack.pop();
-    if(vis[idx])continue;
-    vis[idx]=1;
-    const p4=idx*4;
-    if(isBgColor(d[p4],d[p4+1],d[p4+2])){
-      d[p4+3]=0;
-      const px=idx%w,py=(idx/w)|0;
-      if(px>0&&!vis[idx-1])stack.push(idx-1);
-      if(px<w-1&&!vis[idx+1])stack.push(idx+1);
-      if(py>0&&!vis[idx-w])stack.push(idx-w);
-      if(py<h-1&&!vis[idx+w])stack.push(idx+w);
-    }
-  }
-
-  // Перефарбовуємо червону форму гравця у вибраний колір із гардеробу (зі збереженням усіх тіней)
-  for(let i=0;i<d.length;i+=4){
-    if(d[i+3]===0)continue;
-    const r=d[i],g=d[i+1],b=d[i+2];
-    if(r>115 && r>g*1.65 && r>b*1.65){
-      const lum=r/215;
-      d[i]=Math.min(255,kitRgb.r*lum);
-      d[i+1]=Math.min(255,kitRgb.g*lum);
-      d[i+2]=Math.min(255,kitRgb.b*lum);
-    }
-  }
-
-  x.putImageData(imgD,0,0);
-  spriteCanvas=c;spriteReady=true;
-}
-rawImg.onload=rebuildSprite;
 let ac=null;
 function playTone(freq,dur){
   if(!p.opt.snd)return;
@@ -352,12 +290,12 @@ function rsz(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=cH
 window.addEventListener('resize',rsz);
 
 let rotY=0,velRot=0,dragX=null,moved=false;
-let jugLeft=0,jugCount=0,jugPhase=0,sparks=[];
+let jugLeft=0,jugCount=0,jugPhase=0,activeFoot=-1,ballY=0,ballVy=0,ballX=-24,ballSpin=0,sparks=[];
 
 function spawnSparks(x,y,col){
   if(!p.opt.fx)return;
   for(let i=0;i<16;i++){
-    const a=Math.random()*Math.PI*2,sp=1.6+Math.random()*4.2;
+    const a=Math.random()*Math.PI*2,sp=1.6+Math.random()*4.0;
     sparks.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.8,life:1,col:i%2===0?'#feca57':col});
   }
 }
@@ -371,12 +309,12 @@ function triggerJuggle(){if(jugLeft>0)return;jugLeft=5;stTxt.textContent='⚡ Н
 function kickBallUp(){
   if(jugLeft<=0){stTxt.textContent='⚽ Готовий до матчу';return;}
   jugLeft--;jugCount++;jugCnt.textContent=jugCount;
-  jugPhase=1;
+  activeFoot*=-1;jugPhase=1;ballVy=-10.2;ballX=activeFoot*24;
   playTone(150+jugCount*6,0.12);vib(20);
   if(jugCount%5===0){
     p.cn+=2;p.pt+=5;if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
-    save();updUI();spawnSparks(W*0.42,H*0.72,'#1dd1a1');
-  }else spawnSparks(W*0.36,H*0.80,'#70a1ff');
+    save();updUI();spawnSparks(W*0.5,H*0.58,'#1dd1a1');
+  }else spawnSparks(W*0.5+ballX,H*0.76,'#70a1ff');
 }
 let tAnim=0;
 function drawStadiumBg(){
@@ -429,45 +367,245 @@ function drawStadiumBg(){
   ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
   ctx.beginPath();ctx.ellipse(W*0.5,cy,Math.min(W*0.38,155),Math.min((H-horY)*0.32,44),0,0,Math.PI*2);ctx.stroke();
 }
-function drawPlayerSprite(){
-  const cosA=Math.cos(rotY);
-  const scaleX=Math.max(0.14,Math.abs(cosA));
+const INK='#14181e';
+
+function drawStylizedBoot(x,y,sc,side,bCol,bAc){
+  ctx.save();ctx.translate(x,y);
+  if(side<0)ctx.scale(-1,1);
+
+  // Біла підошва та шипи
+  ctx.fillStyle='#191e26';ctx.strokeStyle=INK;ctx.lineWidth=2*sc;
+  ctx.beginPath();ctx.roundRect(-10*sc,3*sc,28*sc,6*sc,3*sc);ctx.fill();ctx.stroke();
+
+  // Обтічний корпус бутси
+  ctx.fillStyle=bCol;ctx.beginPath();
+  ctx.moveTo(-10*sc,-7*sc);ctx.lineTo(4*sc,-7*sc);
+  ctx.quadraticCurveTo(19*sc,-3*sc,18*sc,4*sc);
+  ctx.lineTo(-10*sc,4*sc);ctx.closePath();ctx.fill();ctx.stroke();
+
+  // Фірмова смуга на бутсі
+  ctx.fillStyle=bAc;ctx.beginPath();
+  ctx.moveTo(-5*sc,3*sc);ctx.quadraticCurveTo(4*sc,-3*sc,15*sc,2*sc);ctx.lineTo(9*sc,4*sc);ctx.closePath();ctx.fill();
+  ctx.restore();
+}
+
+function drawStylizedHero(cx,cy,sc){
+  const cosA=Math.cos(rotY),sinA=Math.sin(rotY);
   const facingBack=cosA<0;
+  const wScale=0.55+0.45*Math.abs(cosA);
+  const j=getItem(p.ej),sh=getItem(p.ep),bt=getItem(p.es),gl=getItem(p.ek);
+  const hasGloves=(p.ek&&p.ek!=='k1');
+  const skin='#f4be8e',skinSh='#d69663';
 
-  const baseY=H*0.91;
-  const bounce=jugPhase>0?Math.sin(jugPhase*Math.PI)*18:Math.sin(tAnim*2.2)*2.5;
-  const imgH=Math.min(H*0.76,W*0.86);
-  const imgW=imgH;
+  // Контактна тінь на полі
+  const sg=ctx.createRadialGradient(cx,cy+4*sc,6*sc,cx,cy+4*sc,62*sc);
+  sg.addColorStop(0,'rgba(0,0,0,0.62)');sg.addColorStop(0.65,'rgba(0,0,0,0.22)');sg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=sg;ctx.beginPath();ctx.ellipse(cx,cy+4*sc,62*sc,14*sc,0,0,Math.PI*2);ctx.fill();
 
-  // Контактна тінь на газоні під ногами гравця
-  const shScale=Math.max(0.65,1-bounce/80);
-  const sg=ctx.createRadialGradient(W*0.5,baseY-4,6,W*0.5,baseY-4,imgW*0.36*shScale);
-  sg.addColorStop(0,'rgba(0,0,0,0.62)');sg.addColorStop(0.65,'rgba(0,0,0,0.24)');sg.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=sg;ctx.beginPath();ctx.ellipse(W*0.5,baseY-4,imgW*0.36*shScale,14*shScale,0,0,Math.PI*2);ctx.fill();
+  const breath=Math.sin(tAnim*2.2)*2.5*sc;
+  const kickSw=jugPhase>0?Math.sin(jugPhase*Math.PI):0;
 
-  ctx.save();
-  ctx.translate(W*0.5,baseY-bounce);
-  ctx.scale(scaleX,1);
+  ctx.save();ctx.translate(cx,cy);
+  ctx.strokeStyle=INK;ctx.lineCap='round';ctx.lineJoin='round';
 
-  if(spriteReady){
-    ctx.drawImage(spriteCanvas,-imgW*0.5,-imgH,imgW,imgH);
-    // Якщо гравець повернутий спиною (180°) — накладаємо футболку з вашим номером поверх торсу
-    if(facingBack){
-      const jItem=getItem(p.ej);
-      ctx.fillStyle=jItem.col;
-      ctx.beginPath();
-      ctx.roundRect(-imgW*0.14,-imgH*0.78,imgW*0.28,imgH*0.32,16);
-      ctx.fill();
-      ctx.fillStyle=p.numCol||'#ffffff';
-      ctx.font=`900 ${Math.round(imgH*0.14)}px sans-serif`;
-      ctx.textAlign='center';
-      ctx.fillText(String(p.num||'10'),0,-imgH*0.57);
+  // 1. НОГИ, ГЕТРИ, БУТСИ ТА ШОРТИ (СИМЕТРИЧНИЙ ВЕКТОРНИЙ СТИЛЬ)
+  [-1,1].forEach(side=>{
+    const kickNow=(jugPhase>0&&side===activeFoot);
+    const liftY=kickNow?kickSw*26*sc:0;
+    const fwdX=kickNow?side*kickSw*6*sc:0;
+
+    const hipX=side*16*wScale*sc,hipY=-78*sc+breath*0.3;
+    const kneeX=side*20*wScale*sc+fwdX*0.5,kneeY=-44*sc-liftY*0.75;
+    const ankX=side*21*wScale*sc+fwdX,ankY=-8*sc-liftY;
+
+    // Гомілка в гетрі з манжетом
+    ctx.lineWidth=14*sc;ctx.strokeStyle=INK;
+    ctx.beginPath();ctx.moveTo(kneeX,kneeY);ctx.lineTo(ankX,ankY);ctx.stroke();
+    ctx.lineWidth=10*sc;ctx.strokeStyle=j.col;
+    ctx.beginPath();ctx.moveTo(kneeX,kneeY);ctx.lineTo(ankX,ankY);ctx.stroke();
+
+    // Манжет гетра
+    ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=2*sc;ctx.strokeStyle=INK;
+    ctx.beginPath();ctx.roundRect(kneeX-6.5*sc,kneeY+2*sc,13*sc,5*sc,2*sc);ctx.fill();ctx.stroke();
+
+    // Коліно
+    ctx.fillStyle=skin;ctx.beginPath();ctx.arc(kneeX,kneeY,6.5*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+    // Широка стильна штанина шортів
+    ctx.fillStyle=sh.col;ctx.lineWidth=2.2*sc;
+    ctx.beginPath();
+    ctx.moveTo(hipX-13*wScale*sc,hipY);
+    ctx.lineTo(hipX+13*wScale*sc,hipY);
+    ctx.lineTo(kneeX+11*wScale*sc,kneeY-4*sc);
+    ctx.lineTo(kneeX-11*wScale*sc,kneeY-4*sc);
+    ctx.closePath();ctx.fill();ctx.stroke();
+
+    drawStylizedBoot(ankX,ankY,sc,facingBack?-side:side,bt.col,bt.ac||'#1dd1a1');
+  });
+  // 2. ОБ'ЄМНИЙ ТОРС ТА ФУТБОЛКА (FIFA MOBILE / BRAWL STARS СТИЛЬ)
+  const topW=31*wScale*sc,botW=24*wScale*sc;
+  const topY=-136*sc+breath,botY=-72*sc+breath*0.3;
+
+  // Руки з рукавами (малюємо перед торсом для чистого силуету)
+  [-1,1].forEach(side=>{
+    const bal=jugPhase>0?(side===activeFoot?-7*sc:9*sc):Math.sin(tAnim*2+side)*3*sc;
+    const shX=side*27*wScale*sc,shY=-128*sc+breath;
+    const elX=side*38*wScale*sc,elY=-104*sc-bal*0.4;
+    const hdX=side*35*wScale*sc,hdY=-82*sc-bal*0.8;
+
+    // Передпліччя
+    ctx.lineWidth=12*sc;ctx.strokeStyle=INK;
+    ctx.beginPath();ctx.moveTo(elX,elY);ctx.lineTo(hdX,hdY);ctx.stroke();
+    ctx.lineWidth=8.5*sc;ctx.strokeStyle=skin;
+    ctx.beginPath();ctx.moveTo(elX,elY);ctx.lineTo(hdX,hdY);ctx.stroke();
+
+    // Плече і біцепс
+    ctx.lineWidth=13*sc;ctx.strokeStyle=INK;
+    ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(elX,elY);ctx.stroke();
+    ctx.lineWidth=9.5*sc;ctx.strokeStyle=skin;
+    ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(elX,elY);ctx.stroke();
+
+    // Короткий рукав футболки
+    const slvX=shX+(elX-shX)*0.55,slvY=shY+(elY-shY)*0.55;
+    ctx.lineWidth=16*sc;ctx.strokeStyle=INK;
+    ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(slvX,slvY);ctx.stroke();
+    ctx.lineWidth=12*sc;ctx.strokeStyle=j.col;
+    ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(slvX,slvY);ctx.stroke();
+
+    // Кулак або воротарська рукавиця
+    ctx.fillStyle=hasGloves?gl.col:skin;ctx.lineWidth=2*sc;ctx.strokeStyle=INK;
+    ctx.beginPath();ctx.arc(hdX,hdY,hasGloves?7.5*sc:5.8*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
+  });
+
+  // Основна футболка
+  ctx.fillStyle=j.col;ctx.lineWidth=2.4*sc;ctx.strokeStyle=INK;
+  ctx.beginPath();
+  ctx.moveTo(-topW,topY);
+  ctx.quadraticCurveTo(0,topY-10*sc,topW,topY);
+  ctx.lineTo(botW,botY);
+  ctx.quadraticCurveTo(0,botY+5*sc,-botW,botY);
+  ctx.closePath();ctx.fill();ctx.stroke();
+
+  // Тіньовий бік футболки для об'єму
+  ctx.fillStyle='rgba(0,0,0,0.14)';
+  ctx.beginPath();
+  ctx.moveTo(0,topY-5*sc);ctx.quadraticCurveTo(topW*0.5,topY-3*sc,topW,topY);
+  ctx.lineTo(botW,botY);ctx.quadraticCurveTo(botW*0.5,botY+3*sc,0,botY+2*sc);
+  ctx.closePath();ctx.fill();
+
+  // Бокові вставки форми
+  ctx.fillStyle=j.trim||'#ffffff';
+  [-1,1].forEach(s=>{
+    ctx.beginPath();
+    ctx.moveTo(s*topW*0.86,topY+14*sc);
+    ctx.lineTo(s*botW*0.95,botY-4*sc);
+    ctx.lineTo(s*botW*0.75,botY-4*sc);
+    ctx.lineTo(s*topW*0.72,topY+22*sc);
+    ctx.closePath();ctx.fill();
+  });
+
+  // V-комір та емблема спереду або номер на спині при повороті 180°
+  const turnX=sinA*8*sc;
+  if(!facingBack){
+    ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=2*sc;ctx.strokeStyle=INK;
+    ctx.beginPath();ctx.moveTo(-10*wScale*sc+turnX,topY-2*sc);ctx.lineTo(turnX,topY+11*sc);ctx.lineTo(10*wScale*sc+turnX,topY-2*sc);ctx.closePath();ctx.fill();ctx.stroke();
+
+    if(Math.abs(cosA)>0.25){
+      ctx.fillStyle='#feca57';ctx.beginPath();ctx.arc(turnX+11*wScale*sc,topY+22*sc,5*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
     }
   }else{
-    ctx.fillStyle='#feca57';ctx.font='bold 13px sans-serif';ctx.textAlign='center';
-    ctx.fillText('Покладіть player.png поруч з index.html',0,-imgH*0.45);
+    ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=2*sc;ctx.strokeStyle=INK;
+    ctx.beginPath();ctx.ellipse(turnX,topY-2*sc,10*wScale*sc,3.5*sc,0,0,Math.PI);ctx.fill();ctx.stroke();
+
+    if(Math.abs(cosA)>0.22){
+      ctx.save();ctx.translate(turnX,topY+44*sc);ctx.scale(Math.abs(cosA),1);
+      ctx.fillStyle=p.numCol||'#ffffff';ctx.strokeStyle=INK;ctx.lineWidth=3.5*sc;
+      ctx.font=`900 ${32*sc}px sans-serif`;ctx.textAlign='center';
+      ctx.strokeText(String(p.num||'10'),0,0);ctx.fillText(String(p.num||'10'),0,0);
+      ctx.restore();
+    }
+  }
+  // 3. ГОЛОВА ТА ОБЛИЧЧЯ В СТИЛІ BRAWL STARS / FIFA MOBILE
+  const headY=-164*sc+breath;
+  ctx.fillStyle=skinSh;ctx.lineWidth=2.2*sc;ctx.strokeStyle=INK;
+  ctx.beginPath();ctx.roundRect(-7*sc,-145*sc+breath,14*sc,14*sc,4*sc);ctx.fill();ctx.stroke();
+
+  // Вуха
+  ctx.fillStyle=skin;
+  [-1,1].forEach(s=>{
+    ctx.beginPath();ctx.arc(s*19*wScale*sc,headY+2*sc,4.5*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
+  });
+
+  // Обличчя
+  ctx.fillStyle=skin;
+  ctx.beginPath();ctx.roundRect(-18*wScale*sc,headY-20*sc,36*wScale*sc,38*sc,16*sc);ctx.fill();ctx.stroke();
+
+  if(!facingBack&&Math.abs(cosA)>0.2){
+    const fx=sinA*8*sc;
+    // Виразні брови та великі стильні очі
+    ctx.fillStyle='#231810';
+    ctx.beginPath();ctx.roundRect(fx-11*wScale*sc,headY-7*sc,7*wScale*sc,2.5*sc,1.2*sc);ctx.fill();
+    ctx.beginPath();ctx.roundRect(fx+4*wScale*sc,headY-7*sc,7*wScale*sc,2.5*sc,1.2*sc);ctx.fill();
+
+    ctx.beginPath();ctx.arc(fx-7.5*wScale*sc,headY-1*sc,2.6*sc,0,Math.PI*2);ctx.arc(fx+7.5*wScale*sc,headY-1*sc,2.6*sc,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffffff';
+    ctx.beginPath();ctx.arc(fx-8.3*wScale*sc,headY-2*sc,1.0*sc,0,Math.PI*2);ctx.arc(fx+6.7*wScale*sc,headY-2*sc,1.0*sc,0,Math.PI*2);ctx.fill();
+
+    // Ніс і впевнена спортивна посмішка
+    ctx.strokeStyle=skinSh;ctx.lineWidth=2*sc;
+    ctx.beginPath();ctx.moveTo(fx,headY-1*sc);ctx.lineTo(fx-1.5*sc,headY+5*sc);ctx.lineTo(fx+1.5*sc,headY+5*sc);ctx.stroke();
+
+    ctx.strokeStyle=INK;ctx.lineWidth=2*sc;
+    ctx.beginPath();ctx.arc(fx,headY+8*sc,5.5*wScale*sc,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
   }
 
+  // Стильна об'ємна зачіска з чубчиком
+  ctx.fillStyle='#241911';ctx.strokeStyle=INK;ctx.lineWidth=2.3*sc;
+  if(facingBack){
+    ctx.beginPath();
+    ctx.moveTo(-19*wScale*sc,headY+2*sc);
+    ctx.quadraticCurveTo(-21*wScale*sc,headY-26*sc,0,headY-27*sc);
+    ctx.quadraticCurveTo(21*wScale*sc,headY-26*sc,19*wScale*sc,headY+2*sc);
+    ctx.lineTo(13*wScale*sc,headY+12*sc);ctx.lineTo(-13*wScale*sc,headY+12*sc);
+    ctx.closePath();ctx.fill();ctx.stroke();
+  }else{
+    ctx.beginPath();
+    ctx.moveTo(-19*wScale*sc,headY-5*sc);
+    ctx.quadraticCurveTo(-21*wScale*sc,headY-26*sc,-2*wScale*sc,headY-27*sc);
+    ctx.quadraticCurveTo(10*wScale*sc,headY-31*sc,18*wScale*sc,headY-19*sc);
+    ctx.quadraticCurveTo(21*wScale*sc,headY-12*sc,19*wScale*sc,headY-5*sc);
+    ctx.quadraticCurveTo(8*wScale*sc,headY-14*sc,-4*wScale*sc,headY-12*sc);
+    ctx.quadraticCurveTo(-12*wScale*sc,headY-14*sc,-19*wScale*sc,headY-5*sc);
+    ctx.closePath();ctx.fill();ctx.stroke();
+  }
+
+  ctx.restore();
+}
+function drawChampBall(bx,by,rad,spinAng){
+  const bCol=getItem(p.eb).col,shSc=Math.max(0.35,1-Math.abs(ballY)/130);
+  ctx.fillStyle=`rgba(0,0,0,${0.5*shSc})`;
+  ctx.beginPath();ctx.ellipse(bx,H*0.88+4,rad*1.15*shSc,rad*0.36*shSc,0,0,Math.PI*2);ctx.fill();
+
+  ctx.save();ctx.translate(bx,by);ctx.rotate(spinAng);
+  const g=ctx.createRadialGradient(-rad*0.3,-rad*0.3,rad*0.1,0,0,rad);
+  g.addColorStop(0,'#ffffff');g.addColorStop(0.65,bCol);g.addColorStop(1,'#8395a7');
+  ctx.fillStyle=g;ctx.strokeStyle=INK;ctx.lineWidth=2.2;
+  ctx.beginPath();ctx.arc(0,0,rad,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+  ctx.fillStyle='#191e26';ctx.beginPath();
+  for(let i=0;i<5;i++){
+    const a=(i/5)*Math.PI*2-Math.PI/2;
+    const px=Math.cos(a)*rad*0.36,py=Math.sin(a)*rad*0.36;
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.closePath();ctx.fill();
+
+  ctx.strokeStyle=INK;ctx.lineWidth=1.5;
+  for(let i=0;i<5;i++){
+    const a=(i/5)*Math.PI*2-Math.PI/2;
+    ctx.beginPath();ctx.moveTo(Math.cos(a)*rad*0.36,Math.sin(a)*rad*0.36);
+    ctx.lineTo(Math.cos(a)*rad*0.88,Math.sin(a)*rad*0.88);ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -489,16 +627,28 @@ function loop(){
     rotY+=velRot;velRot*=0.94;
   }
 
-  if(jugPhase>0){
-    jugPhase-=0.085;
-    if(jugPhase<=0){
-      jugPhase=0;
+  if(jugPhase>0)jugPhase=Math.max(0,jugPhase-0.085);
+
+  if(jugLeft>0||ballY<0||ballVy!==0){
+    ballY+=ballVy;
+    ballVy+=0.54;
+    ballSpin+=0.16*activeFoot;
+    if(ballY>=0){
+      ballY=0;
       if(jugLeft>0)kickBallUp();
+      else{ballVy=0;ballX=-24;}
     }
+  }else{
+    ballX=-24;
   }
 
   drawStadiumBg();
-  drawPlayerSprite();
+  const heroScale=Math.min(W/290,H/270)*1.05;
+  const baseX=W*0.5,baseY=H*0.88;
+  drawStylizedHero(baseX,baseY,heroScale);
+
+  const bRad=Math.max(12,15*heroScale);
+  drawChampBall(baseX+ballX*heroScale,baseY-bRad+ballY*heroScale,bRad,ballSpin);
   drawSparks();
 
   requestAnimationFrame(loop);
