@@ -1,5 +1,5 @@
 <!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 1 З 9 ] =================== -->
+<!-- =================== [ GAME.HTML : ЧАСТИНА 1 З 10 ] ================== -->
 <!-- ===================================================================== -->
 <!DOCTYPE html>
 <html lang="uk">
@@ -50,9 +50,9 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
   </div>
   <div class="ctrl" id="ct"></div>
 </div>
-<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 1 ] ================== -->
+<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 1 ] ================= -->
 <!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 9 ] =================== -->
+<!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 10 ] ================== -->
 <!-- ===================================================================== -->
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
@@ -108,6 +108,16 @@ function loadWallet(){
   if(!p.num)p.num='10';
   if(!p.numCol)p.numCol='#ffffff';
   if(isNaN(Number(p.cn)))p.cn=20;
+
+  // Якщо в збереженнях лишився старий формат турніру без групового етапу — скидаємо його на новий
+  if(p.ucl && p.ucl.active && (!Array.isArray(p.ucl.groups) || p.ucl.groups.length===0)){
+    p.ucl=null;
+    localStorage.removeItem('pc_play_ucl');
+    save();
+    if(new URLSearchParams(location.search).get('mode')==='ucl'){
+      window.location.href='turnir.html';
+    }
+  }
 }
 function save(){try{localStorage.setItem('pc_ucl1',JSON.stringify(p))}catch(e){}}
 loadWallet();
@@ -147,7 +157,10 @@ function getCurOpponent(){
   }
   return freeOpp;
 }
-
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 2 ] ================= -->
+/* ===================================================================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 3 З 10 ] ================== */
+/* ===================================================================== */
 let ph='sh',pS=[],bS=[],ac=null,ambOn=false,crowdMood=0;
 
 function startAmbience(){
@@ -208,10 +221,7 @@ function snd(type){
     if(type==='cheer')setTimeout(()=>whistle(0.32),350);
   }catch(e){}
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 2 ] ================== */
-/* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 3 З 9 ] =================== */
-/* ===================================================================== */
+
 function updUI(){
   lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
   const nxXp=p.lv*100;pt.textContent=p.pt;nx.textContent=nxXp;
@@ -263,7 +273,10 @@ function renderCtrl(){
     b.onclick=()=>act(item.z);ct.appendChild(b);
   });
 }
-
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 3 ] ================= -->
+/* ===================================================================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 4 З 10 ] ================== */
+/* ===================================================================== */
 function zoneCoords(z){
   const col=(z%3)-1,row=z<3?1:0;
   return{x:col*3.85,y:row===1?2.55:0.48,dive:col};
@@ -344,9 +357,9 @@ function act(z){
     },560);
   },380);
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 3 ] ================== */
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 4 ] ================= -->
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 4 З 9 ] =================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 5 З 10 ] ================== */
 /* ===================================================================== */
 function recordGroupMatch(grp,m,gHome,gAway){
   m.sc=`${gHome}:${gAway}`;
@@ -568,9 +581,9 @@ function nextMatch(won){
   pS=[];bS=[];ph='sh';resetPositions();save();updUI();renderCtrl();
   ms.style.borderColor='#feca57';ms.textContent='⚽ Твій удар! Вибери кут';
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 4 ] ================== */
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 5 ] ================= -->
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 5 З 9 ] =================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 6 З 10 ] ================== */
 /* ===================================================================== */
 const ctx=c3d.getContext('2d');let W=300,H=300;
 function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=c3d.width=r.width;H=c3d.height=r.height}}
@@ -688,9 +701,9 @@ function drawMatchGlove(x,y,sc,side,col){
 
   ctx.restore();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 5 ] ================== */
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 6 ] ================= -->
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 6 З 9 ] =================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 7 З 10 ] ================== */
 /* ===================================================================== */
 function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,shortsDark,bootCol,bootAc,gloveCol,diveAng,runPhase,isKicker,isStandingUp){
   ctx.save();
@@ -832,9 +845,9 @@ function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,sho
 
   ctx.restore();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 6 ] ================== */
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 7 ] ================= -->
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 7 З 9 ] =================== */
+/* ================== [ GAME.HTML : ЧАСТИНА 8A З 10 ] ================== */
 /* ===================================================================== */
 function drawRealisticFan(fx,fy,sc,fan,waveVal){
   const t=tAnim*fan.spd+fan.ph;
@@ -858,7 +871,10 @@ function drawRealisticFan(fx,fy,sc,fan,waveVal){
     ctx.fillRect(-3.6*sc,-11.5*sc,7.2*sc,2.2*sc);
     ctx.fillRect(1.2*sc,-10*sc,2.0*sc,5.5*sc);
   }
-
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 8A ] ================ */
+/* ===================================================================== */
+/* ================== [ GAME.HTML : ЧАСТИНА 8B З 10 ] ================== */
+/* ===================================================================== */
   if(crowdMood===1){
     const waveArm=Math.sin(t*4)*2.0*sc;
     drawCapsule(-4.6*sc,-10*sc,-6.8*sc+waveArm,-18*sc,1.4*sc,1.0*sc,fan.skin);
@@ -892,9 +908,9 @@ function getNetBulge(wx,wy){
   const ripple=Math.cos(dist*1.4-netWave.phase*1.6)*0.55+0.45;
   return netWave.amp*0.85*gauss*ripple;
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 7 ] ================== */
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 8B ] ================ */
 /* ===================================================================== */
-/* ================== [ GAME.HTML : ЧАСТИНА 8A З 9 ] =================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 9 З 10 ] ================== */
 /* ===================================================================== */
 function drawStadiumScene(){
   const horizonY=proj(0,0,15.5).y,standTop=Math.max(46,horizonY-H*0.20);
@@ -943,10 +959,7 @@ function drawStadiumScene(){
       }
     });
   }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 8A ] ================= */
-/* ===================================================================== */
-/* ================== [ GAME.HTML : ЧАСТИНА 8B З 9 ] =================== */
-/* ===================================================================== */
+
   ctx.strokeStyle='#eceff1';ctx.lineWidth=4;
   ctx.beginPath();ctx.moveTo(0,standTop-3);ctx.quadraticCurveTo(W*0.5,standTop+12,W,standTop-3);ctx.stroke();
 
@@ -1009,9 +1022,9 @@ function drawStadiumScene(){
   ctx.strokeStyle='#ffffff';ctx.lineWidth=6.5;ctx.lineJoin='round';
   ctx.beginPath();ctx.moveTo(gFL2.x,gFL2.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gFR2.x,gFR2.y);ctx.stroke();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 8B ] ================= */
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 9 ] ================= -->
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 9 З 9 ] =================== */
+/* ================== [ GAME.HTML : ЧАСТИНА 10 З 10 ] ================== */
 /* ===================================================================== */
 function draw3D(){
   tAnim+=0.07;
@@ -1084,4 +1097,4 @@ rsz3D();updUI();renderCtrl();draw3D();
 </script>
 </body>
 </html>
-<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 9 ] ================== -->
+<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 10 ] ================ -->
