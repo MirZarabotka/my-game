@@ -77,21 +77,14 @@ const CLUBS=[
 const RNDS=[{n:'1/8 Фінал',r:60},{n:'1/4 Фінал',r:110},{n:'Півфінал',r:200},{n:'ФІНАЛ ЛЧ',r:500}];
 
 const SHOP=[
-  {id:'j1',t:'j',col:'#1dd1a1',sh:'#ffffff'},
-  {id:'j2',t:'j',col:'#f5f6fa',sh:'#dcdde1'},
-  {id:'j3',t:'j',col:'#eb4d4b',sh:'#1e272e'},
-  {id:'j4',t:'j',col:'#4834d4',sh:'#00d2ff'},
-  {id:'s1',t:'s',col:'#14181d',ac:'#1dd1a1'},
-  {id:'s2',t:'s',col:'#feca57',ac:'#ffffff'},
-  {id:'b1',t:'b',bn:0,col:'#ffffff'},
-  {id:'b2',t:'b',bn:5,col:'#ff5e57'},
-  {id:'b3',t:'b',bn:12,col:'#00d2ff'},
-  {id:'b4',t:'b',bn:25,col:'#feca57'},
-  {id:'k1',t:'k',bn:0,col:'#1dd1a1'},
-  {id:'k2',t:'k',bn:10,col:'#ff9ff3'}
+  {id:'j1',col:'#1dd1a1'},{id:'j2',col:'#f5f6fa'},{id:'j3',col:'#eb4d4b'},{id:'j4',col:'#3867d6'},{id:'j5',col:'#1e272e'},{id:'j6',col:'#feca57'},
+  {id:'p1',col:'#ffffff'},{id:'p2',col:'#1e272e'},{id:'p3',col:'#273c75'},{id:'p4',col:'#eb4d4b'},{id:'p5',col:'#00d2ff'},{id:'p6',col:'#feca57'},
+  {id:'s1',col:'#14181d',ac:'#1dd1a1'},{id:'s2',col:'#f5f6fa',ac:'#eb4d4b'},{id:'s3',col:'#00d2ff',ac:'#ffffff'},{id:'s4',col:'#feca57',ac:'#1e272e'},
+  {id:'b1',bn:0,col:'#ffffff'},{id:'b2',bn:5,col:'#ff5e57'},{id:'b3',bn:12,col:'#00d2ff'},{id:'b4',bn:25,col:'#feca57'},
+  {id:'k1',bn:0,col:'#1dd1a1'},{id:'k2',bn:10,col:'#ff9ff3'}
 ];
 
-let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','s1','b1','k1'],ej:'j1',es:'s1',eb:'b1',ek:'k1',ucl:null};
+let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null};
 const isUCLMode=(new URLSearchParams(location.search).get('mode')==='ucl'||localStorage.getItem('pc_play_ucl')==='1');
 let freeOpp=CLUBS[Math.floor(Math.random()*CLUBS.length)];
 
@@ -103,7 +96,10 @@ function loadWallet(){
     else if(old){p=Object.assign(p,old);save();}
   }catch(e){}
   if(!p.ej)p.ej='j1';
+  if(!p.ep)p.ep='p1';
   if(!p.es)p.es='s1';
+  if(!p.num)p.num='10';
+  if(!p.numCol)p.numCol='#ffffff';
 }
 function save(){try{localStorage.setItem('pc_ucl1',JSON.stringify(p))}catch(e){}}
 loadWallet();
@@ -450,8 +446,9 @@ function drawRealisticPlayer(px,py,sc,jerseyCol,shortsCol,socksCol,bootCol,bootA
 
   ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(0,-48*sc,3.6*sc,0.1,Math.PI-0.1);ctx.fill();
   if(isKicker){
-    ctx.fillStyle='rgba(255,255,255,0.92)';ctx.font=`bold ${Math.max(8,10.5*sc)}px sans-serif`;ctx.textAlign='center';
-    ctx.fillText('10',0,-33*sc);
+    ctx.fillStyle=(ph==='sh')?(p.numCol||'#ffffff'):'rgba(255,255,255,0.92)';
+    ctx.font=`bold ${Math.max(8,10.5*sc)}px sans-serif`;ctx.textAlign='center';
+    ctx.fillText((ph==='sh')?(p.num||'10'):'9',0,-33*sc);
   }
 
   [-1,1].forEach(side=>{
@@ -606,6 +603,7 @@ function draw3D(){
 
   const oppClub=getCurOpponent();
   const myJersey=getItem(p.ej);
+  const myShorts=getItem(p.ep);
   const myShoes=getItem(p.es);
 
   gk.x+=(gk.tx-gk.x)*0.18;gk.y+=(gk.ty-gk.y)*0.18;gk.dive+=(gk.tdive-gk.dive)*0.18;
@@ -638,7 +636,7 @@ function draw3D(){
   const kp=proj(kicker.x,0,kicker.z);
   ctx.fillStyle='rgba(0,0,0,0.42)';ctx.beginPath();ctx.ellipse(kp.x,kp.y,0.55*kp.s,0.22*kp.s,0,0,Math.PI*2);ctx.fill();
   const kCol=(ph==='sh')?myJersey.col:oppClub.c;
-  const kSh=(ph==='sh')?(myJersey.sh||'#ffffff'):'#1e272e';
+  const kSh=(ph==='sh')?myShorts.col:'#1e272e';
   const kBoot=(ph==='sh')?myShoes.col:'#14181d';
   const kBootAc=(ph==='sh')?(myShoes.ac||'#1dd1a1'):'#ffffff';
   drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kCol,kSh,kCol,kBoot,kBootAc,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true);
