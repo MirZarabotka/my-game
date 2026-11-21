@@ -77,6 +77,9 @@ function loadWallet(){
   }catch(e){}
   if(!p.uid)p.uid='u'+Math.floor(100000+Math.random()*900000);
   if(isNaN(Number(p.cn)))p.cn=20;
+  if(p.ucl && (!Array.isArray(p.ucl.teams) || !Array.isArray(p.ucl.rounds))){
+    p.ucl=null;
+  }
   save();
 }
 function save(){try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}}
@@ -109,7 +112,6 @@ function startNewUCL(myClubId){
     ...pool.slice(0,3).map(c=>({id:c.id,n:c.n,str:c.str,col:c.col,me:false,g:0,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0}))
   ];
 
-  // 6 турів групового етапу у вигляді рядків 'індекс1-індекс2'
   const rounds=[
     ['0-1','2-3'],
     ['0-2','1-3'],
@@ -222,19 +224,20 @@ function processMyMatchResult(myG,oppG){
   save();updHeader();pushScoreToCloud();
 }
 function getSortedGroup(){
-  return [...p.ucl.teams].sort((a,b)=>(b.pts-a.pts)||((b.gf-b.ga)-(a.gf-a.ga))||(b.gf-a.gf));
+  const list=(p.ucl&&Array.isArray(p.ucl.teams))?p.ucl.teams:[];
+  return [...list].sort((a,b)=>(b.pts-a.pts)||((b.gf-b.ga)-(a.gf-a.ga))||(b.gf-a.gf));
 }
 
 function getNextOpponent(){
   const u=p.ucl;
   if(!u)return null;
   if(u.stage==='group'&&u.round<6){
-    const pairs=u.rounds.at(u.round);
+    const pairs=u.rounds.at(u.round)||[];
     for(const pairStr of pairs){
       const pts=pairStr.split('-');
       const i1=Number(pts.at(0)),i2=Number(pts.at(1));
-      if(u.teams.at(i1).me)return u.teams.at(i2);
-      if(u.teams.at(i2).me)return u.teams.at(i1);
+      if(u.teams.at(i1)&&u.teams.at(i1).me)return u.teams.at(i2);
+      if(u.teams.at(i2)&&u.teams.at(i2).me)return u.teams.at(i1);
     }
   }
   if(u.stage==='po')return u.poOpp;
