@@ -1,5 +1,5 @@
 <!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 1 З 10 ] ================== -->
+<!-- =================== [ GAME.HTML : ЧАСТИНА 1 З 11 ] ================== -->
 <!-- ===================================================================== -->
 <!DOCTYPE html>
 <html lang="uk">
@@ -52,7 +52,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 </div>
 <!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 1 ] ================= -->
 <!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 10 ] ================== -->
+<!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 11 ] ================== -->
 <!-- ===================================================================== -->
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
@@ -109,7 +109,6 @@ function loadWallet(){
   if(!p.numCol)p.numCol='#ffffff';
   if(isNaN(Number(p.cn)))p.cn=20;
 
-  // Якщо в збереженнях лишився старий формат турніру без групового етапу — скидаємо його на новий
   if(p.ucl && p.ucl.active && (!Array.isArray(p.ucl.groups) || p.ucl.groups.length===0)){
     p.ucl=null;
     localStorage.removeItem('pc_play_ucl');
@@ -157,9 +156,9 @@ function getCurOpponent(){
   }
   return freeOpp;
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 2 ] ================= -->
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 2 ] ================= */
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 3 З 10 ] ================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 3 З 11 ] ================== */
 /* ===================================================================== */
 let ph='sh',pS=[],bS=[],ac=null,ambOn=false,crowdMood=0;
 
@@ -273,9 +272,9 @@ function renderCtrl(){
     b.onclick=()=>act(item.z);ct.appendChild(b);
   });
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 3 ] ================= -->
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 3 ] ================= */
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 4 З 10 ] ================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 4 З 11 ] ================== */
 /* ===================================================================== */
 function zoneCoords(z){
   const col=(z%3)-1,row=z<3?1:0;
@@ -357,9 +356,9 @@ function act(z){
     },560);
   },380);
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 4 ] ================= -->
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 4 ] ================= */
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 5 З 10 ] ================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 5 З 11 ] ================== */
 /* ===================================================================== */
 function recordGroupMatch(grp,m,gHome,gAway){
   m.sc=`${gHome}:${gAway}`;
@@ -581,9 +580,9 @@ function nextMatch(won){
   pS=[];bS=[];ph='sh';resetPositions();save();updUI();renderCtrl();
   ms.style.borderColor='#feca57';ms.textContent='⚽ Твій удар! Вибери кут';
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 5 ] ================= -->
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 5 ] ================= */
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 6 З 10 ] ================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 6 З 11 ] ================== */
 /* ===================================================================== */
 const ctx=c3d.getContext('2d');let W=300,H=300;
 function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=c3d.width=r.width;H=c3d.height=r.height}}
@@ -676,7 +675,10 @@ function drawMatchBoot(x,y,sc,sgn,isBack,bootCol,bootAc){
   }
   ctx.restore();
 }
-
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 6 ] ================= */
+/* ===================================================================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 7 З 11 ] ================== */
+/* ===================================================================== */
 function drawMatchGlove(x,y,sc,side,col){
   ctx.save();
   ctx.translate(x,y);
@@ -701,10 +703,7 @@ function drawMatchGlove(x,y,sc,side,col){
 
   ctx.restore();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 6 ] ================= -->
-/* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 7 З 10 ] ================== */
-/* ===================================================================== */
+
 function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,shortsDark,bootCol,bootAc,gloveCol,diveAng,runPhase,isKicker,isStandingUp){
   ctx.save();
   ctx.translate(px,py);
@@ -771,7 +770,10 @@ function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,sho
     ctx.moveTo(-3.2*sc,-48.2*sc);ctx.lineTo(0,-45.0*sc);ctx.lineTo(3.2*sc,-48.2*sc);
     ctx.quadraticCurveTo(0,-49.2*sc,-3.2*sc,-48.2*sc);ctx.fill();
   }
-
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 7 ] ================= */
+/* ===================================================================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 8 З 11 ] ================== */
+/* ===================================================================== */
   [-1,1].forEach(side=>{
     const diveAmt=Math.min(1,Math.abs(diveAng)/1.1);
     const diveDir=Math.sign(diveAng)||1;
@@ -845,256 +847,96 @@ function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,sho
 
   ctx.restore();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 7 ] ================= -->
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 8 ] ================= */
 /* ===================================================================== */
-/* ================== [ GAME.HTML : ЧАСТИНА 8A З 10 ] ================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 9 З 11 ] ================== */
 /* ===================================================================== */
 function drawRealisticFan(fx,fy,sc,fan,waveVal){
-  const t=tAnim*fan.spd+fan.ph;
-  const sway=Math.sin(t)*1.6*sc;
+  const t=tAnim*fan.spd+fan.ph,sway=Math.sin(t)*1.6*sc;
   const cheerJump=crowdMood===1?Math.max(0,Math.sin(t*2.8))*8*sc:0;
-  const idleBob=(Math.sin(t*1.2)*1.0+waveVal*2.4)*sc;
-  const y=fy-cheerJump-idleBob;
+  const y=fy-cheerJump-(Math.sin(t*1.2)+waveVal*2.4)*sc;
   ctx.save();ctx.translate(fx+sway,y);ctx.rotate(Math.sin(t)*0.07);
-
-  ctx.fillStyle=fan.shirt;
-  ctx.beginPath();
-  ctx.moveTo(-5.4*sc,-10.5*sc);
-  ctx.quadraticCurveTo(0,-13.2*sc,5.4*sc,-10.5*sc);
-  ctx.lineTo(4.4*sc,0);
-  ctx.lineTo(-4.4*sc,0);
-  ctx.closePath();
-  ctx.fill();
-
-  if(fan.scarf){
-    ctx.fillStyle='#4b7bec';
-    ctx.fillRect(-3.6*sc,-11.5*sc,7.2*sc,2.2*sc);
-    ctx.fillRect(1.2*sc,-10*sc,2.0*sc,5.5*sc);
-  }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 8A ] ================ */
-/* ===================================================================== */
-/* ================== [ GAME.HTML : ЧАСТИНА 8B З 10 ] ================== */
-/* ===================================================================== */
+  ctx.fillStyle=fan.shirt;ctx.beginPath();ctx.moveTo(-5.4*sc,-10.5*sc);ctx.quadraticCurveTo(0,-13.2*sc,5.4*sc,-10.5*sc);ctx.lineTo(4.4*sc,0);ctx.lineTo(-4.4*sc,0);ctx.closePath();ctx.fill();
+  if(fan.scarf){ctx.fillStyle='#4b7bec';ctx.fillRect(-3.6*sc,-11.5*sc,7.2*sc,2.2*sc);ctx.fillRect(1.2*sc,-10*sc,2.0*sc,5.5*sc);}
   if(crowdMood===1){
-    const waveArm=Math.sin(t*4)*2.0*sc;
-    drawCapsule(-4.6*sc,-10*sc,-6.8*sc+waveArm,-18*sc,1.4*sc,1.0*sc,fan.skin);
-    drawCapsule(4.6*sc,-10*sc,6.8*sc-waveArm,-18*sc,1.4*sc,1.0*sc,fan.skin);
-    if(fan.scarf){
-      ctx.fillStyle='#1dd1a1';
-      ctx.fillRect(-7.5*sc,-20*sc,15*sc,2.4*sc);
-    }
+    const wa=Math.sin(t*4)*2.0*sc;
+    drawCapsule(-4.6*sc,-10*sc,-6.8*sc+wa,-18*sc,1.4*sc,1.0*sc,fan.skin);drawCapsule(4.6*sc,-10*sc,6.8*sc-wa,-18*sc,1.4*sc,1.0*sc,fan.skin);
+    if(fan.scarf){ctx.fillStyle='#1dd1a1';ctx.fillRect(-7.5*sc,-20*sc,15*sc,2.4*sc);}
   }else if(crowdMood===-1){
-    drawCapsule(-4.6*sc,-10*sc,-3.8*sc,-15.8*sc,1.3*sc,0.9*sc,fan.skin);
-    drawCapsule(4.6*sc,-10*sc,3.8*sc,-15.8*sc,1.3*sc,0.9*sc,fan.skin);
+    drawCapsule(-4.6*sc,-10*sc,-3.8*sc,-15.8*sc,1.3*sc,0.9*sc,fan.skin);drawCapsule(4.6*sc,-10*sc,3.8*sc,-15.8*sc,1.3*sc,0.9*sc,fan.skin);
   }else if(waveVal>0.6){
-    drawCapsule(-4.6*sc,-10*sc,-6.2*sc,-16.8*sc,1.3*sc,0.9*sc,fan.skin);
-    drawCapsule(4.6*sc,-10*sc,6.2*sc,-16.8*sc,1.3*sc,0.9*sc,fan.skin);
+    drawCapsule(-4.6*sc,-10*sc,-6.2*sc,-16.8*sc,1.3*sc,0.9*sc,fan.skin);drawCapsule(4.6*sc,-10*sc,6.2*sc,-16.8*sc,1.3*sc,0.9*sc,fan.skin);
   }
-
-  ctx.fillStyle=fan.skin;
-  ctx.fillRect(-1.1*sc,-13*sc,2.2*sc,2*sc);
-  ctx.beginPath();ctx.ellipse(0,-15.4*sc,2.9*sc,3.6*sc,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=fan.hair;
-  ctx.beginPath();ctx.ellipse(0,-16.6*sc,3.1*sc,2.3*sc,0,Math.PI*0.9,Math.PI*2.1);ctx.fill();
+  ctx.fillStyle=fan.skin;ctx.fillRect(-1.1*sc,-13*sc,2.2*sc,2*sc);ctx.beginPath();ctx.ellipse(0,-15.4*sc,2.9*sc,3.6*sc,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=fan.hair;ctx.beginPath();ctx.ellipse(0,-16.6*sc,3.1*sc,2.3*sc,0,Math.PI*0.9,Math.PI*2.1);ctx.fill();
   ctx.restore();
 }
-
 function getNetBulge(wx,wy){
   if(netWave.amp<=0.005)return 0;
-  const dx=wx-netWave.hitX;
-  const dy=wy-netWave.hitY;
-  const dist=Math.sqrt(dx*dx+dy*dy);
-  const gauss=Math.exp(-(dist*dist)/5.2);
-  const ripple=Math.cos(dist*1.4-netWave.phase*1.6)*0.55+0.45;
-  return netWave.amp*0.85*gauss*ripple;
+  const dist=Math.hypot(wx-netWave.hitX,wy-netWave.hitY);
+  return netWave.amp*0.85*Math.exp(-(dist*dist)/5.2)*(Math.cos(dist*1.4-netWave.phase*1.6)*0.55+0.45);
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 8B ] ================ */
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 9 ] ================= */
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 9 З 10 ] ================== */
+/* ================== [ GAME.HTML : ЧАСТИНА 10 З 11 ] ================== */
 /* ===================================================================== */
 function drawStadiumScene(){
   const horizonY=proj(0,0,15.5).y,standTop=Math.max(46,horizonY-H*0.20);
-
-  const sky=ctx.createLinearGradient(0,0,0,horizonY);
-  sky.addColorStop(0,'#1e272e');sky.addColorStop(1,'#3c6382');
+  const sky=ctx.createLinearGradient(0,0,0,horizonY);sky.addColorStop(0,'#1e272e');sky.addColorStop(1,'#3c6382');
   ctx.fillStyle=sky;ctx.fillRect(0,0,W,horizonY);
-
-  ctx.fillStyle='#2c3e50';ctx.beginPath();
-  ctx.moveTo(0,standTop+10);ctx.lineTo(W*0.20,standTop-25);ctx.lineTo(W*0.40,standTop-28);
-  ctx.lineTo(W*0.56,standTop-52);ctx.lineTo(W*0.74,standTop-38);ctx.lineTo(W*0.92,standTop-20);
-  ctx.lineTo(W,standTop-24);ctx.lineTo(W,horizonY);ctx.lineTo(0,horizonY);ctx.closePath();ctx.fill();
-
+  ctx.fillStyle='#2c3e50';ctx.beginPath();ctx.moveTo(0,standTop+10);ctx.lineTo(W*0.20,standTop-25);ctx.lineTo(W*0.40,standTop-28);ctx.lineTo(W*0.56,standTop-52);ctx.lineTo(W*0.74,standTop-38);ctx.lineTo(W*0.92,standTop-20);ctx.lineTo(W,standTop-24);ctx.lineTo(W,horizonY);ctx.lineTo(0,horizonY);ctx.closePath();ctx.fill();
   ctx.fillStyle='#246124';ctx.fillRect(0,horizonY,W,H-horizonY);
-  for(let z=-6;z<15.5;z+=1.6){
-    const y1=proj(0,0,z).y,y2=proj(0,0,z+1.6).y;
-    ctx.fillStyle=(Math.floor((z+6)*10)%2===0)?'#2d7a2d':'#388e3c';
-    ctx.fillRect(0,Math.min(y1,y2),W,Math.abs(y1-y2)+1);
-  }
-
+  for(let z=-6;z<15.5;z+=1.6){const y1=proj(0,0,z).y,y2=proj(0,0,z+1.6).y;ctx.fillStyle=(Math.floor((z+6)*10)%2===0)?'#2d7a2d':'#388e3c';ctx.fillRect(0,Math.min(y1,y2),W,Math.abs(y1-y2)+1);}
   ctx.fillStyle='#0d1520';ctx.fillRect(0,standTop,W,horizonY-standTop);
-  FANS.forEach(f=>{
-    const pt=proj(f.x,0.3+f.row*0.52,14.3+f.row*0.42);
-    if(pt.x>-20&&pt.x<W+20)drawRealisticFan(pt.x,pt.y,pt.s*0.032,f,Math.max(0,Math.sin(tAnim*0.8-f.x*0.22)));
-  });
-
+  FANS.forEach(f=>{const pt=proj(f.x,0.3+f.row*0.52,14.3+f.row*0.42);if(pt.x>-20&&pt.x<W+20)drawRealisticFan(pt.x,pt.y,pt.s*0.032,f,Math.max(0,Math.sin(tAnim*0.8-f.x*0.22)));});
   [-1,1].forEach(side=>{
-    const baseNear=proj(side*12.6,0,-5.8),baseFar=proj(side*12.6,0,15.5);
-    const topFar=proj(side*19.5,5.8,15.5),topNear=proj(side*21.5,6.4,-5.8);
-    const grad=ctx.createLinearGradient(baseNear.x,baseNear.y,topNear.x,topNear.y);
-    grad.addColorStop(0,'#091019');grad.addColorStop(0.5,'#132030');grad.addColorStop(1,'#1d2f45');
-    ctx.fillStyle=grad;ctx.beginPath();
-    ctx.moveTo(baseNear.x,baseNear.y);ctx.lineTo(baseFar.x,baseFar.y);
-    ctx.lineTo(topFar.x,topFar.y);ctx.lineTo(topNear.x,topNear.y);ctx.closePath();ctx.fill();
-
-    ctx.strokeStyle='#dce4e7';ctx.lineWidth=4.5;
-    ctx.beginPath();ctx.moveTo(topNear.x,topNear.y);ctx.lineTo(topFar.x,topFar.y);ctx.stroke();
+    const bN=proj(side*12.6,0,-5.8),bF=proj(side*12.6,0,15.5),tF=proj(side*19.5,5.8,15.5),tN=proj(side*21.5,6.4,-5.8);
+    const grad=ctx.createLinearGradient(bN.x,bN.y,tN.x,tN.y);grad.addColorStop(0,'#091019');grad.addColorStop(0.5,'#132030');grad.addColorStop(1,'#1d2f45');
+    ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(bN.x,bN.y);ctx.lineTo(bF.x,bF.y);ctx.lineTo(tF.x,tF.y);ctx.lineTo(tN.x,tN.y);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#dce4e7';ctx.lineWidth=4.5;ctx.beginPath();ctx.moveTo(tN.x,tN.y);ctx.lineTo(tF.x,tF.y);ctx.stroke();
   });
-
-  for(let r=6;r>=0;r--){
-    SIDE_FANS.forEach(f=>{
-      if(f.row!==r)return;
-      const pt=proj(f.side*(13.2+f.row*1.05),0.45+f.row*0.82,f.z);
-      if(pt.x>-40&&pt.x<W+40&&pt.y>-30&&pt.y<H+30){
-        drawRealisticFan(pt.x,pt.y,pt.s*0.034,f,Math.max(0,Math.sin(tAnim*0.8-f.z*0.35*f.side)));
-      }
-    });
-  }
-
-  ctx.strokeStyle='#eceff1';ctx.lineWidth=4;
-  ctx.beginPath();ctx.moveTo(0,standTop-3);ctx.quadraticCurveTo(W*0.5,standTop+12,W,standTop-3);ctx.stroke();
-
-  const adL=proj(-12.2,0,12.6),adGL=proj(-5.0,0,12.6),adGR=proj(5.0,0,12.6),adR=proj(12.2,0,12.6);
-  const adTop=proj(0,0.65,12.6).y;
-  ctx.fillStyle='#0c2461';
-  ctx.fillRect(adL.x,adTop,adGL.x-adL.x,adL.y-adTop);ctx.fillRect(adGR.x,adTop,adR.x-adGR.x,adR.y-adTop);
-  ctx.fillStyle='#ffffff';ctx.font='bold 9px sans-serif';ctx.textAlign='center';
-  ctx.fillText('★ CHAMPIONS LEAGUE ★',(adL.x+adGL.x)/2,(adTop+adL.y)/2+3);
-  ctx.fillText('★ UEFA PENALTY CUP ★',(adGR.x+adR.x)/2,(adTop+adR.y)/2+3);
-
+  for(let r=6;r>=0;r--)SIDE_FANS.forEach(f=>{if(f.row===r){const pt=proj(f.side*(13.2+f.row*1.05),0.45+f.row*0.82,f.z);if(pt.x>-40&&pt.x<W+40&&pt.y>-30&&pt.y<H+30)drawRealisticFan(pt.x,pt.y,pt.s*0.034,f,Math.max(0,Math.sin(tAnim*0.8-f.z*0.35*f.side)));}});
+  ctx.strokeStyle='#eceff1';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,standTop-3);ctx.quadraticCurveTo(W*0.5,standTop+12,W,standTop-3);ctx.stroke();
+  const adL=proj(-12.2,0,12.6),adGL=proj(-5.0,0,12.6),adGR=proj(5.0,0,12.6),adR=proj(12.2,0,12.6),adTop=proj(0,0.65,12.6).y;
+  ctx.fillStyle='#0c2461';ctx.fillRect(adL.x,adTop,adGL.x-adL.x,adL.y-adTop);ctx.fillRect(adGR.x,adTop,adR.x-adGR.x,adR.y-adTop);
+  ctx.fillStyle='#ffffff';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText('★ CHAMPIONS LEAGUE ★',(adL.x+adGL.x)/2,(adTop+adL.y)/2+3);ctx.fillText('★ UEFA PENALTY CUP ★',(adGR.x+adR.x)/2,(adTop+adR.y)/2+3);
   ctx.strokeStyle='rgba(255,255,255,0.88)';ctx.lineWidth=2.5;
-  const pBL=proj(-9.5,0,10.5),pFL=proj(-9.5,0,2.8),pFR=proj(9.5,0,2.8),pBR=proj(9.5,0,10.5);
+  const pBL=proj(-9.5,0,10.5),pFL=proj(-9.5,0,2.8),pFR=proj(9.5,0,2.8),pBR=proj(9.5,0,10.5),cFL=proj(-11.4,0,-5.8),cBL=proj(-11.4,0,10.5),cBR=proj(11.4,0,10.5),cFR=proj(11.4,0,-5.8);
   ctx.beginPath();ctx.moveTo(pBL.x,pBL.y);ctx.lineTo(pFL.x,pFL.y);ctx.lineTo(pFR.x,pFR.y);ctx.lineTo(pBR.x,pBR.y);ctx.stroke();
-  const cFL=proj(-11.4,0,-5.8),cBL=proj(-11.4,0,10.5),cBR=proj(11.4,0,10.5),cFR=proj(11.4,0,-5.8);
   ctx.beginPath();ctx.moveTo(cFL.x,cFL.y);ctx.lineTo(cBL.x,cBL.y);ctx.lineTo(cBR.x,cBR.y);ctx.lineTo(cFR.x,cFR.y);ctx.stroke();
-
-  const spot=proj(0,0,0);
-  ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(spot.x,spot.y,0.24*spot.s,0.12*spot.s,0,0,Math.PI*2);ctx.fill();
-
-  if(netWave.amp>0.005){
-    netWave.phase+=0.26;
-    netWave.amp*=0.955;
-  }else{
-    netWave.amp=0;
-  }
-
-  const gw=4.6,gh=3.05,gz=10.5,gd=1.8;
-  const gFL2=proj(-gw,0,gz),gTL=proj(-gw,gh,gz),gTR=proj(gw,gh,gz),gFR2=proj(gw,0,gz);
-
+  const spot=proj(0,0,0);ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(spot.x,spot.y,0.24*spot.s,0.12*spot.s,0,0,Math.PI*2);ctx.fill();
+  if(netWave.amp>0.005){netWave.phase+=0.26;netWave.amp*=0.955;}else netWave.amp=0;
+  const gw=4.6,gh=3.05,gz=10.5,gd=1.8,gFL2=proj(-gw,0,gz),gTL=proj(-gw,gh,gz),gTR=proj(gw,gh,gz),gFR2=proj(gw,0,gz);
   ctx.strokeStyle='rgba(255,255,255,0.46)';ctx.lineWidth=1.1;
-  for(let i=0;i<=18;i++){
-    const t=i/18,wx=-gw+gw*2*t;
-    const topFront=proj(wx,gh,gz);
-    ctx.beginPath();
-    ctx.moveTo(topFront.x,topFront.y);
-    for(let s=0;s<=6;s++){
-      const sy=gh*(1-s/6);
-      const bulge=getNetBulge(wx,sy)*(1-Math.abs(s/6-0.5)*0.4);
-      const pt=proj(wx,sy*0.86,gz+gd+bulge);
-      ctx.lineTo(pt.x,pt.y);
-    }
-    ctx.stroke();
-  }
-  for(let h=1;h<=6;h++){
-    const hy=gh*(h/6);
-    const lFront=proj(-gw,hy,gz),rFront=proj(gw,hy,gz);
-    ctx.beginPath();
-    ctx.moveTo(lFront.x,lFront.y);
-    for(let i=0;i<=18;i++){
-      const wx=-gw+gw*2*(i/18);
-      const bulge=getNetBulge(wx,hy);
-      const pt=proj(wx,hy*0.86,gz+gd+bulge);
-      ctx.lineTo(pt.x,pt.y);
-    }
-    ctx.lineTo(rFront.x,rFront.y);
-    ctx.stroke();
-  }
-
-  ctx.strokeStyle='#ffffff';ctx.lineWidth=6.5;ctx.lineJoin='round';
-  ctx.beginPath();ctx.moveTo(gFL2.x,gFL2.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gFR2.x,gFR2.y);ctx.stroke();
+  for(let i=0;i<=18;i++){const wx=-gw+gw*2*(i/18),tF=proj(wx,gh,gz);ctx.beginPath();ctx.moveTo(tF.x,tF.y);for(let s=0;s<=6;s++){const sy=gh*(1-s/6),pt=proj(wx,sy*0.86,gz+gd+getNetBulge(wx,sy)*(1-Math.abs(s/6-0.5)*0.4));ctx.lineTo(pt.x,pt.y);}ctx.stroke();}
+  for(let h=1;h<=6;h++){const hy=gh*(h/6),lF=proj(-gw,hy,gz),rF=proj(gw,hy,gz);ctx.beginPath();ctx.moveTo(lF.x,lF.y);for(let i=0;i<=18;i++){const wx=-gw+gw*2*(i/18),pt=proj(wx,hy*0.86,gz+gd+getNetBulge(wx,hy));ctx.lineTo(pt.x,pt.y);}ctx.lineTo(rF.x,rF.y);ctx.stroke();}
+  ctx.strokeStyle='#ffffff';ctx.lineWidth=6.5;ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(gFL2.x,gFL2.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gFR2.x,gFR2.y);ctx.stroke();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 9 ] ================= -->
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 10 ] ================ */
 /* ===================================================================== */
-/* ================== [ GAME.HTML : ЧАСТИНА 10 З 10 ] ================== */
+/* ================== [ GAME.HTML : ЧАСТИНА 11 З 11 ] ================== */
 /* ===================================================================== */
 function draw3D(){
-  tAnim+=0.07;
-  ctx.clearRect(0,0,W,H);
-
-  drawStadiumScene();
-
-  const gz=10.5;
-  const oppClub=getCurOpponent();
-  const myJersey=getItem(p.ej);
-  const myShorts=getItem(p.ep);
-  const myShoes=getItem(p.es);
-
-  const moveSpd=(gk.state==='stand')?0.09:0.19;
-  const fallSpd=(gk.state==='fall')?0.22:0.18;
-  gk.x+=(gk.tx-gk.x)*moveSpd;
-  gk.y+=(gk.ty-gk.y)*fallSpd;
-  gk.dive+=(gk.tdive-gk.dive)*moveSpd;
-
+  tAnim+=0.07;ctx.clearRect(0,0,W,H);drawStadiumScene();
+  const gz=10.5,oppClub=getCurOpponent(),myJ=getItem(p.ej),myP=getItem(p.ep),myS=getItem(p.es);
+  const mSpd=(gk.state==='stand')?0.09:0.19,fSpd=(gk.state==='fall')?0.22:0.18;
+  gk.x+=(gk.tx-gk.x)*mSpd;gk.y+=(gk.ty-gk.y)*fSpd;gk.dive+=(gk.tdive-gk.dive)*mSpd;
   const gp=proj(gk.x,gk.y,gz-0.1),gSh=proj(gk.x,0,gz-0.1);
-  const shStretch=1+Math.abs(gk.dive)*0.45;
-  ctx.fillStyle='rgba(0,0,0,0.42)';ctx.beginPath();ctx.ellipse(gSh.x,gSh.y,0.48*gSh.s*shStretch,0.18*gSh.s,0,0,Math.PI*2);ctx.fill();
-
-  const gkJersey=(ph==='sh'||ph==='over')?oppClub.c:'#f39c12';
-  const gkDark=(ph==='sh'||ph==='over')?(oppClub.dark||'#1e272e'):'#b36b00';
-  drawRealisticPlayer(gp.x,gp.y,gp.s*0.032,gkJersey,gkDark,'#ffffff','#1e272e','#0b0f14','#14181d','#ffffff',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false,gk.state==='stand');
-
-  if(ball.active&&ball.t<1){
-    ball.t=Math.min(1,ball.t+0.052);
-    const ease=1-Math.pow(1-ball.t,2);
-    ball.x=ball.sx+(ball.tx-ball.sx)*ease+Math.sin(ball.t*Math.PI)*(ball.tx*0.18);
-    ball.y=ball.sy+(ball.ty-ball.sy)*ease+Math.sin(ball.t*Math.PI)*0.95;
-    ball.z=ball.sz+(ball.tz-ball.sz)*ease;
-  }else if(ball.inNet&&ball.y>0.22){
-    ball.y=Math.max(0.22,ball.y-0.065);
-    ball.z=Math.max(11.3,ball.z-0.015);
-  }
-
-  const bSh=proj(ball.x,0,ball.z);
-  ctx.fillStyle='rgba(0,0,0,0.45)';ctx.beginPath();ctx.ellipse(bSh.x,bSh.y,0.25*bSh.s,0.12*bSh.s,0,0,Math.PI*2);ctx.fill();
-
-  const bp=proj(ball.x,ball.y,ball.z),rad=Math.max(4,0.24*bp.s),bCol=getItem(p.eb).col;
-  const bGrad=ctx.createRadialGradient(bp.x-rad*0.3,bp.y-rad*0.3,rad*0.1,bp.x,bp.y,rad);
-  bGrad.addColorStop(0,'#ffffff');bGrad.addColorStop(0.55,bCol);bGrad.addColorStop(1,'#1e272e');
-  ctx.fillStyle=bGrad;ctx.beginPath();ctx.arc(bp.x,bp.y,rad,0,Math.PI*2);ctx.fill();
-
-  if(kicker.running){
-    kicker.run=Math.min(1,kicker.run+0.08);
-    kicker.x=kicker.sx+(kicker.tx-kicker.sx)*kicker.run;
-    kicker.z=kicker.sz+(kicker.tz-kicker.sz)*kicker.run;
-  }
-  const kp=proj(kicker.x,0,kicker.z);
-  ctx.fillStyle='rgba(0,0,0,0.42)';ctx.beginPath();ctx.ellipse(kp.x,kp.y,0.55*kp.s,0.22*kp.s,0,0,Math.PI*2);ctx.fill();
-
-  const isMyKicker=(ph==='sh'||ph==='over');
-  const kCol=isMyKicker?myJersey.col:oppClub.c;
-  const kDark=isMyKicker?(myJersey.dark||'#090d14'):(oppClub.dark||'#1e272e');
-  const kTrim=isMyKicker?(myJersey.trim||'#ffffff'):'#ffffff';
-  const kSh=isMyKicker?myShorts.col:'#1e272e';
-  const kShDark=isMyKicker?(myShorts.dark||'#0b0f14'):'#0b0f14';
-  const kBoot=isMyKicker?myShoes.col:'#14181d';
-  const kBootAc=isMyKicker?(myShoes.ac||'#1dd1a1'):'#ffffff';
-
-  drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kCol,kDark,kTrim,kSh,kShDark,kBoot,kBootAc,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true,false);
-
+  ctx.fillStyle='rgba(0,0,0,0.42)';ctx.beginPath();ctx.ellipse(gSh.x,gSh.y,0.48*gSh.s*(1+Math.abs(gk.dive)*0.45),0.18*gSh.s,0,0,Math.PI*2);ctx.fill();
+  const isMyShot=(ph==='sh'||ph==='over');
+  drawRealisticPlayer(gp.x,gp.y,gp.s*0.032,isMyShot?oppClub.c:'#f39c12',isMyShot?(oppClub.dark||'#1e272e'):'#b36b00','#ffffff','#1e272e','#0b0f14','#14181d','#ffffff',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false,gk.state==='stand');
+  if(ball.active&&ball.t<1){ball.t=Math.min(1,ball.t+0.052);const e=1-Math.pow(1-ball.t,2);ball.x=ball.sx+(ball.tx-ball.sx)*e+Math.sin(ball.t*Math.PI)*(ball.tx*0.18);ball.y=ball.sy+(ball.ty-ball.sy)*e+Math.sin(ball.t*Math.PI)*0.95;ball.z=ball.sz+(ball.tz-ball.sz)*e;}
+  else if(ball.inNet&&ball.y>0.22){ball.y=Math.max(0.22,ball.y-0.065);ball.z=Math.max(11.3,ball.z-0.015);}
+  const bSh=proj(ball.x,0,ball.z);ctx.fillStyle='rgba(0,0,0,0.45)';ctx.beginPath();ctx.ellipse(bSh.x,bSh.y,0.25*bSh.s,0.12*bSh.s,0,0,Math.PI*2);ctx.fill();
+  const bp=proj(ball.x,ball.y,ball.z),rad=Math.max(4,0.24*bp.s),bGrad=ctx.createRadialGradient(bp.x-rad*0.3,bp.y-rad*0.3,rad*0.1,bp.x,bp.y,rad);
+  bGrad.addColorStop(0,'#ffffff');bGrad.addColorStop(0.55,getItem(p.eb).col);bGrad.addColorStop(1,'#1e272e');ctx.fillStyle=bGrad;ctx.beginPath();ctx.arc(bp.x,bp.y,rad,0,Math.PI*2);ctx.fill();
+  if(kicker.running){kicker.run=Math.min(1,kicker.run+0.08);kicker.x=kicker.sx+(kicker.tx-kicker.sx)*kicker.run;kicker.z=kicker.sz+(kicker.tz-kicker.sz)*kicker.run;}
+  const kp=proj(kicker.x,0,kicker.z);ctx.fillStyle='rgba(0,0,0,0.42)';ctx.beginPath();ctx.ellipse(kp.x,kp.y,0.55*kp.s,0.22*kp.s,0,0,Math.PI*2);ctx.fill();
+  drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,isMyShot?myJ.col:oppClub.c,isMyShot?(myJ.dark||'#090d14'):(oppClub.dark||'#1e272e'),isMyShot?(myJ.trim||'#ffffff'):'#ffffff',isMyShot?myP.col:'#1e272e',isMyShot?(myP.dark||'#0b0f14'):'#0b0f14',isMyShot?myS.col:'#14181d',isMyShot?(myS.ac||'#1dd1a1'):'#ffffff',null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true,false);
   requestAnimationFrame(draw3D);
 }
-
 rsz3D();updUI();renderCtrl();draw3D();
 </script>
 </body>
 </html>
-<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 10 ] ================ -->
+<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 11 ] ================ -->
