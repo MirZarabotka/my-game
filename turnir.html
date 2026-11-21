@@ -1,110 +1,90 @@
 <!-- ===================================================================== -->
-<!-- ================= [ TURNIR.HTML : ЧАСТИНА 1 З 2 ] =================== -->
+<!-- ================== [ TURNIR.HTML : ЧАСТИНА 1 З 5 ] ================== -->
 <!-- ===================================================================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Ліга Чемпіонів — Турнірна сітка</title>
+<title>3D Champions Penalty — Ліга Чемпіонів</title>
 <script src="https://telegram.org"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:10px;display:flex;flex-direction:column;min-height:100vh;user-select:none}
-.top-bar{display:flex;gap:8px;margin-bottom:10px}
-.nav-btn{flex:1;padding:10px;border:none;border-radius:10px;font-weight:bold;font-size:13px;cursor:pointer;text-decoration:none;text-align:center;background:#182230;color:#fff;border:1px solid #3c4f66}
-.ucl-head{background:linear-gradient(135deg,#0c2461,#1e3799);border:1px solid #4b7bec;border-radius:14px;padding:14px;text-align:center;margin-bottom:10px}
-.stats{display:flex;justify-content:space-around;background:rgba(7,11,20,.5);border-radius:8px;padding:7px;margin-top:10px;font-size:12px;color:#feca57;font-weight:bold}
-.entry-box{background:#131b26;border:1px solid #243347;border-radius:14px;padding:20px 16px;text-align:center;margin-top:6px}
-.prizes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0;text-align:left;font-size:12px}
-.prize-item{background:#0b131e;border:1px solid #1e2b3c;padding:8px 10px;border-radius:8px;color:#d1d8e0}
-.start-btn{width:100%;padding:14px;border:none;border-radius:12px;font-weight:bold;font-size:15px;cursor:pointer;background:linear-gradient(135deg,#feca57,#ff9f43);color:#000;box-shadow:0 4px 15px rgba(254,202,87,.3);transition:transform .15s}
-.start-btn:active{transform:scale(.97)}
-.rnd-title{font-size:11px;font-weight:bold;color:#70a1ff;text-transform:uppercase;margin:10px 0 5px;letter-spacing:.5px}
-.match-card{background:#131b26;border:1px solid #243347;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;font-size:13px;transition:transform .15s}
-.match-card.my{border:2px solid #1dd1a1;background:linear-gradient(90deg,rgba(29,209,161,.18),rgba(19,27,38,.95));cursor:pointer;box-shadow:0 0 12px rgba(29,209,161,.2)}
-.match-card.my:active{transform:scale(.98)}
-.match-card.done{opacity:.72;cursor:default;box-shadow:none}
-.badge{padding:4px 10px;border-radius:8px;background:#0b131e;color:#feca57;font-weight:bold;font-size:12px}
-.play-pill{padding:5px 12px;border-radius:8px;background:#1dd1a1;color:#000;font-weight:bold;font-size:12px;animation:pulse 1.5s infinite}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-.champ-box{background:linear-gradient(135deg,#b78628,#feca57);color:#000;border-radius:12px;padding:14px;text-align:center;font-weight:bold;margin-bottom:10px;font-size:14px}
-.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.96);border:1px solid #ff5e57;color:#fff;padding:9px 16px;border-radius:12px;font-size:12px;display:none;white-space:nowrap;z-index:20}
-.modal-bg{position:fixed;inset:0;background:rgba(4,7,14,.85);display:none;align-items:center;justify-content:center;padding:16px;z-index:30}
-.modal{background:#131b26;border:1px solid #4b7bec;border-radius:16px;padding:18px;max-width:340px;width:100%;text-align:center}
-.modal-btns{display:flex;gap:8px;margin-top:16px}
-.m-btn{flex:1;padding:11px;border:none;border-radius:10px;font-weight:bold;font-size:13px;cursor:pointer}
-.m-yes{background:#1dd1a1;color:#000}
-.m-no{background:#1e2b3c;color:#fff}
+body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
+.tabs{display:flex;gap:6px;margin-bottom:6px;flex-shrink:0}
+.tab{flex:1;padding:9px 6px;background:#131b26;border:1px solid #243347;color:#fff;border-radius:10px;font-weight:bold;font-size:12px;cursor:pointer;text-align:center;text-decoration:none}
+.tab.on{background:#152547;color:#70a1ff;border-color:#3867d6}
+.box{background:#131b26;border:1px solid #243347;border-radius:12px;padding:7px 12px;margin-bottom:6px;flex-shrink:0}
+.row{display:flex;justify-content:space-between;align-items:center}
+.bar{width:100%;height:5px;background:#1e2b3c;border-radius:4px;overflow:hidden;margin:4px 0}
+.fill{height:100%;background:#1dd1a1;transition:width .3s}
+.ucl-box{flex:1;overflow-y:auto;background:linear-gradient(180deg,#091326,#0e1b33);border:1px solid #2b4c7e;border-radius:14px;padding:10px}
+.sub-tabs{display:flex;gap:6px;margin-bottom:8px}
+.stab{flex:1;padding:7px;background:#0d182d;border:1px solid #294166;color:#a5b1c2;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;text-align:center}
+.stab.on{background:#1e3799;color:#fff;border-color:#4b7bec}
+.grp-card{background:#0c182e;border:1px solid #233c63;border-radius:11px;padding:8px;margin-bottom:8px}
+.grp-title{font-size:12px;font-weight:bold;color:#70a1ff;margin-bottom:5px;display:flex;justify-content:space-between}
+table.tbl{width:100%;border-collapse:collapse;font-size:11px}
+table.tbl th{color:#778ca3;font-weight:normal;text-align:center;padding:3px 2px;border-bottom:1px solid #1e3354}
+table.tbl th:nth-child(2),table.tbl td:nth-child(2){text-align:left;padding-left:4px}
+table.tbl td{padding:5px 2px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04)}
+tr.q-pass td:first-child{border-left:3px solid #1dd1a1;color:#1dd1a1;font-weight:bold}
+tr.q-out td:first-child{border-left:3px solid #3c4f66;color:#778ca3}
+tr.me-row{background:rgba(29,209,161,.14);font-weight:bold}
+.sched-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#091224;border-radius:7px;margin-top:4px;font-size:11px;border:1px solid #1b3154}
+.sched-item.next{border-color:#feca57;background:rgba(254,202,87,.1)}
+.rnd-title{font-size:11px;font-weight:bold;color:#70a1ff;margin:8px 0 5px;text-transform:uppercase;letter-spacing:.5px}
+.match{background:#0c182e;border:1px solid #233c63;border-radius:10px;padding:7px 10px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.match.me{border-color:#feca57;background:rgba(254,202,87,.09)}
+.btn{background:#182230;border:2px solid #3c4f66;color:#fff;padding:12px 6px;border-radius:12px;font-weight:bold;font-size:13px;cursor:pointer;width:100%}
+.btn:active{transform:scale(.97)}
+.ucl-btn{background:linear-gradient(135deg,#1e3799,#3867d6);border:1px solid #4b7bec;color:#fff;margin-top:6px}
+.cup-banner{text-align:center;padding:12px;background:rgba(254,202,87,.12);border:1px solid #feca57;border-radius:12px;margin-bottom:8px}
 </style>
 </head>
 <body>
-
-<div class="top-bar">
-  <a href="index.html" class="nav-btn" onclick="localStorage.removeItem('pc_play_ucl')">🏠 Головна</a>
-  <button id="quitBtn" class="nav-btn" style="display:none;color:#ff6b6b" onclick="askQuit()">🚪 Завершити турнір</button>
+<div class="tabs">
+  <a href="index.html" class="tab">🏠 Головна</a>
+  <a href="turnir.html" class="tab on">🏆 Ліга Чемпіонів</a>
+  <a href="shop.html" class="tab">🛍 Магазин</a>
 </div>
-
-<div id="app"></div>
-<div id="toast" class="toast"></div>
-
-<div id="confirmModal" class="modal-bg">
-  <div class="modal">
-    <div style="font-size:32px;margin-bottom:6px">🏆</div>
-    <div style="font-size:16px;font-weight:bold;color:#fff">Вступ до Ліги Чемпіонів</div>
-    <div style="font-size:13px;color:#a5b1c2;margin-top:8px;line-height:1.4">
-      Ви підтверджуєте участь у турнірі?<br>
-      З вашого балансу буде списано <b style="color:#feca57">100 💰</b>, після чого відбудеться сліпе жеребкування 1/8 фіналу.
-    </div>
-    <div class="modal-btns">
-      <button class="m-btn m-no" onclick="closeModal()">Скасувати</button>
-      <button class="m-btn m-yes" onclick="confirmStart()">✅ Оплатити 100 💰</button>
-    </div>
-  </div>
+<div class="box">
+  <div class="row"><b style="color:#feca57">Рівень <span id="lv">1</span> • 🏆 ЛЧ: <span id="cp">0</span></b><b style="color:#feca57">💰 <span id="cn">20</span></b></div>
+  <div class="bar"><div class="fill" id="xb"></div></div>
+  <div class="row" style="font-size:11px;color:#8395a7"><span>XP: <span id="pt">0</span>/<span id="nx">100</span></span><span style="color:#70a1ff;font-weight:bold">Групи (Вдома/Виїзд) + Плей-оф</span></div>
 </div>
-<!-- ================ [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 1 ] ================= -->
+<div class="ucl-box" id="uclBox"></div>
+<!-- ================== [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 1 ] ================= -->
 <!-- ===================================================================== -->
-<!-- ================= [ TURNIR.HTML : ЧАСТИНА 2 З 2 ] =================== -->
+<!-- ================== [ TURNIR.HTML : ЧАСТИНА 2 З 5 ] ================== -->
 <!-- ===================================================================== -->
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
 
-const ENTRY_FEE=100;
-
-const CLUBS=[
-  {n:'Реал Мадрид',i:'👑',c:'#ffffff'},
-  {n:'Барселона',i:'🔵🔴',c:'#a50044'},
-  {n:'Баварія',i:'🔴⚪',c:'#dc052d'},
-  {n:'Манчестер Сіті',i:'🩵',c:'#6cabdd'},
-  {n:'ПСЖ',i:'🗼',c:'#004170'},
-  {n:'Арсенал',i:'🔫',c:'#ef0107'},
-  {n:'Інтер Мілан',i:'🐍',c:'#010e80'},
-  {n:'Ліверпуль',i:'🦅',c:'#c8102e'},
-  {n:'Атлетіко',i:'🔴⚪',c:'#cb3524'},
-  {n:'Боруссія Д',i:'🐝',c:'#fde100'},
-  {n:'Ювентус',i:'🦓',c:'#e5e5e5'},
-  {n:'Байєр',i:'💊',c:'#e32221'},
-  {n:'Мілан',i:'⚫🔴',c:'#fb090b'},
-  {n:'Бенфіка',i:'🦅',c:'#e83030'},
-  {n:'Спортінг',i:'🦁',c:'#008057'}
+const ALL_CLUBS=[
+  {n:'Реал Мадрид',i:'👑',c:'#f5f6fa',dark:'#cfd6de'},{n:'Барселона',i:'🔵🔴',c:'#a50044',dark:'#5e0026'},
+  {n:'Баварія',i:'🔴⚪',c:'#dc052d',dark:'#85021a'},{n:'Манчестер Сіті',i:'🩵',c:'#6cabdd',dark:'#386c96'},
+  {n:'ПСЖ',i:'🗼',c:'#004170',dark:'#00213b'},{n:'Арсенал',i:'🔫',c:'#ef0107',dark:'#910004'},
+  {n:'Інтер Мілан',i:'🐍',c:'#010e80',dark:'#000747'},{n:'Ліверпуль',i:'🦅',c:'#c8102e',dark:'#78081a'},
+  {n:'Атлетіко',i:'🔴⚪',c:'#cb3524',dark:'#7d1e13'},{n:'Боруссія Д',i:'🐝',c:'#fde100',dark:'#b5a000'},
+  {n:'Ювентус',i:'🦓',c:'#e5e5e5',dark:'#999999'},{n:'Байєр',i:'💊',c:'#e32221',dark:'#8a1110'},
+  {n:'Мілан',i:'⚫🔴',c:'#fb090b',dark:'#960304'},{n:'Бенфіка',i:'🦅',c:'#e83030',dark:'#8f1818'},
+  {n:'Спортінг',i:'🦁',c:'#008057',dark:'#004730'},{n:'Аталанта',i:'🔵⚫',c:'#1e71b8',dark:'#0e3b63'},
+  {n:'РБ Лейпциг',i:'🐂',c:'#dd0741',dark:'#820325'},{n:'Порту',i:'🐉',c:'#00428c',dark:'#00224a'},
+  {n:'ПСВ',i:'💡',c:'#ed1c24',dark:'#8f0d12'},{n:'Феєнорд',i:'🔴⚪',c:'#e30613',dark:'#85030a'},
+  {n:'Астон Вілла',i:'🦁',c:'#670e36',dark:'#3b061e'},{n:'Монако',i:'🇲🇨',c:'#e51b23',dark:'#8a0d12'},
+  {n:'Лілль',i:'🐕',c:'#e01e13',dark:'#850f08'},{n:'Жирона',i:'⚪🔴',c:'#cc2229',dark:'#7a1116'},
+  {n:'Штутгарт',i:'⚪🔴',c:'#e32219',dark:'#87110c'},{n:'Болонья',i:'🔴🔵',c:'#1a2f48',dark:'#0b1624'},
+  {n:'Селтік',i:'☘️',c:'#018749',dark:'#004d29'},{n:'Брюгге',i:'🔵⚫',c:'#0070b8',dark:'#003e66'},
+  {n:'Шахтар',i:'⚒️',c:'#f37021',dark:'#99400b'},{n:'Динамо Загреб',i:'🔵',c:'#005ca9',dark:'#003361'},
+  {n:'Зальцбург',i:'🐂',c:'#d4002a',dark:'#7d0018'},{n:'Спарта Прага',i:'🔴',c:'#9c1c26',dark:'#5c0e14'}
 ];
 
-function emptyBracket(){
-  return{active:false,rnd:0,r16:[],qf:[],sf:[],fn:[],champ:null};
-}
+const SHOP_COLS={j1:'#1dd1a1',j2:'#f5f6fa',j3:'#d63031',j4:'#1e3799',j5:'#1e272e',j6:'#feca57'};
+const GRP_LETTERS=['A','B','C','D','E','F','G','H'];
 
-function drawRandomBracket(){
-  const pool=[...CLUBS].sort(()=>Math.random()-0.5);
-  const myClub={n:'Твій Клуб',i:'🇺🇦',c:'#1dd1a1',isMe:true};
-  const r16=[];
-  r16.push({a:myClub,b:pool[0],sc:null});
-  for(let i=1;i<15;i+=2){
-    r16.push({a:pool[i],b:pool[i+1],sc:null});
-  }
-  return{active:true,rnd:0,r16,qf:[],sf:[],fn:[],champ:null};
-}
-
-let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','s1','b1','k1'],ej:'j1',es:'s1',eb:'b1',ek:'k1',ucl:null};
+let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null};
+let viewTab='mygrp';
 
 function loadWallet(){
   try{
@@ -113,169 +93,249 @@ function loadWallet(){
     if(v)p=Object.assign(p,v);
     else if(old){p=Object.assign(p,old);save();}
   }catch(e){}
-  if(!p.ej)p.ej='j1';
-  if(!p.es)p.es='s1';
-  if(!p.ucl)p.ucl=emptyBracket();
 }
-
-function save(){
-  try{localStorage.setItem('pc_ucl1',JSON.stringify(p))}catch(e){}
-}
-
+function save(){try{localStorage.setItem('pc_ucl1',JSON.stringify(p))}catch(e){}}
 loadWallet();
 
-window.addEventListener('pageshow',()=>{loadWallet();render();});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadWallet();render();}});
-
-function showMsg(txt,isOk=false){
-  const el=document.getElementById('toast');
-  el.textContent=txt;
-  el.style.borderColor=isOk?'#1dd1a1':'#ff5e57';
-  el.style.display='block';
-  clearTimeout(window._t);
-  window._t=setTimeout(()=>el.style.display='none',2500);
+function updUI(){
+  lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
+  const nxXp=p.lv*100;pt.textContent=p.pt;nx.textContent=nxXp;
+  xb.style.width=Math.min(100,(p.pt/nxXp)*100)+'%';
+}
+/* ================== [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 2 ] ================= -->
+/* ===================================================================== */
+/* ================== [ TURNIR.HTML : ЧАСТИНА 3 З 5 ] ================== */
+/* ===================================================================== */
+function buildGroupSchedule(teams){
+  // Повний двоколовий календар для 4 команд (0, 1, 2, 3): 1 матч вдома + 1 на виїзді
+  const pairings=[
+    [[0,1],[2,3]], // Тур 1
+    [[3,0],[1,2]], // Тур 2
+    [[0,2],[1,3]], // Тур 3
+    [[1,0],[3,2]], // Тур 4
+    [[0,3],[2,1]], // Тур 5
+    [[2,0],[3,1]]  // Тур 6
+  ];
+  return pairings.map((roundPairs,rIdx)=>({
+    rnd:rIdx+1,
+    matches:roundPairs.map(([hi,ai])=>({
+      home:teams[hi].id,
+      away:teams[ai].id,
+      sc:null
+    }))
+  }));
 }
 
-function openStartModal(){
-  loadWallet();
-  if(p.cn<ENTRY_FEE){
-    showMsg(`Недостатньо монет! Потрібно ${ENTRY_FEE} 💰 (у вас ${p.cn} 💰)`);
-    return;
+function initUCL(){
+  const pool=[...ALL_CLUBS].sort(()=>Math.random()-0.5).slice(0,31);
+  const myCol=SHOP_COLS[p.ej]||'#1dd1a1';
+  const all32=[{n:'Твій Клуб',i:'🇺🇦',c:myCol,dark:'#0b0f14',isMe:true},...pool];
+
+  const groups=[];
+  for(let g=0;g<8;g++){
+    const slice=all32.slice(g*4,g*4+4).map((c,idx)=>({
+      id:`g${g}_${idx}`,
+      n:c.n,i:c.i,c:c.c,dark:c.dark||'#1e272e',isMe:!!c.isMe,
+      pl:0,w:0,l:0,gf:0,ga:0,pts:0
+    }));
+    groups.push({
+      name:GRP_LETTERS[g],
+      teams:slice,
+      schedule:buildGroupSchedule(slice)
+    });
   }
-  document.getElementById('confirmModal').style.display='flex';
-}
 
-function closeModal(){
-  document.getElementById('confirmModal').style.display='none';
-}
-
-function confirmStart(){
-  closeModal();
-  loadWallet();
-  if(p.cn<ENTRY_FEE){
-    showMsg(`Недостатньо монет! Потрібно ${ENTRY_FEE} 💰`);
-    return;
-  }
-  p.cn-=ENTRY_FEE;
-  p.ucl=drawRandomBracket();
+  p.ucl={
+    active:true,
+    stage:'group',
+    gRnd:0,
+    groups:groups,
+    rnd:0,
+    r16:[],qf:[],sf:[],fn:[],
+    champ:null,
+    eliminated:false
+  };
+  viewTab='mygrp';
   save();
-  showMsg('🎲 Жеребкування проведено! Удачі в турнірі!',true);
-  render();
+  renderUCL();
 }
 
-function askQuit(){
-  p.ucl=emptyBracket();
-  save();
-  render();
+function getSortedTeams(grp){
+  return [...grp.teams].sort((a,b)=>{
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    const gdA=a.gf-a.ga,gdB=b.gf-b.ga;
+    if(gdB!==gdA)return gdB-gdA;
+    if(b.gf!==a.gf)return b.gf-a.gf;
+    return a.isMe?-1:(b.isMe?1:0);
+  });
 }
 
-function startMyMatch(){
+function playUCLMatch(){
   localStorage.setItem('pc_play_ucl','1');
   location.href='game.html?mode=ucl';
 }
-
-function render(){
+/* ================== [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 3 ] ================= */
+/* ===================================================================== */
+/* ================== [ TURNIR.HTML : ЧАСТИНА 4 З 5 ] ================== */
+/* ===================================================================== */
+function renderGroupCard(grp,showSchedule){
+  const sorted=getSortedTeams(grp);
+  const myTeam=grp.teams.find(t=>t.isMe);
   const u=p.ucl;
-  const quitBtn=document.getElementById('quitBtn');
 
-  if(!u||!u.active||!u.r16||!u.r16.length){
-    quitBtn.style.display='none';
-    document.getElementById('app').innerHTML=`
-      <div class="ucl-head">
-        <div style="font-size:17px;font-weight:bold;color:#fff">🏆 UEFA CHAMPIONS PENALTY CUP</div>
-        <div style="font-size:12px;color:#d1d8e0;margin-top:4px">Офіційний турнір на виліт серед 16 топ-клубів Європи</div>
-        <div class="stats">
-          <span>Рівень: ${p.lv}</span>
-          <span>🏆 Кубків ЛЧ: ${p.cp}</span>
-          <span>💰 Баланс: ${p.cn}</span>
-        </div>
-      </div>
+  let rowsHtml=sorted.map((t,idx)=>{
+    const pass=(idx<2);
+    const cls=`${pass?'q-pass':'q-out'} ${t.isMe?'me-row':''}`;
+    return `<tr class="${cls}">
+      <td>${idx+1}</td>
+      <td>${t.i} ${t.n}</td>
+      <td>${t.pl}</td>
+      <td>${t.w}</td>
+      <td>${t.l}</td>
+      <td>${t.gf}:${t.ga}</td>
+      <td><b style="color:${pass?'#1dd1a1':'#fff'}">${t.pts}</b></td>
+    </tr>`;
+  }).join('');
 
-      <div class="entry-box">
-        <div style="font-size:42px;margin-bottom:8px">🏟</div>
-        <div style="font-size:16px;font-weight:bold;color:#fff">Сліпе жеребкування плей-оф</div>
-        <div style="font-size:12px;color:#8395a7;margin-top:6px;line-height:1.45">
-          Суперники стануть відомі одразу після старту турніру. Пройдіть шлях від 1/8 фіналу до головного трофею!
-        </div>
-
-        <div class="prizes">
-          <div class="prize-item">⚽ <b>1/8 фіналу:</b> +60 💰</div>
-          <div class="prize-item">⚡️ <b>1/4 фіналу:</b> +110 💰</div>
-          <div class="prize-item">🔥 <b>Півфінал:</b> +200 💰</div>
-          <div class="prize-item" style="border-color:#feca57;color:#feca57">🏆 <b>Фінал ЛЧ:</b> +500 💰</div>
-        </div>
-
-        <button class="start-btn" onclick="openStartModal()">
-          🏆 Розпочати турнір (Внесок ${ENTRY_FEE} 💰)
-        </button>
+  let schedHtml='';
+  if(showSchedule && myTeam){
+    schedHtml='<div style="margin-top:8px;font-size:11px;color:#70a1ff;font-weight:bold">📅 Твої матчі в групі (6 турів):</div>';
+    grp.schedule.forEach((rObj,rIdx)=>{
+      const m=rObj.matches.find(x=>x.home===myTeam.id||x.away===myTeam.id);
+      if(!m)return;
+      const isHome=(m.home===myTeam.id);
+      const oppId=isHome?m.away:m.home;
+      const opp=grp.teams.find(t=>t.id===oppId);
+      const isNext=(u.stage==='group' && u.gRnd===rIdx && !m.sc);
+      const venueTag=isHome?'<span style="color:#1dd1a1">🏟️ Вдома</span>':'<span style="color:#feca57">✈️ На виїзді</span>';
+      schedHtml+=`<div class="sched-item ${isNext?'next':''}">
+        <span>Тур ${rObj.rnd} • ${venueTag}</span>
+        <span>vs ${opp.i} ${opp.n}</span>
+        <b>${m.sc?m.sc:(isNext?'▶ Далі':'⏳')}</b>
       </div>`;
+    });
+  }
+
+  return `<div class="grp-card">
+    <div class="grp-title">
+      <span>ГРУПА ${grp.name}</span>
+      <span style="font-size:10px;color:#1dd1a1">1–2 місця ➔ 1/8 фіналу</span>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Команда</th><th>І</th><th>В</th><th>П</th><th>З:П</th><th>О</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    ${schedHtml}
+  </div>`;
+}
+
+function renderKOMatches(title,arr){
+  if(!arr||!arr.length)return '';
+  let h=`<div class="rnd-title">${title}</div>`;
+  arr.forEach(m=>{
+    const isMe=(m.a.isMe||m.b.isMe);
+    h+=`<div class="match ${isMe?'me':''}">
+      <span>${m.a.i} ${m.a.n}</span>
+      <b style="color:${m.sc?'#1dd1a1':'#feca57'}">${m.sc||'VS'}</b>
+      <span>${m.b.n} ${m.b.i}</span>
+    </div>`;
+  });
+  return h;
+}
+/* ================== [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 4 ] ================= */
+/* ===================================================================== */
+/* ================== [ TURNIR.HTML : ЧАСТИНА 5 З 5 ] ================== */
+/* ===================================================================== */
+function renderUCL(){
+  const box=document.getElementById('uclBox');
+  const u=p.ucl;
+
+  if(!u || !u.active || !u.groups){
+    box.innerHTML=`<div class="cup-banner">
+      <div style="font-size:32px">🏆</div>
+      <b style="font-size:15px;color:#feca57">ЛІГА ЧЕМПІОНІВ УЄФА</b>
+      <p style="font-size:12px;color:#a5b1c2;margin:6px 0">8 груп по 4 команди (вдома та на виїзді).<br>Топ-2 з кожної групи виходять у 1/8 фіналу!</p>
+      <button class="btn ucl-btn" onclick="initUCL()">⚽ Почати новий розіграш ЛЧ</button>
+    </div>`;
     return;
   }
 
-  quitBtn.style.display='block';
-  const curArr=[u.r16,u.qf,u.sf,u.fn][u.rnd]||u.r16;
-  const myMatch=curArr.find(m=>m.a.isMe||m.b.isMe)||curArr[0];
-  const opp=myMatch.a.isMe?myMatch.b:myMatch.a;
-
-  let html=`
-    <div class="ucl-head">
-      <div style="font-size:16px;font-weight:bold;color:#fff">🏆 UEFA CHAMPIONS PENALTY CUP</div>
-      <div style="font-size:12px;color:#d1d8e0;margin-top:4px">
-        ${u.champ ? 'Турнір завершено!' : `Твій суперник: <b style="color:#feca57">${opp.i} ${opp.n}</b>`}
-      </div>
-      <div class="stats">
-        <span>Рівень: ${p.lv}</span>
-        <span>🏆 Кубків ЛЧ: ${p.cp}</span>
-        <span>💰 ${p.cn}</span>
-      </div>
-    </div>`;
+  let html='';
 
   if(u.champ){
-    html+=`
-      <div class="champ-box">
-        🎉 ПЕРЕМОЖЕЦЬ СЕЗОНУ: ${u.champ.i} ${u.champ.n} 🎉
-        <div style="margin-top:8px">
-          <button class="start-btn" style="padding:10px;font-size:13px" onclick="openStartModal()">
-            🔄 Новий сезон ЛЧ (Внесок ${ENTRY_FEE} 💰)
-          </button>
-        </div>
+    html+=`<div class="cup-banner">
+      <div style="font-size:28px">${u.champ.isMe?'🏆🎉':'🏆'}</div>
+      <b style="color:#feca57;font-size:14px">${u.champ.isMe?'ТИ ЧЕМПІОН ЛІГИ ЧЕМПІОНІВ!':`Переможець ЛЧ: ${u.champ.i} ${u.champ.n}`}</b>
+      <button class="btn ucl-btn" onclick="initUCL()">🔄 Новий сезон ЛЧ</button>
+    </div>`;
+  }else if(u.eliminated){
+    html+=`<div class="cup-banner" style="border-color:#ff5e57;background:rgba(255,94,87,.12)">
+      <div style="font-size:26px">💔</div>
+      <b style="color:#ff5e57;font-size:14px">Твій клуб завершив виступ у Лізі Чемпіонів</b>
+      <p style="font-size:11px;color:#a5b1c2;margin:4px 0">Вийшли лише 1 і 2 місця груп. Переглянь підсумки або почни новий сезон.</p>
+      <button class="btn ucl-btn" onclick="initUCL()">🔄 Новий сезон ЛЧ</button>
+    </div>`;
+  }else if(u.stage==='group'){
+    const myGrp=u.groups[0];
+    const myTeam=myGrp.teams.find(t=>t.isMe);
+    const rObj=myGrp.schedule[u.gRnd];
+    const m=rObj.matches.find(x=>x.home===myTeam.id||x.away===myTeam.id);
+    const isHome=(m.home===myTeam.id);
+    const opp=myGrp.teams.find(t=>t.id===(isHome?m.away:m.home));
+
+    html+=`<div class="cup-banner" style="padding:10px">
+      <div style="font-size:12px;color:#70a1ff;font-weight:bold">ГРУПА ${myGrp.name} • ТУР ${u.gRnd+1} з 6 (${isHome?'🏟️ ВДОМА':'✈️ НА ВИЇЗДІ'})</div>
+      <div style="font-size:14px;font-weight:bold;margin:4px 0">🇺🇦 Твій Клуб vs ${opp.i} ${opp.n}</div>
+      <button class="btn ucl-btn" onclick="playUCLMatch()">⚽ Грати матч Туру ${u.gRnd+1}</button>
+    </div>`;
+  }else if(u.stage==='ko'){
+    const rNames=['1/8 Фіналу','1/4 Фіналу','Півфінал','ФІНАЛ ЛЧ'];
+    const rArrays=[u.r16,u.qf,u.sf,u.fn][u.rnd]||[];
+    const myM=rArrays.find(m=>m.a.isMe||m.b.isMe);
+    if(myM){
+      const opp=myM.a.isMe?myM.b:myM.a;
+      html+=`<div class="cup-banner" style="padding:10px">
+        <div style="font-size:12px;color:#70a1ff;font-weight:bold">ПЛЕЙ-ОФ • ${rNames[u.rnd]}</div>
+        <div style="font-size:14px;font-weight:bold;margin:4px 0">🇺🇦 Твій Клуб vs ${opp.i} ${opp.n}</div>
+        <button class="btn ucl-btn" onclick="playUCLMatch()">⚽ Грати матч (${rNames[u.rnd]})</button>
       </div>`;
+    }
   }
 
-  const stages=[
-    {title:'🏆 Фінал Ліги Чемпіонів (Приз 500 💰)',list:u.fn},
-    {title:'🔥 Півфінали (Приз 200 💰)',list:u.sf},
-    {title:'⚡️ 1/4 Фіналу (Приз 110 💰)',list:u.qf},
-    {title:'⚽ 1/8 Фіналу (Приз 60 💰)',list:u.r16}
-  ];
+  html+=`<div class="sub-tabs">
+    <div class="stab ${viewTab==='mygrp'?'on':''}" onclick="setTab('mygrp')">🇺🇦 Моя група</div>
+    <div class="stab ${viewTab==='allgrp'?'on':''}" onclick="setTab('allgrp')">📊 Усі групи (A–H)</div>
+    <div class="stab ${viewTab==='ko'?'on':''}" onclick="setTab('ko')">🏆 Плей-оф</div>
+  </div>`;
 
-  stages.forEach(st=>{
-    if(!st.list||!st.list.length)return;
-    html+=`<div class="rnd-title">${st.title}</div>`;
-    st.list.forEach(m=>{
-      const isMy=(m.a.isMe||m.b.isMe);
-      const isPlayable=(isMy && !m.sc && !u.champ);
-      const clickAttr=isPlayable
-        ? `onclick="startMyMatch()"`
-        : `onclick="showMsg('Натисніть на зелений матч із вашим клубом, щоб грати!')"`;
-      const centerTag=isPlayable
-        ? `<span class="play-pill">⚽ ГРАТИ</span>`
-        : `<span class="badge">${m.sc||'VS'}</span>`;
+  if(viewTab==='mygrp'){
+    html+=renderGroupCard(u.groups[0],true);
+  }else if(viewTab==='allgrp'){
+    u.groups.forEach(g=>{html+=renderGroupCard(g,false);});
+  }else{
+    if(u.stage==='group' && !u.eliminated && !u.champ){
+      html+=`<div style="text-align:center;padding:18px 10px;color:#a5b1c2;font-size:12px">
+        ⏳ Сітка 1/8 фіналу сформується після завершення всіх 6 турів групового етапу.<br><br>
+        У 1/8 фіналу виходять <b>1-ше та 2-ге місця</b> кожної групи!
+      </div>`;
+    }else{
+      html+=renderKOMatches('🏆 ФІНАЛ',u.fn);
+      html+=renderKOMatches('🔥 ПІВФІНАЛ',u.sf);
+      html+=renderKOMatches('⚡ 1/4 ФІНАЛУ',u.qf);
+      html+=renderKOMatches('⚔️ 1/8 ФІНАЛУ (1–2 місця груп)',u.r16);
+    }
+  }
 
-      html+=`
-        <div class="match-card ${isMy?'my':''} ${m.sc?'done':''}" ${clickAttr}>
-          <span>${m.a.i} <b>${m.a.n}</b></span>
-          ${centerTag}
-          <span><b>${m.b.n}</b> ${m.b.i}</span>
-        </div>`;
-    });
-  });
-
-  document.getElementById('app').innerHTML=html;
+  box.innerHTML=html;
 }
 
-render();
+function setTab(t){
+  viewTab=t;
+  renderUCL();
+}
+
+updUI();renderUCL();
 </script>
 </body>
 </html>
-<!-- ================ [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 2 ] ================= -->
+<!-- ================== [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 5 ] ================= -->
