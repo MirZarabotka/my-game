@@ -52,6 +52,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 </div>
 <!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 1 ] ================== -->
 <!-- ===================================================================== -->
+<!-- ===================================================================== -->
 <!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 9 ] =================== -->
 <!-- ===================================================================== -->
 <script>
@@ -91,7 +92,7 @@ const SHOP=[
 ];
 
 let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null};
-let freeOpp=CLUBS[Math.floor(Math.random()*CLUBS.length)];
+let freeOpp=CLUBS.at(Math.floor(Math.random()*CLUBS.length));
 
 function loadWallet(){
   try{
@@ -118,16 +119,16 @@ const isUCLMode=(
 );
 
 function getItem(id){
-  return SHOP.find(x=>x.id===id) || SHOP[0];
+  return SHOP.find(x=>x.id===id) || SHOP.at(0);
 }
 
 function getCurOpponent(){
   if(isUCLMode && p.ucl && p.ucl.active){
     if(p.ucl.stage==='group' && Array.isArray(p.ucl.groups) && p.ucl.groups.length>0){
-      const grp=p.ucl.groups.find(g=>g.teams.some(t=>t.isMe)) || p.ucl.groups[0];
+      const grp=p.ucl.groups.find(g=>g.teams.some(t=>t.isMe)) || p.ucl.groups.at(0);
       const me=grp.teams.find(t=>t.isMe);
-      const rObj=grp.schedule[p.ucl.gRnd] || grp.schedule[0];
-      if(me && rObj){
+      const rObj=grp.schedule.at(p.ucl.gRnd) || grp.schedule.at(0);
+      if(me && rObj && Array.isArray(rObj.matches)){
         const m=rObj.matches.find(x=>x.home===me.id || x.away===me.id);
         if(m){
           const isHome=(m.home===me.id);
@@ -137,9 +138,10 @@ function getCurOpponent(){
         }
       }
     }else if(p.ucl.stage==='ko'){
-      const arr=[p.ucl.r16,p.ucl.qf,p.ucl.sf,p.ucl.fn][p.ucl.rnd] || p.ucl.r16;
+      const stages=[p.ucl.r16,p.ucl.qf,p.ucl.sf,p.ucl.fn];
+      const arr=stages.at(p.ucl.rnd) || p.ucl.r16;
       if(Array.isArray(arr) && arr.length>0){
-        const myM=arr.find(m=>m.a.isMe || m.b.isMe) || arr[0];
+        const myM=arr.find(m=>m.a.isMe || m.b.isMe) || arr.at(0);
         return myM.a.isMe ? myM.b : myM.a;
       }
     }
@@ -208,7 +210,6 @@ function snd(type){
   }catch(e){}
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 2 ] ================== */
-/* ===================================================================== */
 /* =================== [ GAME.HTML : ЧАСТИНА 3 З 9 ] =================== */
 /* ===================================================================== */
 function updUI(){
@@ -345,6 +346,7 @@ function act(z){
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 3 ] ================== */
 /* ===================================================================== */
+/* ===================================================================== */
 /* =================== [ GAME.HTML : ЧАСТИНА 4 З 9 ] =================== */
 /* ===================================================================== */
 function recordGroupMatch(grp,m,gHome,gAway){
@@ -378,7 +380,7 @@ function sortGroupTeams(grp){
 function simulateFullKO(u){
   const keys=['r16','qf','sf','fn'];
   while(u.rnd<=3){
-    const rArr=u[keys[u.rnd]];
+    const rArr=u[keys.at(u.rnd)];
     const rWin=[];
     rArr.forEach(rm=>{
       const g1=3+Math.floor(Math.random()*3);
@@ -389,11 +391,11 @@ function simulateFullKO(u){
     });
     if(u.rnd<3){
       const nxt=[];
-      for(let i=0;i<rWin.length;i+=2)nxt.push({a:rWin[i],b:rWin[i+1],sc:null});
-      u[keys[u.rnd+1]]=nxt;
+      for(let i=0;i<rWin.length;i+=2)nxt.push({a:rWin.at(i),b:rWin.at(i+1),sc:null});
+      u[keys.at(u.rnd+1)]=nxt;
       u.rnd++;
     }else{
-      u.champ=rWin[0];
+      u.champ=rWin.at(0);
       break;
     }
   }
@@ -406,7 +408,7 @@ function advanceUCL(pGoals,bGoals,won){
   if(u.stage==='group'){
     const rIdx=u.gRnd;
     u.groups.forEach((grp)=>{
-      const rObj=grp.schedule[rIdx];
+      const rObj=grp.schedule.at(rIdx);
       if(!rObj)return;
       rObj.matches.forEach(m=>{
         const tH=grp.teams.find(t=>t.id===m.home);
@@ -433,15 +435,15 @@ function advanceUCL(pGoals,bGoals,won){
     let myQualified=false;
     u.groups.forEach((grp)=>{
       const s=sortGroupTeams(grp);
-      firsts.push(s[0]);
-      seconds.push(s[1]);
-      if((s[0] && s[0].isMe) || (s[1] && s[1].isMe)) myQualified=true;
+      firsts.push(s.at(0));
+      seconds.push(s.at(1));
+      if(s.at(0).isMe || s.at(1).isMe) myQualified=true;
     });
 
     const r16=[];
     for(let i=0;i<8;i++){
       const oppIdx=(i+1)%8;
-      r16.push({a:firsts[i],b:seconds[oppIdx],sc:null});
+      r16.push({a:firsts.at(i),b:seconds.at(oppIdx),sc:null});
     }
     u.r16=r16;
     u.stage='ko';
@@ -455,11 +457,11 @@ function advanceUCL(pGoals,bGoals,won){
   }
 
   const keys=['r16','qf','sf','fn'];
-  const curArr=u[keys[u.rnd]];
+  const curArr=u[keys.at(u.rnd)];
   const myIdx=curArr.findIndex(m=>m.a.isMe || m.b.isMe);
 
   if(myIdx!==-1){
-    const m=curArr[myIdx];
+    const m=curArr.at(myIdx);
     m.sc=m.a.isMe?`${pGoals}:${bGoals}`:`${bGoals}:${pGoals}`;
   }
 
@@ -481,16 +483,16 @@ function advanceUCL(pGoals,bGoals,won){
   if(u.rnd<3){
     const nextArr=[];
     for(let i=0;i<winners.length;i+=2){
-      nextArr.push({a:winners[i],b:winners[i+1],sc:null});
+      nextArr.push({a:winners.at(i),b:winners.at(i+1),sc:null});
     }
-    u[keys[u.rnd+1]]=nextArr;
+    u[keys.at(u.rnd+1)]=nextArr;
     u.rnd++;
     if(!won){
       u.eliminated=true;
       simulateFullKO(u);
     }
   }else{
-    u.champ=winners[0];
+    u.champ=winners.at(0);
     if(!won)u.eliminated=true;
   }
 }
@@ -515,7 +517,7 @@ function checkSeries(){
           p.cn+=30;p.pt+=45;
           ms.textContent='🎉 Перемога в групі! +3 очки та +30 💰';
         }else{
-          const reward=RNDS[p.ucl.rnd].r;
+          const reward=RNDS.at(p.ucl.rnd).r;
           p.cn+=reward;p.pt+=75;
           if(p.ucl.rnd===3){
             p.cp++;
@@ -562,13 +564,12 @@ function nextMatch(won){
     window.location.href='turnir.html';
     return;
   }else if(won){
-    freeOpp=CLUBS[Math.floor(Math.random()*CLUBS.length)];
+    freeOpp=CLUBS.at(Math.floor(Math.random()*CLUBS.length));
   }
   pS=[];bS=[];ph='sh';resetPositions();save();updUI();renderCtrl();
   ms.style.borderColor='#feca57';ms.textContent='⚽ Твій удар! Вибери кут';
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 4 ] ================== */
-/* ===================================================================== */
 /* =================== [ GAME.HTML : ЧАСТИНА 5 З 9 ] =================== */
 /* ===================================================================== */
 const ctx=c3d.getContext('2d');let W=300,H=300;
