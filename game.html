@@ -1,5 +1,5 @@
 <!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 1 З 7 ] =================== -->
+<!-- =================== [ GAME.HTML : ЧАСТИНА 1 З 8 ] =================== -->
 <!-- ===================================================================== -->
 <!DOCTYPE html>
 <html lang="uk">
@@ -52,7 +52,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 </div>
 <!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 1 ] ================== -->
 <!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 7 ] =================== -->
+<!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 8 ] =================== -->
 <!-- ===================================================================== -->
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
@@ -110,12 +110,12 @@ function loadWallet(){
 function save(){try{localStorage.setItem('pc_ucl1',JSON.stringify(p))}catch(e){}}
 loadWallet();
 
-function getItem(id){return SHOP.find(x=>x.id===id)||SHOP}
+function getItem(id){return SHOP.find(x=>x.id===id)||SHOP[0]}
 function getCurOpponent(){
   if(isUCLMode && p.ucl && p.ucl.active){
     const arr=[p.ucl.r16,p.ucl.qf,p.ucl.sf,p.ucl.fn][p.ucl.rnd]||p.ucl.r16;
     if(arr && arr.length){
-      const myM=arr.find(m=>m.a.isMe||m.b.isMe)||arr;
+      const myM=arr.find(m=>m.a.isMe||m.b.isMe)||arr[0];
       return myM.a.isMe?myM.b:myM.a;
     }
   }
@@ -184,7 +184,7 @@ function snd(type){
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 2 ] ================== */
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 3 З 7 ] =================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 3 З 8 ] =================== */
 /* ===================================================================== */
 function updUI(){
   lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
@@ -310,8 +310,8 @@ function advanceUCL(pGoals,bGoals){
   const u=p.ucl;
   const keys=['r16','qf','sf','fn'];
   const curArr=u[keys[u.rnd]];
-  curArr.sc=`${pGoals}:${bGoals}`;
-  const winners=[curArr.a];
+  curArr[0].sc=`${pGoals}:${bGoals}`;
+  const winners=[curArr[0].a];
 
   for(let i=1;i<curArr.length;i++){
     const g1=3+Math.floor(Math.random()*3);
@@ -329,7 +329,7 @@ function advanceUCL(pGoals,bGoals){
     u[keys[u.rnd+1]]=nextArr;
     u.rnd++;
   }else{
-    u.champ=winners;
+    u.champ=winners[0];
   }
 }
 
@@ -390,7 +390,7 @@ function nextMatch(won){
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 3 ] ================== */
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 4 З 7 ] =================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 4 З 8 ] =================== */
 /* ===================================================================== */
 const ctx=c3d.getContext('2d');let W=300,H=300;
 function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=c3d.width=r.width;H=c3d.height=r.height}}
@@ -510,9 +510,9 @@ function drawMatchGlove(x,y,sc,side,col){
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 4 ] ================== */
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 5 З 7 ] =================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 5 З 8 ] =================== */
 /* ===================================================================== */
-function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,shortsDark,bootCol,bootAc,gloveCol,diveAng,runPhase,isKicker){
+function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,shortsDark,bootCol,bootAc,gloveCol,diveAng,runPhase,isKicker,isStandingUp){
   ctx.save();
   ctx.translate(px,py);
   ctx.rotate(diveAng);
@@ -579,12 +579,32 @@ function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,sho
   }
 
   [-1,1].forEach(side=>{
-    const isDiving=Math.abs(diveAng)>0.15;
+    const diveAmt=Math.min(1,Math.abs(diveAng)/1.1);
+    const diveDir=Math.sign(diveAng)||1;
     const armSwing=swing*(side===-1?-0.75:0.75);
+
     const shX=side*8.6*sc,shY=-44.0*sc;
-    const slvX=isDiving?side*13.5*sc:side*10.4*sc,slvY=isDiving?-49*sc:-38.8*sc+armSwing*0.2;
-    const elX=isDiving?side*17.5*sc:side*11.0*sc,elY=isDiving?-53.5*sc:-34.2*sc+armSwing*0.4;
-    const hdX=isDiving?side*23.5*sc:side*10.2*sc,hdY=isDiving?-59.5*sc:-26.8*sc+armSwing*0.8;
+    let slvX,slvY,elX,elY,hdX,hdY;
+
+    if(!isKicker && isStandingUp && diveAmt>0.08){
+      const isGroundArm=(side===diveDir);
+      if(isGroundArm){
+        slvX=side*(10.5+diveAmt*2.5)*sc; slvY=(-39.0-diveAmt*2.0)*sc;
+        elX=side*(12.0+diveAmt*4.5)*sc;  elY=(-34.0+diveAmt*3.5)*sc;
+        hdX=side*(11.0+diveAmt*6.5)*sc;  hdY=(-26.5+diveAmt*11.5)*sc;
+      }else{
+        slvX=side*(10.0-diveAmt*1.5)*sc; slvY=(-39.0-diveAmt*1.5)*sc;
+        elX=side*(10.5-diveAmt*3.5)*sc;  elY=(-34.0+diveAmt*2.0)*sc;
+        hdX=side*(9.5-diveAmt*4.5)*sc;   hdY=(-26.5+diveAmt*6.5)*sc;
+      }
+    }else{
+      slvX=side*(10.4+diveAmt*3.2)*sc;
+      slvY=(-38.8-diveAmt*10.2)*sc+armSwing*0.2;
+      elX=side*(11.0+diveAmt*6.5)*sc;
+      elY=(-34.2-diveAmt*19.3)*sc+armSwing*0.4;
+      hdX=side*(10.2+diveAmt*13.3)*sc;
+      hdY=(-26.8-diveAmt*32.7)*sc+armSwing*0.8;
+    }
 
     drawCapsule(shX,shY,slvX,slvY,3.2*sc,2.7*sc,jerseyCol);
     ctx.strokeStyle=trimCol;ctx.lineWidth=0.8*sc;
@@ -631,7 +651,10 @@ function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,sho
 
   ctx.restore();
 }
-
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 5 ] ================== */
+/* ===================================================================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 6 З 8 ] =================== */
+/* ===================================================================== */
 function drawRealisticFan(fx,fy,sc,fan,waveVal){
   const t=tAnim*fan.spd+fan.ph;
   const sway=Math.sin(t)*1.6*sc;
@@ -678,10 +701,7 @@ function drawRealisticFan(fx,fy,sc,fan,waveVal){
   ctx.beginPath();ctx.ellipse(0,-16.6*sc,3.1*sc,2.3*sc,0,Math.PI*0.9,Math.PI*2.1);ctx.fill();
   ctx.restore();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 5 ] ================== */
-/* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 6 З 7 ] =================== */
-/* ===================================================================== */
+
 function getNetBulge(wx,wy){
   if(netWave.amp<=0.005)return 0;
   const dx=wx-netWave.hitX;
@@ -691,7 +711,10 @@ function getNetBulge(wx,wy){
   const ripple=Math.cos(dist*1.4-netWave.phase*1.6)*0.55+0.45;
   return netWave.amp*0.85*gauss*ripple;
 }
-
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 6 ] ================== */
+/* ===================================================================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 7 З 8 ] =================== */
+/* ===================================================================== */
 function drawStadiumScene(){
   const horizonY=proj(0,0,15.5).y,standTop=Math.max(46,horizonY-H*0.20);
 
@@ -802,10 +825,9 @@ function drawStadiumScene(){
   ctx.strokeStyle='#ffffff';ctx.lineWidth=6.5;ctx.lineJoin='round';
   ctx.beginPath();ctx.moveTo(gFL2.x,gFL2.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gFR2.x,gFR2.y);ctx.stroke();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 6 ] ================== */
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 7 ] ================== */
 /* ===================================================================== */
-/* ===================================================================== */
-/* ================== [ GAME.HTML : ЧАСТИНА 7A З 7 ] =================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 8 З 8 ] =================== */
 /* ===================================================================== */
 function draw3D(){
   tAnim+=0.07;
@@ -831,11 +853,8 @@ function draw3D(){
 
   const gkJersey=(ph==='sh')?oppClub.c:'#f39c12';
   const gkDark=(ph==='sh')?(oppClub.dark||'#1e272e'):'#b36b00';
-  drawRealisticPlayer(gp.x,gp.y,gp.s*0.032,gkJersey,gkDark,'#ffffff','#1e272e','#0b0f14','#14181d','#ffffff',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false);
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 7A ] ================= */
-/* ===================================================================== */
-/* ================== [ GAME.HTML : ЧАСТИНА 7B З 7 ] =================== */
-/* ===================================================================== */
+  drawRealisticPlayer(gp.x,gp.y,gp.s*0.032,gkJersey,gkDark,'#ffffff','#1e272e','#0b0f14','#14181d','#ffffff',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false,gk.state==='stand');
+
   if(ball.active&&ball.t<1){
     ball.t=Math.min(1,ball.t+0.052);
     const ease=1-Math.pow(1-ball.t,2);
@@ -854,10 +873,7 @@ function draw3D(){
   const bGrad=ctx.createRadialGradient(bp.x-rad*0.3,bp.y-rad*0.3,rad*0.1,bp.x,bp.y,rad);
   bGrad.addColorStop(0,'#ffffff');bGrad.addColorStop(0.55,bCol);bGrad.addColorStop(1,'#1e272e');
   ctx.fillStyle=bGrad;ctx.beginPath();ctx.arc(bp.x,bp.y,rad,0,Math.PI*2);ctx.fill();
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 7B ] ================= */
-/* ===================================================================== */
-/* ================== [ GAME.HTML : ЧАСТИНА 7C З 7 ] =================== */
-/* ===================================================================== */
+
   if(kicker.running){
     kicker.run=Math.min(1,kicker.run+0.08);
     kicker.x=kicker.sx+(kicker.tx-kicker.sx)*kicker.run;
@@ -874,7 +890,7 @@ function draw3D(){
   const kBoot=(ph==='sh')?myShoes.col:'#14181d';
   const kBootAc=(ph==='sh')?(myShoes.ac||'#1dd1a1'):'#ffffff';
 
-  drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kCol,kDark,kTrim,kSh,kShDark,kBoot,kBootAc,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true);
+  drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kCol,kDark,kTrim,kSh,kShDark,kBoot,kBootAc,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true,false);
 
   requestAnimationFrame(draw3D);
 }
@@ -883,3 +899,4 @@ rsz3D();updUI();renderCtrl();draw3D();
 </script>
 </body>
 </html>
+<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 8 ] ================== -->
