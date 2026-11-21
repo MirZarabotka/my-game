@@ -66,7 +66,6 @@ const BIN_ID  = '6b01a76bffd5d16053d39022';
 const API_KEY = '$2a$10$FfzYgApncFFRJpoFkrYgyOZHPwjviuwu1N64Suvm4DneHJP..xKna';
 const API_URL = 'https://jsonbin.io' + BIN_ID;
 
-
 let p={pt:0,lv:1,cp:0,cn:20,nick:'',uid:''};
 try{
   const v=JSON.parse(localStorage.getItem('pc_ucl1'));
@@ -158,20 +157,18 @@ async function syncLeaderboard(notify){
   let fetchOk=false;
   try{
     const res=await fetch(API_URL+'/latest',{
-      headers:{
-        'X-Master-Key':API_KEY,
-        'X-Bin-Meta':'false'
-      }
+      method:'GET',
+      headers:{'X-Master-Key':API_KEY}
     });
     if(res.ok){
       const json=await res.json();
-      remote=Array.isArray(json)?json:(Array.isArray(json.record)?json.record:[]);
+      remote=Array.isArray(json.record)?json.record:[];
       fetchOk=true;
     }else{
       showToast('⚠️ Помилка читання БД: код '+res.status,true);
     }
   }catch(e){
-    showToast('⚠️ Немає зв\'язку з JSONBin',true);
+    showToast('⚠️ Помилка мережі: '+e.message,true);
   }
 
   const updatedTop=renderList(remote);
