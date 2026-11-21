@@ -1,5 +1,5 @@
 <!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 1 З 5 ] =================== -->
+<!-- =================== [ GAME.HTML : ЧАСТИНА 1 З 6 ] =================== -->
 <!-- ===================================================================== -->
 <!DOCTYPE html>
 <html lang="uk">
@@ -52,33 +52,39 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 </div>
 <!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 1 ] ================== -->
 <!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 5 ] =================== -->
+<!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 6 ] =================== -->
 <!-- ===================================================================== -->
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
 
 const CLUBS=[
-  {n:'Реал Мадрид',i:'👑',c:'#ffffff'},
-  {n:'Барселона',i:'🔵🔴',c:'#a50044'},
-  {n:'Баварія',i:'🔴⚪',c:'#dc052d'},
-  {n:'Манчестер Сіті',i:'🩵',c:'#6cabdd'},
-  {n:'ПСЖ',i:'🗼',c:'#004170'},
-  {n:'Арсенал',i:'🔫',c:'#ef0107'},
-  {n:'Інтер Мілан',i:'🐍',c:'#010e80'},
-  {n:'Ліверпуль',i:'🦅',c:'#c8102e'},
-  {n:'Атлетіко',i:'🔴⚪',c:'#cb3524'},
-  {n:'Боруссія Д',i:'🐝',c:'#fde100'},
-  {n:'Ювентус',i:'🦓',c:'#e5e5e5'},
-  {n:'Байєр',i:'💊',c:'#e32221'},
-  {n:'Мілан',i:'⚫🔴',c:'#fb090b'},
-  {n:'Бенфіка',i:'🦅',c:'#e83030'},
-  {n:'Спортінг',i:'🦁',c:'#008057'}
+  {n:'Реал Мадрид',i:'👑',c:'#f5f6fa',dark:'#cfd6de'},
+  {n:'Барселона',i:'🔵🔴',c:'#a50044',dark:'#5e0026'},
+  {n:'Баварія',i:'🔴⚪',c:'#dc052d',dark:'#85021a'},
+  {n:'Манчестер Сіті',i:'🩵',c:'#6cabdd',dark:'#386c96'},
+  {n:'ПСЖ',i:'🗼',c:'#004170',dark:'#00213b'},
+  {n:'Арсенал',i:'🔫',c:'#ef0107',dark:'#910004'},
+  {n:'Інтер Мілан',i:'🐍',c:'#010e80',dark:'#000747'},
+  {n:'Ліверпуль',i:'🦅',c:'#c8102e',dark:'#78081a'},
+  {n:'Атлетіко',i:'🔴⚪',c:'#cb3524',dark:'#7d1e13'},
+  {n:'Боруссія Д',i:'🐝',c:'#fde100',dark:'#b5a000'},
+  {n:'Ювентус',i:'🦓',c:'#e5e5e5',dark:'#999999'},
+  {n:'Байєр',i:'💊',c:'#e32221',dark:'#8a1110'},
+  {n:'Мілан',i:'⚫🔴',c:'#fb090b',dark:'#960304'},
+  {n:'Бенфіка',i:'🦅',c:'#e83030',dark:'#8f1818'},
+  {n:'Спортінг',i:'🦁',c:'#008057',dark:'#004730'}
 ];
 const RNDS=[{n:'1/8 Фінал',r:60},{n:'1/4 Фінал',r:110},{n:'Півфінал',r:200},{n:'ФІНАЛ ЛЧ',r:500}];
 
 const SHOP=[
-  {id:'j1',col:'#1dd1a1'},{id:'j2',col:'#f5f6fa'},{id:'j3',col:'#eb4d4b'},{id:'j4',col:'#3867d6'},{id:'j5',col:'#1e272e'},{id:'j6',col:'#feca57'},
-  {id:'p1',col:'#ffffff'},{id:'p2',col:'#1e272e'},{id:'p3',col:'#273c75'},{id:'p4',col:'#eb4d4b'},{id:'p5',col:'#00d2ff'},{id:'p6',col:'#feca57'},
+  {id:'j1',col:'#1dd1a1',dark:'#0d8a68',trim:'#ffffff'},
+  {id:'j2',col:'#f5f6fa',dark:'#cfd6de',trim:'#1e272e'},
+  {id:'j3',col:'#d63031',dark:'#8e1b1c',trim:'#ffffff'},
+  {id:'j4',col:'#1e3799',dark:'#0c1a52',trim:'#feca57'},
+  {id:'j5',col:'#1e272e',dark:'#0b0f14',trim:'#1dd1a1'},
+  {id:'j6',col:'#feca57',dark:'#c49014',trim:'#1e272e'},
+  {id:'p1',col:'#ffffff',dark:'#cfd6de'},{id:'p2',col:'#1e272e',dark:'#0b0f14'},{id:'p3',col:'#1e3799',dark:'#0c1a52'},
+  {id:'p4',col:'#d63031',dark:'#8e1b1c'},{id:'p5',col:'#00a8ff',dark:'#006299'},{id:'p6',col:'#feca57',dark:'#c49014'},
   {id:'s1',col:'#14181d',ac:'#1dd1a1'},{id:'s2',col:'#f5f6fa',ac:'#eb4d4b'},{id:'s3',col:'#00d2ff',ac:'#ffffff'},{id:'s4',col:'#feca57',ac:'#1e272e'},
   {id:'b1',bn:0,col:'#ffffff'},{id:'b2',bn:5,col:'#ff5e57'},{id:'b3',bn:12,col:'#00d2ff'},{id:'b4',bn:25,col:'#feca57'},
   {id:'k1',bn:0,col:'#1dd1a1'},{id:'k2',bn:10,col:'#ff9ff3'}
@@ -178,7 +184,7 @@ function snd(type){
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 2 ] ================== */
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 3 З 5 ] =================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 3 З 6 ] =================== */
 /* ===================================================================== */
 function updUI(){
   lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
@@ -357,7 +363,7 @@ function nextMatch(won){
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 3 ] ================== */
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 4 З 5 ] =================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 4 З 6 ] =================== */
 /* ===================================================================== */
 const ctx=c3d.getContext('2d');let W=300,H=300;
 function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=c3d.width=r.width;H=c3d.height=r.height}}
@@ -373,9 +379,9 @@ function proj(x,y,z){
   return{x:W/2+x*sc,y:H*0.58-ry*sc,s:sc};
 }
 
-const skins=['#f5cba7','#e0ac69','#8d5524','#ffdbac'];
-const hairs=['#1c1c1c','#4a2c11','#8d6e63','#d4ac0d'];
-const jerseys=['#154360','#ffffff','#1b4f72','#111822','#2471a3'];
+const skins=['#f2c69c','#dda876','#8d5524','#f7d5b4'];
+const hairs=['#191e26','#3e2511','#6e4f3a','#c99e24'];
+const jerseys=['#154360','#f5f6fa','#1b4f72','#111822','#2471a3'];
 
 const FANS=Array.from({length:190},(_,i)=>{
   const row=Math.floor(i/38),colIdx=i%38;
@@ -392,129 +398,270 @@ let gk={x:0,y:0,tx:0,ty:0,dive:0,tdive:0};
 let kicker={x:-1.5,z:-2.8,sx:-1.5,sz:-2.8,tx:-0.35,tz:-0.25,run:0,running:false,kickPose:0};
 let busy=false,tAnim=0;
 
-function drawLimb(x1,y1,x2,y2,r1,r2,col){
-  const ang=Math.atan2(y2-y1,x2-x1);
-  const nx=-Math.sin(ang),ny=Math.cos(ang);
+function drawCapsule(x1,y1,x2,y2,r1,r2,col){
+  const dx=x2-x1,dy=y2-y1;
+  const ang=Math.atan2(dy,dx);
+  const perp=ang+Math.PI/2;
   ctx.fillStyle=col;
   ctx.beginPath();
-  ctx.moveTo(x1+nx*r1,y1+ny*r1);
-  ctx.lineTo(x2+nx*r2,y2+ny*r2);
-  ctx.arc(x2,y2,r2,ang-Math.PI/2,ang+Math.PI/2);
-  ctx.lineTo(x1-nx*r1,y1-ny*r1);
-  ctx.arc(x1,y1,r1,ang+Math.PI/2,ang-Math.PI/2);
+  ctx.arc(x1,y1,r1,perp,perp+Math.PI);
+  ctx.arc(x2,y2,r2,perp+Math.PI,perp);
   ctx.closePath();
   ctx.fill();
 }
 
-function drawRealisticPlayer(px,py,sc,jerseyCol,shortsCol,socksCol,bootCol,bootAc,gloveCol,diveAng,runPhase,isKicker){
+function drawMatchBoot(x,y,sc,sgn,isBack,bootCol,bootAc){
+  ctx.save();
+  ctx.translate(x,y);
+
+  if(isBack){
+    // Бутса нападника (вигляд зі спини)
+    ctx.fillStyle='#0b0f14';
+    ctx.beginPath();ctx.roundRect(-2.4*sc,1.2*sc,4.8*sc,1.1*sc,0.5*sc);ctx.fill();
+    ctx.fillStyle='#cfd6de';
+    ctx.fillRect(-1.9*sc,2.2*sc,0.9*sc,0.7*sc);ctx.fillRect(1.0*sc,2.2*sc,0.9*sc,0.7*sc);
+    ctx.fillStyle=bootCol;
+    ctx.beginPath();
+    ctx.moveTo(-2.1*sc,-1.4*sc);ctx.lineTo(2.1*sc,-1.4*sc);
+    ctx.lineTo(2.4*sc,1.3*sc);ctx.lineTo(-2.4*sc,1.3*sc);
+    ctx.closePath();ctx.fill();
+    ctx.fillStyle=bootAc;
+    ctx.fillRect(-0.7*sc,-1.2*sc,1.4*sc,2.4*sc);
+    ctx.restore();
+    return;
+  }
+
+  // Бутса воротаря (вигляд прямо спереду)
+  ctx.translate(sgn*0.3*sc,0);
+  ctx.fillStyle='#dce4e7';
+  [-1.5*sc,-0.5*sc,0.5*sc,1.5*sc].forEach(sx=>{
+    ctx.beginPath();ctx.roundRect(sx-0.35*sc,2.1*sc,0.7*sc,0.7*sc,0.2*sc);ctx.fill();
+  });
+  ctx.fillStyle='#0d1117';
+  ctx.beginPath();ctx.ellipse(0,1.9*sc,2.7*sc,0.8*sc,0,0,Math.PI*2);ctx.fill();
+
+  ctx.fillStyle=bootCol;
+  ctx.beginPath();
+  ctx.moveTo(-2.1*sc,-1.5*sc);ctx.lineTo(2.1*sc,-1.5*sc);
+  ctx.quadraticCurveTo(2.9*sc,0.5*sc,2.6*sc,1.8*sc);
+  ctx.quadraticCurveTo(0,2.2*sc,-2.6*sc,1.8*sc);
+  ctx.quadraticCurveTo(-2.9*sc,0.5*sc,-2.1*sc,-1.5*sc);
+  ctx.closePath();ctx.fill();
+
+  ctx.strokeStyle=bootAc;ctx.lineWidth=0.8*sc;
+  ctx.beginPath();ctx.arc(0,0.9*sc,1.5*sc,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
+
+  ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=0.6*sc;
+  for(let i=0;i<3;i++){
+    const ly=(-0.9+i*0.6)*sc,lw=(1.0-i*0.1)*sc;
+    ctx.beginPath();ctx.moveTo(-lw,ly);ctx.lineTo(lw,ly);ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawMatchGlove(x,y,sc,side,col){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(side*0.22);
+
+  ctx.fillStyle='#1e272e';
+  ctx.beginPath();ctx.roundRect(-2.1*sc,-1.0*sc,4.2*sc,1.9*sc,0.8*sc);ctx.fill();
+  ctx.fillStyle='#ffffff';
+  ctx.fillRect(-1.4*sc,-0.3*sc,2.8*sc,0.6*sc);
+
+  ctx.fillStyle=col;
+  ctx.beginPath();ctx.roundRect(-2.4*sc,0.8*sc,4.8*sc,3.6*sc,1.2*sc);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.34)';
+  ctx.beginPath();ctx.roundRect(-1.6*sc,1.3*sc,3.2*sc,2.3*sc,0.8*sc);ctx.fill();
+
+  const fingerX=[-1.75,-0.6,0.6,1.75];
+  const fingerLen=[2.1,2.6,2.4,1.8];
+  fingerX.forEach((fx,idx)=>{
+    drawCapsule(fx*sc,4.1*sc,fx*sc,(4.1+fingerLen[idx])*sc,0.58*sc,0.46*sc,col);
+  });
+  drawCapsule(-side*2.1*sc,2.0*sc,-side*3.4*sc,3.4*sc,0.68*sc,0.5*sc,col);
+
+  ctx.restore();
+}
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 4 ] ================== */
+/* ===================================================================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 5 З 6 ] =================== */
+/* ===================================================================== */
+function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,shortsDark,bootCol,bootAc,gloveCol,diveAng,runPhase,isKicker){
   ctx.save();
   ctx.translate(px,py);
   ctx.rotate(diveAng);
 
   const isRunning=Math.abs(runPhase)>0.01;
-  const swing=isRunning?Math.sin(runPhase)*9*sc:0;
-  const lift=isRunning?Math.max(0,-Math.cos(runPhase))*5*sc:0;
-  const skin='#e5b887',skinShade='#c6905b';
-  ctx.rotate(isRunning?0.08:(isKicker?0.04:0));
+  const swing=isRunning?Math.sin(runPhase)*8.5*sc:0;
+  const lift=isRunning?Math.max(0,-Math.cos(runPhase))*4.5*sc:0;
+  const skin='#e4b487',skinShade='#be8450',skinLight='#f6d3af';
+  ctx.rotate(isRunning?0.08:(isKicker?0.03:0));
 
+  // 1. АНАТОМІЧНІ НОГИ (плавні капсули без зламів + реальні бутси)
   [-1,1].forEach(side=>{
     const dir=side===-1?1:-1;
     const stride=swing*dir;
-    const footLift=side===-1?lift:(isRunning?Math.max(0,Math.cos(runPhase))*5*sc:0);
+    const footLift=side===-1?lift:(isRunning?Math.max(0,Math.cos(runPhase))*4.5*sc:0);
 
-    const hipX=side*4.6*sc,hipY=-26*sc;
-    const kneeX=side*5.2*sc+stride*0.45,kneeY=-14.5*sc-footLift*0.4;
-    const ankleX=side*5.0*sc+stride*0.85,ankleY=-2.5*sc-footLift;
+    const hipX=side*4.0*sc,hipY=-26*sc;
+    const kneeX=side*4.4*sc+stride*0.45,kneeY=-14.5*sc-footLift*0.4;
+    const ankleX=side*4.3*sc+stride*0.85,ankleY=-2.5*sc-footLift;
 
-    drawLimb(hipX,hipY,kneeX,kneeY,4.4*sc,3.4*sc,shortsCol);
-    ctx.fillStyle=skinShade;ctx.beginPath();ctx.arc(kneeX,kneeY,2.8*sc,0,Math.PI*2);ctx.fill();
-    drawLimb(kneeX,kneeY+1*sc,ankleX,ankleY,3.2*sc,2.0*sc,socksCol);
-    ctx.fillStyle='#ffffff';ctx.fillRect(kneeX-2.8*sc,kneeY+1*sc,5.6*sc,1.6*sc);
+    const shGrad=ctx.createLinearGradient(hipX-4*sc,hipY,hipX+4*sc,hipY);
+    shGrad.addColorStop(0,shortsCol);shGrad.addColorStop(0.82,shortsCol);shGrad.addColorStop(1,shortsDark);
+    drawCapsule(hipX,hipY,kneeX,kneeY,4.3*sc,3.4*sc,shGrad);
 
-    ctx.fillStyle=bootCol;
-    ctx.beginPath();ctx.ellipse(ankleX+(isKicker?0:side*1.2*sc),ankleY+1.2*sc,4.5*sc,2.1*sc,0,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=bootAc;ctx.fillRect(ankleX-2.5*sc,ankleY+0.5*sc,5*sc,1*sc);
+    drawCapsule(kneeX,kneeY,kneeX,kneeY+2.8*sc,2.5*sc,2.3*sc,skin);
+    if(isKicker){
+      ctx.strokeStyle='rgba(120,75,40,0.45)';ctx.lineWidth=0.8*sc;
+      ctx.beginPath();ctx.moveTo(kneeX-1.8*sc,kneeY+1.4*sc);ctx.quadraticCurveTo(kneeX,kneeY+1.9*sc,kneeX+1.8*sc,kneeY+1.4*sc);ctx.stroke();
+    }else{
+      ctx.fillStyle=skinShade;ctx.beginPath();ctx.arc(kneeX+side*0.6*sc,kneeY+1.5*sc,1.1*sc,0,Math.PI);ctx.fill();
+    }
+
+    const calfX=(kneeX+ankleX)*0.5,calfY=(kneeY+ankleY)*0.5;
+    drawCapsule(kneeX,kneeY+2.5*sc,calfX,calfY,2.5*sc,2.8*sc,jerseyCol);
+    drawCapsule(calfX,calfY,ankleX,ankleY,2.7*sc,1.8*sc,jerseyDark);
+
+    ctx.fillStyle=trimCol;ctx.fillRect(kneeX-2.4*sc,kneeY+2.6*sc,4.8*sc,1.1*sc);
+
+    drawMatchBoot(ankleX,ankleY,sc,side,isKicker,bootCol,bootAc);
   });
 
-  const torsoGrad=ctx.createLinearGradient(-12*sc,-49*sc,12*sc,-25*sc);
-  torsoGrad.addColorStop(0,jerseyCol);torsoGrad.addColorStop(0.75,jerseyCol);torsoGrad.addColorStop(1,'#090d14');
+  // 2. АТЛЕТИЧНИЙ ТОРС І ПЛАВНІ ПЛЕЧІ
+  const torsoGrad=ctx.createLinearGradient(-10.5*sc,-48*sc,10.5*sc,-25*sc);
+  torsoGrad.addColorStop(0,jerseyCol);torsoGrad.addColorStop(0.7,jerseyCol);torsoGrad.addColorStop(1,jerseyDark);
   ctx.fillStyle=torsoGrad;
   ctx.beginPath();
-  ctx.moveTo(-11*sc,-47.5*sc);ctx.quadraticCurveTo(0,-50*sc,11*sc,-47.5*sc);
-  ctx.lineTo(8*sc,-26*sc);ctx.quadraticCurveTo(0,-24.5*sc,-8*sc,-26*sc);
+  ctx.moveTo(-10.2*sc,-44.5*sc);
+  ctx.quadraticCurveTo(-5*sc,-48.8*sc,0,-48.8*sc);
+  ctx.quadraticCurveTo(5*sc,-48.8*sc,10.2*sc,-44.5*sc);
+  ctx.lineTo(9.2*sc,-36*sc);
+  ctx.lineTo(7.4*sc,-25.5*sc);
+  ctx.quadraticCurveTo(0,-24.0*sc,-7.4*sc,-25.5*sc);
+  ctx.lineTo(-9.2*sc,-36*sc);
   ctx.closePath();ctx.fill();
 
-  ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(0,-48*sc,3.6*sc,0.1,Math.PI-0.1);ctx.fill();
+  ctx.fillStyle=trimCol;
   if(isKicker){
+    ctx.beginPath();ctx.ellipse(0,-48.0*sc,3.2*sc,1.2*sc,0,0,Math.PI);ctx.fill();
     ctx.fillStyle=(ph==='sh')?(p.numCol||'#ffffff'):'rgba(255,255,255,0.92)';
-    ctx.font=`bold ${Math.max(8,10.5*sc)}px sans-serif`;ctx.textAlign='center';
+    ctx.font=`900 ${Math.max(8,10.2*sc)}px sans-serif`;ctx.textAlign='center';
     ctx.fillText((ph==='sh')?(p.num||'10'):'9',0,-33*sc);
+  }else{
+    ctx.beginPath();
+    ctx.moveTo(-3.2*sc,-48.2*sc);ctx.lineTo(0,-45.0*sc);ctx.lineTo(3.2*sc,-48.2*sc);
+    ctx.quadraticCurveTo(0,-49.2*sc,-3.2*sc,-48.2*sc);ctx.fill();
   }
 
+  // 3. ПЛАВНІ РУКИ ТА ВОРОТАРСЬКІ ПЕРЧАТКИ З ПАЛЬЦЯМИ
   [-1,1].forEach(side=>{
     const isDiving=Math.abs(diveAng)>0.15;
     const armSwing=swing*(side===-1?-0.75:0.75);
-    const shX=side*10.5*sc,shY=-45.5*sc;
-    const elX=isDiving?side*18*sc:side*13.2*sc,elY=isDiving?-53*sc:-36.5*sc+armSwing*0.4;
-    const hdX=isDiving?side*25*sc:side*14.5*sc,hdY=isDiving?-60*sc:-27.5*sc+armSwing*0.8;
+    const shX=side*8.6*sc,shY=-44.0*sc;
+    const slvX=isDiving?side*13.5*sc:side*10.4*sc,slvY=isDiving?-49*sc:-38.8*sc+armSwing*0.2;
+    const elX=isDiving?side*17.5*sc:side*11.0*sc,elY=isDiving?-53.5*sc:-34.2*sc+armSwing*0.4;
+    const hdX=isDiving?side*23.5*sc:side*10.2*sc,hdY=isDiving?-59.5*sc:-26.8*sc+armSwing*0.8;
 
-    drawLimb(shX,shY,elX,elY,3.4*sc,2.7*sc,jerseyCol);
-    drawLimb(elX,elY,hdX,hdY,2.5*sc,1.8*sc,skin);
+    drawCapsule(shX,shY,slvX,slvY,3.2*sc,2.7*sc,jerseyCol);
+    ctx.strokeStyle=trimCol;ctx.lineWidth=0.8*sc;
+    ctx.beginPath();ctx.arc(slvX,slvY,2.6*sc,0.25,Math.PI-0.25);ctx.stroke();
+
+    drawCapsule(slvX,slvY,elX,elY,2.3*sc,2.0*sc,skin);
+    drawCapsule(elX,elY,hdX,hdY,1.95*sc,1.45*sc,skinShade);
 
     if(gloveCol){
-      ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(hdX,hdY,3.2*sc,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=gloveCol;ctx.beginPath();ctx.ellipse(hdX+side*1*sc,hdY-1*sc,4.6*sc,3.6*sc,side*0.3,0,Math.PI*2);ctx.fill();
+      drawMatchGlove(hdX,hdY,sc*0.72,side,gloveCol);
     }else{
-      ctx.fillStyle=skin;ctx.beginPath();ctx.arc(hdX,hdY,2.2*sc,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(hdX,hdY+0.6*sc,1.8*sc,2.3*sc,side*-0.1,0,Math.PI*2);ctx.fill();
     }
   });
 
-  ctx.fillStyle=skinShade;ctx.fillRect(-2.6*sc,-51.5*sc,5.2*sc,4*sc);
-  ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(0,-56.5*sc,5.5*sc,6.6*sc,0,0,Math.PI*2);ctx.fill();
+  // 4. АНАТОМІЧНА ШИЯ, ГОЛОВА ТА ЗАЧІСКА
+  drawCapsule(0,-47.5*sc,0,-51.5*sc,2.5*sc,2.2*sc,skinShade);
+  ctx.fillStyle=skinShade;ctx.beginPath();
+  ctx.ellipse(-4.4*sc,-55.5*sc,0.85*sc,1.5*sc,0,0,Math.PI*2);
+  ctx.ellipse(4.4*sc,-55.5*sc,0.85*sc,1.5*sc,0,0,Math.PI*2);ctx.fill();
+
+  const faceGrad=ctx.createRadialGradient(-1*sc,-57*sc,1*sc,0,-55.5*sc,6.5*sc);
+  faceGrad.addColorStop(0,skinLight);faceGrad.addColorStop(0.65,skin);faceGrad.addColorStop(1,skinShade);
+  ctx.fillStyle=faceGrad;ctx.beginPath();ctx.ellipse(0,-55.5*sc,4.5*sc,5.6*sc,0,0,Math.PI*2);ctx.fill();
 
   if(!isKicker){
-    ctx.fillStyle='#2c3e50';ctx.beginPath();
-    ctx.arc(-2*sc,-56.8*sc,0.8*sc,0,Math.PI*2);ctx.arc(2*sc,-56.8*sc,0.8*sc,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#231710';
+    ctx.fillRect(-2.8*sc,-57.2*sc,2.0*sc,0.45*sc);
+    ctx.fillRect(0.8*sc,-57.2*sc,2.0*sc,0.45*sc);
+    ctx.beginPath();ctx.arc(-1.7*sc,-56.0*sc,0.65*sc,0,Math.PI*2);ctx.arc(1.7*sc,-56.0*sc,0.65*sc,0,Math.PI*2);ctx.fill();
   }
 
-  ctx.fillStyle='#1b222c';ctx.beginPath();ctx.ellipse(0,-59.2*sc,5.8*sc,4.2*sc,0,Math.PI*0.92,Math.PI*2.08);ctx.fill();
-  if(isKicker){ctx.beginPath();ctx.ellipse(0,-57.5*sc,5.5*sc,4.5*sc,0,0,Math.PI*2);ctx.fill();}
+  ctx.fillStyle='#191e26';
+  if(isKicker){
+    // Акуратна потилиця з fade-переходом (без «шолома»)
+    ctx.beginPath();
+    ctx.moveTo(-4.4*sc,-56*sc);
+    ctx.quadraticCurveTo(-4.7*sc,-61.5*sc,0,-62.0*sc);
+    ctx.quadraticCurveTo(4.7*sc,-61.5*sc,4.4*sc,-56*sc);
+    ctx.lineTo(2.8*sc,-52.8*sc);
+    ctx.quadraticCurveTo(0,-53.4*sc,-2.8*sc,-52.8*sc);
+    ctx.closePath();ctx.fill();
+  }else{
+    ctx.beginPath();ctx.ellipse(0,-58.5*sc,4.8*sc,3.6*sc,0,Math.PI*0.9,Math.PI*2.1);ctx.fill();
+  }
 
   ctx.restore();
 }
 
+// Оновлені реалістичні вболівальники на трибунах
 function drawRealisticFan(fx,fy,sc,fan,waveVal){
   const t=tAnim*fan.spd+fan.ph;
-  const sway=Math.sin(t)*1.8*sc;
+  const sway=Math.sin(t)*1.6*sc;
   const cheerJump=crowdMood===1?Math.max(0,Math.sin(t*2.8))*8*sc:0;
-  const idleBob=(Math.sin(t*1.2)*1.1+waveVal*2.5)*sc;
+  const idleBob=(Math.sin(t*1.2)*1.0+waveVal*2.4)*sc;
   const y=fy-cheerJump-idleBob;
-  ctx.save();ctx.translate(fx+sway,y);ctx.rotate(Math.sin(t)*0.08);
+  ctx.save();ctx.translate(fx+sway,y);ctx.rotate(Math.sin(t)*0.07);
 
-  ctx.fillStyle=fan.shirt;ctx.beginPath();
-  ctx.moveTo(-5.2*sc,-11.5*sc);ctx.quadraticCurveTo(0,-13*sc,5.2*sc,-11.5*sc);
-  ctx.lineTo(4.2*sc,0);ctx.lineTo(-4.2*sc,0);ctx.closePath();ctx.fill();
+  ctx.fillStyle=fan.shirt;
+  ctx.beginPath();
+  ctx.moveTo(-5.4*sc,-10.5*sc);
+  ctx.quadraticCurveTo(0,-13.2*sc,5.4*sc,-10.5*sc);
+  ctx.lineTo(4.4*sc,0);
+  ctx.lineTo(-4.4*sc,0);
+  ctx.closePath();
+  ctx.fill();
 
-  if(crowdMood===1){
-    const waveArm=Math.sin(t*4)*2.2*sc;
-    drawLimb(-4.6*sc,-10.5*sc,-7.2*sc+waveArm,-18.5*sc,1.4*sc,1.0*sc,fan.skin);
-    drawLimb(4.6*sc,-10.5*sc,7.2*sc-waveArm,-18.5*sc,1.4*sc,1.0*sc,fan.skin);
-    if(fan.scarf){ctx.fillStyle='#4b7bec';ctx.fillRect(-8*sc,-20.5*sc,16*sc,2.5*sc);}
-  }else if(crowdMood===-1){
-    drawLimb(-4.6*sc,-10.5*sc,-4.2*sc,-16*sc,1.3*sc,0.9*sc,fan.skin);
-    drawLimb(4.6*sc,-10.5*sc,4.2*sc,-16*sc,1.3*sc,0.9*sc,fan.skin);
-  }else if(waveVal>0.6){
-    drawLimb(-4.6*sc,-10.5*sc,-6.5*sc,-17*sc,1.3*sc,0.9*sc,fan.skin);
-    drawLimb(4.6*sc,-10.5*sc,6.5*sc,-17*sc,1.3*sc,0.9*sc,fan.skin);
+  if(fan.scarf){
+    ctx.fillStyle='#4b7bec';
+    ctx.fillRect(-3.6*sc,-11.5*sc,7.2*sc,2.2*sc);
+    ctx.fillRect(1.2*sc,-10*sc,2.0*sc,5.5*sc);
   }
 
-  ctx.fillStyle=fan.skin;ctx.beginPath();ctx.ellipse(0,-15.4*sc,3.1*sc,3.7*sc,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=fan.hair;ctx.beginPath();ctx.ellipse(0,-16.4*sc,3.3*sc,2.5*sc,0,Math.PI,Math.PI*2);ctx.fill();
+  if(crowdMood===1){
+    const waveArm=Math.sin(t*4)*2.0*sc;
+    drawCapsule(-4.6*sc,-10*sc,-6.8*sc+waveArm,-18*sc,1.4*sc,1.0*sc,fan.skin);
+    drawCapsule(4.6*sc,-10*sc,6.8*sc-waveArm,-18*sc,1.4*sc,1.0*sc,fan.skin);
+    if(fan.scarf){
+      ctx.fillStyle='#1dd1a1';
+      ctx.fillRect(-7.5*sc,-20*sc,15*sc,2.4*sc);
+    }
+  }else if(crowdMood===-1){
+    drawCapsule(-4.6*sc,-10*sc,-3.8*sc,-15.8*sc,1.3*sc,0.9*sc,fan.skin);
+    drawCapsule(4.6*sc,-10*sc,3.8*sc,-15.8*sc,1.3*sc,0.9*sc,fan.skin);
+  }else if(waveVal>0.6){
+    drawCapsule(-4.6*sc,-10*sc,-6.2*sc,-16.8*sc,1.3*sc,0.9*sc,fan.skin);
+    drawCapsule(4.6*sc,-10*sc,6.2*sc,-16.8*sc,1.3*sc,0.9*sc,fan.skin);
+  }
+
+  ctx.fillStyle=fan.skin;
+  ctx.fillRect(-1.1*sc,-13*sc,2.2*sc,2*sc);
+  ctx.beginPath();ctx.ellipse(0,-15.4*sc,2.9*sc,3.6*sc,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=fan.hair;
+  ctx.beginPath();ctx.ellipse(0,-16.6*sc,3.1*sc,2.3*sc,0,Math.PI*0.9,Math.PI*2.1);ctx.fill();
   ctx.restore();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 4 ] ================== */
+/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 5 ] ================== */
 /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 5 З 5 ] =================== */
+/* =================== [ GAME.HTML : ЧАСТИНА 6 З 6 ] =================== */
 /* ===================================================================== */
 function draw3D(){
   tAnim+=0.07;ctx.clearRect(0,0,W,H);
@@ -609,8 +756,10 @@ function draw3D(){
   gk.x+=(gk.tx-gk.x)*0.18;gk.y+=(gk.ty-gk.y)*0.18;gk.dive+=(gk.tdive-gk.dive)*0.18;
   const gp=proj(gk.x,gk.y,gz-0.1),gSh=proj(gk.x,0,gz-0.1);
   ctx.fillStyle='rgba(0,0,0,0.42)';ctx.beginPath();ctx.ellipse(gSh.x,gSh.y,0.48*gSh.s,0.18*gSh.s,0,0,Math.PI*2);ctx.fill();
+
   const gkJersey=(ph==='sh')?oppClub.c:'#f39c12';
-  drawRealisticPlayer(gp.x,gp.y,gp.s*0.032,gkJersey,'#1e272e',gkJersey,'#14181d','#ffffff',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false);
+  const gkDark=(ph==='sh')?(oppClub.dark||'#1e272e'):'#b36b00';
+  drawRealisticPlayer(gp.x,gp.y,gp.s*0.032,gkJersey,gkDark,'#ffffff','#1e272e','#0b0f14','#14181d','#ffffff',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false);
 
   if(ball.active&&ball.t<1){
     ball.t=Math.min(1,ball.t+0.048);
@@ -635,11 +784,16 @@ function draw3D(){
   }
   const kp=proj(kicker.x,0,kicker.z);
   ctx.fillStyle='rgba(0,0,0,0.42)';ctx.beginPath();ctx.ellipse(kp.x,kp.y,0.55*kp.s,0.22*kp.s,0,0,Math.PI*2);ctx.fill();
+
   const kCol=(ph==='sh')?myJersey.col:oppClub.c;
+  const kDark=(ph==='sh')?(myJersey.dark||'#090d14'):(oppClub.dark||'#1e272e');
+  const kTrim=(ph==='sh')?(myJersey.trim||'#ffffff'):'#ffffff';
   const kSh=(ph==='sh')?myShorts.col:'#1e272e';
+  const kShDark=(ph==='sh')?(myShorts.dark||'#0b0f14'):'#0b0f14';
   const kBoot=(ph==='sh')?myShoes.col:'#14181d';
   const kBootAc=(ph==='sh')?(myShoes.ac||'#1dd1a1'):'#ffffff';
-  drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kCol,kSh,kCol,kBoot,kBootAc,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true);
+
+  drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kCol,kDark,kTrim,kSh,kShDark,kBoot,kBootAc,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true);
 
   requestAnimationFrame(draw3D);
 }
@@ -648,4 +802,4 @@ rsz3D();updUI();renderCtrl();draw3D();
 </script>
 </body>
 </html>
-<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 5 ] ================== -->
+<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 6 ] ================== -->
