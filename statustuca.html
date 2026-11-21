@@ -60,7 +60,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 <div class="toast" id="toast">Оновлено!</div>
 
 <script>
-try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
+try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand();}catch(e){}
 
 const BIN_ID  = '6b01a76bffd5d16053d39022';
 const API_KEY = '$2a$10$FfzYgApncFFRJpoFkrYgyOZHPwjviuwu1N64Suvm4DneHJP..xKna';
@@ -87,6 +87,11 @@ if(!p.nick) p.nick='Гравець #'+p.uid.slice(-4).toUpperCase();
 try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}
 
 document.getElementById('nickInp').value=p.nick;
+
+function esc(str){
+  const map=new Map([['&','&amp;'],['<','&lt;'],['>','&gt;'],['"','&quot;'],["'",'&#39;']]);
+  return String(str).replace(/[&<>"']/g,m=>map.get(m)||m);
+}
 
 function showToast(txt){
   const t=document.getElementById('toast');
@@ -133,7 +138,7 @@ function renderList(players){
     return `<div class="${cls}">
       <div class="rank">${rankStr}</div>
       <div class="info">
-        <div class="name">${u.n}${isMe?' (Ти)':''}</div>
+        <div class="name">${esc(u.n)}${isMe?' (Ти)':''}</div>
         <div class="sub">Рівень ${u.lv} • 🏆 Кубків ЛЧ: ${u.cp}</div>
       </div>
       <div class="coins">💰 ${u.cn}</div>
