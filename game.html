@@ -510,6 +510,7 @@ function drawMatchGlove(x,y,sc,side,col){
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 4 ] ================== */
 /* ===================================================================== */
+/* ===================================================================== */
 /* =================== [ GAME.HTML : ЧАСТИНА 5 З 8 ] =================== */
 /* ===================================================================== */
 function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,shortsDark,bootCol,bootAc,gloveCol,diveAng,runPhase,isKicker,isStandingUp){
@@ -568,10 +569,11 @@ function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,sho
 
   ctx.fillStyle=trimCol;
   if(isKicker){
+    const isMyPlayer=(ph==='sh'||ph==='over');
     ctx.beginPath();ctx.ellipse(0,-48.0*sc,3.2*sc,1.2*sc,0,0,Math.PI);ctx.fill();
-    ctx.fillStyle=(ph==='sh')?(p.numCol||'#ffffff'):'rgba(255,255,255,0.92)';
+    ctx.fillStyle=isMyPlayer?(p.numCol||'#ffffff'):'rgba(255,255,255,0.92)';
     ctx.font=`900 ${Math.max(8,10.2*sc)}px sans-serif`;ctx.textAlign='center';
-    ctx.fillText((ph==='sh')?(p.num||'10'):'9',0,-33*sc);
+    ctx.fillText(isMyPlayer?(p.num||'10'):'9',0,-33*sc);
   }else{
     ctx.beginPath();
     ctx.moveTo(-3.2*sc,-48.2*sc);ctx.lineTo(0,-45.0*sc);ctx.lineTo(3.2*sc,-48.2*sc);
@@ -652,7 +654,6 @@ function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,sho
   ctx.restore();
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 5 ] ================== */
-/* ===================================================================== */
 /* =================== [ GAME.HTML : ЧАСТИНА 6 З 8 ] =================== */
 /* ===================================================================== */
 function drawRealisticFan(fx,fy,sc,fan,waveVal){
@@ -827,6 +828,7 @@ function drawStadiumScene(){
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 7 ] ================== */
 /* ===================================================================== */
+/* ===================================================================== */
 /* =================== [ GAME.HTML : ЧАСТИНА 8 З 8 ] =================== */
 /* ===================================================================== */
 function draw3D(){
@@ -851,8 +853,8 @@ function draw3D(){
   const shStretch=1+Math.abs(gk.dive)*0.45;
   ctx.fillStyle='rgba(0,0,0,0.42)';ctx.beginPath();ctx.ellipse(gSh.x,gSh.y,0.48*gSh.s*shStretch,0.18*gSh.s,0,0,Math.PI*2);ctx.fill();
 
-  const gkJersey=(ph==='sh')?oppClub.c:'#f39c12';
-  const gkDark=(ph==='sh')?(oppClub.dark||'#1e272e'):'#b36b00';
+  const gkJersey=(ph==='sh'||ph==='over')?oppClub.c:'#f39c12';
+  const gkDark=(ph==='sh'||ph==='over')?(oppClub.dark||'#1e272e'):'#b36b00';
   drawRealisticPlayer(gp.x,gp.y,gp.s*0.032,gkJersey,gkDark,'#ffffff','#1e272e','#0b0f14','#14181d','#ffffff',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false,gk.state==='stand');
 
   if(ball.active&&ball.t<1){
@@ -882,13 +884,14 @@ function draw3D(){
   const kp=proj(kicker.x,0,kicker.z);
   ctx.fillStyle='rgba(0,0,0,0.42)';ctx.beginPath();ctx.ellipse(kp.x,kp.y,0.55*kp.s,0.22*kp.s,0,0,Math.PI*2);ctx.fill();
 
-  const kCol=(ph==='sh')?myJersey.col:oppClub.c;
-  const kDark=(ph==='sh')?(myJersey.dark||'#090d14'):(oppClub.dark||'#1e272e');
-  const kTrim=(ph==='sh')?(myJersey.trim||'#ffffff'):'#ffffff';
-  const kSh=(ph==='sh')?myShorts.col:'#1e272e';
-  const kShDark=(ph==='sh')?(myShorts.dark||'#0b0f14'):'#0b0f14';
-  const kBoot=(ph==='sh')?myShoes.col:'#14181d';
-  const kBootAc=(ph==='sh')?(myShoes.ac||'#1dd1a1'):'#ffffff';
+  const isMyKicker=(ph==='sh'||ph==='over');
+  const kCol=isMyKicker?myJersey.col:oppClub.c;
+  const kDark=isMyKicker?(myJersey.dark||'#090d14'):(oppClub.dark||'#1e272e');
+  const kTrim=isMyKicker?(myJersey.trim||'#ffffff'):'#ffffff';
+  const kSh=isMyKicker?myShorts.col:'#1e272e';
+  const kShDark=isMyKicker?(myShorts.dark||'#0b0f14'):'#0b0f14';
+  const kBoot=isMyKicker?myShoes.col:'#14181d';
+  const kBootAc=isMyKicker?(myShoes.ac||'#1dd1a1'):'#ffffff';
 
   drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kCol,kDark,kTrim,kSh,kShDark,kBoot,kBootAc,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true,false);
 
@@ -900,3 +903,4 @@ rsz3D();updUI();renderCtrl();draw3D();
 </body>
 </html>
 <!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 8 ] ================== -->
+
