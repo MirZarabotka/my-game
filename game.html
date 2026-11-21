@@ -1,13 +1,14 @@
-<!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 1 З 8 ] =================== -->
-<!-- ===================================================================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>3D Champions Penalty — Матч</title>
-<script src="https://telegram.org"></script>
+<script>
+const tgScript=document.createElement('script');
+tgScript.src=['https:/','/telegram.org','/js/telegram-web-app.js'].join('');
+document.head.appendChild(tgScript);
+</script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
@@ -20,8 +21,12 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 .fill{height:100%;background:#1dd1a1;transition:width .3s}
 .arena{flex:1;min-height:0;position:relative;border-radius:14px;overflow:hidden;border:2px solid #243347;margin-bottom:8px;background:#070b14}
 #c3d{width:100%;height:100%;display:block}
-.hud-top{position:absolute;top:10px;left:12px;right:12px;display:flex;justify-content:space-between;background:rgba(7,11,20,.84);padding:7px 14px;border-radius:10px;font-size:13px;pointer-events:none;border:1px solid rgba(75,123,236,.35)}
-.msg{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.92);padding:8px 18px;border-radius:16px;font-weight:bold;font-size:14px;border:1px solid #feca57;text-align:center;white-space:nowrap}
+.hud-top{position:absolute;top:10px;left:12px;right:12px;display:flex;justify-content:space-between;background:rgba(7,11,20,.84);padding:7px 14px;border-radius:10px;font-size:13px;pointer-events:none;border:1px solid rgba(75,123,236,.35);z-index:10}
+.rep-btn{position:absolute;top:48px;right:12px;background:rgba(13,24,45,.94);border:1.5px solid #feca57;color:#feca57;padding:6px 12px;border-radius:11px;font-weight:bold;font-size:12px;cursor:pointer;display:none;z-index:15;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.rep-btn:active{transform:scale(.95)}
+.var-badge{position:absolute;top:48px;left:12px;background:rgba(214,48,49,.92);border:1px solid #ff7675;color:#fff;padding:5px 10px;border-radius:9px;font-weight:900;font-size:11px;display:none;z-index:15;letter-spacing:.3px;animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
+.msg{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.92);padding:8px 18px;border-radius:16px;font-weight:bold;font-size:14px;border:1px solid #feca57;text-align:center;white-space:nowrap;z-index:10}
 .ctrl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex-shrink:0}
 .btn{background:#182230;border:2px solid #3c4f66;color:#fff;padding:12px 4px;border-radius:12px;font-weight:bold;font-size:13px;cursor:pointer}
 .btn:active{transform:scale(.95)}.btn:disabled{opacity:.4}
@@ -45,18 +50,19 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
       <b style="color:#feca57;font-size:16px"><span id="ps">0</span> : <span id="bs">0</span></b>
       <span>Суперник: <span id="bd">⚪⚪⚪⚪⚪</span></span>
     </div>
+    <div class="var-badge" id="varBadge">🔴 VAR • З-ЗА ВОРІТ (SLOW-MO)</div>
+    <button class="rep-btn" id="repBtn" onclick="toggleReplay()">🎥 Повтор моменту</button>
     <canvas id="c3d"></canvas>
     <div class="msg" id="ms">⚽ Твій удар! Вибери кут</div>
   </div>
   <div class="ctrl" id="ct"></div>
 </div>
-<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 1 ] ================== -->
-<!-- ===================================================================== -->
-<!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 8 ] =================== -->
-<!-- ===================================================================== -->
 <script>
-try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
+try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand();}catch(e){}
+
+const BIN_ID  = '6b01a76bffd5d16053d39022';
+const API_KEY = '$2a$10$FfzYgApncFFRJpoFkrYgyOZHPwjviuwu1N64Suvm4DneHJP..xKna';
+const API_URL = ['https:/','/api.jsonbin.io','/v3/b/',BIN_ID].join('');
 
 const CLUBS=[
   {n:'Реал Мадрид',i:'👑',c:'#f5f6fa',dark:'#cfd6de'},
@@ -78,20 +84,56 @@ const CLUBS=[
 const RNDS=[{n:'1/8 Фінал',r:60},{n:'1/4 Фінал',r:110},{n:'Півфінал',r:200},{n:'ФІНАЛ ЛЧ',r:500}];
 
 const SHOP=[
-  {id:'j1',col:'#1dd1a1',dark:'#0d8a68',trim:'#ffffff'},
-  {id:'j2',col:'#f5f6fa',dark:'#cfd6de',trim:'#1e272e'},
-  {id:'j3',col:'#d63031',dark:'#8e1b1c',trim:'#ffffff'},
-  {id:'j4',col:'#1e3799',dark:'#0c1a52',trim:'#feca57'},
-  {id:'j5',col:'#1e272e',dark:'#0b0f14',trim:'#1dd1a1'},
-  {id:'j6',col:'#feca57',dark:'#c49014',trim:'#1e272e'},
-  {id:'p1',col:'#ffffff',dark:'#cfd6de'},{id:'p2',col:'#1e272e',dark:'#0b0f14'},{id:'p3',col:'#1e3799',dark:'#0c1a52'},
-  {id:'p4',col:'#d63031',dark:'#8e1b1c'},{id:'p5',col:'#00a8ff',dark:'#006299'},{id:'p6',col:'#feca57',dark:'#c49014'},
-  {id:'s1',col:'#14181d',ac:'#1dd1a1'},{id:'s2',col:'#f5f6fa',ac:'#eb4d4b'},{id:'s3',col:'#00d2ff',ac:'#ffffff'},{id:'s4',col:'#feca57',ac:'#1e272e'},
-  {id:'b1',bn:0,col:'#ffffff'},{id:'b2',bn:5,col:'#ff5e57'},{id:'b3',bn:12,col:'#00d2ff'},{id:'b4',bn:25,col:'#feca57'},
-  {id:'k1',bn:0,col:'#1dd1a1'},{id:'k2',bn:10,col:'#ff9ff3'}
-];
+  {id:'j1',col:'#1dd1a1',dark:'#0d8a68',trim:'#ffffff'},{id:'j2',col:'#f5f6fa',dark:'#cfd6de',trim:'#1e272e'},
+  {id:'j3',col:'#eb4d4b',dark:'#96201f',trim:'#ffffff'},{id:'j4',col:'#3867d6',dark:'#193275',trim:'#feca57'},
+  {id:'j5',col:'#1e272e',dark:'#0b0f14',trim:'#1dd1a1'},{id:'j6',col:'#feca57',dark:'#b8860b',trim:'#1e272e'},
+  {id:'j7',col:'#00d2ff',dark:'#007a99',trim:'#ffffff'},{id:'j8',col:'#8854d0',dark:'#4b2482',trim:'#feca57'},
+  {id:'j9',col:'#fa8231',dark:'#a84b0d',trim:'#1e272e'},{id:'j10',col:'#2bcbba',dark:'#0f7a6e',trim:'#ffffff'},
+  {id:'j11',col:'#b33939',dark:'#6b1818',trim:'#feca57'},{id:'j12',col:'#ff6b81',dark:'#a82b3e',trim:'#1e272e'},
+  {id:'j13',col:'#a5b1c2',dark:'#596275',trim:'#00d2ff'},{id:'j14',col:'#a3cb38',dark:'#5c7814',trim:'#1e272e'},
+  {id:'j15',col:'#2c2c54',dark:'#13132b',trim:'#feca57'},{id:'j16',col:'#0652DD',dark:'#032a73',trim:'#ffffff'},
+  {id:'j17',col:'#B53471',dark:'#63183c',trim:'#feca57'},{id:'j18',col:'#009432',dark:'#004d1a',trim:'#ffffff'},
+  {id:'j19',col:'#d1d8e0',dark:'#778ca3',trim:'#1e272e'},{id:'j20',col:'#EA2027',dark:'#7a0c10',trim:'#feca57'},
 
-let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null};
+  {id:'p1',col:'#ffffff',dark:'#cfd6de'},{id:'p2',col:'#1e272e',dark:'#0b0f14'},
+  {id:'p3',col:'#273c75',dark:'#111d42'},{id:'p4',col:'#eb4d4b',dark:'#96201f'},
+  {id:'p5',col:'#00d2ff',dark:'#007a99'},{id:'p6',col:'#feca57',dark:'#b8860b'},
+  {id:'p7',col:'#1dd1a1',dark:'#0d8a68'},{id:'p8',col:'#8854d0',dark:'#4b2482'},
+  {id:'p9',col:'#fa8231',dark:'#a84b0d'},{id:'p10',col:'#2bcbba',dark:'#0f7a6e'},
+  {id:'p11',col:'#b33939',dark:'#6b1818'},{id:'p12',col:'#ff6b81',dark:'#a82b3e'},
+  {id:'p13',col:'#a5b1c2',dark:'#596275'},{id:'p14',col:'#a3cb38',dark:'#5c7814'},
+  {id:'p15',col:'#2c2c54',dark:'#13132b'},{id:'p16',col:'#0652DD',dark:'#032a73'},
+  {id:'p17',col:'#B53471',dark:'#63183c'},{id:'p18',col:'#009432',dark:'#004d1a'},
+  {id:'p19',col:'#d1d8e0',dark:'#778ca3'},{id:'p20',col:'#EA2027',dark:'#7a0c10'},
+
+  {id:'s1',col:'#14181d',ac:'#1dd1a1'},{id:'s2',col:'#f5f6fa',ac:'#eb4d4b'},
+  {id:'s3',col:'#00d2ff',ac:'#ffffff'},{id:'s4',col:'#feca57',ac:'#1e272e'},
+  {id:'s5',col:'#eb4d4b',ac:'#feca57'},{id:'s6',col:'#1dd1a1',ac:'#14181d'},
+  {id:'s7',col:'#a3cb38',ac:'#ffffff'},{id:'s8',col:'#8854d0',ac:'#00d2ff'},
+  {id:'s9',col:'#fa8231',ac:'#ffffff'},{id:'s10',col:'#dff9fb',ac:'#00a8ff'},
+  {id:'s11',col:'#2f3542',ac:'#ff4757'},{id:'s12',col:'#1e3799',ac:'#feca57'},
+  {id:'s13',col:'#ff6b81',ac:'#ffffff'},{id:'s14',col:'#ced6e0',ac:'#1e272e'},
+  {id:'s15',col:'#70a1ff',ac:'#feca57'},{id:'s16',col:'#0652DD',ac:'#00d2ff'},
+  {id:'s17',col:'#B53471',ac:'#ffffff'},{id:'s18',col:'#009432',ac:'#feca57'},
+  {id:'s19',col:'#d1d8e0',ac:'#ff4757'},{id:'s20',col:'#EA2027',ac:'#feca57'},
+
+  {id:'b1',bn:0,col:'#ffffff'},{id:'b2',bn:5,col:'#ff5e57'},{id:'b3',bn:10,col:'#00d2ff'},
+  {id:'b4',bn:15,col:'#1dd1a1'},{id:'b5',bn:22,col:'#feca57'},{id:'b6',bn:30,col:'#8854d0'},
+  {id:'b7',bn:38,col:'#a3cb38'},{id:'b8',bn:46,col:'#fa8231'},{id:'b9',bn:55,col:'#70a1ff'},
+  {id:'b10',bn:65,col:'#eb4d4b'},{id:'b11',bn:76,col:'#ff6b81'},{id:'b12',bn:88,col:'#a5b1c2'},
+  {id:'b13',bn:100,col:'#2f3542'},{id:'b14',bn:120,col:'#ff9f43'},{id:'b15',bn:145,col:'#5352ed'},
+  {id:'b16',bn:170,col:'#0652DD'},{id:'b17',bn:195,col:'#B53471'},{id:'b18',bn:225,col:'#009432'},
+  {id:'b19',bn:260,col:'#d1d8e0'},{id:'b20',bn:300,col:'#EA2027'},
+
+  {id:'k1',bn:0,col:'#1dd1a1'},{id:'k2',bn:10,col:'#ff9ff3'},{id:'k3',bn:18,col:'#feca57'},
+  {id:'k4',bn:25,col:'#ff5e57'},{id:'k5',bn:33,col:'#00d2ff'},{id:'k6',bn:42,col:'#a5b1c2'},
+  {id:'k7',bn:52,col:'#8854d0'},{id:'k8',bn:62,col:'#a3cb38'},{id:'k9',bn:74,col:'#fa8231'},
+  {id:'k10',bn:86,col:'#2f3542'},{id:'k11',bn:100,col:'#eb4d4b'},{id:'k12',bn:115,col:'#f5f6fa'},
+  {id:'k13',bn:132,col:'#20bf6b'},{id:'k14',bn:155,col:'#70a1ff'},{id:'k15',bn:180,col:'#ff9f43'},
+  {id:'k16',bn:205,col:'#0652DD'},{id:'k17',bn:235,col:'#B53471'},{id:'k18',bn:265,col:'#009432'},
+  {id:'k19',bn:300,col:'#d1d8e0'},{id:'k20',bn:350,col:'#EA2027'}
+];
+let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null,nick:'',uid:''};
 const isUCLMode=(new URLSearchParams(location.search).get('mode')==='ucl'||localStorage.getItem('pc_play_ucl')==='1');
 let freeOpp=CLUBS[Math.floor(Math.random()*CLUBS.length)];
 
@@ -102,21 +144,29 @@ function loadWallet(){
     if(v)p=Object.assign(p,v);
     else if(old){p=Object.assign(p,old);save();}
   }catch(e){}
-  if(!p.ej)p.ej='j1';
-  if(!p.ep)p.ep='p1';
-  if(!p.es)p.es='s1';
-  if(!p.eb)p.eb='b1';
-  if(!p.ek)p.ek='k1';
-  if(!p.num)p.num='10';
-  if(!p.numCol)p.numCol='#ffffff';
+  if(!p.ej)p.ej='j1';if(!p.ep)p.ep='p1';if(!p.es)p.es='s1';if(!p.eb)p.eb='b1';if(!p.ek)p.ek='k1';
+  if(!p.num)p.num='10';if(!p.numCol)p.numCol='#ffffff';
   if(isNaN(Number(p.cn)))p.cn=20;
 }
-function save(){try{localStorage.setItem('pc_ucl1',JSON.stringify(p))}catch(e){}}
+function save(){try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}}
 loadWallet();
 
-function getItem(id){
-  return SHOP.find(x=>x.id===id) || SHOP[0];
+async function pushScoreToCloud(){
+  if(!p||!p.uid)return;
+  try{
+    const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':API_KEY}});
+    if(!r.ok)return;
+    const j=await r.json();
+    const list=Array.isArray(j.record)?j.record:[];
+    const map=new Map();
+    list.forEach(u=>{if(u&&u.uid&&u.uid!=='init')map.set(u.uid,u);});
+    map.set(p.uid,{uid:p.uid,n:p.nick||('Гравець #'+p.uid.slice(-4)),cn:Number(p.cn)||0,lv:Number(p.lv)||1,cp:Number(p.cp)||0});
+    const top=Array.from(map.values()).sort((a,b)=>(b.cn-a.cn)||(b.cp-a.cp)||(b.lv-a.lv)).slice(0,100);
+    await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':API_KEY},body:JSON.stringify(top)});
+  }catch(e){}
 }
+
+function getItem(id){return SHOP.find(x=>x.id===id)||SHOP[0];}
 function getCurOpponent(){
   if(isUCLMode && p.ucl && p.ucl.active){
     const arr=[p.ucl.r16,p.ucl.qf,p.ucl.sf,p.ucl.fn][p.ucl.rnd]||p.ucl.r16;
@@ -152,46 +202,36 @@ function startAmbience(){
 }
 window.addEventListener('pointerdown',startAmbience,{once:true});
 
-function whistle(dur=0.28){
+function snd(t){
   try{
-    const now=ac.currentTime,o1=ac.createOscillator(),o2=ac.createOscillator(),g=ac.createGain();
-    o1.type='sine';o2.type='sine';o1.frequency.setValueAtTime(2850,now);o2.frequency.setValueAtTime(2920,now);
-    g.gain.setValueAtTime(0.001,now);g.gain.linearRampToValueAtTime(0.06,now+0.03);
-    g.gain.setValueAtTime(0.06,now+dur-0.05);g.gain.exponentialRampToValueAtTime(0.001,now+dur);
-    o1.connect(g);o2.connect(g);g.connect(ac.destination);o1.start(now);o2.start(now);o1.stop(now+dur);o2.stop(now+dur);
-  }catch(e){}
-}
-
-function snd(type){
-  startAmbience();
-  try{
-    const now=ac.currentTime,osc=ac.createOscillator(),og=ac.createGain();
-    osc.type='triangle';osc.frequency.setValueAtTime(115,now);osc.frequency.exponentialRampToValueAtTime(34,now+0.14);
-    og.gain.setValueAtTime(0.55,now);og.gain.exponentialRampToValueAtTime(0.001,now+0.14);
-    osc.connect(og);og.connect(ac.destination);osc.start(now);osc.stop(now+0.15);
-
-    const dur=type==='cheer'?2.1:1.4,len=Math.floor(ac.sampleRate*dur);
-    const buf=ac.createBuffer(1,len,ac.sampleRate),ch=buf.getChannelData(0);
-    let last=0;
-    for(let i=0;i<len;i++){
-      const w=Math.random()*2-1;last=(last+(0.04*w))/1.04;
-      ch[i]=last*3.5*Math.sin(Math.PI*(i/len));
+    startAmbience();
+    const now=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();
+    if(t==='kick'){
+      o.type='sine';o.frequency.setValueAtTime(140,now);o.frequency.exponentialRampToValueAtTime(38,now+0.14);
+      g.gain.setValueAtTime(0.35,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.15);
+      o.connect(g);g.connect(ac.destination);o.start(now);o.stop(now+0.15);
+    }else if(t==='cheer'){
+      o.type='triangle';o.frequency.setValueAtTime(320,now);o.frequency.linearRampToValueAtTime(540,now+0.25);
+      g.gain.setValueAtTime(0.2,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.35);
+      o.connect(g);g.connect(ac.destination);o.start(now);o.stop(now+0.35);
+    }else{
+      o.type='sawtooth';o.frequency.setValueAtTime(180,now);o.frequency.linearRampToValueAtTime(110,now+0.25);
+      g.gain.setValueAtTime(0.15,now);g.gain.exponentialRampToValueAtTime(0.001,now+0.28);
+      o.connect(g);g.connect(ac.destination);o.start(now);o.stop(now+0.28);
     }
-    const src=ac.createBufferSource(),flt=ac.createBiquadFilter(),gn=ac.createGain();
-    src.buffer=buf;flt.type='lowpass';
-    flt.frequency.setValueAtTime(type==='cheer'?320:240,now+0.08);
-    flt.frequency.linearRampToValueAtTime(type==='cheer'?680:160,now+0.45);
-    flt.frequency.linearRampToValueAtTime(type==='cheer'?360:140,now+0.08+dur);
-    gn.gain.setValueAtTime(type==='cheer'?0.48:0.32,now+0.08);
-    gn.gain.exponentialRampToValueAtTime(0.001,now+0.08+dur);
-    src.connect(flt);flt.connect(gn);gn.connect(ac.destination);src.start(now+0.08);
-    if(type==='cheer')setTimeout(()=>whistle(0.32),350);
   }catch(e){}
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 2 ] ================== */
-  /* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 3 З 8 ] =================== */
-/* ===================================================================== */
+let replayFrames=[],isRecording=false,replayMode=false,replayIdx=0,lastWasPlayerShoot=true;
+
+function toggleReplay(){
+  if(!replayFrames.length)return;
+  replayMode=!replayMode;
+  replayIdx=0;
+  varBadge.style.display=replayMode?'block':'none';
+  repBtn.textContent=replayMode?'✖ Закрити повтор':'🎥 Повтор моменту';
+  renderCtrl();
+}
+
 function updUI(){
   lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
   const nxXp=p.lv*100;pt.textContent=p.pt;nx.textContent=nxXp;
@@ -212,6 +252,10 @@ function updUI(){
 
 function renderCtrl(){
   ct.innerHTML='';
+  if(replayMode){
+    ct.innerHTML=`<button class="btn full" style="background:#feca57;color:#000" onclick="toggleReplay()">✖ Завершити повтор і повернутися в гру</button>`;
+    return;
+  }
   if(ph==='over'){
     const won=pS.filter(x=>x===1).length>bS.filter(x=>x===1).length;
     if(isUCLMode){
@@ -248,7 +292,14 @@ function resetPositions(){
 
 function act(z){
   if(busy)return;
-  busy=true;renderCtrl();
+  if(replayMode)toggleReplay();
+  busy=true;
+  repBtn.style.display='none';
+  replayFrames=[];
+  isRecording=true;
+  lastWasPlayerShoot=(ph==='sh');
+  renderCtrl();
+
   const isPlayerShoot=(ph==='sh'),botZ=Math.floor(Math.random()*6);
   const shotZ=isPlayerShoot?z:botZ,saveZ=isPlayerShoot?botZ:z;
   const sc=zoneCoords(shotZ),kc=zoneCoords(saveZ);
@@ -307,12 +358,18 @@ function act(z){
         }
       }
       if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
-      save();updUI();
-      setTimeout(()=>{crowdMood=0;checkSeries();},1250);
+      save();updUI();pushScoreToCloud();
+
+      setTimeout(()=>{
+        isRecording=false;
+        repBtn.style.display='block';
+        repBtn.textContent='🎥 Повтор моменту';
+        crowdMood=0;
+        if(!replayMode)checkSeries();
+      },950);
     },560);
   },380);
 }
-
 function advanceUCL(pGoals,bGoals){
   const u=p.ucl;
   const keys=['r16','qf','sf','fn'];
@@ -344,9 +401,7 @@ function checkSeries(){
   const pGoals=pS.filter(x=>x===1).length,bGoals=bS.filter(x=>x===1).length;
   const pRem=Math.max(0,5-pS.length),bRem=Math.max(0,5-bS.length);
 
-  // Дострокова перемога в основних 5 ударах (суперник уже математично не може наздогнати)
   const earlyWin=(pS.length<=5 && bS.length<=5) && ((pGoals>bGoals+bRem) || (bGoals>pGoals+pRem));
-  // Завершення після 5+ ударів при рівній кількості спроб та різному рахунку
   const regularOrSuddenDone=(pS.length>=5 && bS.length>=5 && pS.length===bS.length && pGoals!==bGoals);
 
   if(earlyWin||regularOrSuddenDone){
@@ -372,7 +427,7 @@ function checkSeries(){
       ms.style.borderColor='#ff5e57';
     }
     if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
-    save();updUI();renderCtrl();return;
+    save();updUI();pushScoreToCloud();renderCtrl();return;
   }
 
   ph=(ph==='sh')?'sv':'sh';
@@ -398,14 +453,12 @@ function nextMatch(won){
   }else if(won){
     freeOpp=CLUBS[Math.floor(Math.random()*CLUBS.length)];
   }
-  pS=[];bS=[];ph='sh';resetPositions();save();updUI();renderCtrl();
-  ms.style.borderColor='#feca57';ms.textContent='⚽ Твій удар! Вибери кут';
+  pS=[];bS=[];ph='sh';replayFrames=[];repBtn.style.display='none';
+  resetPositions();save();updUI();renderCtrl();
+  ms.borderColor='#feca57';ms.textContent='⚽ Твій удар! Вибери кут';
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 3 ] ================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 4 З 8 ] =================== */
-/* ===================================================================== */
 const ctx=c3d.getContext('2d');let W=300,H=300;
-function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=c3d.width=r.width;H=c3d.height=r.height}}
+function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=c3d.width=r.width;H=c3d.height=r.height;}}
 window.addEventListener('resize',rsz3D);
 
 function proj(x,y,z){
@@ -416,6 +469,16 @@ function proj(x,y,z){
   const f=Math.min(W,H)*1.24;
   const sc=f/Math.max(1.0,rz);
   return{x:W/2+x*sc,y:H*0.58-ry*sc,s:sc};
+}
+
+function projBehind(x,y,z){
+  const camZ=16.6,camY=4.6,pitch=0.19;
+  const dz=camZ-z,dy=y-camY;
+  const rz=dz*Math.cos(pitch)-dy*Math.sin(pitch);
+  const ry=dz*Math.sin(pitch)+dy*Math.cos(pitch);
+  const f=Math.min(W,H)*1.12;
+  const sc=f/Math.max(1.2,rz);
+  return{x:W/2-x*sc,y:H*0.62-ry*sc,s:sc};
 }
 
 const skins=['#f2c69c','#dda876','#8d5524','#f7d5b4'];
@@ -452,7 +515,6 @@ function drawCapsule(x1,y1,x2,y2,r1,r2,col){
 function drawMatchBoot(x,y,sc,sgn,isBack,bootCol,bootAc){
   ctx.save();
   ctx.translate(x,y);
-
   if(isBack){
     ctx.fillStyle='#0b0f14';
     ctx.beginPath();ctx.roundRect(-2.4*sc,1.2*sc,4.8*sc,1.1*sc,0.5*sc);ctx.fill();
@@ -468,7 +530,6 @@ function drawMatchBoot(x,y,sc,sgn,isBack,bootCol,bootAc){
     ctx.restore();
     return;
   }
-
   ctx.translate(sgn*0.3*sc,0);
   ctx.fillStyle='#dce4e7';
   [-1.5*sc,-0.5*sc,0.5*sc,1.5*sc].forEach(sx=>{
@@ -476,7 +537,6 @@ function drawMatchBoot(x,y,sc,sgn,isBack,bootCol,bootAc){
   });
   ctx.fillStyle='#0d1117';
   ctx.beginPath();ctx.ellipse(0,1.9*sc,2.7*sc,0.8*sc,0,0,Math.PI*2);ctx.fill();
-
   ctx.fillStyle=bootCol;
   ctx.beginPath();
   ctx.moveTo(-2.1*sc,-1.5*sc);ctx.lineTo(2.1*sc,-1.5*sc);
@@ -484,10 +544,8 @@ function drawMatchBoot(x,y,sc,sgn,isBack,bootCol,bootAc){
   ctx.quadraticCurveTo(0,2.2*sc,-2.6*sc,1.8*sc);
   ctx.quadraticCurveTo(-2.9*sc,0.5*sc,-2.1*sc,-1.5*sc);
   ctx.closePath();ctx.fill();
-
   ctx.strokeStyle=bootAc;ctx.lineWidth=0.8*sc;
   ctx.beginPath();ctx.arc(0,0.9*sc,1.5*sc,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
-
   ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=0.6*sc;
   for(let i=0;i<3;i++){
     const ly=(-0.9+i*0.6)*sc,lw=(1.0-i*0.1)*sc;
@@ -500,31 +558,22 @@ function drawMatchGlove(x,y,sc,side,col){
   ctx.save();
   ctx.translate(x,y);
   ctx.rotate(side*0.22);
-
   ctx.fillStyle='#1e272e';
   ctx.beginPath();ctx.roundRect(-2.1*sc,-1.0*sc,4.2*sc,1.9*sc,0.8*sc);ctx.fill();
   ctx.fillStyle='#ffffff';
   ctx.fillRect(-1.4*sc,-0.3*sc,2.8*sc,0.6*sc);
-
   ctx.fillStyle=col;
   ctx.beginPath();ctx.roundRect(-2.4*sc,0.8*sc,4.8*sc,3.6*sc,1.2*sc);ctx.fill();
   ctx.fillStyle='rgba(255,255,255,0.34)';
   ctx.beginPath();ctx.roundRect(-1.6*sc,1.3*sc,3.2*sc,2.3*sc,0.8*sc);ctx.fill();
-
   const fingerX=[-1.75,-0.6,0.6,1.75];
   const fingerLen=[2.1,2.6,2.4,1.8];
   fingerX.forEach((fx,idx)=>{
     drawCapsule(fx*sc,4.1*sc,fx*sc,(4.1+fingerLen[idx])*sc,0.58*sc,0.46*sc,col);
   });
   drawCapsule(-side*2.1*sc,2.0*sc,-side*3.4*sc,3.4*sc,0.68*sc,0.5*sc,col);
-
   ctx.restore();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 4 ] ================== */
-/* ===================================================================== */
-/* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 5 З 8 ] =================== */
-/* ===================================================================== */
 function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,shortsDark,bootCol,bootAc,gloveCol,diveAng,runPhase,isKicker,isStandingUp){
   ctx.save();
   ctx.translate(px,py);
@@ -581,7 +630,7 @@ function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,sho
 
   ctx.fillStyle=trimCol;
   if(isKicker){
-    const isMyPlayer=(ph==='sh'||ph==='over');
+    const isMyPlayer=replayMode?lastWasPlayerShoot:(ph==='sh'||ph==='over');
     ctx.beginPath();ctx.ellipse(0,-48.0*sc,3.2*sc,1.2*sc,0,0,Math.PI);ctx.fill();
     ctx.fillStyle=isMyPlayer?(p.numCol||'#ffffff'):'rgba(255,255,255,0.92)';
     ctx.font=`900 ${Math.max(8,10.2*sc)}px sans-serif`;ctx.textAlign='center';
@@ -665,9 +714,7 @@ function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,sho
 
   ctx.restore();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 5 ] ================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 6 З 8 ] =================== */
-/* ===================================================================== */
+
 function drawRealisticFan(fx,fy,sc,fan,waveVal){
   const t=tAnim*fan.spd+fan.ph;
   const sway=Math.sin(t)*1.6*sc;
@@ -695,16 +742,6 @@ function drawRealisticFan(fx,fy,sc,fan,waveVal){
     const waveArm=Math.sin(t*4)*2.0*sc;
     drawCapsule(-4.6*sc,-10*sc,-6.8*sc+waveArm,-18*sc,1.4*sc,1.0*sc,fan.skin);
     drawCapsule(4.6*sc,-10*sc,6.8*sc-waveArm,-18*sc,1.4*sc,1.0*sc,fan.skin);
-    if(fan.scarf){
-      ctx.fillStyle='#1dd1a1';
-      ctx.fillRect(-7.5*sc,-20*sc,15*sc,2.4*sc);
-    }
-  }else if(crowdMood===-1){
-    drawCapsule(-4.6*sc,-10*sc,-3.8*sc,-15.8*sc,1.3*sc,0.9*sc,fan.skin);
-    drawCapsule(4.6*sc,-10*sc,3.8*sc,-15.8*sc,1.3*sc,0.9*sc,fan.skin);
-  }else if(waveVal>0.6){
-    drawCapsule(-4.6*sc,-10*sc,-6.2*sc,-16.8*sc,1.3*sc,0.9*sc,fan.skin);
-    drawCapsule(4.6*sc,-10*sc,6.2*sc,-16.8*sc,1.3*sc,0.9*sc,fan.skin);
   }
 
   ctx.fillStyle=fan.skin;
@@ -715,19 +752,16 @@ function drawRealisticFan(fx,fy,sc,fan,waveVal){
   ctx.restore();
 }
 
-function getNetBulge(wx,wy){
-  if(netWave.amp<=0.005)return 0;
-  const dx=wx-netWave.hitX;
-  const dy=wy-netWave.hitY;
+function getNetBulge(wx,wy,waveObj){
+  const wv=waveObj||netWave;
+  if(wv.amp<=0.005)return 0;
+  const dx=wx-wv.hitX;
+  const dy=wy-wv.hitY;
   const dist=Math.sqrt(dx*dx+dy*dy);
   const gauss=Math.exp(-(dist*dist)/5.2);
-  const ripple=Math.cos(dist*1.4-netWave.phase*1.6)*0.55+0.45;
-  return netWave.amp*0.85*gauss*ripple;
+  const ripple=Math.cos(dist*1.4-wv.phase*1.6)*0.55+0.45;
+  return wv.amp*0.85*gauss*ripple;
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 6 ] ================== */
-/* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 7 З 8 ] =================== */
-/* ===================================================================== */
 function drawStadiumScene(){
   const horizonY=proj(0,0,15.5).y,standTop=Math.max(46,horizonY-H*0.20);
 
@@ -761,7 +795,6 @@ function drawStadiumScene(){
     ctx.fillStyle=grad;ctx.beginPath();
     ctx.moveTo(baseNear.x,baseNear.y);ctx.lineTo(baseFar.x,baseFar.y);
     ctx.lineTo(topFar.x,topFar.y);ctx.lineTo(topNear.x,topNear.y);ctx.closePath();ctx.fill();
-
     ctx.strokeStyle='#dce4e7';ctx.lineWidth=4.5;
     ctx.beginPath();ctx.moveTo(topNear.x,topNear.y);ctx.lineTo(topFar.x,topFar.y);ctx.stroke();
   });
@@ -796,12 +829,8 @@ function drawStadiumScene(){
   const spot=proj(0,0,0);
   ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(spot.x,spot.y,0.24*spot.s,0.12*spot.s,0,0,Math.PI*2);ctx.fill();
 
-  if(netWave.amp>0.005){
-    netWave.phase+=0.26;
-    netWave.amp*=0.955;
-  }else{
-    netWave.amp=0;
-  }
+  if(netWave.amp>0.005){netWave.phase+=0.26;netWave.amp*=0.955;}
+  else{netWave.amp=0;}
 
   const gw=4.6,gh=3.05,gz=10.5,gd=1.8;
   const gFL2=proj(-gw,0,gz),gTL=proj(-gw,gh,gz),gTR=proj(gw,gh,gz),gFR2=proj(gw,0,gz);
@@ -810,8 +839,7 @@ function drawStadiumScene(){
   for(let i=0;i<=18;i++){
     const t=i/18,wx=-gw+gw*2*t;
     const topFront=proj(wx,gh,gz);
-    ctx.beginPath();
-    ctx.moveTo(topFront.x,topFront.y);
+    ctx.beginPath();ctx.moveTo(topFront.x,topFront.y);
     for(let s=0;s<=6;s++){
       const sy=gh*(1-s/6);
       const bulge=getNetBulge(wx,sy)*(1-Math.abs(s/6-0.5)*0.4);
@@ -823,8 +851,7 @@ function drawStadiumScene(){
   for(let h=1;h<=6;h++){
     const hy=gh*(h/6);
     const lFront=proj(-gw,hy,gz),rFront=proj(gw,hy,gz);
-    ctx.beginPath();
-    ctx.moveTo(lFront.x,lFront.y);
+    ctx.beginPath();ctx.moveTo(lFront.x,lFront.y);
     for(let i=0;i<=18;i++){
       const wx=-gw+gw*2*(i/18);
       const bulge=getNetBulge(wx,hy);
@@ -838,14 +865,114 @@ function drawStadiumScene(){
   ctx.strokeStyle='#ffffff';ctx.lineWidth=6.5;ctx.lineJoin='round';
   ctx.beginPath();ctx.moveTo(gFL2.x,gFL2.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gFR2.x,gFR2.y);ctx.stroke();
 }
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 7 ] ================== */
-/* ===================================================================== */
-/* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 8 З 8 ] =================== */
-/* ===================================================================== */
+
+function drawBehindGoalReplay(fr){
+  const horY=projBehind(0,0,-14).y;
+  const sky=ctx.createLinearGradient(0,0,0,horY);
+  sky.addColorStop(0,'#09111e');sky.addColorStop(1,'#1e375a');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,horY);
+
+  ctx.fillStyle='#0d1726';
+  ctx.fillRect(0,horY-H*0.18,W,H*0.18);
+  for(let r=0;r<4;r++){
+    ctx.fillStyle=r%2===0?'rgba(255,255,255,0.08)':'rgba(112,161,255,0.12)';
+    for(let x=10;x<W-10;x+=12){
+      ctx.fillRect(x,horY-12-r*10,5,6);
+    }
+  }
+
+  ctx.fillStyle='#246124';ctx.fillRect(0,horY,W,H-horY);
+  for(let z=14;z>-14;z-=1.8){
+    const y1=projBehind(0,0,z).y,y2=projBehind(0,0,z-1.8).y;
+    ctx.fillStyle=(Math.floor((z+14)*10)%2===0)?'#2d7a2d':'#388e3c';
+    ctx.fillRect(0,Math.min(y1,y2),W,Math.abs(y1-y2)+1);
+  }
+
+  ctx.strokeStyle='rgba(255,255,255,0.88)';ctx.lineWidth=2.5;
+  const pBL=projBehind(-9.5,0,10.5),pFL=projBehind(-9.5,0,2.8),pFR=projBehind(9.5,0,2.8),pBR=projBehind(9.5,0,10.5);
+  ctx.beginPath();ctx.moveTo(pBL.x,pBL.y);ctx.lineTo(pFL.x,pFL.y);ctx.lineTo(pFR.x,pFR.y);ctx.lineTo(pBR.x,pBR.y);ctx.stroke();
+  const cFL=projBehind(-12.5,0,10.5),cFR=projBehind(12.5,0,10.5);
+  ctx.beginPath();ctx.moveTo(cFL.x,cFL.y);ctx.lineTo(cFR.x,cFR.y);ctx.stroke();
+
+  const spot=projBehind(0,0,0);
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(spot.x,spot.y,0.24*spot.s,0.12*spot.s,0,0,Math.PI*2);ctx.fill();
+
+  const oppClub=getCurOpponent();
+  const myJersey=getItem(p.ej),myShorts=getItem(p.ep),myShoes=getItem(p.es);
+
+  const kp=projBehind(fr.kx,0,fr.kz);
+  ctx.fillStyle='rgba(0,0,0,0.4)';ctx.beginPath();ctx.ellipse(kp.x,kp.y,0.5*kp.s,0.2*kp.s,0,0,Math.PI*2);ctx.fill();
+  const kCol=lastWasPlayerShoot?myJersey.col:oppClub.c;
+  const kDark=lastWasPlayerShoot?(myJersey.dark||'#090d14'):(oppClub.dark||'#1e272e');
+  const kTrim=lastWasPlayerShoot?(myJersey.trim||'#ffffff'):'#ffffff';
+  const kSh=lastWasPlayerShoot?myShorts.col:'#1e272e';
+  const kShDark=lastWasPlayerShoot?(myShorts.dark||'#0b0f14'):'#0b0f14';
+  const kBoot=lastWasPlayerShoot?myShoes.col:'#14181d';
+  const kBootAc=lastWasPlayerShoot?(myShoes.ac||'#1dd1a1'):'#ffffff';
+  drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kCol,kDark,kTrim,kSh,kShDark,kBoot,kBootAc,null,fr.kPose*0.18,fr.kRun?fr.anim*3.2:0,false,false);
+
+  const gz=10.5;
+  const gp=projBehind(fr.gx,fr.gy,gz-0.1),gSh=projBehind(fr.gx,0,gz-0.1);
+  ctx.fillStyle='rgba(0,0,0,0.45)';ctx.beginPath();ctx.ellipse(gSh.x,gSh.y,0.48*gSh.s*(1+Math.abs(fr.gdive)*0.45),0.18*gSh.s,0,0,Math.PI*2);ctx.fill();
+  const gkJersey=lastWasPlayerShoot?oppClub.c:'#f39c12';
+  const gkDark=lastWasPlayerShoot?(oppClub.dark||'#1e272e'):'#b36b00';
+  drawRealisticPlayer(gp.x,gp.y,gp.s*0.033,gkJersey,gkDark,'#ffffff','#1e272e','#0b0f14','#14181d','#ffffff',getItem(p.ek).col,-fr.gdive*0.95,0,true,fr.gState==='stand');
+
+  const bSh=projBehind(fr.bx,0,fr.bz);
+  ctx.fillStyle='rgba(0,0,0,0.45)';ctx.beginPath();ctx.ellipse(bSh.x,bSh.y,0.25*bSh.s,0.12*bSh.s,0,0,Math.PI*2);ctx.fill();
+  const bp=projBehind(fr.bx,fr.by,fr.bz),rad=Math.max(5,0.24*bp.s),bCol=getItem(p.eb).col;
+  const bGrad=ctx.createRadialGradient(bp.x-rad*0.3,bp.y-rad*0.3,rad*0.1,bp.x,bp.y,rad);
+  bGrad.addColorStop(0,'#ffffff');bGrad.addColorStop(0.55,bCol);bGrad.addColorStop(1,'#1e272e');
+  ctx.fillStyle=bGrad;ctx.beginPath();ctx.arc(bp.x,bp.y,rad,0,Math.PI*2);ctx.fill();
+
+  const gw=4.6,gh=3.05,gd=1.8;
+  const gFL=projBehind(-gw,0,gz),gTL=projBehind(-gw,gh,gz),gTR=projBehind(gw,gh,gz),gFR=projBehind(gw,0,gz);
+  ctx.strokeStyle='#ffffff';ctx.lineWidth=7.5;ctx.lineJoin='round';
+  ctx.beginPath();ctx.moveTo(gFL.x,gFL.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gFR.x,gFR.y);ctx.stroke();
+
+  ctx.strokeStyle='rgba(255,255,255,0.52)';ctx.lineWidth=1.35;
+  for(let i=0;i<=18;i++){
+    const t=i/18,wx=-gw+gw*2*t;
+    const topFront=projBehind(wx,gh,gz);
+    ctx.beginPath();ctx.moveTo(topFront.x,topFront.y);
+    for(let s=0;s<=6;s++){
+      const sy=gh*(1-s/6);
+      const bulge=getNetBulge(wx,sy,fr.nw)*(1-Math.abs(s/6-0.5)*0.4);
+      const pt=projBehind(wx,sy*0.86,gz+gd+bulge);
+      ctx.lineTo(pt.x,pt.y);
+    }
+    ctx.stroke();
+  }
+  for(let h=1;h<=6;h++){
+    const hy=gh*(h/6);
+    const lFront=projBehind(-gw,hy,gz),rFront=projBehind(gw,hy,gz);
+    ctx.beginPath();ctx.moveTo(lFront.x,lFront.y);
+    for(let i=0;i<=18;i++){
+      const wx=-gw+gw*2*(i/18);
+      const bulge=getNetBulge(wx,hy,fr.nw);
+      const pt=projBehind(wx,hy*0.86,gz+gd+bulge);
+      ctx.lineTo(pt.x,pt.y);
+    }
+    ctx.lineTo(rFront.x,rFront.y);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.fillRect(0,0,W,26);
+  ctx.fillRect(0,H-26,W,26);
+}
 function draw3D(){
   tAnim+=0.07;
   ctx.clearRect(0,0,W,H);
+
+  if(replayMode && replayFrames.length>0){
+    const fr=replayFrames[Math.floor(replayIdx)];
+    drawBehindGoalReplay(fr);
+    replayIdx+=0.32;
+    if(replayIdx>=replayFrames.length)replayIdx=0;
+    requestAnimationFrame(draw3D);
+    return;
+  }
 
   drawStadiumScene();
 
@@ -907,6 +1034,16 @@ function draw3D(){
 
   drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kCol,kDark,kTrim,kSh,kShDark,kBoot,kBootAc,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true,false);
 
+  if(isRecording){
+    replayFrames.push({
+      bx:ball.x,by:ball.y,bz:ball.z,
+      gx:gk.x,gy:gk.y,gdive:gk.dive,gState:gk.state,
+      kx:kicker.x,kz:kicker.z,kRun:kicker.running,kPose:kicker.kickPose,
+      anim:tAnim,
+      nw:{amp:netWave.amp,phase:netWave.phase,hitX:netWave.hitX,hitY:netWave.hitY}
+    });
+  }
+
   requestAnimationFrame(draw3D);
 }
 
@@ -914,5 +1051,3 @@ rsz3D();updUI();renderCtrl();draw3D();
 </script>
 </body>
 </html>
-<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 8 ] ================== -->
-
