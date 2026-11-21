@@ -60,8 +60,8 @@ const BIN_ID='6b01a76bffd5d16053d39022',API_KEY='$2a$10$FfzYgApncFFRJpoFkrYgyOZH
 const CLUBS=[
   {id:'shakhtar',n:'🇺🇦 Шахтар',str:82,col:'#fa8231'},{id:'dynamo',n:'🇺🇦 Динамо Київ',str:80,col:'#3867d6'},
   {id:'real',n:'🇪🇸 Реал Мадрид',str:95,col:'#f5f6fa'},{id:'barca',n:'🇪🇸 Барселона',str:92,col:'#eb4d4b'},
-  {id:'mancity',n:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Ман Сіті',str:94,col:'#00d2ff'},{id:'arsenal',n:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Арсенал',str:90,col:'#eb4d4b'},
-  {id:'liverpool',n:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Ліверпуль',str:91,col:'#b33939'},{id:'bayern',n:'🇩🇪 Баварія',str:93,col:'#EA2027'},
+  {id:'mancity',n:'🇬🇧 Ман Сіті',str:94,col:'#00d2ff'},{id:'arsenal',n:'🇬🇧 Арсенал',str:90,col:'#eb4d4b'},
+  {id:'liverpool',n:'🇬🇧 Ліверпуль',str:91,col:'#b33939'},{id:'bayern',n:'🇩🇪 Баварія',str:93,col:'#EA2027'},
   {id:'dortmund',n:'🇩🇪 Боруссія Д',str:87,col:'#feca57'},{id:'psg',n:'🇫🇷 ПСЖ',str:91,col:'#273c75'},
   {id:'inter',n:'🇮🇹 Інтер Мілан',str:90,col:'#0652DD'},{id:'milan',n:'🇮🇹 Мілан',str:88,col:'#eb4d4b'},
   {id:'juve',n:'🇮🇹 Ювентус',str:87,col:'#dfe4ea'},{id:'atletico',n:'🇪🇸 Атлетіко',str:89,col:'#eb4d4b'},
@@ -109,24 +109,24 @@ function startNewUCL(myClubId){
     ...pool.slice(0,3).map(c=>({id:c.id,n:c.n,str:c.str,col:c.col,me:false,g:0,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0}))
   ];
 
-  // 6 турів колового турніру для групи з 4 команд
+  // 6 турів колового турніру для групи з 4 команд (0 — гравець, 1..3 — суперники)
   const rounds=[
-    [[0,1],[2,3]],
-    [[2,0],[1,3]],
-    [[0,3],[1,2]],
-    [[1,0],[3,2]],
-    [[0,2],[3,1]],
-    [[3,0],[2,1]]
+    [,],
+    [,],
+    [,],
+    [,],
+    [,],
+    [,]
   ];
 
   p.ucl={
-    stage:'group', // 'group' | 'po' | 'done'
+    stage:'group',
     round:0,
     myClub:myName,
     teams:grpA,
     rounds:rounds,
     results:[],
-    poStage:0, // 0: 1/8, 1: 1/4, 2: 1/2, 3: Фінал
+    poStage:0,
     poPool:pool.slice(3,11),
     poOpp:null,
     poHistory:[],
@@ -178,7 +178,6 @@ function processMyMatchResult(myG,oppG){
     u.results.unshift({r:u.round+1,lines:log});
     u.round++;
 
-    // Нагорода за матч групи
     const bonusCn=myG>oppG?35:(myG===oppG?18:10);
     p.cn+=bonusCn;p.pt+=myG>oppG?30:15;
     if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
@@ -188,7 +187,7 @@ function processMyMatchResult(myG,oppG){
       const myRank=sorted.findIndex(t=>t.me);
       if(myRank<=1){
         u.stage='po';u.poStage=0;
-        u.poOpp=u.poPool[0]||CLUBS[2];
+        u.poOpp=u.poPool||CLUBS;
         p.cn+=60;
       }else{
         u.stage='done';u.champion=false;
@@ -197,7 +196,7 @@ function processMyMatchResult(myG,oppG){
   }else if(u.stage==='po'){
     const stages=['1/8 фіналу','1/4 фіналу','1/2 фіналу','ФІНАЛ ЛЧ'];
     let win=myG>oppG;
-    if(myG===oppG)win=Math.random()>0.45; // серія пенальті до перемоги
+    if(myG===oppG)win=Math.random()>0.45;
     const finalMy=win&&myG===oppG?myG+1:myG;
     const finalOpp=!win&&myG===oppG?oppG+1:oppG;
 
@@ -229,7 +228,7 @@ function getNextOpponent(){
   if(!u)return null;
   if(u.stage==='group'&&u.round<6){
     const pair=u.rounds[u.round].find(([i1,i2])=>u.teams[i1].me||u.teams[i2].me);
-    const oppIdx=u.teams[pair[0]].me?pair[1]:pair[0];
+    const oppIdx=u.teams[pair].me?pair:pair;
     return u.teams[oppIdx];
   }
   if(u.stage==='po')return u.poOpp;
