@@ -64,7 +64,8 @@ try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand();}catch(e){}
 
 const BIN_ID  = '6b01a76bffd5d16053d39022';
 const API_KEY = '$2a$10$FfzYgApncFFRJpoFkrYgyOZHPwjviuwu1N64Suvm4DneHJP..xKna';
-const API_URL = `https://jsonbin.io{BIN_ID}`;
+const API_URL = 'https://jsonbin.io' + BIN_ID;
+
 
 let p={pt:0,lv:1,cp:0,cn:20,nick:'',uid:''};
 try{
