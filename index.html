@@ -269,29 +269,95 @@ let juggleTimer=0,juggleFoot=1,jBallY=0,jBallVy=0,jBallX=18,jBallRot=0,combo=0;
 let autoJuggles=0,isHeadMode=false,headBounce=0;
 let sparks=[];
 
-let lastActTime=Date.now(),speechText='',speechTimer=0,speechIdx=0;
-const IDLE_PHRASES=[
-  'Ти сьогодні грати будеш?',
-  'Я вже розім\'явся, пішли бити пенальті!',
-  'Кубок Ліги Чемпіонів сам себе не виграє!',
-  'Нумо в матч, воротар вже чекає!',
-  'Натисни на мене, давай почеканимо!'
-];
+let audioCtx=null;
+function initAudio(){
+  if(!audioCtx){
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(AC)audioCtx=new AC();
+  }
+  if(audioCtx && audioCtx.state==='suspended')audioCtx.resume();
+}
 
-function speakPhrase(txt){
-  if(!p.cfg.snd || !('speechSynthesis' in window))return;
+function playKickSound(isHead){
+  if(!p.cfg.snd)return;
   try{
-    window.speechSynthesis.cancel();
-    const u=new SpeechSynthesisUtterance(txt);
-    const voices=window.speechSynthesis.getVoices();
-    const ukVoice=voices.find(v=>v.lang&&v.lang.toLowerCase().includes('uk'))
-      || voices.find(v=>v.lang&&v.lang.toLowerCase().includes('ru'));
-    if(ukVoice)u.voice=ukVoice;
-    u.lang='uk-UA';
-    u.rate=1.04;
-    u.pitch=0.95;
-    window.speechSynthesis.speak(u);
+    initAudio();
+    if(!audioCtx)return;
+    const now=audioCtx.currentTime;
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(isHead?190:135,now);
+    osc.frequency.exponentialRampToValueAtTime(isHead?65:42,now+0.11);
+    gain.gain.setValueAtTime(0.28,now);
+    gain.gain.exponentialRampToValueAtTime(0.001,now+0.12);
+    osc.connect(gain);gain.connect(audioCtx.destination);
+    osc.start(now);osc.stop(now+0.12);
   }catch(e){}
+}
+
+function playVoiceBeep(txt){
+  if(!p.cfg.snd)return;
+  try{
+    initAudio();
+    if(!audioCtx)return;
+    const now=audioCtx.currentTime;
+    const syllables=Math.min(10,Math.max(4,Math.floor(txt.length/3)));
+    for(let i=0;i<syllables;i++){
+      const t0=now+i*0.095;
+      const osc=audioCtx.createOscillator();
+      const gain=audioCtx.createGain();
+      osc.type='triangle';
+      const baseF=165+Math.sin(i*1.7)*28+(i===syllables-1?22:0);
+      osc.frequency.setValueAtTime(baseF,t0);
+      osc.frequency.linearRampToValueAtTime(baseF*1.12,t0+0.04);
+      osc.frequency.linearRampToValueAtTime(baseF*0.88,t0+0.08);
+      gain.gain.setValueAtTime(0.001,t0);
+      gain.gain.linearRampToValueAtTime(0.16,t0+0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001,t0+0.085);
+      osc.connect(gain);gain.connect(audioCtx.destination);
+      osc.start(t0);osc.stop(t0+0.09);
+    }
+  }catch(e){}
+}
+
+let lastActTime=Date.now(),speechText='',speechTimer=0,lastPhraseIdx=-1;
+const IDLE_PHRASES=[
+  'Ти сьогодні грати будеш? ⚽',
+  'Я вже розім\'явся, пішли бити пенальті!',
+  'Кубок Ліги Чемпіонів сам себе не виграє! 🏆',
+  'Нумо в матч, воротар вже тремтить!',
+  'Тапни по мені — покажу майстер-клас! 🔥',
+  'Монети самі в кишеню не впадуть, гайда на поле! 💰',
+  'Заціни мої бутси, пора забити пару дев\'яток!',
+  'Трибуни гудуть, а ми стоїмо... Погнали! 🏟️',
+  'Хтось уже обганяє нас у рейтингу, час відповісти! 📊',
+  'У мене удар як гармата, перевіримо? 🚀',
+  'Може заглянемо в гардероб за новою формою? 👕',
+  'Сьогодні ідеальна погода для хет-трику!',
+  'Воротар думає, що вгадає кут. Ага, зараз! 😎',
+  'Не забудь забрати щоденний бонус! 🎁',
+  'Давай серію на 20 набивань, слабо? ⚡'
+];
+function speakPhrase(txt){
+  if(!p.cfg.snd)return;
+  let ttsStarted=false;
+  try{
+    if('speechSynthesis' in window){
+      window.speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(txt);
+      const voices=window.speechSynthesis.getVoices();
+      const ukVoice=voices.find(v=>v.lang&&v.lang.toLowerCase().includes('uk'))
+        || voices.find(v=>v.lang&&v.lang.toLowerCase().includes('ru'));
+      if(ukVoice)u.voice=ukVoice;
+      u.lang='uk-UA';
+      u.rate=1.04;
+      u.pitch=0.95;
+      u.onstart=()=>{ttsStarted=true;};
+      window.speechSynthesis.speak(u);
+    }
+  }catch(e){}
+  setTimeout(()=>{if(!ttsStarted)playVoiceBeep(txt);},120);
 }
 
 function resetIdle(){
@@ -318,6 +384,7 @@ function triggerHit(){
 
   if(combo>=5){
     isHeadMode=true;
+    playKickSound(true);
     juggleTimer=1.0;
     headBounce=1.0;
     jBallX=0;
@@ -327,6 +394,7 @@ function triggerHit(){
     spawnSparks(W*0.5,H*0.32,'#00d2ff',7);
   }else{
     isHeadMode=false;
+    playKickSound(false);
     juggleTimer=1.0;
     juggleFoot*=-1;
     jBallX=juggleFoot*14;
@@ -344,6 +412,7 @@ function triggerHit(){
   }
 }
 stage.addEventListener('pointerdown',e=>{
+  initAudio();
   resetIdle();
   try{if('speechSynthesis' in window)window.speechSynthesis.getVoices();}catch(e){}
   isDragging=true;lastX=downX=e.clientX;downY=e.clientY;downT=Date.now();spinLeft=0;
@@ -770,8 +839,10 @@ function loop(){
   }
 
   if(!isDragging && juggleTimer<=0 && (Date.now()-lastActTime)>=20000){
-    speechText=IDLE_PHRASES.at(speechIdx%IDLE_PHRASES.length);
-    speechIdx++;
+    let idx=Math.floor(Math.random()*IDLE_PHRASES.length);
+    if(idx===lastPhraseIdx)idx=(idx+1)%IDLE_PHRASES.length;
+    lastPhraseIdx=idx;
+    speechText=IDLE_PHRASES.at(idx);
     speechTimer=6.5;
     lastActTime=Date.now();
     speakPhrase(speechText);
