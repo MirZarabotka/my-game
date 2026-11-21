@@ -232,88 +232,108 @@ function drawStadiumBackground(){
 }
 /* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 3 ] ================== */
 /* ===================================================================== */
+/* ===================================================================== */
 /* ================== [ INDEX.HTML : ЧАСТИНА 4 З 5 ] =================== */
 /* ===================================================================== */
-function drawSmoothLimb(x1,y1,x2,y2,r1,r2,col){
-  const ang=Math.atan2(y2-y1,x2-x1);
-  const nx=-Math.sin(ang),ny=Math.cos(ang);
+function drawCapsule(x1,y1,x2,y2,r1,r2,col){
+  const dx=x2-x1,dy=y2-y1;
+  const ang=Math.atan2(dy,dx);
+  const perp=ang+Math.PI/2;
   ctx.fillStyle=col;
   ctx.beginPath();
-  ctx.moveTo(x1+nx*r1,y1+ny*r1);
-  ctx.lineTo(x2+nx*r2,y2+ny*r2);
-  ctx.arc(x2,y2,r2,ang-Math.PI/2,ang+Math.PI/2);
-  ctx.lineTo(x1-nx*r1,y1-ny*r1);
-  ctx.arc(x1,y1,r1,ang+Math.PI/2,ang-Math.PI/2);
+  ctx.arc(x1,y1,r1,perp,perp+Math.PI);
+  ctx.arc(x2,y2,r2,perp+Math.PI,perp);
   ctx.closePath();
   ctx.fill();
 }
 
 function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem){
-  const skin='#e2b183',skinShade='#bd8552';
+  const skin='#e4b487',skinShade='#be8450',skinLight='#f6d3af';
   const wScale=Math.max(0.42,Math.abs(cosR));
   const depthShift=sinR*6*sc;
 
-  // 1. Ноги (шорти, коліна, литки в гетрах, бутси)
+  // 1. АТЛЕТИЧНІ НОГИ (суцільні шорти, плавні коліна, м'язисті литки, бутси)
   [-1,1].forEach(side=>{
     const sgn=side*(cosR>=0?1:-1);
-    const hipX=sgn*6.8*sc*wScale+depthShift*0.2,hipY=-56*sc;
-    const kneeX=sgn*7.6*sc*wScale+depthShift*0.4,kneeY=-30*sc;
-    const ankleX=sgn*7.4*sc*wScale+depthShift*0.55,ankleY=-4.5*sc;
+    const hipX=sgn*7.2*sc*wScale+depthShift*0.2,hipY=-56*sc;
+    const kneeX=sgn*7.8*sc*wScale+depthShift*0.4,kneeY=-31*sc;
+    const ankleX=sgn*7.6*sc*wScale+depthShift*0.55,ankleY=-5*sc;
 
-    const shGradLeg=ctx.createLinearGradient(hipX-8*sc,hipY,hipX+8*sc,hipY);
-    shGradLeg.addColorStop(0,pItem.col);
-    shGradLeg.addColorStop(0.85,pItem.col);
-    shGradLeg.addColorStop(1,pItem.dark||'#1e272e');
-    drawSmoothLimb(hipX,hipY,kneeX,kneeY+1*sc,8.2*sc,6.6*sc,shGradLeg);
+    // Шорти (об'ємний суцільний крій)
+    const shGrad=ctx.createLinearGradient(hipX-9*sc,hipY,hipX+9*sc,hipY);
+    shGrad.addColorStop(0,pItem.col);
+    shGrad.addColorStop(0.82,pItem.col);
+    shGrad.addColorStop(1,pItem.dark||'#1e272e');
+    drawCapsule(hipX,hipY,kneeX,kneeY,8.5*sc,6.8*sc,shGrad);
 
+    // Окантовка низу шортів
     ctx.strokeStyle='rgba(255,255,255,0.28)';ctx.lineWidth=1.2*sc;
-    ctx.beginPath();ctx.moveTo(kneeX-6.2*sc,kneeY+0.5*sc);ctx.lineTo(kneeX+6.2*sc,kneeY+0.5*sc);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(kneeX-6.5*sc,kneeY+1*sc);ctx.lineTo(kneeX+6.5*sc,kneeY+1*sc);ctx.stroke();
 
-    drawSmoothLimb(kneeX,kneeY+1*sc,kneeX,kneeY+6*sc,4.6*sc,4.3*sc,skin);
-    ctx.fillStyle=skinShade;ctx.beginPath();ctx.arc(kneeX+sgn*1.2*sc,kneeY+3.5*sc,2.4*sc,0,Math.PI);ctx.fill();
+    // Коліно (плавна шкіра з м'якою тінню)
+    drawCapsule(kneeX,kneeY,kneeX,kneeY+6.5*sc,5.0*sc,4.6*sc,skin);
+    ctx.fillStyle=skinShade;ctx.beginPath();ctx.arc(kneeX+sgn*1.2*sc,kneeY+3.5*sc,2.2*sc,0,Math.PI);ctx.fill();
 
-    const calfX=(kneeX+ankleX)*0.5-sinR*1.2*sc,calfY=(kneeY+ankleY)*0.5-1*sc;
-    drawSmoothLimb(kneeX,kneeY+5*sc,calfX,calfY,4.7*sc,5.3*sc,jItem.col);
-    drawSmoothLimb(calfX,calfY,ankleX,ankleY,5.1*sc,3.2*sc,jItem.dark||jItem.col);
+    // Гетри з плавним анатомічним вигином литки
+    const calfX=(kneeX+ankleX)*0.5-sinR*1.2*sc,calfY=(kneeY+ankleY)*0.5;
+    drawCapsule(kneeX,kneeY+6*sc,calfX,calfY,4.8*sc,5.4*sc,jItem.col);
+    drawCapsule(calfX,calfY,ankleX,ankleY,5.3*sc,3.4*sc,jItem.dark||jItem.col);
 
-    ctx.fillStyle=jItem.trim||'#ffffff';ctx.fillRect(kneeX-4.6*sc,kneeY+5*sc,9.2*sc,2.2*sc);
+    // Манжет гетрів
+    ctx.fillStyle=jItem.trim||'#ffffff';
+    ctx.fillRect(kneeX-4.8*sc,kneeY+6*sc,9.6*sc,2.4*sc);
 
+    // Реалістична бутса
     const bootDir=sinR*8*sc+(cosR>=0?sgn*2.2*sc:0);
-    ctx.fillStyle='#0d1117';ctx.fillRect(ankleX-4.5*sc+bootDir*0.35,ankleY+2.8*sc,10*sc,1.6*sc);
+    ctx.fillStyle='#0d1117';
+    ctx.beginPath();ctx.ellipse(ankleX+bootDir*0.4,ankleY+3.2*sc,8.4*sc,2.2*sc,0,0,Math.PI*2);ctx.fill();
 
-    ctx.fillStyle=sItem.col;ctx.beginPath();
-    ctx.ellipse(ankleX+bootDir*0.45,ankleY+1.4*sc,8.2*sc,3.4*sc,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=sItem.col;
+    ctx.beginPath();ctx.ellipse(ankleX+bootDir*0.45,ankleY+1.4*sc,8.4*sc,3.6*sc,0,0,Math.PI*2);ctx.fill();
 
-    ctx.fillStyle=sItem.ac||'#1dd1a1';ctx.beginPath();
-    ctx.ellipse(ankleX+bootDir*0.5,ankleY+1.0*sc,4.0*sc,1.3*sc,0.15,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=sItem.ac||'#1dd1a1';
+    ctx.beginPath();ctx.ellipse(ankleX+bootDir*0.5,ankleY+0.9*sc,4.2*sc,1.4*sc,0.15,0,Math.PI*2);ctx.fill();
   });
 
-  // 2. Атлетичний торс у стилі FIFA
-  const shW=(18.5*wScale+5.2)*sc,chestW=(16.5*wScale+4.8)*sc,waistW=(12.2*wScale+4.2)*sc;
+  // 2. АТЛЕТИЧНИЙ ТОРС У СТИЛІ FIFA
+  const shW=(18.5*wScale+5.2)*sc,chestW=(16.5*wScale+4.8)*sc,waistW=(12.4*wScale+4.2)*sc;
   const torsoGrad=ctx.createLinearGradient(-shW,-104*sc,shW,-54*sc);
-  torsoGrad.addColorStop(0,jItem.col);torsoGrad.addColorStop(0.65,jItem.col);torsoGrad.addColorStop(1,jItem.dark||'#090d14');
+  torsoGrad.addColorStop(0,jItem.col);
+  torsoGrad.addColorStop(0.65,jItem.col);
+  torsoGrad.addColorStop(1,jItem.dark||'#090d14');
 
-  ctx.fillStyle=torsoGrad;ctx.beginPath();
-  ctx.moveTo(-shW,-99*sc+breath);
+  ctx.fillStyle=torsoGrad;
+  ctx.beginPath();
+  ctx.moveTo(-shW,-98*sc+breath);
   ctx.quadraticCurveTo(-shW*0.5,-105*sc+breath,0,-105*sc+breath);
-  ctx.quadraticCurveTo(shW*0.5,-105*sc+breath,shW,-99*sc+breath);
-  ctx.lineTo(chestW,-80*sc+breath*0.5);ctx.lineTo(waistW,-55*sc);
-  ctx.quadraticCurveTo(0,-52*sc,-waistW,-55*sc);ctx.lineTo(-chestW,-80*sc+breath*0.5);
-  ctx.closePath();ctx.fill();
+  ctx.quadraticCurveTo(shW*0.5,-105*sc+breath,shW,-98*sc+breath);
+  ctx.lineTo(chestW,-80*sc+breath*0.5);
+  ctx.lineTo(waistW,-55*sc);
+  ctx.quadraticCurveTo(0,-52*sc,-waistW,-55*sc);
+  ctx.lineTo(-chestW,-80*sc+breath*0.5);
+  ctx.closePath();
+  ctx.fill();
 
-  ctx.strokeStyle='rgba(0,0,0,0.14)';ctx.lineWidth=1.1*sc;ctx.beginPath();
+  // Складки тканини на футболці
+  ctx.strokeStyle='rgba(0,0,0,0.14)';ctx.lineWidth=1.1*sc;
+  ctx.beginPath();
   ctx.moveTo(-waistW*0.6,-62*sc);ctx.quadraticCurveTo(0,-66*sc,waistW*0.5,-60*sc);
   ctx.moveTo(-chestW*0.5,-75*sc);ctx.quadraticCurveTo(depthShift*0.3,-78*sc,chestW*0.4,-73*sc);
   ctx.stroke();
 
-  ctx.fillStyle=jItem.trim||'#ffffff';ctx.beginPath();
-  ctx.moveTo(depthShift*0.4-6.2*sc,-103*sc+breath);ctx.lineTo(depthShift*0.4,-96.5*sc+breath);
+  // Спортивний комірець
+  ctx.fillStyle=jItem.trim||'#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(depthShift*0.4-6.2*sc,-103*sc+breath);
+  ctx.lineTo(depthShift*0.4,-96.5*sc+breath);
   ctx.lineTo(depthShift*0.4+6.2*sc,-103*sc+breath);
   ctx.quadraticCurveTo(depthShift*0.4,-105*sc+breath,depthShift*0.4-6.2*sc,-103*sc+breath);
   ctx.fill();
 
+  // Номер на спині або емблема та спонсор спереду
   if(isBack){
-    ctx.fillStyle=p.numCol||'#ffffff';ctx.font=`900 ${Math.round(18*sc)}px sans-serif`;ctx.textAlign='center';
+    ctx.fillStyle=p.numCol||'#ffffff';
+    ctx.font=`900 ${Math.round(18*sc)}px sans-serif`;ctx.textAlign='center';
     ctx.fillText(p.num||'10',-depthShift*0.45,-72*sc+breath);
   }else{
     const crestX=depthShift*0.5+6.5*sc*wScale,crestY=-89*sc+breath;
@@ -322,28 +342,32 @@ function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem){
     ctx.lineTo(crestX+2.4*sc,crestY+1.5*sc);ctx.lineTo(crestX,crestY+3.8*sc);ctx.lineTo(crestX-2.4*sc,crestY+1.5*sc);
     ctx.closePath();ctx.fill();ctx.strokeStyle='#1e272e';ctx.lineWidth=0.8*sc;ctx.stroke();
 
-    ctx.fillStyle=jItem.trim||'#ffffff';ctx.globalAlpha=0.82;
+    ctx.fillStyle=jItem.trim||'#ffffff';ctx.globalAlpha=0.85;
     ctx.font=`bold ${Math.max(5,5.5*sc)}px sans-serif`;ctx.textAlign='center';
     ctx.fillText('CHAMPIONS',depthShift*0.45,-77*sc+breath);ctx.globalAlpha=1;
   }
 
-  // 3. Плавні, природні руки
+  // 3. ПЛАВНІ, ОБ'ЄМНІ РУКИ (без жодних перекручувань!)
   [-1,1].forEach(side=>{
     const sgn=side*(cosR>=0?1:-1);
     const shX=sgn*(shW-2.5*sc),shY=-97*sc+breath;
-    const slvX=sgn*(shW+2.8*sc)+depthShift*0.2,slvY=-85*sc+breath*0.7;
-    const elX=sgn*(shW+4.2*sc)+depthShift*0.35,elY=-75*sc+breath*0.4;
-    const wrX=sgn*(shW+2.6*sc)+depthShift*0.5,wrY=-57*sc;
+    const slvX=sgn*(shW+3.0*sc)+depthShift*0.2,slvY=-85*sc+breath*0.7;
+    const elX=sgn*(shW+4.2*sc)+depthShift*0.35,elY=-74*sc+breath*0.4;
+    const wrX=sgn*(shW+2.8*sc)+depthShift*0.5,wrY=-57*sc;
 
-    drawSmoothLimb(shX,shY,slvX,slvY,6.4*sc,5.4*sc,jItem.col);
+    // Рукав футболки
+    drawCapsule(shX,shY,slvX,slvY,6.6*sc,5.5*sc,jItem.col);
+    // Окантовка манжети рукава
     ctx.strokeStyle=jItem.trim||'#ffffff';ctx.lineWidth=1.5*sc;
-    ctx.beginPath();ctx.moveTo(slvX-4.5*sc,slvY);ctx.lineTo(slvX+4.5*sc,slvY);ctx.stroke();
+    ctx.beginPath();ctx.arc(slvX,slvY,5.4*sc,0.2,Math.PI-0.2);ctx.stroke();
 
-    drawSmoothLimb(slvX,slvY,elX,elY,4.6*sc,4.1*sc,skin);
-    drawSmoothLimb(elX,elY,wrX,wrY,4.0*sc,2.8*sc,skinShade);
+    // Плавний біцепс і передпліччя
+    drawCapsule(slvX,slvY,elX,elY,4.8*sc,4.2*sc,skin);
+    drawCapsule(elX,elY,wrX,wrY,4.1*sc,2.9*sc,skinShade);
 
-    ctx.fillStyle=kItem.col;ctx.beginPath();
-    ctx.ellipse(wrX,wrY+1.5*sc,3.6*sc,4.6*sc,sgn*-0.1,0,Math.PI*2);ctx.fill();
+    // Кисть або рукавиця
+    ctx.fillStyle=kItem.col;
+    ctx.beginPath();ctx.ellipse(wrX,wrY+1.5*sc,3.6*sc,4.5*sc,sgn*-0.1,0,Math.PI*2);ctx.fill();
   });
 }
 /* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4 ] ================== */
@@ -351,15 +375,22 @@ function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem){
 /* ================== [ INDEX.HTML : ЧАСТИНА 5 З 5 ] =================== */
 /* ===================================================================== */
 function drawPlayerHead(sc,sinR,isBack,breath){
-  const skin='#e2b183',skinShade='#bd8552',skinLight='#f4cfa9';
+  const skin='#e4b487',skinShade='#be8450',skinLight='#f6d3af';
   const headX=sinR*6*sc*0.45;
 
-  drawSmoothLimb(headX,-102*sc+breath,headX,-112*sc+breath,4.8*sc,4.4*sc,skinShade);
+  // Плавна, анатомічна шия з тіньовим градієнтом
+  const neckGrad=ctx.createLinearGradient(headX-5*sc,-106*sc,headX+5*sc,-106*sc);
+  neckGrad.addColorStop(0,skinShade);
+  neckGrad.addColorStop(0.5,skin);
+  neckGrad.addColorStop(1,skinShade);
+  drawCapsule(headX,-102*sc+breath,headX,-113*sc+breath,5.0*sc,4.5*sc,neckGrad);
 
+  // Вуха
   ctx.fillStyle=skinShade;ctx.beginPath();
   ctx.ellipse(headX-8.8*sc,-120.5*sc+breath,1.7*sc,3.0*sc,0,0,Math.PI*2);
   ctx.ellipse(headX+8.8*sc,-120.5*sc+breath,1.7*sc,3.0*sc,0,0,Math.PI*2);ctx.fill();
 
+  // Реалістичний овал голови з вилицями і підборіддям
   const faceGrad=ctx.createRadialGradient(headX-2*sc,-123*sc+breath,2*sc,headX,-120*sc+breath,12*sc);
   faceGrad.addColorStop(0,skinLight);faceGrad.addColorStop(0.65,skin);faceGrad.addColorStop(1,skinShade);
   ctx.fillStyle=faceGrad;ctx.beginPath();
@@ -373,10 +404,12 @@ function drawPlayerHead(sc,sinR,isBack,breath){
   if(!isBack){
     const eyeOff=sinR*4.8*sc;
 
+    // Виразні брови
     ctx.fillStyle='#231710';ctx.beginPath();
     ctx.ellipse(headX+eyeOff-3.4*sc,-123.5*sc+breath,2.2*sc,0.55*sc,-0.08,0,Math.PI*2);
     ctx.ellipse(headX+eyeOff+3.4*sc,-123.5*sc+breath,2.2*sc,0.55*sc,0.08,0,Math.PI*2);ctx.fill();
 
+    // Очі
     ctx.fillStyle='#ffffff';ctx.beginPath();
     ctx.ellipse(headX+eyeOff-3.3*sc,-121.4*sc+breath,1.6*sc,0.95*sc,0,0,Math.PI*2);
     ctx.ellipse(headX+eyeOff+3.3*sc,-121.4*sc+breath,1.6*sc,0.95*sc,0,0,Math.PI*2);ctx.fill();
@@ -385,19 +418,23 @@ function drawPlayerHead(sc,sinR,isBack,breath){
     ctx.arc(headX+eyeOff-3.2*sc,-121.4*sc+breath,0.85*sc,0,Math.PI*2);
     ctx.arc(headX+eyeOff+3.2*sc,-121.4*sc+breath,0.85*sc,0,Math.PI*2);ctx.fill();
 
+    // Тінь носа
     ctx.strokeStyle=skinShade;ctx.lineWidth=1.1*sc;ctx.beginPath();
     ctx.moveTo(headX+eyeOff,-121.5*sc+breath);
     ctx.lineTo(headX+eyeOff+sinR*1.2*sc,-117.6*sc+breath);
     ctx.lineTo(headX+eyeOff+sinR*0.5*sc,-117.2*sc+breath);ctx.stroke();
 
+    // Спортивна щетина
     ctx.fillStyle='rgba(35,23,16,0.14)';ctx.beginPath();
     ctx.arc(headX+eyeOff*0.5,-114.5*sc+breath,6.2*sc,0.15,Math.PI-0.15);ctx.fill();
 
+    // Природні губи
     ctx.strokeStyle='#8d5524';ctx.lineWidth=1.2*sc;ctx.beginPath();
     ctx.moveTo(headX+eyeOff-2.2*sc,-114.4*sc+breath);
     ctx.quadraticCurveTo(headX+eyeOff,-113.6*sc+breath,headX+eyeOff+2.2*sc,-114.4*sc+breath);ctx.stroke();
   }
 
+  // Сучасна футбольна зачіска
   ctx.fillStyle='#191e26';ctx.beginPath();
   ctx.moveTo(headX-8.8*sc,-122*sc+breath);
   ctx.quadraticCurveTo(headX-9.5*sc,-132.5*sc+breath,headX,-133.5*sc+breath);
