@@ -31,7 +31,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 <body>
 <div class="tabs">
   <a href="index.html" class="tab" onclick="localStorage.removeItem('pc_play_ucl')">🏠 Головна (Гравець)</a>
-  <a href="turnir.html" class="tab ucl">🏆 Сітка Ліги Чемпіонів</a>
+  <a href="turnir.html" class="tab ucl" onclick="localStorage.removeItem('pc_play_ucl')">🏆 Сітка Ліги Чемпіонів</a>
 </div>
 <div class="box">
   <div class="row"><b style="color:#feca57">Рівень <span id="lv">1</span> • 🏆 ЛЧ: <span id="cp">0</span></b><b style="color:#feca57">💰 <span id="cn">20</span></b></div>
@@ -351,6 +351,7 @@ function recordGroupMatch(grp,m,gHome,gAway){
   m.sc=`${gHome}:${gAway}`;
   const tH=grp.teams.find(t=>t.id===m.home);
   const tA=grp.teams.find(t=>t.id===m.away);
+  if(!tH||!tA)return;
   tH.pl++;tA.pl++;
   tH.gf+=gHome;tH.ga+=gAway;
   tA.gf+=gAway;tA.ga+=gHome;
@@ -400,15 +401,17 @@ function simulateFullKO(u){
 
 function advanceUCL(pGoals,bGoals,won){
   const u=p.ucl;
+  if(!u)return;
 
   if(u.stage==='group'){
     const rIdx=u.gRnd;
     u.groups.forEach((grp)=>{
       const rObj=grp.schedule[rIdx];
+      if(!rObj)return;
       rObj.matches.forEach(m=>{
         const tH=grp.teams.find(t=>t.id===m.home);
         const tA=grp.teams.find(t=>t.id===m.away);
-        if(tH.isMe || tA.isMe){
+        if(tH && tA && (tH.isMe || tA.isMe)){
           const gHome=tH.isMe?pGoals:bGoals;
           const gAway=tA.isMe?pGoals:bGoals;
           recordGroupMatch(grp,m,gHome,gAway);
@@ -432,7 +435,7 @@ function advanceUCL(pGoals,bGoals,won){
       const s=sortGroupTeams(grp);
       firsts.push(s[0]);
       seconds.push(s[1]);
-      if(s[0].isMe || s[1].isMe) myQualified=true;
+      if((s[0] && s[0].isMe) || (s[1] && s[1].isMe)) myQualified=true;
     });
 
     const r16=[];
@@ -551,10 +554,12 @@ function checkSeries(){
 function nextMatch(won){
   const pGoals=pS.filter(x=>x===1).length,bGoals=bS.filter(x=>x===1).length;
   if(isUCLMode){
-    advanceUCL(pGoals,bGoals,won);
-    save();
+    try{
+      advanceUCL(pGoals,bGoals,won);
+      save();
+    }catch(e){}
     localStorage.removeItem('pc_play_ucl');
-    location.href='turnir.html';
+    window.location.href='turnir.html';
     return;
   }else if(won){
     freeOpp=CLUBS[Math.floor(Math.random()*CLUBS.length)];
