@@ -1,362 +1,174 @@
-<!-- ===================================================================== -->
-<!-- ================== [ INDEX.HTML : ЧАСТИНА 1 З 6 ] =================== -->
-<!-- ===================================================================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>3D Champions Penalty — Головна</title>
+<title>3D Champions Penalty — Рейтинг гравців</title>
 <script src="https://telegram.org"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
-.top-box{background:#131b26;border:1px solid #243347;border-radius:12px;padding:7px 12px;margin-bottom:6px;flex-shrink:0}
-.row{display:flex;justify-content:space-between;align-items:center}
-.bar{width:100%;height:5px;background:#1e2b3c;border-radius:4px;overflow:hidden;margin:4px 0}
-.fill{height:100%;background:#1dd1a1;transition:width .3s}
-.stage{flex:1;min-height:0;position:relative;border-radius:14px;overflow:hidden;border:2px solid #243347;margin-bottom:8px;background:#09111e;touch-action:none}
-#heroCanvas{width:100%;height:100%;display:block}
-.rank-btn{position:absolute;top:12px;left:12px;z-index:20;background:rgba(13,24,45,.92);border:1.5px solid #4b7bec;color:#feca57;padding:7px 12px;border-radius:12px;font-weight:bold;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;box-shadow:0 4px 12px rgba(0,0,0,.45)}
-.rank-btn:active{transform:scale(.95)}
-.act-badge{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.82);border:1px solid #3867d6;padding:5px 14px;border-radius:14px;font-size:11px;font-weight:bold;color:#70a1ff;pointer-events:none;white-space:nowrap}
-.hint-badge{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.82);border:1px solid rgba(255,255,255,.15);padding:4px 12px;border-radius:12px;font-size:10px;color:#dfe4ea;pointer-events:none;white-space:nowrap}
-.menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0}
-.mbtn{border:none;border-radius:13px;padding:12px 8px;font-weight:bold;font-size:13px;cursor:pointer;text-align:center;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-.mbtn:active{transform:scale(.97)}
-.mbtn.play{grid-column:span 2;background:linear-gradient(135deg,#1dd1a1,#10ac84);color:#000;font-size:15px;padding:13px}
-.mbtn.ucl{background:linear-gradient(135deg,#1e3799,#3867d6);color:#fff;border:1px solid #4b7bec}
-.mbtn.shop{background:#182230;color:#feca57;border:1px solid #3c4f66}
-.mbtn span{font-size:10px;font-weight:normal;opacity:.85}
+.box{background:#131b26;border:1px solid #243347;border-radius:12px;padding:9px 12px;margin-bottom:6px;flex-shrink:0}
+.row{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.inp{background:#09101c;border:1px solid #2f435e;color:#fff;padding:7px 10px;border-radius:8px;font-size:12px;flex:1;outline:none}
+.inp:focus{border-color:#1dd1a1}
+.btn{background:#1e3799;border:1px solid #4b7bec;color:#fff;padding:7px 11px;border-radius:8px;font-weight:bold;font-size:12px;cursor:pointer;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.btn.grn{background:#1dd1a1;border-color:#1dd1a1;color:#000}
+.board{flex:1;overflow-y:auto;background:linear-gradient(180deg,#0b1322,#101c30);border:1px solid #243347;border-radius:14px;padding:8px;margin-bottom:8px}
+.item{display:flex;align-items:center;justify-content:space-between;background:#131f33;border:1px solid #203454;border-radius:10px;padding:8px 10px;margin-bottom:6px;font-size:13px}
+.item.me{border:1.5px solid #1dd1a1;background:rgba(29,209,161,.14)}
+.item.top1{border-color:#feca57;background:rgba(254,202,87,.12)}
+.item.top2{border-color:#c8d6e5}
+.item.top3{border-color:#e17055}
+.rank{width:28px;font-weight:900;font-size:14px;text-align:center;flex-shrink:0}
+.info{flex:1;min-width:0;padding:0 8px}
+.name{font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:10px;color:#8395a7;margin-top:2px}
+.coins{font-weight:900;color:#feca57;font-size:14px;text-align:right;flex-shrink:0}
+.tabs{display:flex;gap:6px;flex-shrink:0}
+.tab{flex:1;padding:10px 6px;background:#131b26;border:1px solid #243347;color:#fff;border-radius:10px;font-weight:bold;font-size:12px;cursor:pointer;text-align:center;text-decoration:none}
+.tab.on{background:#152547;color:#70a1ff;border-color:#3867d6}
+.status{text-align:center;font-size:11px;color:#8395a7;padding:12px}
+.toast{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);background:#1dd1a1;color:#000;padding:7px 16px;border-radius:14px;font-weight:bold;font-size:12px;display:none;z-index:99}
 </style>
 </head>
 <body>
 
-<div class="top-box">
+<div class="box">
+  <div class="row" style="margin-bottom:6px">
+    <b style="color:#feca57;font-size:13px">🌍 Реальні гравці • Топ за монетами</b>
+    <span id="myPos" style="font-size:11px;color:#1dd1a1;font-weight:bold">Місце: #—</span>
+  </div>
   <div class="row">
-    <b style="color:#feca57;font-size:13px">Рівень <span id="lv">1</span> • 🏆 ЛЧ: <span id="cp">0</span></b>
-    <b style="color:#feca57;font-size:14px">💰 <span id="cn">20</span></b>
+    <input type="text" id="nickInp" class="inp" maxlength="18" placeholder="Твій нікнейм...">
+    <button class="btn grn" onclick="saveNick()">💾 Зберегти</button>
+    <button class="btn" onclick="syncLeaderboard(true)">🔄 Оновити</button>
   </div>
-  <div class="bar"><div class="fill" id="xb"></div></div>
-  <div class="row" style="font-size:10px;color:#8395a7">
-    <span>Досвід XP: <span id="pt">0</span>/<span id="nx">100</span></span>
-    <span style="color:#70a1ff;font-weight:bold">🇺🇦 Твій Клуб</span>
-  </div>
-</div>
-<!-- ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 1 ] ================= -->
-<!-- ===================================================================== -->
-<!-- ================== [ INDEX.HTML : ЧАСТИНА 2 З 6 ] =================== -->
-<!-- ===================================================================== -->
-<div class="stage" id="stage">
-  <a href="statustuca.html" class="rank-btn">📊 Рейтинг</a>
-  <div class="act-badge" id="actBadge">🏃 Зарядка: Стрибки</div>
-  <canvas id="heroCanvas"></canvas>
-  <div class="hint-badge">👆 Натисни на гравця — набиває м'яч • Проведи — крутиться</div>
 </div>
 
-<div class="menu">
-  <a href="game.html" class="mbtn play" onclick="localStorage.removeItem('pc_play_ucl')">
-    ⚽ ШВИДКИЙ МАТЧ (АРЕНА)
-    <span>Тренування та заробіток монет</span>
-  </a>
-  <a href="game.html?mode=ucl" class="mbtn ucl" onclick="localStorage.setItem('pc_play_ucl','1')">
-    🏆 ЛІГА ЧЕМПІОНІВ
-    <span id="uclSub">Групи + Плей-оф</span>
-  </a>
-  <a href="shop.html" class="mbtn shop">
-    🛍 ГАРДЕРОБ / МАГАЗИН
-    <span>Форма, бутси, номер</span>
-  </a>
+<div class="board" id="board">
+  <div class="status">⏳ Завантаження реальних гравців...</div>
 </div>
+
+<div class="tabs">
+  <a href="index.html" class="tab">🏠 Головна</a>
+  <a href="game.html" class="tab">⚽ Грати</a>
+  <a href="statustuca.html" class="tab on">📊 Рейтинг</a>
+</div>
+
+<div class="toast" id="toast">Оновлено!</div>
 
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
 
-const SHOP=[
-  {id:'j1',col:'#1dd1a1',dark:'#0d8a68',trim:'#ffffff'},
-  {id:'j2',col:'#f5f6fa',dark:'#cfd6de',trim:'#1e272e'},
-  {id:'j3',col:'#d63031',dark:'#8e1b1c',trim:'#ffffff'},
-  {id:'j4',col:'#1e3799',dark:'#0c1a52',trim:'#feca57'},
-  {id:'j5',col:'#1e272e',dark:'#0b0f14',trim:'#1dd1a1'},
-  {id:'j6',col:'#feca57',dark:'#c49014',trim:'#1e272e'},
-  {id:'p1',col:'#ffffff',dark:'#cfd6de'},{id:'p2',col:'#1e272e',dark:'#0b0f14'},{id:'p3',col:'#1e3799',dark:'#0c1a52'},
-  {id:'p4',col:'#d63031',dark:'#8e1b1c'},{id:'p5',col:'#00a8ff',dark:'#006299'},{id:'p6',col:'#feca57',dark:'#c49014'},
-  {id:'s1',col:'#14181d',ac:'#1dd1a1'},{id:'s2',col:'#f5f6fa',ac:'#eb4d4b'},{id:'s3',col:'#00d2ff',ac:'#ffffff'},{id:'s4',col:'#feca57',ac:'#1e272e'},
-  {id:'b1',col:'#ffffff'},{id:'b2',col:'#ff5e57'},{id:'b3',col:'#00d2ff'},{id:'b4',col:'#feca57'},
-  {id:'k1',col:'#1dd1a1'},{id:'k2',col:'#ff9ff3'}
-];
+const API_URL='https://kvdb.io';
 
-let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null};
+let p={pt:0,lv:1,cp:0,cn:20,nick:'',uid:''};
 try{
-  const old=JSON.parse(localStorage.getItem('pc_3d8'));
   const v=JSON.parse(localStorage.getItem('pc_ucl1'));
   if(v)p=Object.assign(p,v);
-  else if(old){p=Object.assign(p,old);localStorage.setItem('pc_ucl1',JSON.stringify(p));}
 }catch(e){}
 
-function getItem(id){return SHOP.find(x=>x.id===id)||SHOP.at(0);}
-
-function updHUD(){
-  lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
-  const nxXp=p.lv*100;pt.textContent=p.pt;nx.textContent=nxXp;
-  xb.style.width=Math.min(100,(p.pt/nxXp)*100)+'%';
-  if(p.ucl&&p.ucl.active){
-    if(p.ucl.stage==='group')uclSub.textContent=`Групи: Тур ${(p.ucl.gRnd||0)+1} з 6`;
-    else uclSub.textContent=`Плей-оф: ${['1/8 Фіналу','1/4 Фіналу','Півфінал','ФІНАЛ'].at(p.ucl.rnd)||'ЛЧ'}`;
-  }
-}
-updHUD();
-/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 2 ] ================= -->
-/* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 3 З 6 ] =================== */
-/* ===================================================================== */
-const canvas=document.getElementById('heroCanvas'),ctx=canvas.getContext('2d');
-let W=300,H=400;
-function rsz(){const r=stage.getBoundingClientRect();if(r.width>0&&r.height>0){W=canvas.width=r.width;H=canvas.height=r.height;}}
-window.addEventListener('resize',rsz);rsz();
-
-let rotY=0,rotVel=0,isDragging=false,lastX=0,downX=0,downY=0,downT=0;
-let juggleTimer=0,juggleFoot=1,jBallY=0,jBallVy=0,jBallX=18;
-
-stage.addEventListener('pointerdown',e=>{
-  isDragging=true;lastX=downX=e.clientX;downY=e.clientY;downT=Date.now();rotVel=0;
-});
-window.addEventListener('pointermove',e=>{
-  if(!isDragging)return;
-  const dx=e.clientX-lastX;lastX=e.clientX;
-  rotY+=dx*0.015;rotVel=dx*0.012;
-});
-window.addEventListener('pointerup',e=>{
-  if(!isDragging)return;isDragging=false;
-  const dist=Math.hypot(e.clientX-downX,e.clientY-downY);
-  if(dist<10 && (Date.now()-downT)<320){
-    juggleTimer=1.0;juggleFoot*=-1;
-    jBallVy=-7.5;jBallX=juggleFoot*16;
-    actBadge.textContent='⚽ Набиває м\'яч!';
-  }
-});
-
-function drawCapsule(x1,y1,x2,y2,r1,r2,col){
-  const perp=Math.atan2(y2-y1,x2-x1)+Math.PI/2;
-  ctx.fillStyle=col;ctx.beginPath();
-  ctx.arc(x1,y1,r1,perp,perp+Math.PI);
-  ctx.arc(x2,y2,r2,perp+Math.PI,perp);
-  ctx.closePath();ctx.fill();
-}
-
-function drawBoot(x,y,sc,side,bootCol,bootAc){
-  ctx.save();ctx.translate(x,y);ctx.scale(side,1);
-  ctx.fillStyle='#dce4e7';
-  [-2.5*sc,0,2.5*sc].forEach(sx=>{ctx.beginPath();ctx.roundRect(sx-0.5*sc,2.2*sc,1.0*sc,0.9*sc,0.2*sc);ctx.fill();});
-  ctx.fillStyle='#0d1117';ctx.beginPath();ctx.ellipse(1.2*sc,2.0*sc,4.6*sc,1.0*sc,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=bootCol;ctx.beginPath();
-  ctx.moveTo(-3.2*sc,-2.2*sc);ctx.lineTo(1.8*sc,-1.8*sc);ctx.quadraticCurveTo(6.2*sc,-0.2*sc,5.6*sc,1.9*sc);
-  ctx.lineTo(-3.4*sc,1.9*sc);ctx.closePath();ctx.fill();
-  ctx.strokeStyle=bootAc;ctx.lineWidth=1.1*sc;ctx.beginPath();ctx.moveTo(-1.5*sc,0.8*sc);ctx.quadraticCurveTo(1.5*sc,1.5*sc,4.5*sc,0.6*sc);ctx.stroke();
-  ctx.restore();
-}
-/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 3 ] ================= -->
-/* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 4 З 6 ] =================== */
-/* ===================================================================== */
-function drawArenaBg(t){
-  const horY=H*0.54;
-  const sky=ctx.createLinearGradient(0,0,0,horY);
-  sky.addColorStop(0,'#060b14');sky.addColorStop(1,'#162a45');
-  ctx.fillStyle=sky;ctx.fillRect(0,0,W,horY);
-
-  ctx.fillStyle='#0b1322';
-  ctx.beginPath();ctx.moveTo(0,horY-H*0.24);ctx.quadraticCurveTo(W*0.5,horY-H*0.18,W,horY-H*0.24);
-  ctx.lineTo(W,horY);ctx.lineTo(0,horY);ctx.closePath();ctx.fill();
-
-  for(let r=0;r<5;r++){
-    const ry=horY-H*0.04-r*(H*0.036);
-    ctx.fillStyle=r%2===0?'rgba(255,255,255,0.06)':'rgba(112,161,255,0.08)';
-    for(let x=8;x<W-8;x+=11){
-      const bob=Math.sin(t*2+x*0.05+r)*1.5;
-      ctx.fillRect(x,ry+bob,4,5);
+// Унікальний ID реального гравця (з Telegram ID або генерується один раз)
+try{
+  const tgUser=window.Telegram?.WebApp?.initDataUnsafe?.user;
+  if(tgUser){
+    p.uid='tg_'+tgUser.id;
+    if(!p.nick){
+      p.nick=tgUser.first_name+(tgUser.username?` (@${tgUser.username})`:'');
     }
   }
+}catch(e){}
 
-  [W*0.16,W*0.84].forEach((lx,idx)=>{
-    const ly=horY-H*0.25;
-    const beam=ctx.createRadialGradient(lx,ly,4,lx+(idx===0?90:-90),horY+80,H*0.55);
-    beam.addColorStop(0,'rgba(220,240,255,0.28)');beam.addColorStop(1,'rgba(220,240,255,0)');
-    ctx.fillStyle=beam;ctx.beginPath();ctx.moveTo(lx-12,ly);ctx.lineTo(lx+12,ly);
-    ctx.lineTo(lx+(idx===0?240:-40),H);ctx.lineTo(lx+(idx===0?-40:240),H);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#ffffff';ctx.fillRect(lx-10,ly-4,20,7);
-  });
+if(!p.uid) p.uid='u_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+if(!p.nick) p.nick='Гравець #'+p.uid.slice(-4).toUpperCase();
+try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}
 
-  ctx.fillStyle='#0c2461';ctx.fillRect(0,horY-14,W,14);
-  ctx.fillStyle='#fff';ctx.font='bold 8px sans-serif';ctx.textAlign='center';
-  ctx.fillText('★ UEFA CHAMPIONS LEAGUE ★ OFFICIAL ARENA ★',W*0.5,horY-4);
+document.getElementById('nickInp').value=p.nick;
 
-  const grass=ctx.createLinearGradient(0,horY,0,H);
-  grass.addColorStop(0,'#1e5c24');grass.addColorStop(0.5,'#27782e');grass.addColorStop(1,'#1b5220');
-  ctx.fillStyle=grass;ctx.fillRect(0,horY,W,H-horY);
-
-  ctx.strokeStyle='rgba(255,255,255,0.55)';ctx.lineWidth=2;
-  ctx.beginPath();ctx.ellipse(W*0.5,horY+H*0.16,W*0.36,H*0.09,0,0,Math.PI*2);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(0,horY+H*0.16);ctx.lineTo(W,horY+H*0.16);ctx.stroke();
-}
-/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4 ] ================= -->
-/* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 5 З 6 ] =================== */
-/* ===================================================================== */
-function drawHero3D(t){
-  const cx=W*0.5,baseY=H*0.82,sc=Math.min(W,H)*0.0056;
-  const cosA=Math.cos(rotY),sinA=Math.sin(rotY);
-  const isBack=cosA<0,wScale=Math.max(0.28,Math.abs(cosA));
-
-  const jCol=getItem(p.ej).col,jDark=getItem(p.ej).dark||'#0d8a68',trim=getItem(p.ej).trim||'#fff';
-  const sCol=getItem(p.ep).col,sDark=getItem(p.ep).dark||'#cfd6de';
-  const bCol=getItem(p.es).col,bAc=getItem(p.es).ac||'#1dd1a1';
-  const skin='#e4b487',shade='#be8450',light='#f6d3af';
-
-  const cycle=Math.floor(t/5)%3;
-  let jumpY=0,squat=0,armRaise=0,legKickL=0,legKickR=0,bodyTwist=0;
-
-  if(juggleTimer>0){
-    if(juggleFoot===1)legKickR=Math.sin(juggleTimer*Math.PI)*18*sc;
-    else legKickL=Math.sin(juggleTimer*Math.PI)*18*sc;
-  }else if(cycle===0){
-    actBadge.textContent='🏃 Зарядка: Стрибки';
-    const jp=Math.abs(Math.sin(t*4.5));
-    jumpY=jp*16*sc;armRaise=jp;
-  }else if(cycle===1){
-    actBadge.textContent='🏋️ Розминка: Присідання';
-    squat=(Math.sin(t*2.8)*0.5+0.5)*16*sc;armRaise=squat/(16*sc)*0.55;
-  }else{
-    actBadge.textContent='🤸 Розтяжка корпусу';
-    bodyTwist=Math.sin(t*2.6)*0.22;armRaise=0.45;
-  }
-
-  ctx.fillStyle='rgba(0,0,0,0.42)';
-  const shS=1-(jumpY/(40*sc));
-  ctx.beginPath();ctx.ellipse(cx,baseY+4*sc,22*sc*shS,6*sc*shS,0,0,Math.PI*2);ctx.fill();
-
-  ctx.save();
-  ctx.translate(cx,baseY-jumpY);
-
-  [-1,1].forEach(side=>{
-    const xOff=side*7.5*sc*wScale+sinA*side*2*sc;
-    const kick=side===-1?legKickL:legKickR;
-    const hipX=xOff,hipY=-46*sc+squat;
-    const kneeX=xOff+(side*squat*0.35),kneeY=-25*sc+squat*0.55-kick*0.6;
-    const ankX=xOff,ankY=-3*sc-kick;
-
-    drawCapsule(hipX,hipY,kneeX,kneeY,6.5*sc*wScale+2,5.2*sc*wScale+1.5,isBack?sDark:sCol);
-    drawCapsule(kneeX,kneeY,kneeX,kneeY+4*sc,3.8*sc*wScale+1.5,3.5*sc*wScale+1.5,skin);
-    drawCapsule(kneeX,kneeY+3.5*sc,ankX,ankY,4.0*sc*wScale+1.5,2.6*sc*wScale+1.2,jCol);
-    ctx.fillStyle=trim;ctx.fillRect(kneeX-3.5*sc*wScale-1,kneeY+3.5*sc,7*sc*wScale+2,1.6*sc);
-    drawBoot(ankX,ankY,sc,cosA>=0?1:-1,bCol,bAc);
-  });
-
-  ctx.save();
-  ctx.translate(0,-46*sc+squat);
-  ctx.rotate(bodyTwist);
-
-  const tW=(16*wScale+5)*sc;
-  const tG=ctx.createLinearGradient(-tW,-42*sc,tW,0);
-  tG.addColorStop(0,jCol);tG.addColorStop(0.75,jCol);tG.addColorStop(1,jDark);
-  ctx.fillStyle=tG;
-  ctx.beginPath();
-  ctx.moveTo(-tW,-36*sc);ctx.quadraticCurveTo(0,-43*sc,tW,-36*sc);
-  ctx.lineTo(tW*0.84,0);ctx.quadraticCurveTo(0,2*sc,-tW*0.84,0);ctx.closePath();ctx.fill();
-
-  if(isBack){
-    ctx.fillStyle=p.numCol||'#ffffff';
-    ctx.font=`900 ${Math.max(12,18*sc*wScale)}px sans-serif`;ctx.textAlign='center';
-    ctx.fillText(p.num||'10',0,-14*sc);
-  }else{
-    ctx.fillStyle=trim;ctx.beginPath();ctx.ellipse(0,-38.5*sc,4.5*sc*wScale+1.5,1.8*sc,0,0,Math.PI);ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.85)';ctx.font=`bold ${Math.max(6,6.5*sc)}px sans-serif`;ctx.textAlign='center';
-    if(wScale>0.45)ctx.fillText('CHAMPIONS',0,-20*sc);
-    ctx.fillStyle='#feca57';ctx.beginPath();ctx.arc(tW*0.45,-28*sc,2.2*sc*wScale,0,Math.PI*2);ctx.fill();
-  }
-
-  [-1,1].forEach(side=>{
-    const shX=side*(tW-2*sc),shY=-34*sc;
-    const elX=shX+side*(6+armRaise*4)*sc*wScale;
-    const elY=shY+(14-armRaise*28)*sc;
-    const hdX=elX+side*(3-armRaise*5)*sc*wScale;
-    const hdY=elY+(13-armRaise*26)*sc;
-
-    drawCapsule(shX,shY,elX,elY,4.4*sc*wScale+1.5,3.5*sc*wScale+1.2,jCol);
-    drawCapsule(elX,elY,hdX,hdY,3.2*sc*wScale+1.2,2.4*sc*wScale+1,skin);
-    ctx.fillStyle=getItem(p.ek).col;
-    ctx.beginPath();ctx.arc(hdX,hdY,3.4*sc,0,Math.PI*2);ctx.fill();
-  });
-
-  drawCapsule(0,-39*sc,0,-45*sc,3.6*sc,3.2*sc,shade);
-  const fG=ctx.createRadialGradient(-2*sc,-54*sc,1*sc,0,-52*sc,10*sc);
-  fG.addColorStop(0,light);fG.addColorStop(0.65,skin);fG.addColorStop(1,shade);
-  ctx.fillStyle=fG;ctx.beginPath();ctx.ellipse(0,-52*sc,7.2*sc,8.8*sc,0,0,Math.PI*2);ctx.fill();
-
-  if(!isBack){
-    const eyeShift=sinA*3.2*sc;
-    ctx.fillStyle='#1e272e';
-    ctx.beginPath();
-    ctx.arc(-2.6*sc*wScale+eyeShift,-53*sc,1.0*sc,0,Math.PI*2);
-    ctx.arc(2.6*sc*wScale+eyeShift,-53*sc,1.0*sc,0,Math.PI*2);
-    ctx.fill();
-    ctx.strokeStyle='#a8683a';ctx.lineWidth=1.1*sc;
-    ctx.beginPath();ctx.arc(eyeShift,-48.5*sc,2.0*sc*wScale,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
-  }
-
-  ctx.fillStyle='#191e26';
-  if(isBack){
-    ctx.beginPath();ctx.ellipse(0,-53*sc,7.5*sc,8.5*sc,0,0,Math.PI*2);ctx.fill();
-  }else{
-    ctx.beginPath();ctx.ellipse(0,-57*sc,7.6*sc,5.2*sc,0,Math.PI*0.92,Math.PI*2.08);ctx.fill();
-  }
-
-  ctx.restore();
-  ctx.restore();
-}
-/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 5 ] ================= -->
-/* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 6 З 6 ] =================== */
-/* ===================================================================== */
-function drawJuggleBall(){
-  const cx=W*0.5,baseY=H*0.82,sc=Math.min(W,H)*0.0056;
-  if(juggleTimer>0){
-    juggleTimer=Math.max(0,juggleTimer-0.025);
-    jBallY+=jBallVy;
-    jBallVy+=0.42;
-    if(jBallY>0){jBallY=0;jBallVy=0;}
-  }else{
-    jBallY=0;jBallX=18;
-  }
-
-  const bx=cx+jBallX*sc,by=baseY-6*sc+jBallY*sc,rad=6.5*sc;
-  ctx.fillStyle='rgba(0,0,0,0.4)';
-  ctx.beginPath();ctx.ellipse(bx,baseY+4*sc,rad*0.9,rad*0.35,0,0,Math.PI*2);ctx.fill();
-
-  const bCol=getItem(p.eb).col;
-  const bG=ctx.createRadialGradient(bx-rad*0.3,by-rad*0.3,rad*0.1,bx,by,rad);
-  bG.addColorStop(0,'#ffffff');bG.addColorStop(0.6,bCol);bG.addColorStop(1,'#1e272e');
-  ctx.fillStyle=bG;ctx.beginPath();ctx.arc(bx,by,rad,0,Math.PI*2);ctx.fill();
-
-  ctx.fillStyle='rgba(0,0,0,0.65)';
-  ctx.beginPath();ctx.arc(bx,by,rad*0.32,0,Math.PI*2);ctx.fill();
+function showToast(txt){
+  const t=document.getElementById('toast');
+  t.textContent=txt;t.style.display='block';
+  setTimeout(()=>{t.style.display='none';},2000);
 }
 
-let t=0;
-function loop(){
-  t+=0.04;
-  if(!isDragging){
-    rotY+=rotVel;
-    rotVel*=0.94;
-  }
-  ctx.clearRect(0,0,W,H);
-  drawArenaBg(t);
-  drawHero3D(t);
-  drawJuggleBall();
-  requestAnimationFrame(loop);
+function saveNick(){
+  const val=document.getElementById('nickInp').value.trim();
+  if(!val)return;
+  p.nick=val;
+  try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}
+  syncLeaderboard(true);
 }
-loop();
+
+function renderList(players){
+  const me={
+    uid:p.uid,
+    n:p.nick,
+    cn:Number(p.cn)||0,
+    lv:Number(p.lv)||1,
+    cp:Number(p.cp)||0
+  };
+
+  // Оновлюємо себе в загальному списку без дублікатів і без жодних ботів
+  const map=new Map();
+  if(Array.isArray(players)){
+    players.forEach(u=>{
+      if(u && u.uid && u.n && typeof u.cn==='number') map.set(u.uid,u);
+    });
+  }
+  map.set(me.uid,me);
+
+  const all=Array.from(map.values());
+  all.sort((a,b)=>(b.cn-a.cn)||(b.cp-a.cp)||(b.lv-a.lv));
+
+  const myIdx=all.findIndex(x=>x.uid===me.uid);
+  document.getElementById('myPos').textContent=`Твоє місце: #${myIdx+1} з ${all.length}`;
+
+  const medals=['🥇','🥈','🥉'];
+  const html=all.map((u,idx)=>{
+    const isMe=(u.uid===me.uid);
+    const rankStr=idx<3?medals.at(idx):`#${idx+1}`;
+    const cls=`item ${isMe?'me':''} ${idx===0?'top1':(idx===1?'top2':(idx===2?'top3':''))}`;
+    return `<div class="${cls}">
+      <div class="rank">${rankStr}</div>
+      <div class="info">
+        <div class="name">${u.n}${isMe?' (Ти)':''}</div>
+        <div class="sub">Рівень ${u.lv} • 🏆 Кубків ЛЧ: ${u.cp}</div>
+      </div>
+      <div class="coins">💰 ${u.cn}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('board').innerHTML=html;
+  return all.slice(0,100);
+}
+
+async function syncLeaderboard(notify){
+  let remote=[];
+  try{
+    const res=await fetch(API_URL,{cache:'no-store'});
+    if(res.ok){
+      const data=await res.json();
+      if(Array.isArray(data)) remote=data;
+    }
+  }catch(e){}
+
+  const updatedTop=renderList(remote);
+
+  try{
+    await fetch(API_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(updatedTop)
+    });
+    if(notify) showToast('✅ Рейтинг синхронізовано!');
+  }catch(e){
+    if(notify) showToast('⚠️ Локальне оновлення (немає мережі)');
+  }
+}
+
+syncLeaderboard(false);
 </script>
 </body>
 </html>
-<!-- ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 6 ] ================= -->
