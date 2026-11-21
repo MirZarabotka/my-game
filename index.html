@@ -64,7 +64,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 <div class="stage" id="stage">
   <a href="statustuca.html" class="hud-btn rank-btn">📊 Рейтинг</a>
   <button class="hud-btn gift-btn" id="giftBtn" onclick="openGift()">🎁 Бонус</button>
-  <div class="act-badge" id="actBadge">🏃 Зарядка: Стрибки</div>
+  <div class="act-badge" id="actBadge">⚽ Готовий до матчу</div>
   <div class="combo-badge" id="comboBadge">🔥 Серія набивань: 0</div>
   <canvas id="heroCanvas"></canvas>
   <div class="hint-badge">👆 Тап по гравцю — набиває м'яч • Свайп — крутиться</div>
@@ -267,17 +267,24 @@ function drawCapsule(x1,y1,x2,y2,r1,r2,col){
   ctx.closePath();ctx.fill();
 }
 
-function drawBoot(x,y,sc,dir,col,ac){
-  ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
+function drawBoot(x,y,sc,sinA,cosA,side,col,ac){
+  ctx.save();ctx.translate(x,y);
+  const sideShift=sinA*8.5*sc+side*1.2*sc*Math.abs(cosA);
+  const toeW=(3.4*(1-Math.abs(sinA)*0.3)+Math.abs(sinA)*3.8)*sc;
+  const startX=sideShift>0?-3.5*sc:sideShift-toeW;
+  const endX=sideShift>0?sideShift+toeW:3.5*sc;
+  const w=endX-startX;
+
   ctx.fillStyle='#111';
-  [-4,0,4].forEach(sx=>ctx.fillRect((sx-1)*sc,2.5*sc,2*sc,1.6*sc));
+  ctx.fillRect(startX+0.5*sc,2.2*sc,w-1*sc,1.7*sc);
+
   ctx.fillStyle=col;
   ctx.beginPath();
-  ctx.moveTo(-5*sc,-2*sc);ctx.lineTo(3*sc,-2*sc);
-  ctx.quadraticCurveTo(9.5*sc,-1.5*sc,10*sc,2.5*sc);
-  ctx.lineTo(-5.5*sc,2.5*sc);ctx.closePath();ctx.fill();
+  ctx.roundRect(startX,-2.2*sc,w,4.6*sc,2.2*sc);
+  ctx.fill();
+
   ctx.fillStyle=ac;
-  ctx.beginPath();ctx.moveTo(-1*sc,-1*sc);ctx.lineTo(6.5*sc,0.5*sc);ctx.lineTo(5.5*sc,2*sc);ctx.lineTo(-2*sc,1*sc);ctx.closePath();ctx.fill();
+  ctx.fillRect(startX+w*0.2,-0.5*sc,w*0.6,1.3*sc);
   ctx.restore();
 }
 
@@ -335,7 +342,9 @@ function drawHero3D(t){
   const bCol=getItem(p.es).col,bAc=getItem(p.es).ac||'#1dd1a1';
   const skin='#e4b487',shade='#be8450',light='#f6d3af';
 
-  const cycle=Math.floor(t/5)%3;
+  const sec=performance.now()/1000;
+  const phase=sec%20;
+  const exType=Math.floor(sec/20)%3;
   let jumpY=0,squat=0,armRaise=0,legKickL=0,legKickR=0,bodyTwist=0;
 
   if(juggleTimer>0){
@@ -343,16 +352,19 @@ function drawHero3D(t){
     if(juggleFoot===1){legKickR=kCurve*21*sc;bodyTwist=-0.08*kCurve;}
     else{legKickL=kCurve*21*sc;bodyTwist=0.08*kCurve;}
     armRaise=0.35*kCurve;
-  }else if(cycle===0){
+  }else if(phase<10){
+    actBadge.textContent='⚽ Готовий до матчу';
+    armRaise=0.06+Math.sin(sec*1.6)*0.03;
+  }else if(exType===0){
     actBadge.textContent='🏃 Зарядка: Стрибки';
-    const jp=Math.abs(Math.sin(t*4.5));
-    jumpY=jp*16*sc;armRaise=jp;
-  }else if(cycle===1){
+    const jp=Math.abs(Math.sin((phase-10)*2.2));
+    jumpY=jp*13*sc;armRaise=jp*0.85;
+  }else if(exType===1){
     actBadge.textContent='🏋️ Розминка: Присідання';
-    squat=(Math.sin(t*2.8)*0.5+0.5)*16*sc;armRaise=squat/(16*sc)*0.55;
+    squat=(Math.sin((phase-10)*1.6)*0.5+0.5)*14*sc;armRaise=(squat/(14*sc))*0.5;
   }else{
     actBadge.textContent='🤸 Розтяжка корпусу';
-    bodyTwist=Math.sin(t*2.6)*0.22;armRaise=0.45;
+    bodyTwist=Math.sin((phase-10)*1.5)*0.18;armRaise=0.35;
   }
 
   const glow=ctx.createRadialGradient(cx,baseY+4*sc,2,cx,baseY+4*sc,30*sc);
@@ -377,10 +389,10 @@ function drawHero3D(t){
     drawCapsule(kneeX,kneeY,kneeX,kneeY+4*sc,3.8*sc*wScale+1.5,3.5*sc*wScale+1.5,skin);
     drawCapsule(kneeX,kneeY+3.5*sc,ankX,ankY,4.0*sc*wScale+1.5,2.6*sc*wScale+1.2,jCol);
     ctx.fillStyle=trim;ctx.fillRect(kneeX-3.5*sc*wScale-1,kneeY+3.5*sc,7*sc*wScale+2,1.6*sc);
-    drawBoot(ankX,ankY,sc,cosA>=0?1:-1,bCol,bAc);
+    drawBoot(ankX,ankY,sc,sinA,cosA,side,bCol,bAc);
   });
 
-  const breath=Math.sin(t*3.2)*0.8*sc;
+  const breath=Math.sin(sec*2.4)*0.7*sc;
   ctx.save();
   ctx.translate(0,-46*sc+squat+breath);
   ctx.rotate(bodyTwist);
