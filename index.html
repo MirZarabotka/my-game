@@ -100,7 +100,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
   <div class="mcard">
     <h3>⚙️ Налаштування гри</h3>
     <div class="srow">
-      <span>🔊 Звукові ефекти</span>
+      <span>🔊 Звукові ефекти та голос</span>
       <button class="tgl" id="sndBtn" onclick="toggleCfg('snd')">УВІМК</button>
     </div>
     <div class="srow">
@@ -269,6 +269,38 @@ let juggleTimer=0,juggleFoot=1,jBallY=0,jBallVy=0,jBallX=18,jBallRot=0,combo=0;
 let autoJuggles=0,isHeadMode=false,headBounce=0;
 let sparks=[];
 
+let lastActTime=Date.now(),speechText='',speechTimer=0,speechIdx=0;
+const IDLE_PHRASES=[
+  'Ти сьогодні грати будеш?',
+  'Я вже розім\'явся, пішли бити пенальті!',
+  'Кубок Ліги Чемпіонів сам себе не виграє!',
+  'Нумо в матч, воротар вже чекає!',
+  'Натисни на мене, давай почеканимо!'
+];
+
+function speakPhrase(txt){
+  if(!p.cfg.snd || !('speechSynthesis' in window))return;
+  try{
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(txt);
+    const voices=window.speechSynthesis.getVoices();
+    const ukVoice=voices.find(v=>v.lang&&v.lang.toLowerCase().includes('uk'))
+      || voices.find(v=>v.lang&&v.lang.toLowerCase().includes('ru'));
+    if(ukVoice)u.voice=ukVoice;
+    u.lang='uk-UA';
+    u.rate=1.04;
+    u.pitch=0.95;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+function resetIdle(){
+  lastActTime=Date.now();
+  speechTimer=0;
+  speechText='';
+  try{if('speechSynthesis' in window)window.speechSynthesis.cancel();}catch(e){}
+}
+
 function spawnSparks(x,y,col,cnt){
   if(!p.cfg.fx)return;
   for(let i=0;i<cnt;i++){
@@ -278,6 +310,7 @@ function spawnSparks(x,y,col,cnt){
 }
 
 function triggerHit(){
+  resetIdle();
   combo++;
   haptic('light');
   comboBadge.style.display='block';
@@ -310,26 +343,40 @@ function triggerHit(){
     spawnSparks(W*0.5,H*0.48,'#feca57',16);
   }
 }
-
 stage.addEventListener('pointerdown',e=>{
+  resetIdle();
+  try{if('speechSynthesis' in window)window.speechSynthesis.getVoices();}catch(e){}
   isDragging=true;lastX=downX=e.clientX;downY=e.clientY;downT=Date.now();spinLeft=0;
 });
+
 window.addEventListener('pointermove',e=>{
   if(!isDragging)return;
+  resetIdle();
   const dx=e.clientX-lastX;lastX=e.clientX;
   rotY+=dx*0.014;
 });
+
 window.addEventListener('pointerup',e=>{
   if(!isDragging)return;isDragging=false;
   const totalDx=e.clientX-downX;
   const dist=Math.hypot(totalDx,e.clientY-downY);
+  const full=Math.PI*2;
   if(dist<10 && (Date.now()-downT)<320){
     autoJuggles=4;
     triggerHit();
+    if(Math.abs(rotY%full)>0.05){
+      const nearest=Math.round(rotY/full)*full;
+      spinLeft=nearest-rotY;
+    }
   }else if(Math.abs(totalDx)>=15){
     const dir=totalDx>0?1:-1;
-    const rem=rotY%(Math.PI*2);
-    spinLeft=dir*(Math.PI*2)-(rem*0.5);
+    const baseTurn=dir>0?Math.ceil(rotY/full)*full:Math.floor(rotY/full)*full;
+    let diff=baseTurn-rotY;
+    if(Math.abs(diff)<Math.PI*0.7)diff+=dir*full;
+    spinLeft=diff;
+  }else if(Math.abs(rotY%full)>0.05){
+    const nearest=Math.round(rotY/full)*full;
+    spinLeft=nearest-rotY;
   }
 });
 function drawCapsule(x1,y1,x2,y2,r1,r2,col){
@@ -610,6 +657,42 @@ function drawHero3D(t){
   ctx.restore();
   ctx.restore();
 }
+function drawSpeechBubble(){
+  if(speechTimer<=0 || !speechText)return;
+  const cx=W*0.5,baseY=H*0.82,sc=Math.min(W,H)*0.0056;
+  const alpha=Math.min(1,speechTimer*2);
+
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.font='bold 12px sans-serif';
+  const txtW=ctx.measureText(speechText).width;
+  const padX=14,boxW=Math.min(W-24,txtW+padX*2),boxH=30;
+  const bx=cx-boxW*0.5;
+  const by=Math.max(82,baseY-126*sc-boxH);
+
+  ctx.fillStyle='rgba(255,255,255,0.96)';
+  ctx.strokeStyle='#1dd1a1';
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.roundRect(bx,by,boxW,boxH,12);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle='rgba(255,255,255,0.96)';
+  ctx.beginPath();
+  ctx.moveTo(cx-6,by+boxH);
+  ctx.lineTo(cx+6,by+boxH);
+  ctx.lineTo(cx,by+boxH+8);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle='#0b1322';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(speechText,cx,by+boxH*0.5+1);
+  ctx.restore();
+}
+
 function drawJuggleBall(){
   const cx=W*0.5,baseY=H*0.82,sc=Math.min(W,H)*0.0056;
   if(juggleTimer>0){
@@ -675,17 +758,34 @@ function drawSparks(){
 let t=0;
 function loop(){
   t+=0.04;
-  if(!isDragging && Math.abs(spinLeft)>0.005){
-    const step=Math.sign(spinLeft)*Math.min(Math.abs(spinLeft),Math.max(0.014,Math.abs(spinLeft)*0.022));
+  if(!isDragging && Math.abs(spinLeft)>0.001){
+    const step=Math.sign(spinLeft)*Math.min(Math.abs(spinLeft),Math.max(0.007,Math.abs(spinLeft)*0.011));
     rotY+=step;
     spinLeft-=step;
-    if(Math.abs(spinLeft)<0.01)spinLeft=0;
+    if(Math.abs(spinLeft)<=0.008){
+      rotY+=spinLeft;
+      spinLeft=0;
+      rotY=0;
+    }
   }
+
+  if(!isDragging && juggleTimer<=0 && (Date.now()-lastActTime)>=20000){
+    speechText=IDLE_PHRASES.at(speechIdx%IDLE_PHRASES.length);
+    speechIdx++;
+    speechTimer=6.5;
+    lastActTime=Date.now();
+    speakPhrase(speechText);
+  }
+  if(speechTimer>0){
+    speechTimer=Math.max(0,speechTimer-0.016);
+  }
+
   ctx.clearRect(0,0,W,H);
   drawArenaBg(t);
   drawHero3D(t);
   drawJuggleBall();
   drawSparks();
+  drawSpeechBubble();
   requestAnimationFrame(loop);
 }
 loop();
