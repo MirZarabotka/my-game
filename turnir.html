@@ -100,7 +100,7 @@ function updHeader(){
   xb.style.width=Math.min(100,(p.pt/nxXp)*100)+'%';
 }
 function startNewUCL(myClubId){
-  const myBase=CLUBS.find(c=>c.id===myClubId)||CLUBS;
+  const myBase=CLUBS.find(c=>c.id===myClubId)||CLUBS.at(0);
   const myName=p.nick?`${myBase.n} (${p.nick})`:myBase.n;
   const pool=CLUBS.filter(c=>c.id!==myClubId).sort(()=>Math.random()-0.5);
 
@@ -109,14 +109,14 @@ function startNewUCL(myClubId){
     ...pool.slice(0,3).map(c=>({id:c.id,n:c.n,str:c.str,col:c.col,me:false,g:0,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0}))
   ];
 
-  // 6 турів колового турніру для групи з 4 команд (0 — гравець, 1..3 — суперники)
+  // 6 турів групового етапу у вигляді рядків 'індекс1-індекс2'
   const rounds=[
-    [,],
-    [,],
-    [,],
-    [,],
-    [,],
-    [,]
+    ['0-1','2-3'],
+    ['0-2','1-3'],
+    ['0-3','1-2'],
+    ['1-0','3-2'],
+    ['2-0','3-1'],
+    ['3-0','2-1']
   ];
 
   p.ucl={
@@ -163,10 +163,12 @@ function checkIncomingResult(){
 function processMyMatchResult(myG,oppG){
   const u=p.ucl;if(!u)return;
   if(u.stage==='group'&&u.round<6){
-    const pairs=u.rounds[u.round];
+    const pairs=u.rounds.at(u.round);
     const log=[];
-    pairs.forEach(([i1,i2])=>{
-      const t1=u.teams[i1],t2=u.teams[i2];
+    pairs.forEach(pairStr=>{
+      const pts=pairStr.split('-');
+      const i1=Number(pts.at(0)),i2=Number(pts.at(1));
+      const t1=u.teams.at(i1),t2=u.teams.at(i2);
       if(t1.me||t2.me){
         const g1=t1.me?myG:oppG,g2=t2.me?myG:oppG;
         applyMatchStats(t1,t2,g1,g2);
@@ -187,7 +189,7 @@ function processMyMatchResult(myG,oppG){
       const myRank=sorted.findIndex(t=>t.me);
       if(myRank<=1){
         u.stage='po';u.poStage=0;
-        u.poOpp=u.poPool||CLUBS;
+        u.poOpp=u.poPool.at(0)||CLUBS.at(2);
         p.cn+=60;
       }else{
         u.stage='done';u.champion=false;
@@ -200,7 +202,7 @@ function processMyMatchResult(myG,oppG){
     const finalMy=win&&myG===oppG?myG+1:myG;
     const finalOpp=!win&&myG===oppG?oppG+1:oppG;
 
-    u.poHistory.push({st:stages[u.poStage],opp:u.poOpp.n,sc:`${finalMy}:${finalOpp}`,win});
+    u.poHistory.push({st:stages.at(u.poStage),opp:u.poOpp.n,sc:`${finalMy}:${finalOpp}`,win});
     if(win){
       p.cn+=50+(u.poStage*25);p.pt+=45;
       if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
@@ -211,7 +213,7 @@ function processMyMatchResult(myG,oppG){
         p.cn+=250;p.pt+=120;
         if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
       }else{
-        u.poOpp=u.poPool[u.poStage]||CLUBS[u.poStage+2];
+        u.poOpp=u.poPool.at(u.poStage)||CLUBS.at(u.poStage+2);
       }
     }else{
       u.stage='done';u.champion=false;
@@ -227,9 +229,13 @@ function getNextOpponent(){
   const u=p.ucl;
   if(!u)return null;
   if(u.stage==='group'&&u.round<6){
-    const pair=u.rounds[u.round].find(([i1,i2])=>u.teams[i1].me||u.teams[i2].me);
-    const oppIdx=u.teams[pair].me?pair:pair;
-    return u.teams[oppIdx];
+    const pairs=u.rounds.at(u.round);
+    for(const pairStr of pairs){
+      const pts=pairStr.split('-');
+      const i1=Number(pts.at(0)),i2=Number(pts.at(1));
+      if(u.teams.at(i1).me)return u.teams.at(i2);
+      if(u.teams.at(i2).me)return u.teams.at(i1);
+    }
   }
   if(u.stage==='po')return u.poOpp;
   return null;
@@ -238,11 +244,12 @@ function getNextOpponent(){
 function playTournamentMatch(){
   const opp=getNextOpponent();
   if(!opp)return;
+  const poNames=['1/8 фіналу','1/4 фіналу','1/2 фіналу','ФІНАЛ ЛЧ'];
   localStorage.setItem('pc_play_ucl',JSON.stringify({
     oppName:opp.n,
     oppCol:opp.col||'#eb4d4b',
     oppStr:opp.str||85,
-    stage:p.ucl.stage==='group'?`Група • Тур ${p.ucl.round+1}/6`:['1/8 фіналу','1/4 фіналу','1/2 фіналу','ФІНАЛ ЛЧ'][p.ucl.poStage]
+    stage:p.ucl.stage==='group'?`Група • Тур ${p.ucl.round+1}/6`:poNames.at(p.ucl.poStage)
   }));
   location.href='game.html';
 }
@@ -290,7 +297,7 @@ function render(){
     return;
   }
 
-  const stageTitle=u.stage==='group'?`Груповий етап • Тур ${u.round+1} з 6`:`Плей-оф • ${poNames[u.poStage]}`;
+  const stageTitle=u.stage==='group'?`Груповий етап • Тур ${u.round+1} з 6`:`Плей-оф • ${poNames.at(u.poStage)}`;
 
   app.innerHTML=`
     <div class="hero">
@@ -339,7 +346,7 @@ function renderPlayoffHtml(){
   return `
     <div class="box">
       ${stages.map((st,idx)=>{
-        const done=u.poHistory[idx];
+        const done=u.poHistory.at(idx);
         const isCur=(u.stage==='po'&&u.poStage===idx);
         if(done)return `<div class="mcard me"><span><b>${st}:</b> vs ${done.opp}</span><b style="color:${done.win?'#1dd1a1':'#ff5e57'}">${done.sc} ${done.win?'✔':'✖'}</b></div>`;
         if(isCur)return `<div class="mcard me"><span><b>${st}:</b> vs ${u.poOpp.n}</span><b style="color:#feca57">▶ Зараз</b></div>`;
