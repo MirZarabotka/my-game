@@ -1,5 +1,5 @@
 <!-- ===================================================================== -->
-<!-- ================== [ INDEX.HTML : ЧАСТИНА 1 З 6 ] =================== -->
+<!-- ================== [ INDEX.HTML : ЧАСТИНА 1 З 7 ] =================== -->
 <!-- ===================================================================== -->
 <!DOCTYPE html>
 <html lang="uk">
@@ -21,14 +21,16 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 .fill{height:100%;background:linear-gradient(90deg,#1dd1a1,#00d2ff);transition:width .3s}
 .stage{flex:1;min-height:0;position:relative;border-radius:14px;overflow:hidden;border:2px solid #243347;margin-bottom:8px;background:#09111e;touch-action:none}
 #heroCanvas{width:100%;height:100%;display:block}
-.hud-btn{position:absolute;top:12px;z-index:20;background:rgba(13,24,45,.92);border:1.5px solid #4b7bec;color:#feca57;padding:7px 11px;border-radius:12px;font-weight:bold;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;box-shadow:0 4px 12px rgba(0,0,0,.45);cursor:pointer}
+.top-hud{position:absolute;top:10px;left:10px;right:10px;z-index:20;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.hud-grp{display:flex;gap:6px;pointer-events:auto}
+.hud-btn{background:rgba(13,24,45,.92);border:1.5px solid #4b7bec;color:#feca57;padding:6px 10px;border-radius:11px;font-weight:bold;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;box-shadow:0 4px 12px rgba(0,0,0,.45);cursor:pointer}
 .hud-btn:active{transform:scale(.95)}
-.rank-btn{left:12px}
-.gift-btn{right:12px;border-color:#feca57;color:#fff}
+.cfg-btn{border-color:#70a1ff;color:#fff;padding:6px 9px}
+.gift-btn{border-color:#feca57;color:#fff}
 .gift-btn.ready{background:linear-gradient(135deg,#feca57,#ff9f43);color:#000;animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-.act-badge{position:absolute;top:48px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.82);border:1px solid #3867d6;padding:4px 13px;border-radius:14px;font-size:11px;font-weight:bold;color:#70a1ff;pointer-events:none;white-space:nowrap}
-.combo-badge{position:absolute;top:76px;left:50%;transform:translateX(-50%);background:rgba(29,209,161,.2);border:1px solid #1dd1a1;padding:3px 11px;border-radius:12px;font-size:11px;font-weight:bold;color:#1dd1a1;pointer-events:none;display:none}
+.act-badge{position:absolute;top:46px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.82);border:1px solid #3867d6;padding:4px 13px;border-radius:14px;font-size:11px;font-weight:bold;color:#70a1ff;pointer-events:none;white-space:nowrap}
+.combo-badge{position:absolute;top:74px;left:50%;transform:translateX(-50%);background:rgba(29,209,161,.2);border:1px solid #1dd1a1;padding:3px 11px;border-radius:12px;font-size:11px;font-weight:bold;color:#1dd1a1;pointer-events:none;display:none}
 .hint-badge{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.82);border:1px solid rgba(255,255,255,.15);padding:4px 12px;border-radius:12px;font-size:10px;color:#dfe4ea;pointer-events:none;white-space:nowrap}
 .menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0}
 .mbtn{border:none;border-radius:13px;padding:12px 8px;font-weight:bold;font-size:13px;cursor:pointer;text-align:center;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
@@ -38,16 +40,19 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 .mbtn.shop{background:#182230;color:#feca57;border:1px solid #3c4f66}
 .mbtn span{font-size:10px;font-weight:normal;opacity:.85}
 .modal{position:fixed;inset:0;background:rgba(4,8,16,.85);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
-.mcard{background:#131b26;border:2px solid #feca57;border-radius:16px;padding:18px;max-width:310px;width:100%;text-align:center}
-.mcard h3{margin:0 0 8px;color:#feca57;font-size:18px}
+.mcard{background:#131b26;border:2px solid #4b7bec;border-radius:16px;padding:18px;max-width:310px;width:100%;text-align:center}
+.mcard h3{margin:0 0 10px;color:#feca57;font-size:17px}
 .mcard p{margin:0 0 14px;font-size:13px;color:#c8d6e5;line-height:1.4}
-.mcard button{background:linear-gradient(135deg,#1dd1a1,#10ac84);border:none;color:#000;font-weight:bold;padding:10px 22px;border-radius:10px;font-size:14px;cursor:pointer;width:100%}
+.mcard button.ok{background:linear-gradient(135deg,#1dd1a1,#10ac84);border:none;color:#000;font-weight:bold;padding:10px 20px;border-radius:10px;font-size:14px;cursor:pointer;width:100%;margin-top:6px}
+.srow{display:flex;justify-content:space-between;align-items:center;background:#0b1322;border:1px solid #243347;padding:9px 12px;border-radius:10px;margin-bottom:8px;font-size:13px}
+.tgl{background:#1e3799;border:1px solid #4b7bec;color:#fff;padding:5px 11px;border-radius:8px;font-weight:bold;font-size:12px;cursor:pointer}
+.tgl.on{background:#1dd1a1;border-color:#1dd1a1;color:#000}
 </style>
 </head>
 <body>
 <!-- ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 1 ] ================= -->
 <!-- ===================================================================== -->
-<!-- ================== [ INDEX.HTML : ЧАСТИНА 2 З 6 ] =================== -->
+<!-- ================== [ INDEX.HTML : ЧАСТИНА 2 З 7 ] =================== -->
 <!-- ===================================================================== -->
 <div class="top-box">
   <div class="row">
@@ -62,12 +67,17 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 </div>
 
 <div class="stage" id="stage">
-  <a href="statustuca.html" class="hud-btn rank-btn">📊 Рейтинг</a>
-  <button class="hud-btn gift-btn" id="giftBtn" onclick="openGift()">🎁 Бонус</button>
+  <div class="top-hud">
+    <div class="hud-grp">
+      <a href="statustuca.html" class="hud-btn">📊 Рейтинг</a>
+      <button class="hud-btn cfg-btn" onclick="openCfg()" title="Налаштування">⚙️</button>
+    </div>
+    <button class="hud-btn gift-btn" id="giftBtn" onclick="openGift()">🎁 Бонус</button>
+  </div>
   <div class="act-badge" id="actBadge">⚽ Готовий до матчу</div>
   <div class="combo-badge" id="comboBadge">🔥 Серія набивань: 0</div>
   <canvas id="heroCanvas"></canvas>
-  <div class="hint-badge">👆 Тап по гравцю — набиває м'яч • Свайп — крутиться</div>
+  <div class="hint-badge">👆 Тап по гравцю — набиває 5 разів • Свайп — крутиться</div>
 </div>
 
 <div class="menu">
@@ -86,15 +96,34 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 </div>
 
 <div class="modal" id="giftModal">
-  <div class="mcard">
+  <div class="mcard" style="border-color:#feca57">
     <h3>🎁 Щоденний бонус</h3>
     <p id="giftText">Забирай нагороду за вхід у гру!</p>
-    <button id="giftClaimBtn" onclick="claimGift()">Забрати +50 💰</button>
+    <button class="ok" id="giftClaimBtn" onclick="claimGift()">Забрати +50 💰</button>
+  </div>
+</div>
+
+<div class="modal" id="cfgModal">
+  <div class="mcard">
+    <h3>⚙️ Налаштування гри</h3>
+    <div class="srow">
+      <span>🔊 Звукові ефекти</span>
+      <button class="tgl" id="sndBtn" onclick="toggleCfg('snd')">УВІМК</button>
+    </div>
+    <div class="srow">
+      <span>📳 Вібрація (Telegram)</span>
+      <button class="tgl" id="vibBtn" onclick="toggleCfg('vib')">УВІМК</button>
+    </div>
+    <div class="srow">
+      <span>✨ Іскри та ефекти</span>
+      <button class="tgl" id="fxBtn" onclick="toggleCfg('fx')">УВІМК</button>
+    </div>
+    <button class="ok" onclick="cfgModal.style.display='none'">Закрити</button>
   </div>
 </div>
 <!-- ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 2 ] ================= -->
 <!-- ===================================================================== -->
-<!-- ================== [ INDEX.HTML : ЧАСТИНА 3 З 6 ] =================== -->
+<!-- ================== [ INDEX.HTML : ЧАСТИНА 3 З 7 ] =================== -->
 <!-- ===================================================================== -->
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand();}catch(e){}
@@ -117,13 +146,14 @@ const SHOP=[
   {id:'k1',col:'#1dd1a1'},{id:'k2',col:'#ff9ff3'}
 ];
 
-let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null,nick:'',uid:'',lastGift:0};
+let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null,nick:'',uid:'',lastGift:0,cfg:{snd:true,vib:true,fx:true}};
 try{
   const old=JSON.parse(localStorage.getItem('pc_3d8'));
   const v=JSON.parse(localStorage.getItem('pc_ucl1'));
   if(v)p=Object.assign(p,v);
   else if(old)p=Object.assign(p,old);
 }catch(e){}
+if(!p.cfg)p.cfg={snd:true,vib:true,fx:true};
 
 try{
   const tgUser=window.Telegram?.WebApp?.initDataUnsafe?.user;
@@ -141,6 +171,26 @@ function saveP(){
 saveP();
 
 function getItem(id){return SHOP.find(x=>x.id===id)||SHOP.at(0);}
+
+function haptic(type){
+  if(!p.cfg.vib)return;
+  try{window.Telegram?.WebApp?.HapticFeedback?.impactOccurred(type||'light');}catch(e){}
+}
+
+function openCfg(){
+  updCfgUI();
+  cfgModal.style.display='flex';
+}
+function toggleCfg(k){
+  p.cfg[k]=!p.cfg[k];
+  saveP();updCfgUI();haptic('light');
+}
+function updCfgUI(){
+  [['snd',sndBtn],['vib',vibBtn],['fx',fxBtn]].forEach(([k,el])=>{
+    el.textContent=p.cfg[k]?'УВІМК':'ВИМК';
+    el.classList.toggle('on',!!p.cfg[k]);
+  });
+}
 
 function updHUD(){
   lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
@@ -188,7 +238,7 @@ function claimGift(){
   p.pt=(Number(p.pt)||0)+20;
   while(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
   p.lastGift=Date.now();
-  saveP();updHUD();
+  saveP();updHUD();haptic('medium');
   giftModal.style.display='none';
   spawnSparks(W*0.5,H*0.45,'#feca57',18);
   pushScoreToCloud();
@@ -213,7 +263,7 @@ updHUD();
 pushScoreToCloud();
 /* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 3 ] ================= */
 /* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 4 З 6 ] =================== */
+/* ================== [ INDEX.HTML : ЧАСТИНА 4 З 7 ] =================== */
 /* ===================================================================== */
 const canvas=document.getElementById('heroCanvas'),ctx=canvas.getContext('2d');
 let W=300,H=400;
@@ -222,12 +272,48 @@ window.addEventListener('resize',rsz);rsz();
 
 let rotY=0,rotVel=0,isDragging=false,lastX=0,downX=0,downY=0,downT=0;
 let juggleTimer=0,juggleFoot=1,jBallY=0,jBallVy=0,jBallX=18,jBallRot=0,combo=0;
+let autoJuggles=0,isHeadMode=false,headBounce=0;
 let sparks=[];
 
 function spawnSparks(x,y,col,cnt){
+  if(!p.cfg.fx)return;
   for(let i=0;i<cnt;i++){
     const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*3.5;
     sparks.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,life:1,col});
+  }
+}
+
+function triggerHit(){
+  combo++;
+  haptic('light');
+  comboBadge.style.display='block';
+  comboBadge.textContent=`🔥 Серія набивань: ${combo}`;
+
+  if(combo>=5){
+    isHeadMode=true;
+    juggleTimer=0.85;
+    headBounce=1.0;
+    jBallX=0;
+    jBallY=-108;
+    jBallVy=-4.2;
+    actBadge.textContent=combo%5===0?'⭐ Супер-серія головою! +1 XP':'🤯 Набиває головою!';
+    spawnSparks(W*0.5,H*0.32,'#00d2ff',7);
+  }else{
+    isHeadMode=false;
+    juggleTimer=0.95;
+    juggleFoot*=-1;
+    jBallX=juggleFoot*14;
+    jBallY=-14;
+    jBallVy=-6.8;
+    actBadge.textContent='⚽ Набиває м\'яч!';
+    spawnSparks(W*0.5+jBallX*2,H*0.74,'#1dd1a1',6);
+  }
+
+  if(combo%5===0){
+    p.pt=(Number(p.pt)||0)+1;
+    if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
+    saveP();updHUD();
+    spawnSparks(W*0.5,H*0.48,'#feca57',14);
   }
 }
 
@@ -243,22 +329,14 @@ window.addEventListener('pointerup',e=>{
   if(!isDragging)return;isDragging=false;
   const dist=Math.hypot(e.clientX-downX,e.clientY-downY);
   if(dist<10 && (Date.now()-downT)<320){
-    juggleTimer=1.0;juggleFoot*=-1;
-    jBallVy=-8.2;jBallX=juggleFoot*15;
-    combo++;
-    comboBadge.style.display='block';
-    comboBadge.textContent=`🔥 Серія набивань: ${combo}`;
-    actBadge.textContent=combo%5===0?'⭐ Супер-трюк! +1 XP':'⚽ Набиває м\'яч!';
-    spawnSparks(W*0.5+jBallX*2,H*0.75,'#1dd1a1',6);
-    if(combo%5===0){
-      p.pt=(Number(p.pt)||0)+1;
-      if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
-      saveP();updHUD();
-      spawnSparks(W*0.5,H*0.55,'#feca57',14);
-    }
+    autoJuggles=4;
+    triggerHit();
   }
 });
-
+/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4 ] ================= */
+/* ===================================================================== */
+/* ================== [ INDEX.HTML : ЧАСТИНА 5 З 7 ] =================== */
+/* ===================================================================== */
 function drawCapsule(x1,y1,x2,y2,r1,r2,col){
   const ang=Math.atan2(y2-y1,x2-x1),perp=ang+Math.PI/2;
   ctx.fillStyle=col;ctx.beginPath();
@@ -328,9 +406,9 @@ function drawArenaBg(t){
   ctx.beginPath();ctx.ellipse(W*0.5,horY+H*0.16,W*0.36,H*0.09,0,0,Math.PI*2);ctx.stroke();
   ctx.beginPath();ctx.moveTo(0,horY+H*0.16);ctx.lineTo(W,horY+H*0.16);ctx.stroke();
 }
-/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4 ] ================= -->
+/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 5 ] ================= */
 /* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 5 З 6 ] =================== */
+/* ================== [ INDEX.HTML : ЧАСТИНА 6 З 7 ] =================== */
 /* ===================================================================== */
 function drawHero3D(t){
   const cx=W*0.5,baseY=H*0.82,sc=Math.min(W,H)*0.0056;
@@ -345,13 +423,23 @@ function drawHero3D(t){
   const sec=performance.now()/1000;
   const phase=sec%20;
   const exType=Math.floor(sec/20)%3;
-  let jumpY=0,squat=0,armRaise=0,legKickL=0,legKickR=0,bodyTwist=0;
+  let jumpY=0,squat=0,armRaise=0,legKickL=0,legKickR=0,bodyTwist=0,headNod=0;
+
+  if(headBounce>0) headBounce=Math.max(0,headBounce-0.06);
 
   if(juggleTimer>0){
-    const kCurve=Math.sin(juggleTimer*Math.PI);
-    if(juggleFoot===1){legKickR=kCurve*21*sc;bodyTwist=-0.08*kCurve;}
-    else{legKickL=kCurve*21*sc;bodyTwist=0.08*kCurve;}
-    armRaise=0.35*kCurve;
+    if(isHeadMode){
+      const hCurve=Math.sin(headBounce*Math.PI);
+      jumpY=hCurve*7.5*sc;
+      headNod=-hCurve*4.5*sc;
+      armRaise=0.45+hCurve*0.25;
+      bodyTwist=Math.sin(sec*6)*0.05;
+    }else{
+      const kCurve=Math.sin(juggleTimer*Math.PI);
+      if(juggleFoot===1){legKickR=kCurve*20*sc;bodyTwist=-0.08*kCurve;}
+      else{legKickL=kCurve*20*sc;bodyTwist=0.08*kCurve;}
+      armRaise=0.35*kCurve;
+    }
   }else if(phase<10){
     actBadge.textContent='⚽ Готовий до матчу';
     armRaise=0.06+Math.sin(sec*1.6)*0.03;
@@ -429,55 +517,71 @@ function drawHero3D(t){
     ctx.beginPath();ctx.arc(hdX,hdY,3.4*sc,0,Math.PI*2);ctx.fill();
   });
 
-  drawCapsule(0,-39*sc,0,-45*sc,3.6*sc,3.2*sc,shade);
-  const fG=ctx.createRadialGradient(-2*sc,-54*sc,1*sc,0,-52*sc,10*sc);
+  drawCapsule(0,-39*sc,0,-45*sc+headNod,3.6*sc,3.2*sc,shade);
+  const fG=ctx.createRadialGradient(-2*sc,-54*sc+headNod,1*sc,0,-52*sc+headNod,10*sc);
   fG.addColorStop(0,light);fG.addColorStop(0.65,skin);fG.addColorStop(1,shade);
-  ctx.fillStyle=fG;ctx.beginPath();ctx.ellipse(0,-52*sc,7.2*sc,8.8*sc,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=fG;ctx.beginPath();ctx.ellipse(0,-52*sc+headNod,7.2*sc,8.8*sc,0,0,Math.PI*2);ctx.fill();
 
   if(!isBack){
-    const lookBall=juggleTimer>0?(juggleFoot*1.5*sc):0;
+    const lookBall=(juggleTimer>0&&!isHeadMode)?(juggleFoot*1.5*sc):0;
     const eyeShift=sinA*3.2*sc+lookBall;
+    const eyeY=isHeadMode?(-55*sc+headNod):(-53*sc+headNod);
     ctx.fillStyle='#1e272e';
     ctx.beginPath();
-    ctx.arc(-2.6*sc*wScale+eyeShift,-53*sc,1.0*sc,0,Math.PI*2);
-    ctx.arc(2.6*sc*wScale+eyeShift,-53*sc,1.0*sc,0,Math.PI*2);
+    ctx.arc(-2.6*sc*wScale+eyeShift,eyeY,1.0*sc,0,Math.PI*2);
+    ctx.arc(2.6*sc*wScale+eyeShift,eyeY,1.0*sc,0,Math.PI*2);
     ctx.fill();
     ctx.strokeStyle='#a8683a';ctx.lineWidth=1.1*sc;
-    ctx.beginPath();ctx.arc(eyeShift,-48.5*sc,2.1*sc*wScale,0.12*Math.PI,0.88*Math.PI);ctx.stroke();
+    ctx.beginPath();ctx.arc(eyeShift,-48.5*sc+headNod,2.1*sc*wScale,0.12*Math.PI,0.88*Math.PI);ctx.stroke();
   }
 
   ctx.fillStyle='#191e26';
   if(isBack){
-    ctx.beginPath();ctx.ellipse(0,-53*sc,7.5*sc,8.5*sc,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(0,-53*sc+headNod,7.5*sc,8.5*sc,0,0,Math.PI*2);ctx.fill();
   }else{
-    ctx.beginPath();ctx.ellipse(0,-57*sc,7.6*sc,5.2*sc,0,Math.PI*0.92,Math.PI*2.08);ctx.fill();
+    ctx.beginPath();ctx.ellipse(0,-57*sc+headNod,7.6*sc,5.2*sc,0,Math.PI*0.92,Math.PI*2.08);ctx.fill();
   }
 
   ctx.restore();
   ctx.restore();
 }
-/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 5 ] ================= */
+/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 6 ] ================= */
 <!-- ===================================================================== -->
-<!-- ================== [ INDEX.HTML : ЧАСТИНА 6 З 6 ] =================== -->
+<!-- ================== [ INDEX.HTML : ЧАСТИНА 7 З 7 ] =================== -->
 <!-- ===================================================================== -->
 function drawJuggleBall(){
   const cx=W*0.5,baseY=H*0.82,sc=Math.min(W,H)*0.0056;
   if(juggleTimer>0){
-    juggleTimer=Math.max(0,juggleTimer-0.025);
+    juggleTimer=Math.max(0,juggleTimer-0.028);
     jBallY+=jBallVy;
-    jBallVy+=0.42;
-    jBallRot+=0.18*juggleFoot;
-    if(jBallY>0){
-      jBallY=0;jBallVy=0;
-      if(combo>0){combo=0;comboBadge.style.display='none';}
+    jBallVy+=isHeadMode?0.36:0.46;
+    jBallRot+=0.18*(isHeadMode?0.6:juggleFoot);
+
+    if(isHeadMode){
+      if(jBallY>-106 && jBallVy>0){
+        if(autoJuggles>0){
+          autoJuggles--;
+          triggerHit();
+        }else{
+          isHeadMode=false;
+        }
+      }
+    }else{
+      if(jBallY>-12 && jBallVy>0 && autoJuggles>0){
+        autoJuggles--;
+        triggerHit();
+      }else if(jBallY>0){
+        jBallY=0;jBallVy=0;juggleTimer=0;
+        if(combo>0){combo=0;comboBadge.style.display='none';}
+      }
     }
   }else{
-    jBallY=0;jBallX=18;
+    jBallY=0;jBallX=18;isHeadMode=false;autoJuggles=0;
     if(combo>0){combo=0;comboBadge.style.display='none';}
   }
 
   const bx=cx+jBallX*sc,by=baseY-6*sc+jBallY*sc,rad=6.5*sc;
-  const shScale=Math.max(0.45,1+jBallY/90);
+  const shScale=Math.max(0.35,1+jBallY/130);
   ctx.fillStyle='rgba(0,0,0,0.42)';
   ctx.beginPath();ctx.ellipse(bx,baseY+4*sc,rad*0.95*shScale,rad*0.35*shScale,0,0,Math.PI*2);ctx.fill();
 
@@ -522,4 +626,4 @@ loop();
 </script>
 </body>
 </html>
-<!-- ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 6 ] ================= -->
+<!-- ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 7 ] ================= -->
