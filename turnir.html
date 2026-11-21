@@ -1,98 +1,90 @@
 <!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 1 З 9 ] =================== -->
+<!-- ================== [ TURNIR.HTML : ЧАСТИНА 1 З 3 ] ================== -->
 <!-- ===================================================================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>3D Champions Penalty — Матч</title>
+<title>3D Champions Penalty — Ліга Чемпіонів</title>
 <script src="https://telegram.org"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
 .tabs{display:flex;gap:6px;margin-bottom:6px;flex-shrink:0}
-.tab{flex:1;padding:8px 6px;background:#131b26;border:1px solid #243347;color:#fff;border-radius:10px;font-weight:bold;font-size:12px;cursor:pointer;text-align:center;text-decoration:none}
-.tab.ucl{background:#152547;color:#70a1ff;border-color:#3867d6}
+.tab{flex:1;padding:9px 6px;background:#131b26;border:1px solid #243347;color:#fff;border-radius:10px;font-weight:bold;font-size:12px;cursor:pointer;text-align:center;text-decoration:none}
+.tab.on{background:#152547;color:#70a1ff;border-color:#3867d6}
 .box{background:#131b26;border:1px solid #243347;border-radius:12px;padding:7px 12px;margin-bottom:6px;flex-shrink:0}
 .row{display:flex;justify-content:space-between;align-items:center}
 .bar{width:100%;height:5px;background:#1e2b3c;border-radius:4px;overflow:hidden;margin:4px 0}
 .fill{height:100%;background:#1dd1a1;transition:width .3s}
-.arena{flex:1;min-height:0;position:relative;border-radius:14px;overflow:hidden;border:2px solid #243347;margin-bottom:8px;background:#070b14}
-#c3d{width:100%;height:100%;display:block}
-.hud-top{position:absolute;top:10px;left:12px;right:12px;display:flex;justify-content:space-between;background:rgba(7,11,20,.84);padding:7px 14px;border-radius:10px;font-size:13px;pointer-events:none;border:1px solid rgba(75,123,236,.35)}
-.msg{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.92);padding:8px 18px;border-radius:16px;font-weight:bold;font-size:14px;border:1px solid #feca57;text-align:center;white-space:nowrap}
-.ctrl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex-shrink:0}
-.btn{background:#182230;border:2px solid #3c4f66;color:#fff;padding:12px 4px;border-radius:12px;font-weight:bold;font-size:13px;cursor:pointer}
-.btn:active{transform:scale(.95)}.btn:disabled{opacity:.4}
-.full{grid-column:span 3;border:none;font-size:14px;padding:13px}
+.ucl-box{flex:1;overflow-y:auto;background:linear-gradient(180deg,#091326,#0e1b33);border:1px solid #2b4c7e;border-radius:14px;padding:10px}
+.sub-tabs{display:flex;gap:6px;margin-bottom:8px}
+.stab{flex:1;padding:7px;background:#0d182d;border:1px solid #294166;color:#a5b1c2;border-radius:8px;font-size:11px;font-weight:bold;cursor:pointer;text-align:center}
+.stab.on{background:#1e3799;color:#fff;border-color:#4b7bec}
+.grp-card{background:#0c182e;border:1px solid #233c63;border-radius:11px;padding:8px;margin-bottom:8px}
+.grp-title{font-size:12px;font-weight:bold;color:#70a1ff;margin-bottom:5px;display:flex;justify-content:space-between}
+table.tbl{width:100%;border-collapse:collapse;font-size:11px}
+table.tbl th{color:#778ca3;font-weight:normal;text-align:center;padding:3px 2px;border-bottom:1px solid #1e3354}
+table.tbl th:nth-child(2),table.tbl td:nth-child(2){text-align:left;padding-left:4px}
+table.tbl td{padding:5px 2px;text-align:center;border-bottom:1px solid rgba(255,255,255,.04)}
+tr.q-pass td:first-child{border-left:3px solid #1dd1a1;color:#1dd1a1;font-weight:bold}
+tr.q-out td:first-child{border-left:3px solid #3c4f66;color:#778ca3}
+tr.me-row{background:rgba(29,209,161,.14);font-weight:bold}
+.sched-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:#091224;border-radius:7px;margin-top:4px;font-size:11px;border:1px solid #1b3154}
+.sched-item.next{border-color:#feca57;background:rgba(254,202,87,.1)}
+.rnd-title{font-size:11px;font-weight:bold;color:#70a1ff;margin:8px 0 5px;text-transform:uppercase;letter-spacing:.5px}
+.match{background:#0c182e;border:1px solid #233c63;border-radius:10px;padding:7px 10px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.match.me{border-color:#feca57;background:rgba(254,202,87,.09)}
+.btn{background:#182230;border:2px solid #3c4f66;color:#fff;padding:12px 6px;border-radius:12px;font-weight:bold;font-size:13px;cursor:pointer;width:100%}
+.btn:active{transform:scale(.97)}
+.ucl-btn{background:linear-gradient(135deg,#1e3799,#3867d6);border:1px solid #4b7bec;color:#fff;margin-top:6px}
+.cup-banner{text-align:center;padding:12px;background:rgba(254,202,87,.12);border:1px solid #feca57;border-radius:12px;margin-bottom:8px}
 </style>
 </head>
 <body>
 <div class="tabs">
-  <a href="index.html" class="tab" onclick="localStorage.removeItem('pc_play_ucl')">🏠 Головна (Гравець)</a>
-  <a href="turnir.html" class="tab ucl" onclick="localStorage.removeItem('pc_play_ucl')">🏆 Сітка Ліги Чемпіонів</a>
+  <a href="index.html" class="tab">🏠 Головна</a>
+  <a href="turnir.html" class="tab on">🏆 Ліга Чемпіонів</a>
+  <a href="shop.html" class="tab">🛍 Магазин</a>
 </div>
 <div class="box">
   <div class="row"><b style="color:#feca57">Рівень <span id="lv">1</span> • 🏆 ЛЧ: <span id="cp">0</span></b><b style="color:#feca57">💰 <span id="cn">20</span></b></div>
   <div class="bar"><div class="fill" id="xb"></div></div>
-  <div class="row" style="font-size:11px;color:#8395a7"><span>XP: <span id="pt">0</span>/<span id="nx">100</span></span><span id="op" style="color:#70a1ff;font-weight:bold">Матч</span></div>
+  <div class="row" style="font-size:11px;color:#8395a7"><span>XP: <span id="pt">0</span>/<span id="nx">100</span></span><span style="color:#70a1ff;font-weight:bold">Групи (Вдома/Виїзд) + Плей-оф</span></div>
 </div>
-<div style="display:flex;flex-direction:column;flex:1;min-height:0">
-  <div class="arena" id="ar">
-    <div class="hud-top">
-      <span>Ти: <span id="pd">⚪⚪⚪⚪⚪</span></span>
-      <b style="color:#feca57;font-size:16px"><span id="ps">0</span> : <span id="bs">0</span></b>
-      <span>Суперник: <span id="bd">⚪⚪⚪⚪⚪</span></span>
-    </div>
-    <canvas id="c3d"></canvas>
-    <div class="msg" id="ms">⚽ Твій удар! Вибери кут</div>
-  </div>
-  <div class="ctrl" id="ct"></div>
-</div>
-<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 1 ] ================== -->
+<div class="ucl-box" id="uclBox"></div>
+<!-- ================== [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 1 ] ================= -->
 <!-- ===================================================================== -->
-<!-- ===================================================================== -->
-<!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 9 ] =================== -->
+<!-- ================== [ TURNIR.HTML : ЧАСТИНА 2 З 3 ] ================== -->
 <!-- ===================================================================== -->
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
 
-const CLUBS=[
-  {n:'Реал Мадрид',i:'👑',c:'#f5f6fa',dark:'#cfd6de'},
-  {n:'Барселона',i:'🔵🔴',c:'#a50044',dark:'#5e0026'},
-  {n:'Баварія',i:'🔴⚪',c:'#dc052d',dark:'#85021a'},
-  {n:'Манчестер Сіті',i:'🩵',c:'#6cabdd',dark:'#386c96'},
-  {n:'ПСЖ',i:'🗼',c:'#004170',dark:'#00213b'},
-  {n:'Арсенал',i:'🔫',c:'#ef0107',dark:'#910004'},
-  {n:'Інтер Мілан',i:'🐍',c:'#010e80',dark:'#000747'},
-  {n:'Ліверпуль',i:'🦅',c:'#c8102e',dark:'#78081a'},
-  {n:'Атлетіко',i:'🔴⚪',c:'#cb3524',dark:'#7d1e13'},
-  {n:'Боруссія Д',i:'🐝',c:'#fde100',dark:'#b5a000'},
-  {n:'Ювентус',i:'🦓',c:'#e5e5e5',dark:'#999999'},
-  {n:'Байєр',i:'💊',c:'#e32221',dark:'#8a1110'},
-  {n:'Мілан',i:'⚫🔴',c:'#fb090b',dark:'#960304'},
-  {n:'Бенфіка',i:'🦅',c:'#e83030',dark:'#8f1818'},
-  {n:'Спортінг',i:'🦁',c:'#008057',dark:'#004730'}
+const ALL_CLUBS=[
+  {n:'Реал Мадрид',i:'👑',c:'#f5f6fa',dark:'#cfd6de'},{n:'Барселона',i:'🔵🔴',c:'#a50044',dark:'#5e0026'},
+  {n:'Баварія',i:'🔴⚪',c:'#dc052d',dark:'#85021a'},{n:'Манчестер Сіті',i:'🩵',c:'#6cabdd',dark:'#386c96'},
+  {n:'ПСЖ',i:'🗼',c:'#004170',dark:'#00213b'},{n:'Арсенал',i:'🔫',c:'#ef0107',dark:'#910004'},
+  {n:'Інтер Мілан',i:'🐍',c:'#010e80',dark:'#000747'},{n:'Ліверпуль',i:'🦅',c:'#c8102e',dark:'#78081a'},
+  {n:'Атлетіко',i:'🔴⚪',c:'#cb3524',dark:'#7d1e13'},{n:'Боруссія Д',i:'🐝',c:'#fde100',dark:'#b5a000'},
+  {n:'Ювентус',i:'🦓',c:'#e5e5e5',dark:'#999999'},{n:'Байєр',i:'💊',c:'#e32221',dark:'#8a1110'},
+  {n:'Мілан',i:'⚫🔴',c:'#fb090b',dark:'#960304'},{n:'Бенфіка',i:'🦅',c:'#e83030',dark:'#8f1818'},
+  {n:'Спортінг',i:'🦁',c:'#008057',dark:'#004730'},{n:'Аталанта',i:'🔵⚫',c:'#1e71b8',dark:'#0e3b63'},
+  {n:'РБ Лейпциг',i:'🐂',c:'#dd0741',dark:'#820325'},{n:'Порту',i:'🐉',c:'#00428c',dark:'#00224a'},
+  {n:'ПСВ',i:'💡',c:'#ed1c24',dark:'#8f0d12'},{n:'Феєнорд',i:'🔴⚪',c:'#e30613',dark:'#85030a'},
+  {n:'Астон Вілла',i:'🦁',c:'#670e36',dark:'#3b061e'},{n:'Монако',i:'🇲🇨',c:'#e51b23',dark:'#8a0d12'},
+  {n:'Лілль',i:'🐕',c:'#e01e13',dark:'#850f08'},{n:'Жирона',i:'⚪🔴',c:'#cc2229',dark:'#7a1116'},
+  {n:'Штутгарт',i:'⚪🔴',c:'#e32219',dark:'#87110c'},{n:'Болонья',i:'🔴🔵',c:'#1a2f48',dark:'#0b1624'},
+  {n:'Селтік',i:'☘️',c:'#018749',dark:'#004d29'},{n:'Брюгге',i:'🔵⚫',c:'#0070b8',dark:'#003e66'},
+  {n:'Шахтар',i:'⚒️',c:'#f37021',dark:'#99400b'},{n:'Динамо Загреб',i:'🔵',c:'#005ca9',dark:'#003361'},
+  {n:'Зальцбург',i:'🐂',c:'#d4002a',dark:'#7d0018'},{n:'Спарта Прага',i:'🔴',c:'#9c1c26',dark:'#5c0e14'}
 ];
-const RNDS=[{n:'1/8 Фінал',r:60},{n:'1/4 Фінал',r:110},{n:'Півфінал',r:200},{n:'ФІНАЛ ЛЧ',r:500}];
 
-const SHOP=[
-  {id:'j1',col:'#1dd1a1',dark:'#0d8a68',trim:'#ffffff'},
-  {id:'j2',col:'#f5f6fa',dark:'#cfd6de',trim:'#1e272e'},
-  {id:'j3',col:'#d63031',dark:'#8e1b1c',trim:'#ffffff'},
-  {id:'j4',col:'#1e3799',dark:'#0c1a52',trim:'#feca57'},
-  {id:'j5',col:'#1e272e',dark:'#0b0f14',trim:'#1dd1a1'},
-  {id:'j6',col:'#feca57',dark:'#c49014',trim:'#1e272e'},
-  {id:'p1',col:'#ffffff',dark:'#cfd6de'},{id:'p2',col:'#1e272e',dark:'#0b0f14'},{id:'p3',col:'#1e3799',dark:'#0c1a52'},
-  {id:'p4',col:'#d63031',dark:'#8e1b1c'},{id:'p5',col:'#00a8ff',dark:'#006299'},{id:'p6',col:'#feca57',dark:'#c49014'},
-  {id:'s1',col:'#14181d',ac:'#1dd1a1'},{id:'s2',col:'#f5f6fa',ac:'#eb4d4b'},{id:'s3',col:'#00d2ff',ac:'#ffffff'},{id:'s4',col:'#feca57',ac:'#1e272e'},
-  {id:'b1',bn:0,col:'#ffffff'},{id:'b2',bn:5,col:'#ff5e57'},{id:'b3',bn:12,col:'#00d2ff'},{id:'b4',bn:25,col:'#feca57'},
-  {id:'k1',bn:0,col:'#1dd1a1'},{id:'k2',bn:10,col:'#ff9ff3'}
-];
+const SHOP_COLS={j1:'#1dd1a1',j2:'#f5f6fa',j3:'#d63031',j4:'#1e3799',j5:'#1e272e',j6:'#feca57'};
+const GRP_LETTERS=['A','B','C','D','E','F','G','H'];
 
 let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null};
-let freeOpp=CLUBS.at(Math.floor(Math.random()*CLUBS.length));
+let viewTab='mygrp';
 
 function loadWallet(){
   try{
@@ -101,273 +93,63 @@ function loadWallet(){
     if(v)p=Object.assign(p,v);
     else if(old){p=Object.assign(p,old);save();}
   }catch(e){}
-  if(!p.ej)p.ej='j1';
-  if(!p.ep)p.ep='p1';
-  if(!p.es)p.es='s1';
-  if(!p.eb)p.eb='b1';
-  if(!p.ek)p.ek='k1';
-  if(!p.num)p.num='10';
-  if(!p.numCol)p.numCol='#ffffff';
-  if(isNaN(Number(p.cn)))p.cn=20;
 }
 function save(){try{localStorage.setItem('pc_ucl1',JSON.stringify(p))}catch(e){}}
 loadWallet();
 
-const isUCLMode=(
-  (new URLSearchParams(location.search).get('mode')==='ucl' || localStorage.getItem('pc_play_ucl')==='1')
-  && p.ucl && p.ucl.active
-);
-
-function getItem(id){
-  return SHOP.find(x=>x.id===id) || SHOP.at(0);
-}
-
-function getCurOpponent(){
-  if(isUCLMode && p.ucl && p.ucl.active){
-    if(p.ucl.stage==='group' && Array.isArray(p.ucl.groups) && p.ucl.groups.length>0){
-      const grp=p.ucl.groups.find(g=>g.teams.some(t=>t.isMe)) || p.ucl.groups.at(0);
-      const me=grp.teams.find(t=>t.isMe);
-      const rObj=grp.schedule.at(p.ucl.gRnd) || grp.schedule.at(0);
-      if(me && rObj && Array.isArray(rObj.matches)){
-        const m=rObj.matches.find(x=>x.home===me.id || x.away===me.id);
-        if(m){
-          const isHome=(m.home===me.id);
-          const oppId=isHome?m.away:m.home;
-          const opp=grp.teams.find(t=>t.id===oppId);
-          if(opp) return Object.assign({},opp,{isHome:isHome,tour:p.ucl.gRnd+1,grpName:grp.name});
-        }
-      }
-    }else if(p.ucl.stage==='ko'){
-      const stages=[p.ucl.r16,p.ucl.qf,p.ucl.sf,p.ucl.fn];
-      const arr=stages.at(p.ucl.rnd) || p.ucl.r16;
-      if(Array.isArray(arr) && arr.length>0){
-        const myM=arr.find(m=>m.a.isMe || m.b.isMe) || arr.at(0);
-        return myM.a.isMe ? myM.b : myM.a;
-      }
-    }
-  }
-  return freeOpp;
-}
-
-let ph='sh',pS=[],bS=[],ac=null,ambOn=false,crowdMood=0;
-
-function startAmbience(){
-  if(ambOn)return;
-  try{
-    if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();
-    if(ac.state==='suspended')ac.resume();
-    ambOn=true;
-    const len=ac.sampleRate*6,buf=ac.createBuffer(1,len,ac.sampleRate),ch=buf.getChannelData(0);
-    let lastOut=0;
-    for(let i=0;i<len;i++){
-      const white=Math.random()*2-1;
-      lastOut=(lastOut+(0.02*white))/1.02;
-      const swell=0.65+0.35*Math.sin((i/len)*Math.PI*2);
-      ch[i]=lastOut*3.2*swell;
-    }
-    const ns=ac.createBufferSource();ns.buffer=buf;ns.loop=true;
-    const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=260;
-    const gn=ac.createGain();gn.gain.value=0.16;
-    ns.connect(lp);lp.connect(gn);gn.connect(ac.destination);ns.start();
-  }catch(e){}
-}
-window.addEventListener('pointerdown',startAmbience,{once:true});
-
-function whistle(dur=0.28){
-  try{
-    const now=ac.currentTime,o1=ac.createOscillator(),o2=ac.createOscillator(),g=ac.createGain();
-    o1.type='sine';o2.type='sine';o1.frequency.setValueAtTime(2850,now);o2.frequency.setValueAtTime(2920,now);
-    g.gain.setValueAtTime(0.001,now);g.gain.linearRampToValueAtTime(0.06,now+0.03);
-    g.gain.setValueAtTime(0.06,now+dur-0.05);g.gain.exponentialRampToValueAtTime(0.001,now+dur);
-    o1.connect(g);o2.connect(g);g.connect(ac.destination);o1.start(now);o2.start(now);o1.stop(now+dur);o2.stop(now+dur);
-  }catch(e){}
-}
-
-function snd(type){
-  startAmbience();
-  try{
-    const now=ac.currentTime,osc=ac.createOscillator(),og=ac.createGain();
-    osc.type='triangle';osc.frequency.setValueAtTime(115,now);osc.frequency.exponentialRampToValueAtTime(34,now+0.14);
-    og.gain.setValueAtTime(0.55,now);og.gain.exponentialRampToValueAtTime(0.001,now+0.14);
-    osc.connect(og);og.connect(ac.destination);osc.start(now);osc.stop(now+0.15);
-
-    const dur=type==='cheer'?2.1:1.4,len=Math.floor(ac.sampleRate*dur);
-    const buf=ac.createBuffer(1,len,ac.sampleRate),ch=buf.getChannelData(0);
-    let last=0;
-    for(let i=0;i<len;i++){
-      const w=Math.random()*2-1;last=(last+(0.04*w))/1.04;
-      ch[i]=last*3.5*Math.sin(Math.PI*(i/len));
-    }
-    const src=ac.createBufferSource(),flt=ac.createBiquadFilter(),gn=ac.createGain();
-    src.buffer=buf;flt.type='lowpass';
-    flt.frequency.setValueAtTime(type==='cheer'?320:240,now+0.08);
-    flt.frequency.linearRampToValueAtTime(type==='cheer'?680:160,now+0.45);
-    flt.frequency.linearRampToValueAtTime(type==='cheer'?360:140,now+0.08+dur);
-    gn.gain.setValueAtTime(type==='cheer'?0.48:0.32,now+0.08);
-    gn.gain.exponentialRampToValueAtTime(0.001,now+0.08+dur);
-    src.connect(flt);flt.connect(gn);gn.connect(ac.destination);src.start(now+0.08);
-    if(type==='cheer')setTimeout(()=>whistle(0.32),350);
-  }catch(e){}
-}
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 2 ] ================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 3 З 9 ] =================== */
-/* ===================================================================== */
 function updUI(){
   lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
   const nxXp=p.lv*100;pt.textContent=p.pt;nx.textContent=nxXp;
   xb.style.width=Math.min(100,(p.pt/nxXp)*100)+'%';
-  const opp=getCurOpponent();
-  if(isUCLMode && p.ucl && p.ucl.active){
-    if(p.ucl.stage==='group'){
-      const vTag=opp.isHome?'Вдома':'Виїзд';
-      op.textContent=`🏆 Гр.${opp.grpName} Т.${opp.tour} (${vTag}): ${opp.i} ${opp.n}`;
-    }else{
-      const rndName=RNDS[p.ucl.rnd]?RNDS[p.ucl.rnd].n:'ЛЧ';
-      op.textContent=`🏆 ${rndName}: ${opp.i} ${opp.n}`;
-    }
-  }else{
-    op.textContent=`⚽ Спаринг: ${opp.i} ${opp.n}`;
-  }
-  const totalSlots=Math.max(5,pS.length,bS.length);
-  pd.textContent=Array.from({length:totalSlots},(_,i)=>pS[i]===1?'🟢':(pS[i]===0?'🔴':'⚪')).join('');
-  bd.textContent=Array.from({length:totalSlots},(_,i)=>bS[i]===1?'🟢':(bS[i]===0?'🔴':'⚪')).join('');
-  ps.textContent=pS.filter(x=>x===1).length;
-  bs.textContent=bS.filter(x=>x===1).length;
 }
 
-function renderCtrl(){
-  ct.innerHTML='';
-  if(ph==='over'){
-    const pG=pS.filter(x=>x===1).length,bG=bS.filter(x=>x===1).length;
-    const won=pG>bG,isDraw=(pG===bG);
-    if(isUCLMode){
-      const isGrp=(p.ucl && p.ucl.stage==='group');
-      const btnText=isGrp
-        ?'📊 Зберегти в таблицю групи'
-        :(won?'🏆 Зберегти результат і в сітку ЛЧ':'📊 Дивитись результати');
-      const btnBg=won?'#1dd1a1':(isDraw?'#feca57':'#3867d6');
-      const btnCol=(won||isDraw)?'#000':'#fff';
-      ct.innerHTML=`<button class="btn full" style="background:${btnBg};color:${btnCol}" onclick="nextMatch(${won})">${btnText}</button>`;
-    }else{
-      ct.innerHTML=`<button class="btn full" style="background:${won?'#1dd1a1':'#ff5e57'};color:#000" onclick="nextMatch(${won})">${won?'⚽ Наступний спаринг':'🔄 Спробувати ще раз'}</button>`;
-    }
-    return;
-  }
-  const zones=[
-    {z:0,l:'↖️ Лів. Верх'},{z:1,l:'⬆️ Центр Верх'},{z:2,l:'↗️ Прав. Верх'},
-    {z:3,l:'↙️ Лів. Низ'},{z:4,l:'⬇️ Центр Низ'},{z:5,l:'↘️ Прав. Низ'}
+function buildGroupSchedule(teams){
+  const t0=teams.at(0),t1=teams.at(1),t2=teams.at(2),t3=teams.at(3);
+  return [
+    {rnd:1,matches:[{home:t0.id,away:t1.id,sc:null},{home:t2.id,away:t3.id,sc:null}]},
+    {rnd:2,matches:[{home:t3.id,away:t0.id,sc:null},{home:t1.id,away:t2.id,sc:null}]},
+    {rnd:3,matches:[{home:t0.id,away:t2.id,sc:null},{home:t3.id,away:t1.id,sc:null}]},
+    {rnd:4,matches:[{home:t1.id,away:t0.id,sc:null},{home:t3.id,away:t2.id,sc:null}]},
+    {rnd:5,matches:[{home:t0.id,away:t3.id,sc:null},{home:t2.id,away:t1.id,sc:null}]},
+    {rnd:6,matches:[{home:t2.id,away:t0.id,sc:null},{home:t1.id,away:t3.id,sc:null}]}
   ];
-  zones.forEach(item=>{
-    const b=document.createElement('button');
-    b.className='btn';b.textContent=item.l;b.disabled=busy;
-    b.onclick=()=>act(item.z);ct.appendChild(b);
-  });
 }
 
-function zoneCoords(z){
-  const col=(z%3)-1,row=z<3?1:0;
-  return{x:col*3.85,y:row===1?2.55:0.48,dive:col};
-}
+function initUCL(){
+  const pool=[...ALL_CLUBS].sort(()=>Math.random()-0.5).slice(0,31);
+  const myCol=SHOP_COLS[p.ej]||'#1dd1a1';
+  const all32=[{n:'Твій Клуб',i:'🇺🇦',c:myCol,dark:'#0b0f14',isMe:true},...pool];
 
-let netWave={amp:0,phase:0,hitX:0,hitY:1.5};
-
-function resetPositions(){
-  ball={x:0,y:0.22,z:0,sx:0,sy:0.22,sz:0,tx:0,ty:0.22,tz:0,t:1,active:false,inNet:false,vy:0};
-  gk={x:0,y:0,tx:0,ty:0,dive:0,tdive:0,state:'idle'};
-  kicker={x:-1.5,z:-2.8,sx:-1.5,sz:-2.8,tx:-0.35,tz:-0.25,run:0,running:false,kickPose:0};
-  netWave.amp=0;
-}
-
-function act(z){
-  if(busy)return;
-  busy=true;renderCtrl();
-  const isPlayerShoot=(ph==='sh'),botZ=Math.floor(Math.random()*6);
-  const shotZ=isPlayerShoot?z:botZ,saveZ=isPlayerShoot?botZ:z;
-  const sc=zoneCoords(shotZ),kc=zoneCoords(saveZ);
-
-  kicker.running=true;kicker.run=0;
-
-  setTimeout(()=>{
-    kicker.running=false;kicker.kickPose=1;
-    const isGoal=(shotZ!==saveZ);
-    ball={x:0,y:0.22,z:0,sx:0,sy:0.22,sz:0,tx:sc.x,ty:sc.y,tz:isGoal?11.75:10.4,t:0,active:true,inNet:false,vy:0};
-    
-    gk.state='jump';
-    gk.tx=kc.x*0.92;
-    gk.ty=kc.y>1?0.85:0.15;
-    gk.tdive=kc.dive;
-    snd('kick');
-
-    setTimeout(()=>{
-      gk.state='fall';
-      gk.ty=0;
-      if(Math.abs(gk.tdive)>0.1) gk.tdive=Math.sign(gk.tdive)*1.45;
-    },460);
-
-    setTimeout(()=>{
-      gk.state='stand';
-      gk.tdive=0;
-    },1020);
-
-    setTimeout(()=>{
-      if(isGoal){
-        netWave={amp:1.0,phase:0,hitX:sc.x,hitY:sc.y};
-        ball.inNet=true;
-      }else{
-        ball.sx=ball.x;ball.sy=ball.y;ball.sz=ball.z;
-        ball.tx=sc.x*1.15;ball.ty=0.22;ball.tz=8.8;
-        ball.t=0;
-      }
-
-      if(isPlayerShoot){
-        pS.push(isGoal?1:0);
-        if(isGoal){
-          const winCoins=10+(getItem(p.eb).bn||0);
-          p.cn+=winCoins;p.pt+=25;crowdMood=1;snd('cheer');
-          ms.textContent=`⚽ ГОЛ! +${winCoins} 💰`;ms.style.borderColor='#1dd1a1';
-        }else{
-          crowdMood=-1;snd('boo');ms.textContent='🧤 Воротар потягнув!';ms.style.borderColor='#ff5e57';
-        }
-      }else{
-        bS.push(isGoal?1:0);
-        if(isGoal){
-          crowdMood=-1;snd('boo');ms.textContent=`❌ ${getCurOpponent().n} забив!`;ms.style.borderColor='#ff5e57';
-        }else{
-          const saveCoins=5+(getItem(p.ek).bn||0);
-          p.cn+=saveCoins;p.pt+=20;crowdMood=1;snd('cheer');
-          ms.textContent=`🧤 СЕЙВ! +${saveCoins} 💰`;ms.style.borderColor='#1dd1a1';
-        }
-      }
-      if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
-      save();updUI();
-      setTimeout(()=>{crowdMood=0;checkSeries();},1250);
-    },560);
-  },380);
-}
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 3 ] ================== */
-/* ===================================================================== */
-/* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 4 З 9 ] =================== */
-/* ===================================================================== */
-function recordGroupMatch(grp,m,gHome,gAway){
-  m.sc=`${gHome}:${gAway}`;
-  const tH=grp.teams.find(t=>t.id===m.home);
-  const tA=grp.teams.find(t=>t.id===m.away);
-  if(!tH||!tA)return;
-  tH.pl++;tA.pl++;
-  tH.gf+=gHome;tH.ga+=gAway;
-  tA.gf+=gAway;tA.ga+=gHome;
-  if(gHome>gAway){
-    tH.w++;tH.pts+=3;tA.l++;
-  }else if(gAway>gHome){
-    tA.w++;tA.pts+=3;tH.l++;
-  }else{
-    tH.d=(tH.d||0)+1;tH.pts+=1;
-    tA.d=(tA.d||0)+1;tA.pts+=1;
+  const groups=[];
+  for(let g=0;g<8;g++){
+    const slice=all32.slice(g*4,g*4+4).map((c,idx)=>({
+      id:`g${g}_${idx}`,
+      n:c.n,i:c.i,c:c.c,dark:c.dark||'#1e272e',isMe:!!c.isMe,
+      pl:0,w:0,d:0,l:0,gf:0,ga:0,pts:0
+    }));
+    groups.push({
+      name:GRP_LETTERS.at(g),
+      teams:slice,
+      schedule:buildGroupSchedule(slice)
+    });
   }
+
+  p.ucl={
+    active:true,
+    stage:'group',
+    gRnd:0,
+    groups:groups,
+    rnd:0,
+    r16:[],qf:[],sf:[],fn:[],
+    champ:null,
+    eliminated:false
+  };
+  viewTab='mygrp';
+  save();
+  renderUCL();
 }
 
-function sortGroupTeams(grp){
+function getSortedTeams(grp){
   return [...grp.teams].sort((a,b)=>{
     if(b.pts!==a.pts)return b.pts-a.pts;
     const gdA=a.gf-a.ga,gdB=b.gf-b.ga;
@@ -377,708 +159,173 @@ function sortGroupTeams(grp){
   });
 }
 
-function simulateFullKO(u){
-  const keys=['r16','qf','sf','fn'];
-  while(u.rnd<=3){
-    const rArr=u[keys.at(u.rnd)];
-    const rWin=[];
-    rArr.forEach(rm=>{
-      const g1=3+Math.floor(Math.random()*3);
-      let g2=2+Math.floor(Math.random()*4);
-      if(g1===g2)g2++;
-      rm.sc=`${g1}:${g2}`;
-      rWin.push(g1>g2?rm.a:rm.b);
-    });
-    if(u.rnd<3){
-      const nxt=[];
-      for(let i=0;i<rWin.length;i+=2)nxt.push({a:rWin.at(i),b:rWin.at(i+1),sc:null});
-      u[keys.at(u.rnd+1)]=nxt;
-      u.rnd++;
-    }else{
-      u.champ=rWin.at(0);
-      break;
-    }
-  }
+function playUCLMatch(){
+  localStorage.setItem('pc_play_ucl','1');
+  window.location.href='game.html?mode=ucl';
 }
-
-function advanceUCL(pGoals,bGoals,won){
+/* ================== [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 2 ] ================= */
+/* ===================================================================== */
+/* ================== [ TURNIR.HTML : ЧАСТИНА 3 З 3 ] ================== */
+/* ===================================================================== */
+function renderGroupCard(grp,showSchedule){
+  const sorted=getSortedTeams(grp);
+  const myTeam=grp.teams.find(t=>t.isMe);
   const u=p.ucl;
-  if(!u)return;
 
-  if(u.stage==='group'){
-    const rIdx=u.gRnd;
-    u.groups.forEach((grp)=>{
-      const rObj=grp.schedule.at(rIdx);
-      if(!rObj)return;
-      rObj.matches.forEach(m=>{
-        const tH=grp.teams.find(t=>t.id===m.home);
-        const tA=grp.teams.find(t=>t.id===m.away);
-        if(tH && tA && (tH.isMe || tA.isMe)){
-          const gHome=tH.isMe?pGoals:bGoals;
-          const gAway=tA.isMe?pGoals:bGoals;
-          recordGroupMatch(grp,m,gHome,gAway);
-        }else{
-          const g1=2+Math.floor(Math.random()*4);
-          let g2=2+Math.floor(Math.random()*4);
-          if(g1===g2 && Math.random()>0.28)g2++;
-          recordGroupMatch(grp,m,g1,g2);
-        }
-      });
-    });
-
-    if(u.gRnd<5){
-      u.gRnd++;
-      return;
-    }
-
-    const firsts=[],seconds=[];
-    let myQualified=false;
-    u.groups.forEach((grp)=>{
-      const s=sortGroupTeams(grp);
-      firsts.push(s.at(0));
-      seconds.push(s.at(1));
-      if(s.at(0).isMe || s.at(1).isMe) myQualified=true;
-    });
-
-    const r16=[];
-    for(let i=0;i<8;i++){
-      const oppIdx=(i+1)%8;
-      r16.push({a:firsts.at(i),b:seconds.at(oppIdx),sc:null});
-    }
-    u.r16=r16;
-    u.stage='ko';
-    u.rnd=0;
-
-    if(!myQualified){
-      u.eliminated=true;
-      simulateFullKO(u);
-    }
-    return;
-  }
-
-  const keys=['r16','qf','sf','fn'];
-  const curArr=u[keys.at(u.rnd)];
-  const myIdx=curArr.findIndex(m=>m.a.isMe || m.b.isMe);
-
-  if(myIdx!==-1){
-    const m=curArr.at(myIdx);
-    m.sc=m.a.isMe?`${pGoals}:${bGoals}`:`${bGoals}:${pGoals}`;
-  }
-
-  const winners=[];
-  curArr.forEach((m,idx)=>{
-    if(idx===myIdx){
-      const myTeam=m.a.isMe?m.a:m.b;
-      const oppTeam=m.a.isMe?m.b:m.a;
-      winners.push(won?myTeam:oppTeam);
-    }else{
-      const g1=3+Math.floor(Math.random()*3);
-      let g2=2+Math.floor(Math.random()*4);
-      if(g1===g2)g2++;
-      m.sc=`${g1}:${g2}`;
-      winners.push(g1>g2?m.a:m.b);
-    }
-  });
-
-  if(u.rnd<3){
-    const nextArr=[];
-    for(let i=0;i<winners.length;i+=2){
-      nextArr.push({a:winners.at(i),b:winners.at(i+1),sc:null});
-    }
-    u[keys.at(u.rnd+1)]=nextArr;
-    u.rnd++;
-    if(!won){
-      u.eliminated=true;
-      simulateFullKO(u);
-    }
-  }else{
-    u.champ=winners.at(0);
-    if(!won)u.eliminated=true;
-  }
-}
-
-function checkSeries(){
-  const pGoals=pS.filter(x=>x===1).length,bGoals=bS.filter(x=>x===1).length;
-  const pRem=Math.max(0,5-pS.length),bRem=Math.max(0,5-bS.length);
-  const isGroupStage=(isUCLMode && p.ucl && p.ucl.active && p.ucl.stage==='group');
-
-  const earlyWin=(pS.length<=5 && bS.length<=5) && ((pGoals>bGoals+bRem) || (bGoals>pGoals+pRem));
-  const groupFiveDone=(isGroupStage && pS.length===5 && bS.length===5);
-  const koDone=(!isGroupStage && pS.length>=5 && bS.length>=5 && pS.length===bS.length && pGoals!==bGoals);
-
-  if(earlyWin || groupFiveDone || koDone){
-    ph='over';busy=false;
-    const won=(pGoals>bGoals);
-    const isDraw=(pGoals===bGoals);
-
-    if(won){
-      if(isUCLMode && p.ucl && p.ucl.active){
-        if(p.ucl.stage==='group'){
-          p.cn+=30;p.pt+=45;
-          ms.textContent='🎉 Перемога в групі! +3 очки та +30 💰';
-        }else{
-          const reward=RNDS.at(p.ucl.rnd).r;
-          p.cn+=reward;p.pt+=75;
-          if(p.ucl.rnd===3){
-            p.cp++;
-            ms.textContent=`🏆 ЧЕМПІОН ЛІГИ ЧЕМПІОНІВ! +${reward} 💰`;
-          }else{
-            ms.textContent=`🎉 Прохід далі! Призові +${reward} 💰`;
-          }
-        }
-      }else{
-        p.cn+=25;p.pt+=40;
-        ms.textContent='🏆 Перемога у спарингу! +25 💰';
-      }
-      ms.style.borderColor='#feca57';
-    }else if(isDraw){
-      p.cn+=15;p.pt+=25;
-      ms.textContent=`🤝 Нічия ${pGoals}:${bGoals}! +1 очко та +15 💰`;
-      ms.style.borderColor='#feca57';
-    }else{
-      ms.textContent=`💔 Поразка від ${getCurOpponent().n}`;
-      ms.style.borderColor='#ff5e57';
-    }
-    if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
-    save();updUI();renderCtrl();return;
-  }
-
-  ph=(ph==='sh')?'sv':'sh';
-  resetPositions();busy=false;
-  ms.style.borderColor='#feca57';
-  const isSudden=(!isGroupStage && pS.length>=5 && bS.length>=5);
-  ms.textContent=ph==='sh'
-    ?(isSudden?'🔥 До першого промаху! Твій удар':'⚽ Твій удар! Вибери кут')
-    :(isSudden?'🔥 До першого промаху! Твій сейв':'🧤 Твій сейв! Вгадай кут');
-  renderCtrl();
-}
-
-function nextMatch(won){
-  const pGoals=pS.filter(x=>x===1).length,bGoals=bS.filter(x=>x===1).length;
-  if(isUCLMode){
-    try{
-      advanceUCL(pGoals,bGoals,won);
-      save();
-    }catch(e){}
-    localStorage.removeItem('pc_play_ucl');
-    window.location.href='turnir.html';
-    return;
-  }else if(won){
-    freeOpp=CLUBS.at(Math.floor(Math.random()*CLUBS.length));
-  }
-  pS=[];bS=[];ph='sh';resetPositions();save();updUI();renderCtrl();
-  ms.style.borderColor='#feca57';ms.textContent='⚽ Твій удар! Вибери кут';
-}
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 4 ] ================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 5 З 9 ] =================== */
-/* ===================================================================== */
-const ctx=c3d.getContext('2d');let W=300,H=300;
-function rsz3D(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=c3d.width=r.width;H=c3d.height=r.height}}
-window.addEventListener('resize',rsz3D);
-
-function proj(x,y,z){
-  const camZ=-11.8,camY=12.4,pitch=0.66;
-  const dz=z-camZ,dy=y-camY;
-  const rz=dz*Math.cos(pitch)-dy*Math.sin(pitch);
-  const ry=dz*Math.sin(pitch)+dy*Math.cos(pitch);
-  const f=Math.min(W,H)*1.24;
-  const sc=f/Math.max(1.0,rz);
-  return{x:W/2+x*sc,y:H*0.58-ry*sc,s:sc};
-}
-
-const skins=['#f2c69c','#dda876','#8d5524','#f7d5b4'];
-const hairs=['#191e26','#3e2511','#6e4f3a','#c99e24'];
-const jerseys=['#154360','#f5f6fa','#1b4f72','#111822','#2471a3'];
-
-const FANS=Array.from({length:190},(_,i)=>{
-  const row=Math.floor(i/38),colIdx=i%38;
-  return{x:-16.5+colIdx*0.89+(row%2)*0.4,row:row,ph:Math.random()*6.28,spd:0.8+Math.random()*0.6,style:i%3,skin:skins[i%4],hair:hairs[(i*3)%4],shirt:jerseys[(i*7)%5],scarf:(i%4===0)};
-});
-
-const SIDE_FANS=Array.from({length:280},(_,i)=>{
-  const side=i<140?-1:1,local=i%140,row=Math.floor(local/20),idx=local%20;
-  return{side:side,row:row,z:-5.2+idx*1.02+(row%2)*0.45,ph:Math.random()*6.28,spd:0.8+Math.random()*0.6,style:i%3,skin:skins[i%4],hair:hairs[(i*5)%4],shirt:jerseys[(i*3)%5],scarf:(i%5===0)};
-});
-
-let ball={x:0,y:0.22,z:0,sx:0,sy:0.22,sz:0,tx:0,ty:0.22,tz:0,t:1,active:false,inNet:false,vy:0};
-let gk={x:0,y:0,tx:0,ty:0,dive:0,tdive:0,state:'idle'};
-let kicker={x:-1.5,z:-2.8,sx:-1.5,sz:-2.8,tx:-0.35,tz:-0.25,run:0,running:false,kickPose:0};
-let busy=false,tAnim=0;
-
-function drawCapsule(x1,y1,x2,y2,r1,r2,col){
-  const dx=x2-x1,dy=y2-y1;
-  const ang=Math.atan2(dy,dx);
-  const perp=ang+Math.PI/2;
-  ctx.fillStyle=col;
-  ctx.beginPath();
-  ctx.arc(x1,y1,r1,perp,perp+Math.PI);
-  ctx.arc(x2,y2,r2,perp+Math.PI,perp);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawMatchBoot(x,y,sc,sgn,isBack,bootCol,bootAc){
-  ctx.save();
-  ctx.translate(x,y);
-
-  if(isBack){
-    ctx.fillStyle='#0b0f14';
-    ctx.beginPath();ctx.roundRect(-2.4*sc,1.2*sc,4.8*sc,1.1*sc,0.5*sc);ctx.fill();
-    ctx.fillStyle='#cfd6de';
-    ctx.fillRect(-1.9*sc,2.2*sc,0.9*sc,0.7*sc);ctx.fillRect(1.0*sc,2.2*sc,0.9*sc,0.7*sc);
-    ctx.fillStyle=bootCol;
-    ctx.beginPath();
-    ctx.moveTo(-2.1*sc,-1.4*sc);ctx.lineTo(2.1*sc,-1.4*sc);
-    ctx.lineTo(2.4*sc,1.3*sc);ctx.lineTo(-2.4*sc,1.3*sc);
-    ctx.closePath();ctx.fill();
-    ctx.fillStyle=bootAc;
-    ctx.fillRect(-0.7*sc,-1.2*sc,1.4*sc,2.4*sc);
-    ctx.restore();
-    return;
-  }
-
-  ctx.translate(sgn*0.3*sc,0);
-  ctx.fillStyle='#dce4e7';
-  [-1.5*sc,-0.5*sc,0.5*sc,1.5*sc].forEach(sx=>{
-    ctx.beginPath();ctx.roundRect(sx-0.35*sc,2.1*sc,0.7*sc,0.7*sc,0.2*sc);ctx.fill();
-  });
-  ctx.fillStyle='#0d1117';
-  ctx.beginPath();ctx.ellipse(0,1.9*sc,2.7*sc,0.8*sc,0,0,Math.PI*2);ctx.fill();
-
-  ctx.fillStyle=bootCol;
-  ctx.beginPath();
-  ctx.moveTo(-2.1*sc,-1.5*sc);ctx.lineTo(2.1*sc,-1.5*sc);
-  ctx.quadraticCurveTo(2.9*sc,0.5*sc,2.6*sc,1.8*sc);
-  ctx.quadraticCurveTo(0,2.2*sc,-2.6*sc,1.8*sc);
-  ctx.quadraticCurveTo(-2.9*sc,0.5*sc,-2.1*sc,-1.5*sc);
-  ctx.closePath();ctx.fill();
-
-  ctx.strokeStyle=bootAc;ctx.lineWidth=0.8*sc;
-  ctx.beginPath();ctx.arc(0,0.9*sc,1.5*sc,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
-
-  ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=0.6*sc;
-  for(let i=0;i<3;i++){
-    const ly=(-0.9+i*0.6)*sc,lw=(1.0-i*0.1)*sc;
-    ctx.beginPath();ctx.moveTo(-lw,ly);ctx.lineTo(lw,ly);ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function drawMatchGlove(x,y,sc,side,col){
-  ctx.save();
-  ctx.translate(x,y);
-  ctx.rotate(side*0.22);
-
-  ctx.fillStyle='#1e272e';
-  ctx.beginPath();ctx.roundRect(-2.1*sc,-1.0*sc,4.2*sc,1.9*sc,0.8*sc);ctx.fill();
-  ctx.fillStyle='#ffffff';
-  ctx.fillRect(-1.4*sc,-0.3*sc,2.8*sc,0.6*sc);
-
-  ctx.fillStyle=col;
-  ctx.beginPath();ctx.roundRect(-2.4*sc,0.8*sc,4.8*sc,3.6*sc,1.2*sc);ctx.fill();
-  ctx.fillStyle='rgba(255,255,255,0.34)';
-  ctx.beginPath();ctx.roundRect(-1.6*sc,1.3*sc,3.2*sc,2.3*sc,0.8*sc);ctx.fill();
-
-  const fingerX=[-1.75,-0.6,0.6,1.75];
-  const fingerLen=[2.1,2.6,2.4,1.8];
-  fingerX.forEach((fx,idx)=>{
-    drawCapsule(fx*sc,4.1*sc,fx*sc,(4.1+fingerLen[idx])*sc,0.58*sc,0.46*sc,col);
-  });
-  drawCapsule(-side*2.1*sc,2.0*sc,-side*3.4*sc,3.4*sc,0.68*sc,0.5*sc,col);
-
-  ctx.restore();
-}
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 5 ] ================== */
-/* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 6 З 9 ] =================== */
-/* ===================================================================== */
-function drawRealisticPlayer(px,py,sc,jerseyCol,jerseyDark,trimCol,shortsCol,shortsDark,bootCol,bootAc,gloveCol,diveAng,runPhase,isKicker,isStandingUp){
-  ctx.save();
-  ctx.translate(px,py);
-  ctx.rotate(diveAng);
-
-  const isRunning=Math.abs(runPhase)>0.01;
-  const swing=isRunning?Math.sin(runPhase)*8.5*sc:0;
-  const lift=isRunning?Math.max(0,-Math.cos(runPhase))*4.5*sc:0;
-  const skin='#e4b487',skinShade='#be8450',skinLight='#f6d3af';
-  ctx.rotate(isRunning?0.08:(isKicker?0.03:0));
-
-  [-1,1].forEach(side=>{
-    const dir=side===-1?1:-1;
-    const stride=swing*dir;
-    const footLift=side===-1?lift:(isRunning?Math.max(0,Math.cos(runPhase))*4.5*sc:0);
-
-    const hipX=side*4.0*sc,hipY=-26*sc;
-    const kneeX=side*4.4*sc+stride*0.45,kneeY=-14.5*sc-footLift*0.4;
-    const ankleX=side*4.3*sc+stride*0.85,ankleY=-2.5*sc-footLift;
-
-    const shGrad=ctx.createLinearGradient(hipX-4*sc,hipY,hipX+4*sc,hipY);
-    shGrad.addColorStop(0,shortsCol);shGrad.addColorStop(0.82,shortsCol);shGrad.addColorStop(1,shortsDark);
-    drawCapsule(hipX,hipY,kneeX,kneeY,4.3*sc,3.4*sc,shGrad);
-
-    drawCapsule(kneeX,kneeY,kneeX,kneeY+2.8*sc,2.5*sc,2.3*sc,skin);
-    if(isKicker){
-      ctx.strokeStyle='rgba(120,75,40,0.45)';ctx.lineWidth=0.8*sc;
-      ctx.beginPath();ctx.moveTo(kneeX-1.8*sc,kneeY+1.4*sc);ctx.quadraticCurveTo(kneeX,kneeY+1.9*sc,kneeX+1.8*sc,kneeY+1.4*sc);ctx.stroke();
-    }else{
-      ctx.fillStyle=skinShade;ctx.beginPath();ctx.arc(kneeX+side*0.6*sc,kneeY+1.5*sc,1.1*sc,0,Math.PI);ctx.fill();
-    }
-
-    const calfX=(kneeX+ankleX)*0.5,calfY=(kneeY+ankleY)*0.5;
-    drawCapsule(kneeX,kneeY+2.5*sc,calfX,calfY,2.5*sc,2.8*sc,jerseyCol);
-    drawCapsule(calfX,calfY,ankleX,ankleY,2.7*sc,1.8*sc,jerseyDark);
-
-    ctx.fillStyle=trimCol;ctx.fillRect(kneeX-2.4*sc,kneeY+2.6*sc,4.8*sc,1.1*sc);
-
-    drawMatchBoot(ankleX,ankleY,sc,side,isKicker,bootCol,bootAc);
-  });
-
-  const torsoGrad=ctx.createLinearGradient(-10.5*sc,-48*sc,10.5*sc,-25*sc);
-  torsoGrad.addColorStop(0,jerseyCol);torsoGrad.addColorStop(0.7,jerseyCol);torsoGrad.addColorStop(1,jerseyDark);
-  ctx.fillStyle=torsoGrad;
-  ctx.beginPath();
-  ctx.moveTo(-10.2*sc,-44.5*sc);
-  ctx.quadraticCurveTo(-5*sc,-48.8*sc,0,-48.8*sc);
-  ctx.quadraticCurveTo(5*sc,-48.8*sc,10.2*sc,-44.5*sc);
-  ctx.lineTo(9.2*sc,-36*sc);
-  ctx.lineTo(7.4*sc,-25.5*sc);
-  ctx.quadraticCurveTo(0,-24.0*sc,-7.4*sc,-25.5*sc);
-  ctx.lineTo(-9.2*sc,-36*sc);
-  ctx.closePath();ctx.fill();
-
-  ctx.fillStyle=trimCol;
-  if(isKicker){
-    const isMyPlayer=(ph==='sh'||ph==='over');
-    ctx.beginPath();ctx.ellipse(0,-48.0*sc,3.2*sc,1.2*sc,0,0,Math.PI);ctx.fill();
-    ctx.fillStyle=isMyPlayer?(p.numCol||'#ffffff'):'rgba(255,255,255,0.92)';
-    ctx.font=`900 ${Math.max(8,10.2*sc)}px sans-serif`;ctx.textAlign='center';
-    ctx.fillText(isMyPlayer?(p.num||'10'):'9',0,-33*sc);
-  }else{
-    ctx.beginPath();
-    ctx.moveTo(-3.2*sc,-48.2*sc);ctx.lineTo(0,-45.0*sc);ctx.lineTo(3.2*sc,-48.2*sc);
-    ctx.quadraticCurveTo(0,-49.2*sc,-3.2*sc,-48.2*sc);ctx.fill();
-  }
-
-  [-1,1].forEach(side=>{
-    const diveAmt=Math.min(1,Math.abs(diveAng)/1.1);
-    const diveDir=Math.sign(diveAng)||1;
-    const armSwing=swing*(side===-1?-0.75:0.75);
-
-    const shX=side*8.6*sc,shY=-44.0*sc;
-    let slvX,slvY,elX,elY,hdX,hdY;
-
-    if(!isKicker && isStandingUp && diveAmt>0.08){
-      const isGroundArm=(side===diveDir);
-      if(isGroundArm){
-        slvX=side*(10.5+diveAmt*2.5)*sc; slvY=(-39.0-diveAmt*2.0)*sc;
-        elX=side*(12.0+diveAmt*4.5)*sc;  elY=(-34.0+diveAmt*3.5)*sc;
-        hdX=side*(11.0+diveAmt*6.5)*sc;  hdY=(-26.5+diveAmt*11.5)*sc;
-      }else{
-        slvX=side*(10.0-diveAmt*1.5)*sc; slvY=(-39.0-diveAmt*1.5)*sc;
-        elX=side*(10.5-diveAmt*3.5)*sc;  elY=(-34.0+diveAmt*2.0)*sc;
-        hdX=side*(9.5-diveAmt*4.5)*sc;   hdY=(-26.5+diveAmt*6.5)*sc;
-      }
-    }else{
-      slvX=side*(10.4+diveAmt*3.2)*sc;
-      slvY=(-38.8-diveAmt*10.2)*sc+armSwing*0.2;
-      elX=side*(11.0+diveAmt*6.5)*sc;
-      elY=(-34.2-diveAmt*19.3)*sc+armSwing*0.4;
-      hdX=side*(10.2+diveAmt*13.3)*sc;
-      hdY=(-26.8-diveAmt*32.7)*sc+armSwing*0.8;
-    }
-
-    drawCapsule(shX,shY,slvX,slvY,3.2*sc,2.7*sc,jerseyCol);
-    ctx.strokeStyle=trimCol;ctx.lineWidth=0.8*sc;
-    ctx.beginPath();ctx.arc(slvX,slvY,2.6*sc,0.25,Math.PI-0.25);ctx.stroke();
-
-    drawCapsule(slvX,slvY,elX,elY,2.3*sc,2.0*sc,skin);
-    drawCapsule(elX,elY,hdX,hdY,1.95*sc,1.45*sc,skinShade);
-
-    if(gloveCol){
-      drawMatchGlove(hdX,hdY,sc*0.72,side,gloveCol);
-    }else{
-      ctx.fillStyle=skin;ctx.beginPath();ctx.ellipse(hdX,hdY+0.6*sc,1.8*sc,2.3*sc,side*-0.1,0,Math.PI*2);ctx.fill();
-    }
-  });
-
-  drawCapsule(0,-47.5*sc,0,-51.5*sc,2.5*sc,2.2*sc,skinShade);
-  ctx.fillStyle=skinShade;ctx.beginPath();
-  ctx.ellipse(-4.4*sc,-55.5*sc,0.85*sc,1.5*sc,0,0,Math.PI*2);
-  ctx.ellipse(4.4*sc,-55.5*sc,0.85*sc,1.5*sc,0,0,Math.PI*2);ctx.fill();
-
-  const faceGrad=ctx.createRadialGradient(-1*sc,-57*sc,1*sc,0,-55.5*sc,6.5*sc);
-  faceGrad.addColorStop(0,skinLight);faceGrad.addColorStop(0.65,skin);faceGrad.addColorStop(1,skinShade);
-  ctx.fillStyle=faceGrad;ctx.beginPath();ctx.ellipse(0,-55.5*sc,4.5*sc,5.6*sc,0,0,Math.PI*2);ctx.fill();
-
-  if(!isKicker){
-    ctx.fillStyle='#231710';
-    ctx.fillRect(-2.8*sc,-57.2*sc,2.0*sc,0.45*sc);
-    ctx.fillRect(0.8*sc,-57.2*sc,2.0*sc,0.45*sc);
-    ctx.beginPath();ctx.arc(-1.7*sc,-56.0*sc,0.65*sc,0,Math.PI*2);ctx.arc(1.7*sc,-56.0*sc,0.65*sc,0,Math.PI*2);ctx.fill();
-  }
-
-  ctx.fillStyle='#191e26';
-  if(isKicker){
-    ctx.beginPath();
-    ctx.moveTo(-4.4*sc,-56*sc);
-    ctx.quadraticCurveTo(-4.7*sc,-61.5*sc,0,-62.0*sc);
-    ctx.quadraticCurveTo(4.7*sc,-61.5*sc,4.4*sc,-56*sc);
-    ctx.lineTo(2.8*sc,-52.8*sc);
-    ctx.quadraticCurveTo(0,-53.4*sc,-2.8*sc,-52.8*sc);
-    ctx.closePath();ctx.fill();
-  }else{
-    ctx.beginPath();ctx.ellipse(0,-58.5*sc,4.8*sc,3.6*sc,0,Math.PI*0.9,Math.PI*2.1);ctx.fill();
-  }
-
-  ctx.restore();
-}
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 6 ] ================== */
-/* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 7 З 9 ] =================== */
-/* ===================================================================== */
-function drawRealisticFan(fx,fy,sc,fan,waveVal){
-  const t=tAnim*fan.spd+fan.ph;
-  const sway=Math.sin(t)*1.6*sc;
-  const cheerJump=crowdMood===1?Math.max(0,Math.sin(t*2.8))*8*sc:0;
-  const idleBob=(Math.sin(t*1.2)*1.0+waveVal*2.4)*sc;
-  const y=fy-cheerJump-idleBob;
-  ctx.save();ctx.translate(fx+sway,y);ctx.rotate(Math.sin(t)*0.07);
-
-  ctx.fillStyle=fan.shirt;
-  ctx.beginPath();
-  ctx.moveTo(-5.4*sc,-10.5*sc);
-  ctx.quadraticCurveTo(0,-13.2*sc,5.4*sc,-10.5*sc);
-  ctx.lineTo(4.4*sc,0);
-  ctx.lineTo(-4.4*sc,0);
-  ctx.closePath();
-  ctx.fill();
-
-  if(fan.scarf){
-    ctx.fillStyle='#4b7bec';
-    ctx.fillRect(-3.6*sc,-11.5*sc,7.2*sc,2.2*sc);
-    ctx.fillRect(1.2*sc,-10*sc,2.0*sc,5.5*sc);
-  }
-
-  if(crowdMood===1){
-    const waveArm=Math.sin(t*4)*2.0*sc;
-    drawCapsule(-4.6*sc,-10*sc,-6.8*sc+waveArm,-18*sc,1.4*sc,1.0*sc,fan.skin);
-    drawCapsule(4.6*sc,-10*sc,6.8*sc-waveArm,-18*sc,1.4*sc,1.0*sc,fan.skin);
-    if(fan.scarf){
-      ctx.fillStyle='#1dd1a1';
-      ctx.fillRect(-7.5*sc,-20*sc,15*sc,2.4*sc);
-    }
-  }else if(crowdMood===-1){
-    drawCapsule(-4.6*sc,-10*sc,-3.8*sc,-15.8*sc,1.3*sc,0.9*sc,fan.skin);
-    drawCapsule(4.6*sc,-10*sc,3.8*sc,-15.8*sc,1.3*sc,0.9*sc,fan.skin);
-  }else if(waveVal>0.6){
-    drawCapsule(-4.6*sc,-10*sc,-6.2*sc,-16.8*sc,1.3*sc,0.9*sc,fan.skin);
-    drawCapsule(4.6*sc,-10*sc,6.2*sc,-16.8*sc,1.3*sc,0.9*sc,fan.skin);
-  }
-
-  ctx.fillStyle=fan.skin;
-  ctx.fillRect(-1.1*sc,-13*sc,2.2*sc,2*sc);
-  ctx.beginPath();ctx.ellipse(0,-15.4*sc,2.9*sc,3.6*sc,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=fan.hair;
-  ctx.beginPath();ctx.ellipse(0,-16.6*sc,3.1*sc,2.3*sc,0,Math.PI*0.9,Math.PI*2.1);ctx.fill();
-  ctx.restore();
-}
-
-function getNetBulge(wx,wy){
-  if(netWave.amp<=0.005)return 0;
-  const dx=wx-netWave.hitX;
-  const dy=wy-netWave.hitY;
-  const dist=Math.sqrt(dx*dx+dy*dy);
-  const gauss=Math.exp(-(dist*dist)/5.2);
-  const ripple=Math.cos(dist*1.4-netWave.phase*1.6)*0.55+0.45;
-  return netWave.amp*0.85*gauss*ripple;
-}
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 7 ] ================== */
-/* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 8 З 9 ] =================== */
-/* ===================================================================== */
-function drawStadiumScene(){
-  const horizonY=proj(0,0,15.5).y,standTop=Math.max(46,horizonY-H*0.20);
-
-  const sky=ctx.createLinearGradient(0,0,0,horizonY);
-  sky.addColorStop(0,'#1e272e');sky.addColorStop(1,'#3c6382');
-  ctx.fillStyle=sky;ctx.fillRect(0,0,W,horizonY);
-
-  ctx.fillStyle='#2c3e50';ctx.beginPath();
-  ctx.moveTo(0,standTop+10);ctx.lineTo(W*0.20,standTop-25);ctx.lineTo(W*0.40,standTop-28);
-  ctx.lineTo(W*0.56,standTop-52);ctx.lineTo(W*0.74,standTop-38);ctx.lineTo(W*0.92,standTop-20);
-  ctx.lineTo(W,standTop-24);ctx.lineTo(W,horizonY);ctx.lineTo(0,horizonY);ctx.closePath();ctx.fill();
-
-  ctx.fillStyle='#246124';ctx.fillRect(0,horizonY,W,H-horizonY);
-  for(let z=-6;z<15.5;z+=1.6){
-    const y1=proj(0,0,z).y,y2=proj(0,0,z+1.6).y;
-    ctx.fillStyle=(Math.floor((z+6)*10)%2===0)?'#2d7a2d':'#388e3c';
-    ctx.fillRect(0,Math.min(y1,y2),W,Math.abs(y1-y2)+1);
-  }
-
-  ctx.fillStyle='#0d1520';ctx.fillRect(0,standTop,W,horizonY-standTop);
-  FANS.forEach(f=>{
-    const pt=proj(f.x,0.3+f.row*0.52,14.3+f.row*0.42);
-    if(pt.x>-20&&pt.x<W+20)drawRealisticFan(pt.x,pt.y,pt.s*0.032,f,Math.max(0,Math.sin(tAnim*0.8-f.x*0.22)));
-  });
-
-  [-1,1].forEach(side=>{
-    const baseNear=proj(side*12.6,0,-5.8),baseFar=proj(side*12.6,0,15.5);
-    const topFar=proj(side*19.5,5.8,15.5),topNear=proj(side*21.5,6.4,-5.8);
-    const grad=ctx.createLinearGradient(baseNear.x,baseNear.y,topNear.x,topNear.y);
-    grad.addColorStop(0,'#091019');grad.addColorStop(0.5,'#132030');grad.addColorStop(1,'#1d2f45');
-    ctx.fillStyle=grad;ctx.beginPath();
-    ctx.moveTo(baseNear.x,baseNear.y);ctx.lineTo(baseFar.x,baseFar.y);
-    ctx.lineTo(topFar.x,topFar.y);ctx.lineTo(topNear.x,topNear.y);ctx.closePath();ctx.fill();
-
-    ctx.strokeStyle='#dce4e7';ctx.lineWidth=4.5;
-    ctx.beginPath();ctx.moveTo(topNear.x,topNear.y);ctx.lineTo(topFar.x,topFar.y);ctx.stroke();
-  });
-
-  for(let r=6;r>=0;r--){
-    SIDE_FANS.forEach(f=>{
-      if(f.row!==r)return;
-      const pt=proj(f.side*(13.2+f.row*1.05),0.45+f.row*0.82,f.z);
-      if(pt.x>-40&&pt.x<W+40&&pt.y>-30&&pt.y<H+30){
-        drawRealisticFan(pt.x,pt.y,pt.s*0.034,f,Math.max(0,Math.sin(tAnim*0.8-f.z*0.35*f.side)));
-      }
+  let rowsHtml=sorted.map((t,idx)=>{
+    const pass=(idx<2);
+    const cls=`${pass?'q-pass':'q-out'} ${t.isMe?'me-row':''}`;
+    return `<tr class="${cls}">
+      <td>${idx+1}</td>
+      <td>${t.i} ${t.n}</td>
+      <td>${t.pl}</td>
+      <td>${t.w}</td>
+      <td>${t.d||0}</td>
+      <td>${t.l}</td>
+      <td>${t.gf}:${t.ga}</td>
+      <td><b style="color:${pass?'#1dd1a1':'#fff'}">${t.pts}</b></td>
+    </tr>`;
+  }).join('');
+
+  let schedHtml='';
+  if(showSchedule && myTeam && Array.isArray(grp.schedule)){
+    schedHtml='<div style="margin-top:8px;font-size:11px;color:#70a1ff;font-weight:bold">📅 Твої матчі в групі (6 турів):</div>';
+    grp.schedule.forEach((rObj,rIdx)=>{
+      const m=rObj.matches.find(x=>x.home===myTeam.id||x.away===myTeam.id);
+      if(!m)return;
+      const isHome=(m.home===myTeam.id);
+      const oppId=isHome?m.away:m.home;
+      const opp=grp.teams.find(t=>t.id===oppId);
+      const isNext=(u.stage==='group' && u.gRnd===rIdx && !m.sc);
+      const venueTag=isHome?'<span style="color:#1dd1a1">🏟️ Вдома</span>':'<span style="color:#feca57">✈️ На виїзді</span>';
+      schedHtml+=`<div class="sched-item ${isNext?'next':''}">
+        <span>Тур ${rObj.rnd} • ${venueTag}</span>
+        <span>vs ${opp.i} ${opp.n}</span>
+        <b>${m.sc?m.sc:(isNext?'▶ Далі':'⏳')}</b>
+      </div>`;
     });
   }
 
-  ctx.strokeStyle='#eceff1';ctx.lineWidth=4;
-  ctx.beginPath();ctx.moveTo(0,standTop-3);ctx.quadraticCurveTo(W*0.5,standTop+12,W,standTop-3);ctx.stroke();
+  return `<div class="grp-card">
+    <div class="grp-title">
+      <span>ГРУПА ${grp.name}</span>
+      <span style="font-size:10px;color:#1dd1a1">1–2 місця ➔ 1/8 фіналу</span>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Команда</th><th>І</th><th>В</th><th>Н</th><th>П</th><th>З:П</th><th>О</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    ${schedHtml}
+  </div>`;
+}
 
-  const adL=proj(-12.2,0,12.6),adGL=proj(-5.0,0,12.6),adGR=proj(5.0,0,12.6),adR=proj(12.2,0,12.6);
-  const adTop=proj(0,0.65,12.6).y;
-  ctx.fillStyle='#0c2461';
-  ctx.fillRect(adL.x,adTop,adGL.x-adL.x,adL.y-adTop);ctx.fillRect(adGR.x,adTop,adR.x-adGR.x,adR.y-adTop);
-  ctx.fillStyle='#ffffff';ctx.font='bold 9px sans-serif';ctx.textAlign='center';
-  ctx.fillText('★ CHAMPIONS LEAGUE ★',(adL.x+adGL.x)/2,(adTop+adL.y)/2+3);
-  ctx.fillText('★ UEFA PENALTY CUP ★',(adGR.x+adR.x)/2,(adTop+adR.y)/2+3);
+function renderKOMatches(title,arr){
+  if(!arr||!arr.length)return '';
+  let h=`<div class="rnd-title">${title}</div>`;
+  arr.forEach(m=>{
+    const isMe=(m.a.isMe||m.b.isMe);
+    h+=`<div class="match ${isMe?'me':''}">
+      <span>${m.a.i} ${m.a.n}</span>
+      <b style="color:${m.sc?'#1dd1a1':'#feca57'}">${m.sc||'VS'}</b>
+      <span>${m.b.n} ${m.b.i}</span>
+    </div>`;
+  });
+  return h;
+}
 
-  ctx.strokeStyle='rgba(255,255,255,0.88)';ctx.lineWidth=2.5;
-  const pBL=proj(-9.5,0,10.5),pFL=proj(-9.5,0,2.8),pFR=proj(9.5,0,2.8),pBR=proj(9.5,0,10.5);
-  ctx.beginPath();ctx.moveTo(pBL.x,pBL.y);ctx.lineTo(pFL.x,pFL.y);ctx.lineTo(pFR.x,pFR.y);ctx.lineTo(pBR.x,pBR.y);ctx.stroke();
-  const cFL=proj(-11.4,0,-5.8),cBL=proj(-11.4,0,10.5),cBR=proj(11.4,0,10.5),cFR=proj(11.4,0,-5.8);
-  ctx.beginPath();ctx.moveTo(cFL.x,cFL.y);ctx.lineTo(cBL.x,cBL.y);ctx.lineTo(cBR.x,cBR.y);ctx.lineTo(cFR.x,cFR.y);ctx.stroke();
+function renderUCL(){
+  const box=document.getElementById('uclBox');
+  const u=p.ucl;
 
-  const spot=proj(0,0,0);
-  ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(spot.x,spot.y,0.24*spot.s,0.12*spot.s,0,0,Math.PI*2);ctx.fill();
+  const isValidGroupData=(u && u.active && Array.isArray(u.groups) && u.groups.length>0 && Array.isArray(u.groups.at(0).schedule) && u.groups.at(0).schedule.at(0).matches);
 
-  if(netWave.amp>0.005){
-    netWave.phase+=0.26;
-    netWave.amp*=0.955;
+  if(!isValidGroupData){
+    box.innerHTML=`<div class="cup-banner">
+      <div style="font-size:32px">🏆</div>
+      <b style="font-size:15px;color:#feca57">ЛІГА ЧЕМПІОНІВ УЄФА</b>
+      <p style="font-size:12px;color:#a5b1c2;margin:6px 0">8 груп по 4 команди (вдома та на виїзді, 6 турів).<br>Топ-2 з кожної групи виходять у 1/8 фіналу!</p>
+      <button class="btn ucl-btn" onclick="initUCL()">⚽ Почати новий розіграш ЛЧ</button>
+    </div>`;
+    return;
+  }
+
+  let html='';
+
+  if(u.champ){
+    html+=`<div class="cup-banner">
+      <div style="font-size:28px">${u.champ.isMe?'🏆🎉':'🏆'}</div>
+      <b style="color:#feca57;font-size:14px">${u.champ.isMe?'ТИ ЧЕМПІОН ЛІГИ ЧЕМПІОНІВ!':`Переможець ЛЧ: ${u.champ.i} ${u.champ.n}`}</b>
+      <button class="btn ucl-btn" onclick="initUCL()">🔄 Новий сезон ЛЧ</button>
+    </div>`;
+  }else if(u.eliminated){
+    html+=`<div class="cup-banner" style="border-color:#ff5e57;background:rgba(255,94,87,.12)">
+      <div style="font-size:26px">💔</div>
+      <b style="color:#ff5e57;font-size:14px">Твій клуб завершив виступ у Лізі Чемпіонів</b>
+      <p style="font-size:11px;color:#a5b1c2;margin:4px 0">Вийшли лише 1 і 2 місця груп. Переглянь підсумки або почни новий сезон.</p>
+      <button class="btn ucl-btn" onclick="initUCL()">🔄 Новий сезон ЛЧ</button>
+    </div>`;
+  }else if(u.stage==='group'){
+    const myGrp=u.groups.find(g=>g.teams.some(t=>t.isMe)) || u.groups.at(0);
+    const myTeam=myGrp.teams.find(t=>t.isMe);
+    const rObj=myGrp.schedule.at(u.gRnd);
+    const m=rObj.matches.find(x=>x.home===myTeam.id||x.away===myTeam.id);
+    const isHome=(m.home===myTeam.id);
+    const opp=myGrp.teams.find(t=>t.id===(isHome?m.away:m.home));
+
+    html+=`<div class="cup-banner" style="padding:10px">
+      <div style="font-size:12px;color:#70a1ff;font-weight:bold">ГРУПА ${myGrp.name} • ТУР ${u.gRnd+1} з 6 (${isHome?'🏟️ ВДОМА':'✈️ НА ВИЇЗДІ'})</div>
+      <div style="font-size:14px;font-weight:bold;margin:4px 0">🇺🇦 Твій Клуб vs ${opp.i} ${opp.n}</div>
+      <button class="btn ucl-btn" onclick="playUCLMatch()">⚽ Грати матч Туру ${u.gRnd+1}</button>
+    </div>`;
+  }else if(u.stage==='ko'){
+    const rNames=['1/8 Фіналу','1/4 Фіналу','Півфінал','ФІНАЛ ЛЧ'];
+    const rArrays=[u.r16,u.qf,u.sf,u.fn].at(u.rnd)||[];
+    const myM=rArrays.find(m=>m.a.isMe||m.b.isMe);
+    if(myM){
+      const opp=myM.a.isMe?myM.b:myM.a;
+      html+=`<div class="cup-banner" style="padding:10px">
+        <div style="font-size:12px;color:#70a1ff;font-weight:bold">ПЛЕЙ-ОФ • ${rNames.at(u.rnd)}</div>
+        <div style="font-size:14px;font-weight:bold;margin:4px 0">🇺🇦 Твій Клуб vs ${opp.i} ${opp.n}</div>
+        <button class="btn ucl-btn" onclick="playUCLMatch()">⚽ Грати матч (${rNames.at(u.rnd)})</button>
+      </div>`;
+    }
+  }
+
+  html+=`<div class="sub-tabs">
+    <div class="stab ${viewTab==='mygrp'?'on':''}" onclick="setTab('mygrp')">🇺🇦 Моя група</div>
+    <div class="stab ${viewTab==='allgrp'?'on':''}" onclick="setTab('allgrp')">📊 Усі групи (A–H)</div>
+    <div class="stab ${viewTab==='ko'?'on':''}" onclick="setTab('ko')">🏆 Плей-оф</div>
+  </div>`;
+
+  if(viewTab==='mygrp'){
+    const myGrp=u.groups.find(g=>g.teams.some(t=>t.isMe)) || u.groups.at(0);
+    html+=renderGroupCard(myGrp,true);
+  }else if(viewTab==='allgrp'){
+    u.groups.forEach(g=>{html+=renderGroupCard(g,false);});
   }else{
-    netWave.amp=0;
-  }
-
-  const gw=4.6,gh=3.05,gz=10.5,gd=1.8;
-  const gFL2=proj(-gw,0,gz),gTL=proj(-gw,gh,gz),gTR=proj(gw,gh,gz),gFR2=proj(gw,0,gz);
-
-  ctx.strokeStyle='rgba(255,255,255,0.46)';ctx.lineWidth=1.1;
-  for(let i=0;i<=18;i++){
-    const t=i/18,wx=-gw+gw*2*t;
-    const topFront=proj(wx,gh,gz);
-    ctx.beginPath();
-    ctx.moveTo(topFront.x,topFront.y);
-    for(let s=0;s<=6;s++){
-      const sy=gh*(1-s/6);
-      const bulge=getNetBulge(wx,sy)*(1-Math.abs(s/6-0.5)*0.4);
-      const pt=proj(wx,sy*0.86,gz+gd+bulge);
-      ctx.lineTo(pt.x,pt.y);
+    if(u.stage==='group' && !u.eliminated && !u.champ){
+      html+=`<div style="text-align:center;padding:18px 10px;color:#a5b1c2;font-size:12px">
+        ⏳ Сітка 1/8 фіналу сформується після завершення всіх 6 турів групового етапу.<br><br>
+        У 1/8 фіналу виходять <b>1-ше та 2-ге місця</b> кожної групи!
+      </div>`;
+    }else{
+      html+=renderKOMatches('🏆 ФІНАЛ',u.fn);
+      html+=renderKOMatches('🔥 ПІВФІНАЛ',u.sf);
+      html+=renderKOMatches('⚡ 1/4 ФІНАЛУ',u.qf);
+      html+=renderKOMatches('⚔️ 1/8 ФІНАЛУ (1–2 місця груп)',u.r16);
     }
-    ctx.stroke();
-  }
-  for(let h=1;h<=6;h++){
-    const hy=gh*(h/6);
-    const lFront=proj(-gw,hy,gz),rFront=proj(gw,hy,gz);
-    ctx.beginPath();
-    ctx.moveTo(lFront.x,lFront.y);
-    for(let i=0;i<=18;i++){
-      const wx=-gw+gw*2*(i/18);
-      const bulge=getNetBulge(wx,hy);
-      const pt=proj(wx,hy*0.86,gz+gd+bulge);
-      ctx.lineTo(pt.x,pt.y);
-    }
-    ctx.lineTo(rFront.x,rFront.y);
-    ctx.stroke();
   }
 
-  ctx.strokeStyle='#ffffff';ctx.lineWidth=6.5;ctx.lineJoin='round';
-  ctx.beginPath();ctx.moveTo(gFL2.x,gFL2.y);ctx.lineTo(gTL.x,gTL.y);ctx.lineTo(gTR.x,gTR.y);ctx.lineTo(gFR2.x,gFR2.y);ctx.stroke();
-}
-/* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 8 ] ================== */
-/* ===================================================================== */
-/* =================== [ GAME.HTML : ЧАСТИНА 9 З 9 ] =================== */
-/* ===================================================================== */
-function draw3D(){
-  tAnim+=0.07;
-  ctx.clearRect(0,0,W,H);
-
-  drawStadiumScene();
-
-  const gz=10.5;
-  const oppClub=getCurOpponent();
-  const myJersey=getItem(p.ej);
-  const myShorts=getItem(p.ep);
-  const myShoes=getItem(p.es);
-
-  const moveSpd=(gk.state==='stand')?0.09:0.19;
-  const fallSpd=(gk.state==='fall')?0.22:0.18;
-  gk.x+=(gk.tx-gk.x)*moveSpd;
-  gk.y+=(gk.ty-gk.y)*fallSpd;
-  gk.dive+=(gk.tdive-gk.dive)*moveSpd;
-
-  const gp=proj(gk.x,gk.y,gz-0.1),gSh=proj(gk.x,0,gz-0.1);
-  const shStretch=1+Math.abs(gk.dive)*0.45;
-  ctx.fillStyle='rgba(0,0,0,0.42)';ctx.beginPath();ctx.ellipse(gSh.x,gSh.y,0.48*gSh.s*shStretch,0.18*gSh.s,0,0,Math.PI*2);ctx.fill();
-
-  const gkJersey=(ph==='sh'||ph==='over')?oppClub.c:'#f39c12';
-  const gkDark=(ph==='sh'||ph==='over')?(oppClub.dark||'#1e272e'):'#b36b00';
-  drawRealisticPlayer(gp.x,gp.y,gp.s*0.032,gkJersey,gkDark,'#ffffff','#1e272e','#0b0f14','#14181d','#ffffff',getItem(p.ek).col,gk.dive*0.95,busy?0:tAnim*0.6,false,gk.state==='stand');
-
-  if(ball.active&&ball.t<1){
-    ball.t=Math.min(1,ball.t+0.052);
-    const ease=1-Math.pow(1-ball.t,2);
-    ball.x=ball.sx+(ball.tx-ball.sx)*ease+Math.sin(ball.t*Math.PI)*(ball.tx*0.18);
-    ball.y=ball.sy+(ball.ty-ball.sy)*ease+Math.sin(ball.t*Math.PI)*0.95;
-    ball.z=ball.sz+(ball.tz-ball.sz)*ease;
-  }else if(ball.inNet&&ball.y>0.22){
-    ball.y=Math.max(0.22,ball.y-0.065);
-    ball.z=Math.max(11.3,ball.z-0.015);
-  }
-
-  const bSh=proj(ball.x,0,ball.z);
-  ctx.fillStyle='rgba(0,0,0,0.45)';ctx.beginPath();ctx.ellipse(bSh.x,bSh.y,0.25*bSh.s,0.12*bSh.s,0,0,Math.PI*2);ctx.fill();
-
-  const bp=proj(ball.x,ball.y,ball.z),rad=Math.max(4,0.24*bp.s),bCol=getItem(p.eb).col;
-  const bGrad=ctx.createRadialGradient(bp.x-rad*0.3,bp.y-rad*0.3,rad*0.1,bp.x,bp.y,rad);
-  bGrad.addColorStop(0,'#ffffff');bGrad.addColorStop(0.55,bCol);bGrad.addColorStop(1,'#1e272e');
-  ctx.fillStyle=bGrad;ctx.beginPath();ctx.arc(bp.x,bp.y,rad,0,Math.PI*2);ctx.fill();
-
-  if(kicker.running){
-    kicker.run=Math.min(1,kicker.run+0.08);
-    kicker.x=kicker.sx+(kicker.tx-kicker.sx)*kicker.run;
-    kicker.z=kicker.sz+(kicker.tz-kicker.sz)*kicker.run;
-  }
-  const kp=proj(kicker.x,0,kicker.z);
-  ctx.fillStyle='rgba(0,0,0,0.42)';ctx.beginPath();ctx.ellipse(kp.x,kp.y,0.55*kp.s,0.22*kp.s,0,0,Math.PI*2);ctx.fill();
-
-  const isMyKicker=(ph==='sh'||ph==='over');
-  const kCol=isMyKicker?myJersey.col:oppClub.c;
-  const kDark=isMyKicker?(myJersey.dark||'#090d14'):(oppClub.dark||'#1e272e');
-  const kTrim=isMyKicker?(myJersey.trim||'#ffffff'):'#ffffff';
-  const kSh=isMyKicker?myShorts.col:'#1e272e';
-  const kShDark=isMyKicker?(myShorts.dark||'#0b0f14'):'#0b0f14';
-  const kBoot=isMyKicker?myShoes.col:'#14181d';
-  const kBootAc=isMyKicker?(myShoes.ac||'#1dd1a1'):'#ffffff';
-
-  drawRealisticPlayer(kp.x,kp.y,kp.s*0.036,kCol,kDark,kTrim,kSh,kShDark,kBoot,kBootAc,null,kicker.kickPose*-0.18,kicker.running?tAnim*3.2:0,true,false);
-
-  requestAnimationFrame(draw3D);
+  box.innerHTML=html;
 }
 
-rsz3D();updUI();renderCtrl();draw3D();
+function setTab(t){
+  viewTab=t;
+  renderUCL();
+}
+
+updUI();renderUCL();
 </script>
 </body>
 </html>
-<!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 9 ] ================== -->
+<!-- ================== [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 3 ] ================= -->
