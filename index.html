@@ -10,870 +10,353 @@
 <script src="https://telegram.org"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:10px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden;position:relative}
-#heroCanvas{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
-.top-card{position:relative;z-index:2;background:rgba(11,17,28,.84);backdrop-filter:blur(6px);border:1px solid rgba(75,123,236,.35);border-radius:14px;padding:9px 14px;flex-shrink:0}
+body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
+.top-box{background:#131b26;border:1px solid #243347;border-radius:12px;padding:7px 12px;margin-bottom:6px;flex-shrink:0}
 .row{display:flex;justify-content:space-between;align-items:center}
-.bar{width:100%;height:5px;background:#1e2b3c;border-radius:4px;overflow:hidden;margin:5px 0}
+.bar{width:100%;height:5px;background:#1e2b3c;border-radius:4px;overflow:hidden;margin:4px 0}
 .fill{height:100%;background:#1dd1a1;transition:width .3s}
-.stage-wrap{position:relative;z-index:1;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;touch-action:none;cursor:pointer;padding-bottom:10px}
-.juggle-badge{position:absolute;top:12px;background:rgba(12,36,97,.88);border:1px solid #4b7bec;color:#feca57;padding:5px 14px;border-radius:16px;font-weight:bold;font-size:13px;display:none;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,.4)}
-.hint-pill{background:rgba(7,11,20,.78);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.18);padding:5px 13px;border-radius:20px;font-size:11px;color:#d1d8e0;pointer-events:none}
-.menu-grid{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0}
-.m-btn{padding:14px 8px;border:none;border-radius:14px;font-weight:bold;font-size:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .12s;text-decoration:none}
-.m-btn:active{transform:scale(.96)}
-.btn-arena{grid-column:span 2;background:linear-gradient(135deg,#1dd1a1,#10ac84);color:#000;font-size:16px;box-shadow:0 4px 16px rgba(29,209,161,.35)}
-.btn-ucl{background:linear-gradient(135deg,#1e3799,#3867d6);color:#fff;border:1px solid #4b7bec}
-.btn-shop{background:rgba(24,34,48,.92);color:#feca57;border:1px solid #3c4f66}
+.stage{flex:1;min-height:0;position:relative;border-radius:14px;overflow:hidden;border:2px solid #243347;margin-bottom:8px;background:#09111e;touch-action:none}
+#heroCanvas{width:100%;height:100%;display:block}
+.rank-btn{position:absolute;top:12px;left:12px;z-index:20;background:rgba(13,24,45,.92);border:1.5px solid #4b7bec;color:#feca57;padding:7px 12px;border-radius:12px;font-weight:bold;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;box-shadow:0 4px 12px rgba(0,0,0,.45)}
+.rank-btn:active{transform:scale(.95)}
+.act-badge{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.82);border:1px solid #3867d6;padding:5px 14px;border-radius:14px;font-size:11px;font-weight:bold;color:#70a1ff;pointer-events:none;white-space:nowrap}
+.hint-badge{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.82);border:1px solid rgba(255,255,255,.15);padding:4px 12px;border-radius:12px;font-size:10px;color:#dfe4ea;pointer-events:none;white-space:nowrap}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0}
+.mbtn{border:none;border-radius:13px;padding:12px 8px;font-weight:bold;font-size:13px;cursor:pointer;text-align:center;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.mbtn:active{transform:scale(.97)}
+.mbtn.play{grid-column:span 2;background:linear-gradient(135deg,#1dd1a1,#10ac84);color:#000;font-size:15px;padding:13px}
+.mbtn.ucl{background:linear-gradient(135deg,#1e3799,#3867d6);color:#fff;border:1px solid #4b7bec}
+.mbtn.shop{background:#182230;color:#feca57;border:1px solid #3c4f66}
+.mbtn span{font-size:10px;font-weight:normal;opacity:.85}
 </style>
 </head>
 <body>
 
-<canvas id="heroCanvas"></canvas>
-
-<div class="top-card">
+<div class="top-box">
   <div class="row">
-    <b style="color:#feca57;font-size:14px">Рівень <span id="lv">1</span> • 🏆 ЛЧ: <span id="cp">0</span></b>
-    <b style="color:#feca57;font-size:15px">💰 <span id="cn">20</span></b>
+    <b style="color:#feca57;font-size:13px">Рівень <span id="lv">1</span> • 🏆 ЛЧ: <span id="cp">0</span></b>
+    <b style="color:#feca57;font-size:14px">💰 <span id="cn">20</span></b>
   </div>
   <div class="bar"><div class="fill" id="xb"></div></div>
-  <div class="row" style="font-size:11px;color:#a5b1c2">
+  <div class="row" style="font-size:10px;color:#8395a7">
     <span>Досвід XP: <span id="pt">0</span>/<span id="nx">100</span></span>
-    <span style="color:#1dd1a1;font-weight:bold">🇺🇦 Твій Клуб • №<span id="heroNumTag">10</span></span>
+    <span style="color:#70a1ff;font-weight:bold">🇺🇦 Твій Клуб</span>
   </div>
 </div>
-
-<div class="stage-wrap" id="stage">
-  <div class="juggle-badge" id="juggleBadge">⚽ Набивання: <span id="juggleCnt">0</span></div>
-  <div class="hint-pill">👆 Натисни на гравця — набиває м’яч • Проведи — крутиться</div>
-</div>
-
-<div class="menu-grid">
-  <a href="game.html" class="m-btn btn-arena" onclick="localStorage.removeItem('pc_play_ucl')">
-    <span>⚽ ШВИДКИЙ МАТЧ (АРЕНА)</span>
-    <span style="font-size:11px;font-weight:normal;opacity:.85">Тренування та заробіток монет</span>
-  </a>
-  <a href="turnir.html" class="m-btn btn-ucl">
-    <span>🏆 ЛІГА ЧЕМПІОНІВ</span>
-    <span style="font-size:10px;font-weight:normal;color:#d1d8e0">Турнір на виліт</span>
-  </a>
-  <a href="shop.html" class="m-btn btn-shop">
-    <span>🛍 ГАРДЕРОБ / МАГАЗИН</span>
-    <span style="font-size:10px;font-weight:normal;color:#a5b1c2">Форма, бутси, номер</span>
-  </a>
-</div>
-<!-- ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 1 ] ================== -->
+<!-- ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 1 ] ================= -->
 <!-- ===================================================================== -->
 <!-- ================== [ INDEX.HTML : ЧАСТИНА 2 З 6 ] =================== -->
 <!-- ===================================================================== -->
+<div class="stage" id="stage">
+  <a href="statustuca.html" class="rank-btn">📊 Рейтинг</a>
+  <div class="act-badge" id="actBadge">🏃 Зарядка: Стрибки</div>
+  <canvas id="heroCanvas"></canvas>
+  <div class="hint-badge">👆 Натисни на гравця — набиває м'яч • Проведи — крутиться</div>
+</div>
+
+<div class="menu">
+  <a href="game.html" class="mbtn play" onclick="localStorage.removeItem('pc_play_ucl')">
+    ⚽ ШВИДКИЙ МАТЧ (АРЕНА)
+    <span>Тренування та заробіток монет</span>
+  </a>
+  <a href="game.html?mode=ucl" class="mbtn ucl" onclick="localStorage.setItem('pc_play_ucl','1')">
+    🏆 ЛІГА ЧЕМПІОНІВ
+    <span id="uclSub">Групи + Плей-оф</span>
+  </a>
+  <a href="shop.html" class="mbtn shop">
+    🛍 ГАРДЕРОБ / МАГАЗИН
+    <span>Форма, бутси, номер</span>
+  </a>
+</div>
+
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
 
-const ITEMS={
-  j1:{col:'#1dd1a1',dark:'#0d8a68',trim:'#ffffff'},
-  j2:{col:'#f5f6fa',dark:'#cfd6de',trim:'#1e272e'},
-  j3:{col:'#d63031',dark:'#8e1b1c',trim:'#ffffff'},
-  j4:{col:'#1e3799',dark:'#0c1a52',trim:'#feca57'},
-  j5:{col:'#1e272e',dark:'#0b0f14',trim:'#1dd1a1'},
-  j6:{col:'#feca57',dark:'#c49014',trim:'#1e272e'},
-  p1:{col:'#ffffff',dark:'#cfd6de'},p2:{col:'#1e272e',dark:'#0b0f14'},p3:{col:'#1e3799',dark:'#0c1a52'},
-  p4:{col:'#d63031',dark:'#8e1b1c'},p5:{col:'#00a8ff',dark:'#006299'},p6:{col:'#feca57',dark:'#c49014'},
-  s1:{col:'#14181d',ac:'#1dd1a1'},s2:{col:'#f5f6fa',ac:'#eb4d4b'},s3:{col:'#00d2ff',ac:'#ffffff'},s4:{col:'#feca57',ac:'#1e272e'},
-  b1:{col:'#ffffff'},b2:{col:'#ff5e57'},b3:{col:'#00d2ff'},b4:{col:'#feca57'},
-  k1:{col:'#1dd1a1'},k2:{col:'#ff9ff3'}
-};
+const SHOP=[
+  {id:'j1',col:'#1dd1a1',dark:'#0d8a68',trim:'#ffffff'},
+  {id:'j2',col:'#f5f6fa',dark:'#cfd6de',trim:'#1e272e'},
+  {id:'j3',col:'#d63031',dark:'#8e1b1c',trim:'#ffffff'},
+  {id:'j4',col:'#1e3799',dark:'#0c1a52',trim:'#feca57'},
+  {id:'j5',col:'#1e272e',dark:'#0b0f14',trim:'#1dd1a1'},
+  {id:'j6',col:'#feca57',dark:'#c49014',trim:'#1e272e'},
+  {id:'p1',col:'#ffffff',dark:'#cfd6de'},{id:'p2',col:'#1e272e',dark:'#0b0f14'},{id:'p3',col:'#1e3799',dark:'#0c1a52'},
+  {id:'p4',col:'#d63031',dark:'#8e1b1c'},{id:'p5',col:'#00a8ff',dark:'#006299'},{id:'p6',col:'#feca57',dark:'#c49014'},
+  {id:'s1',col:'#14181d',ac:'#1dd1a1'},{id:'s2',col:'#f5f6fa',ac:'#eb4d4b'},{id:'s3',col:'#00d2ff',ac:'#ffffff'},{id:'s4',col:'#feca57',ac:'#1e272e'},
+  {id:'b1',col:'#ffffff'},{id:'b2',col:'#ff5e57'},{id:'b3',col:'#00d2ff'},{id:'b4',col:'#feca57'},
+  {id:'k1',col:'#1dd1a1'},{id:'k2',col:'#ff9ff3'}
+];
 
 let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null};
+try{
+  const old=JSON.parse(localStorage.getItem('pc_3d8'));
+  const v=JSON.parse(localStorage.getItem('pc_ucl1'));
+  if(v)p=Object.assign(p,v);
+  else if(old){p=Object.assign(p,old);localStorage.setItem('pc_ucl1',JSON.stringify(p));}
+}catch(e){}
 
-function loadWallet(){
-  try{
-    const old=JSON.parse(localStorage.getItem('pc_3d8'));
-    const v=JSON.parse(localStorage.getItem('pc_ucl1'));
-    if(v)p=Object.assign(p,v);
-    else if(old){p=Object.assign(p,old);localStorage.setItem('pc_ucl1',JSON.stringify(p));}
-  }catch(e){}
-  if(!p.ej)p.ej='j1';
-  if(!p.ep)p.ep='p1';
-  if(!p.es)p.es='s1';
-  if(!p.num)p.num='10';
-  if(!p.numCol)p.numCol='#ffffff';
-}
+function getItem(id){return SHOP.find(x=>x.id===id)||SHOP.at(0);}
 
-loadWallet();
-window.addEventListener('pageshow',()=>{loadWallet();updUI();});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadWallet();updUI();}});
-
-function updUI(){
-  document.getElementById('lv').textContent=p.lv;
-  document.getElementById('cp').textContent=p.cp;
-  document.getElementById('cn').textContent=p.cn;
-  document.getElementById('heroNumTag').textContent=p.num||'10';
-  const nxXp=p.lv*100;
-  document.getElementById('pt').textContent=p.pt;
-  document.getElementById('nx').textContent=nxXp;
-  document.getElementById('xb').style.width=Math.min(100,(p.pt/nxXp)*100)+'%';
-}
-
-const cvs=document.getElementById('heroCanvas');
-const ctx=cvs.getContext('2d');
-let W=300,H=300;
-function rsz(){
-  W=cvs.width=window.innerWidth;
-  H=cvs.height=window.innerHeight;
-}
-window.addEventListener('resize',rsz);
-
-let ac=null;
-function playTouchSound(){
-  try{
-    if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();
-    if(ac.state==='suspended')ac.resume();
-    const now=ac.currentTime,osc=ac.createOscillator(),g=ac.createGain();
-    osc.type='sine';
-    osc.frequency.setValueAtTime(145,now);
-    osc.frequency.exponentialRampToValueAtTime(52,now+0.09);
-    g.gain.setValueAtTime(0.28,now);
-    g.gain.exponentialRampToValueAtTime(0.001,now+0.09);
-    osc.connect(g);g.connect(ac.destination);
-    osc.start(now);osc.stop(now+0.1);
-  }catch(e){}
-}
-
-let rotY=0.22,velY=0.004,dragging=false,downX=0,lastX=0,tAnim=0;
-let juggleTimer=0,jugglePhase=0,juggleBlend=0,juggleHits=0,lastCycle=-1;
-
-let lastInteractTime=Date.now();
-let idleMode='none';
-let idlePhase=0,idleBlend=0,idleSwitchTimer=0;
-const IDLE_NAMES={run:'🏃 Розминка: Біг на місці',squat:'🏋️ Зарядка: Присідання',jack:'🤸 Зарядка: Стрибки'};
-
-function markUserActive(){
-  lastInteractTime=Date.now();
-  idleMode='none';
-}
-
-function triggerJuggle(){
-  markUserActive();
-  if(juggleTimer<=0){
-    jugglePhase=0;
-    juggleHits=0;
-    lastCycle=-1;
+function updHUD(){
+  lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
+  const nxXp=p.lv*100;pt.textContent=p.pt;nx.textContent=nxXp;
+  xb.style.width=Math.min(100,(p.pt/nxXp)*100)+'%';
+  if(p.ucl&&p.ucl.active){
+    if(p.ucl.stage==='group')uclSub.textContent=`Групи: Тур ${(p.ucl.gRnd||0)+1} з 6`;
+    else uclSub.textContent=`Плей-оф: ${['1/8 Фіналу','1/4 Фіналу','Півфінал','ФІНАЛ'].at(p.ucl.rnd)||'ЛЧ'}`;
   }
-  juggleTimer=240;
-  velY=0;
-  playTouchSound();
 }
-
-const stageEl=document.getElementById('stage');
-
-stageEl.addEventListener('pointerdown',e=>{
-  markUserActive();
-  dragging=true;
-  downX=lastX=e.clientX;
-  velY=0;
-});
-window.addEventListener('pointermove',e=>{
-  if(!dragging)return;
-  markUserActive();
-  const dx=e.clientX-lastX;
-  lastX=e.clientX;
-  if(Math.abs(e.clientX-downX)>8){
-    velY=dx*0.015;
-    rotY+=velY;
-  }
-});
-window.addEventListener('pointerup',e=>{
-  if(dragging && Math.abs(e.clientX-downX)<=8){
-    triggerJuggle();
-  }
-  dragging=false;
-});
-/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 2 ] ================== */
+updHUD();
+/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 2 ] ================= -->
 /* ===================================================================== */
 /* ================== [ INDEX.HTML : ЧАСТИНА 3 З 6 ] =================== */
 /* ===================================================================== */
-function drawStadiumBackground(){
-  const horizon=H*0.54;
+const canvas=document.getElementById('heroCanvas'),ctx=canvas.getContext('2d');
+let W=300,H=400;
+function rsz(){const r=stage.getBoundingClientRect();if(r.width>0&&r.height>0){W=canvas.width=r.width;H=canvas.height=r.height;}}
+window.addEventListener('resize',rsz);rsz();
 
-  const sky=ctx.createLinearGradient(0,0,0,horizon);
-  sky.addColorStop(0,'#050a14');
-  sky.addColorStop(0.55,'#0d2140');
-  sky.addColorStop(1,'#1b3b69');
-  ctx.fillStyle=sky;
-  ctx.fillRect(0,0,W,horizon);
+let rotY=0,rotVel=0,isDragging=false,lastX=0,downX=0,downY=0,downT=0;
+let juggleTimer=0,juggleFoot=1,jBallY=0,jBallVy=0,jBallX=18;
 
-  const standTop=horizon-H*0.24;
-  ctx.fillStyle='#0a1220';
-  ctx.beginPath();
-  ctx.moveTo(0,standTop+18);
-  ctx.quadraticCurveTo(W*0.5,standTop-14,W,standTop+18);
-  ctx.lineTo(W,horizon);
-  ctx.lineTo(0,horizon);
-  ctx.closePath();
-  ctx.fill();
-
-  for(let r=0;r<7;r++){
-    const ry=standTop+16+r*((horizon-standTop-22)/7);
-    ctx.strokeStyle=r%2===0?'rgba(56,103,214,0.22)':'rgba(255,255,255,0.08)';
-    ctx.lineWidth=1.5;
-    ctx.beginPath();
-    ctx.moveTo(0,ry+8);
-    ctx.quadraticCurveTo(W*0.5,ry-6,W,ry+8);
-    ctx.stroke();
-
-    for(let i=0;i<26;i++){
-      const fx=(W/26)*i+(r%2)*12;
-      const fy=ry+4-Math.sin((i/26)*Math.PI)*10;
-      const blink=Math.sin(tAnim*1.4+i*1.7+r*2.3);
-      ctx.fillStyle=blink>0.85?'rgba(255,255,255,0.75)':(i%3===0?'rgba(75,123,236,0.45)':'rgba(29,209,161,0.3)');
-      ctx.fillRect(fx,fy,3,3);
-    }
+stage.addEventListener('pointerdown',e=>{
+  isDragging=true;lastX=downX=e.clientX;downY=e.clientY;downT=Date.now();rotVel=0;
+});
+window.addEventListener('pointermove',e=>{
+  if(!isDragging)return;
+  const dx=e.clientX-lastX;lastX=e.clientX;
+  rotY+=dx*0.015;rotVel=dx*0.012;
+});
+window.addEventListener('pointerup',e=>{
+  if(!isDragging)return;isDragging=false;
+  const dist=Math.hypot(e.clientX-downX,e.clientY-downY);
+  if(dist<10 && (Date.now()-downT)<320){
+    juggleTimer=1.0;juggleFoot*=-1;
+    jBallVy=-7.5;jBallX=juggleFoot*16;
+    actBadge.textContent='⚽ Набиває м\'яч!';
   }
+});
 
-  ctx.strokeStyle='#cfd6de';
-  ctx.lineWidth=3.5;
-  ctx.beginPath();
-  ctx.moveTo(0,standTop+14);
-  ctx.quadraticCurveTo(W*0.5,standTop-18,W,standTop+14);
-  ctx.stroke();
-
-  [0.16,0.84].forEach(pos=>{
-    const lx=W*pos,ly=standTop-6;
-    const beam=ctx.createRadialGradient(lx,ly,4,W*0.5,H*0.65,H*0.55);
-    beam.addColorStop(0,'rgba(220,240,255,0.32)');
-    beam.addColorStop(0.5,'rgba(120,170,255,0.08)');
-    beam.addColorStop(1,'rgba(7,11,20,0)');
-    ctx.fillStyle=beam;
-    ctx.beginPath();
-    ctx.moveTo(lx-14,ly);ctx.lineTo(lx+14,ly);
-    ctx.lineTo(W*(pos<0.5?0.85:1.15),H);ctx.lineTo(W*(pos<0.5?-0.15:0.15),H);
-    ctx.closePath();ctx.fill();
-
-    ctx.fillStyle='#ffffff';ctx.shadowColor='#70a1ff';ctx.shadowBlur=14;
-    ctx.fillRect(lx-14,ly-5,28,8);ctx.shadowBlur=0;
-  });
-
-  ctx.fillStyle='#0c2461';
-  ctx.fillRect(0,horizon-12,W,12);
-  ctx.fillStyle='#4b7bec';
-  ctx.fillRect(0,horizon-13,W,2);
-  ctx.fillStyle='rgba(255,255,255,0.82)';
-  ctx.font='bold 8px sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText('★ UEFA CHAMPIONS LEAGUE  •  3D PENALTY CUP  •  OFFICIAL ARENA ★',W*0.5,horizon-3);
-
-  const grass=ctx.createLinearGradient(0,horizon,0,H);
-  grass.addColorStop(0,'#1b5e20');
-  grass.addColorStop(0.45,'#2e7d32');
-  grass.addColorStop(1,'#143d18');
-  ctx.fillStyle=grass;
-  ctx.fillRect(0,horizon,W,H-horizon);
-
-  for(let s=0;s<8;s++){
-    const y1=horizon+Math.pow(s/8,1.35)*(H-horizon);
-    const y2=horizon+Math.pow((s+1)/8,1.35)*(H-horizon);
-    if(s%2===0){ctx.fillStyle='rgba(255,255,255,0.045)';ctx.fillRect(0,y1,W,y2-y1);}
-  }
-
-  ctx.strokeStyle='rgba(255,255,255,0.32)';
-  ctx.lineWidth=2.5;
-  ctx.beginPath();
-  ctx.ellipse(W*0.5,H*0.76,W*0.42,H*0.09,0,0,Math.PI*2);
-  ctx.stroke();
-
-  const botFade=ctx.createLinearGradient(0,H*0.78,0,H);
-  botFade.addColorStop(0,'rgba(7,11,20,0)');
-  botFade.addColorStop(1,'rgba(7,11,20,0.88)');
-  ctx.fillStyle=botFade;
-  ctx.fillRect(0,H*0.78,W,H*0.22);
-}
-/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 3 ] ================== */
-/* ===================================================================== */
-  /* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 4 З 6 ] =================== */
-/* ===================================================================== */
 function drawCapsule(x1,y1,x2,y2,r1,r2,col){
-  const dx=x2-x1,dy=y2-y1;
-  const ang=Math.atan2(dy,dx);
-  const perp=ang+Math.PI/2;
-  ctx.fillStyle=col;
-  ctx.beginPath();
+  const perp=Math.atan2(y2-y1,x2-x1)+Math.PI/2;
+  ctx.fillStyle=col;ctx.beginPath();
   ctx.arc(x1,y1,r1,perp,perp+Math.PI);
   ctx.arc(x2,y2,r2,perp+Math.PI,perp);
-  ctx.closePath();
-  ctx.fill();
+  ctx.closePath();ctx.fill();
 }
 
-function drawFootballBoot(x,y,sc,sgn,cosR,sinR,sItem){
-  ctx.save();
-  ctx.translate(x,y);
-
-  const isBack=cosR<0;
-  const turnAmt=Math.abs(sinR);
-
-  // 1. ВИГЛЯД ПРЯМО СПЕРЕДУ (коли гравець дивиться на камеру)
-  if(!isBack && turnAmt<0.38){
-    const shiftX=sinR*3.5*sc+sgn*0.5*sc;
-    ctx.translate(shiftX,0);
-
-    // Передні шипи знизу
-    ctx.fillStyle='#dce4e7';
-    [-2.5*sc,-0.8*sc,0.8*sc,2.5*sc].forEach(sx=>{
-      ctx.beginPath();
-      ctx.roundRect(sx-0.5*sc,3.4*sc,1.0*sc,1.1*sc,0.3*sc);
-      ctx.fill();
-    });
-
-    // Підошва спереду
-    ctx.fillStyle='#0d1117';
-    ctx.beginPath();
-    ctx.ellipse(0,3.1*sc,4.3*sc,1.3*sc,0,0,Math.PI*2);
-    ctx.fill();
-
-    // Об'ємний носок та підйом бутси, спрямований прямо на глядача
-    const frontGrad=ctx.createLinearGradient(0,-3.2*sc,0,3.2*sc);
-    frontGrad.addColorStop(0,'#11161d');
-    frontGrad.addColorStop(0.35,sItem.col);
-    frontGrad.addColorStop(0.85,sItem.col);
-    frontGrad.addColorStop(1,'#0d1117');
-
-    ctx.fillStyle=frontGrad;
-    ctx.beginPath();
-    ctx.moveTo(-3.3*sc,-2.4*sc);
-    ctx.lineTo(3.3*sc,-2.4*sc);
-    ctx.quadraticCurveTo(4.6*sc,0.8*sc,4.2*sc,2.9*sc);
-    ctx.quadraticCurveTo(0,3.6*sc,-4.2*sc,2.9*sc);
-    ctx.quadraticCurveTo(-4.6*sc,0.8*sc,-3.3*sc,-2.4*sc);
-    ctx.closePath();
-    ctx.fill();
-
-    // Контрастна передня вставка / логотип на носку
-    ctx.strokeStyle=sItem.ac||'#1dd1a1';
-    ctx.lineWidth=1.3*sc;
-    ctx.beginPath();
-    ctx.arc(0,1.4*sc,2.5*sc,0.15*Math.PI,0.85*Math.PI);
-    ctx.stroke();
-
-    // Центральна шнурівка на підйомі стопи
-    ctx.strokeStyle='rgba(255,255,255,0.85)';
-    ctx.lineWidth=0.95*sc;
-    for(let i=0;i<3;i++){
-      const ly=(-1.4+i*0.95)*sc;
-      const lw=(1.6-i*0.15)*sc;
-      ctx.beginPath();
-      ctx.moveTo(-lw,ly);
-      ctx.lineTo(lw,ly);
-      ctx.stroke();
-    }
-
-    ctx.restore();
-    return;
-  }
-
-  // 2. ВИГЛЯД ЗІ СПИНИ (п'ята та задник)
-  if(isBack && turnAmt<0.38){
-    ctx.fillStyle='#0b0f14';
-    ctx.beginPath();
-    ctx.roundRect(-3.8*sc,2.0*sc,7.6*sc,1.7*sc,0.8*sc);
-    ctx.fill();
-
-    ctx.fillStyle='#cfd6de';
-    ctx.fillRect(-3.0*sc,3.6*sc,1.4*sc,1.1*sc);
-    ctx.fillRect(1.6*sc,3.6*sc,1.4*sc,1.1*sc);
-
-    ctx.fillStyle=sItem.col;
-    ctx.beginPath();
-    ctx.moveTo(-3.4*sc,-2.2*sc);
-    ctx.lineTo(3.4*sc,-2.2*sc);
-    ctx.lineTo(3.8*sc,2.2*sc);
-    ctx.lineTo(-3.8*sc,2.2*sc);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle=sItem.ac||'#1dd1a1';
-    ctx.fillRect(-1.1*sc,-2.0*sc,2.2*sc,3.8*sc);
-    ctx.restore();
-    return;
-  }
-
-  // 3. ВИГЛЯД У ПРОФІЛЬ / НАПІВОБЕРТА (коли крутиш гравця вліво чи вправо)
-  const dir=Math.sign(sinR)||1;
-  const sideFactor=Math.min(1,(turnAmt-0.35)/0.65);
-  ctx.scale(dir,1);
-
-  const len=(5.0+5.0*sideFactor)*sc;
-  const heelX=-3.5*sc;
-  const toeX=len;
-
+function drawBoot(x,y,sc,side,bootCol,bootAc){
+  ctx.save();ctx.translate(x,y);ctx.scale(side,1);
   ctx.fillStyle='#dce4e7';
-  [heelX+1.0*sc,heelX+3.2*sc,toeX-3.4*sc,toeX-1.2*sc].forEach(sx=>{
-    ctx.beginPath();
-    ctx.roundRect(sx-0.6*sc,3.2*sc,1.2*sc,1.2*sc,0.3*sc);
-    ctx.fill();
-  });
+  [-2.5*sc,0,2.5*sc].forEach(sx=>{ctx.beginPath();ctx.roundRect(sx-0.5*sc,2.2*sc,1.0*sc,0.9*sc,0.2*sc);ctx.fill();});
+  ctx.fillStyle='#0d1117';ctx.beginPath();ctx.ellipse(1.2*sc,2.0*sc,4.6*sc,1.0*sc,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=bootCol;ctx.beginPath();
+  ctx.moveTo(-3.2*sc,-2.2*sc);ctx.lineTo(1.8*sc,-1.8*sc);ctx.quadraticCurveTo(6.2*sc,-0.2*sc,5.6*sc,1.9*sc);
+  ctx.lineTo(-3.4*sc,1.9*sc);ctx.closePath();ctx.fill();
+  ctx.strokeStyle=bootAc;ctx.lineWidth=1.1*sc;ctx.beginPath();ctx.moveTo(-1.5*sc,0.8*sc);ctx.quadraticCurveTo(1.5*sc,1.5*sc,4.5*sc,0.6*sc);ctx.stroke();
+  ctx.restore();
+}
+/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 3 ] ================= -->
+/* ===================================================================== */
+/* ================== [ INDEX.HTML : ЧАСТИНА 4 З 6 ] =================== */
+/* ===================================================================== */
+function drawArenaBg(t){
+  const horY=H*0.54;
+  const sky=ctx.createLinearGradient(0,0,0,horY);
+  sky.addColorStop(0,'#060b14');sky.addColorStop(1,'#162a45');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,horY);
 
-  ctx.fillStyle='#0d1117';
-  ctx.beginPath();
-  ctx.moveTo(heelX-0.4*sc,2.2*sc);
-  ctx.quadraticCurveTo((heelX+toeX)*0.45,1.6*sc,toeX+0.4*sc,2.3*sc);
-  ctx.lineTo(toeX+0.2*sc,3.4*sc);
-  ctx.quadraticCurveTo((heelX+toeX)*0.45,2.9*sc,heelX-0.2*sc,3.4*sc);
-  ctx.closePath();
-  ctx.fill();
+  ctx.fillStyle='#0b1322';
+  ctx.beginPath();ctx.moveTo(0,horY-H*0.24);ctx.quadraticCurveTo(W*0.5,horY-H*0.18,W,horY-H*0.24);
+  ctx.lineTo(W,horY);ctx.lineTo(0,horY);ctx.closePath();ctx.fill();
 
-  const bootGrad=ctx.createLinearGradient(heelX,-3.5*sc,toeX,2.5*sc);
-  bootGrad.addColorStop(0,sItem.col);
-  bootGrad.addColorStop(0.75,sItem.col);
-  bootGrad.addColorStop(1,'#11161d');
-
-  ctx.fillStyle=bootGrad;
-  ctx.beginPath();
-  ctx.moveTo(heelX,-3.0*sc);
-  ctx.quadraticCurveTo(heelX+2.0*sc,-2.2*sc,heelX+3.2*sc,-2.8*sc);
-  ctx.quadraticCurveTo(heelX+5.5*sc,-0.8*sc,toeX-1.2*sc,0.4*sc);
-  ctx.quadraticCurveTo(toeX+1.0*sc,1.0*sc,toeX+0.3*sc,2.4*sc);
-  ctx.lineTo(heelX-0.3*sc,2.3*sc);
-  ctx.quadraticCurveTo(heelX-0.8*sc,-0.5*sc,heelX,-3.0*sc);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.fillStyle='#1e272e';
-  ctx.beginPath();
-  ctx.ellipse(heelX+1.6*sc,-2.8*sc,2.6*sc,1.1*sc,-0.15,0,Math.PI*2);
-  ctx.fill();
-
-  ctx.strokeStyle=sItem.ac||'#1dd1a1';
-  ctx.lineWidth=1.4*sc;
-  ctx.lineCap='round';
-  ctx.beginPath();
-  ctx.moveTo(heelX+1.8*sc,0.6*sc);
-  ctx.quadraticCurveTo((heelX+toeX)*0.55,-0.3*sc,toeX-1.6*sc,1.3*sc);
-  ctx.stroke();
-
-  ctx.strokeStyle='rgba(255,255,255,0.75)';
-  ctx.lineWidth=0.85*sc;
-  for(let i=0;i<3;i++){
-    const lx=heelX+(3.8+i*1.5)*sc;
-    const ly=(-1.8+i*0.65)*sc;
-    ctx.beginPath();
-    ctx.moveTo(lx,ly);
-    ctx.lineTo(lx+0.9*sc,ly+0.8*sc);
-    ctx.stroke();
+  for(let r=0;r<5;r++){
+    const ry=horY-H*0.04-r*(H*0.036);
+    ctx.fillStyle=r%2===0?'rgba(255,255,255,0.06)':'rgba(112,161,255,0.08)';
+    for(let x=8;x<W-8;x+=11){
+      const bob=Math.sin(t*2+x*0.05+r)*1.5;
+      ctx.fillRect(x,ry+bob,4,5);
+    }
   }
 
-  ctx.restore();
-}
-
-function drawGKGlove(x,y,sc,sgn,col){
-  ctx.save();
-  ctx.translate(x,y);
-  ctx.rotate(sgn*-0.08);
-
-  ctx.fillStyle='#1e272e';
-  ctx.beginPath();
-  ctx.roundRect(-2.6*sc,-1.2*sc,5.2*sc,2.4*sc,1.0*sc);
-  ctx.fill();
-  ctx.fillStyle='#ffffff';
-  ctx.fillRect(-1.8*sc,-0.4*sc,3.6*sc,0.8*sc);
-
-  ctx.fillStyle=col;
-  ctx.beginPath();
-  ctx.roundRect(-3.0*sc,1.0*sc,6.0*sc,4.6*sc,1.6*sc);
-  ctx.fill();
-
-  ctx.fillStyle='rgba(255,255,255,0.32)';
-  ctx.beginPath();
-  ctx.roundRect(-2.0*sc,1.6*sc,4.0*sc,3.0*sc,1.0*sc);
-  ctx.fill();
-
-  const fingerX=[-2.2,-0.75,0.75,2.2];
-  const fingerLen=[2.6,3.2,3.0,2.3];
-  fingerX.forEach((fx,idx)=>{
-    drawCapsule(fx*sc,5.2*sc,fx*sc,(5.2+fingerLen[idx])*sc,0.72*sc,0.58*sc,col);
+  [W*0.16,W*0.84].forEach((lx,idx)=>{
+    const ly=horY-H*0.25;
+    const beam=ctx.createRadialGradient(lx,ly,4,lx+(idx===0?90:-90),horY+80,H*0.55);
+    beam.addColorStop(0,'rgba(220,240,255,0.28)');beam.addColorStop(1,'rgba(220,240,255,0)');
+    ctx.fillStyle=beam;ctx.beginPath();ctx.moveTo(lx-12,ly);ctx.lineTo(lx+12,ly);
+    ctx.lineTo(lx+(idx===0?240:-40),H);ctx.lineTo(lx+(idx===0?-40:240),H);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#ffffff';ctx.fillRect(lx-10,ly-4,20,7);
   });
 
-  const thumbDir=-sgn;
-  drawCapsule(thumbDir*2.6*sc,2.6*sc,thumbDir*4.3*sc,4.4*sc,0.85*sc,0.65*sc,col);
+  ctx.fillStyle='#0c2461';ctx.fillRect(0,horY-14,W,14);
+  ctx.fillStyle='#fff';ctx.font='bold 8px sans-serif';ctx.textAlign='center';
+  ctx.fillText('★ UEFA CHAMPIONS LEAGUE ★ OFFICIAL ARENA ★',W*0.5,horY-4);
 
-  ctx.restore();
+  const grass=ctx.createLinearGradient(0,horY,0,H);
+  grass.addColorStop(0,'#1e5c24');grass.addColorStop(0.5,'#27782e');grass.addColorStop(1,'#1b5220');
+  ctx.fillStyle=grass;ctx.fillRect(0,horY,W,H-horY);
+
+  ctx.strokeStyle='rgba(255,255,255,0.55)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.ellipse(W*0.5,horY+H*0.16,W*0.36,H*0.09,0,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,horY+H*0.16);ctx.lineTo(W,horY+H*0.16);ctx.stroke();
 }
-/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4 ] ================== */
+/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4 ] ================= -->
 /* ===================================================================== */
 /* ================== [ INDEX.HTML : ЧАСТИНА 5 З 6 ] =================== */
 /* ===================================================================== */
-function drawSingleArm(side,sc,cosR,sinR,breath,shW,jItem,skin,skinShade,kItem,jInfo,ex){
-  const sgn=side*(cosR>=0?1:-1);
-  const armSway=Math.sin(tAnim+side*0.5)*0.6*sc;
-  const activeArm=(side===1?jInfo.liftL:jInfo.liftR)*jInfo.blend;
-  const balOut=(jInfo.blend*3.5+activeArm*2.5)*sc*sgn;
-  const balUp=(jInfo.blend*2.5+activeArm*3.0)*sc;
+function drawHero3D(t){
+  const cx=W*0.5,baseY=H*0.82,sc=Math.min(W,H)*0.0056;
+  const cosA=Math.cos(rotY),sinA=Math.sin(rotY);
+  const isBack=cosA<0,wScale=Math.max(0.28,Math.abs(cosA));
 
-  const armDepth=side*sinR*8.5*sc;
-  const forwardReach=sinR*4.2*sc;
+  const jCol=getItem(p.ej).col,jDark=getItem(p.ej).dark||'#0d8a68',trim=getItem(p.ej).trim||'#fff';
+  const sCol=getItem(p.ep).col,sDark=getItem(p.ep).dark||'#cfd6de';
+  const bCol=getItem(p.es).col,bAc=getItem(p.es).ac||'#1dd1a1';
+  const skin='#e4b487',shade='#be8450',light='#f6d3af';
 
-  const runArm=(side===1?ex.armRunR:ex.armRunL)*sc;
-  const sq=ex.squat;
-  const jackArm=ex.jack*sc;
+  const cycle=Math.floor(t/5)%3;
+  let jumpY=0,squat=0,armRaise=0,legKickL=0,legKickR=0,bodyTwist=0;
 
-  const shX=sgn*(shW-2.8*sc)+armDepth*0.35;
-  const shY=-92*sc+breath+ex.bodyY*sc;
+  if(juggleTimer>0){
+    if(juggleFoot===1)legKickR=Math.sin(juggleTimer*Math.PI)*18*sc;
+    else legKickL=Math.sin(juggleTimer*Math.PI)*18*sc;
+  }else if(cycle===0){
+    actBadge.textContent='🏃 Зарядка: Стрибки';
+    const jp=Math.abs(Math.sin(t*4.5));
+    jumpY=jp*16*sc;armRaise=jp;
+  }else if(cycle===1){
+    actBadge.textContent='🏋️ Розминка: Присідання';
+    squat=(Math.sin(t*2.8)*0.5+0.5)*16*sc;armRaise=squat/(16*sc)*0.55;
+  }else{
+    actBadge.textContent='🤸 Розтяжка корпусу';
+    bodyTwist=Math.sin(t*2.6)*0.22;armRaise=0.45;
+  }
 
-  const slvX=sgn*(shW+1.2*sc+jackArm*5.5)+armDepth*0.65+balOut*0.4+sinR*sq*3.0*sc;
-  const slvY=-81.5*sc+breath*0.7+ex.bodyY*sc-balUp*0.3-jackArm*11*sc-sq*2.5*sc-Math.abs(runArm)*1.5;
+  ctx.fillStyle='rgba(0,0,0,0.42)';
+  const shS=1-(jumpY/(40*sc));
+  ctx.beginPath();ctx.ellipse(cx,baseY+4*sc,22*sc*shS,6*sc*shS,0,0,Math.PI*2);ctx.fill();
 
-  const elX=sgn*(shW+2.2*sc+jackArm*11.0-sq*1.5*sc)+armDepth*0.95+armSway+balOut*0.8+sinR*(sq*8.5*sc+runArm*5.0);
-  const elY=-71.5*sc+breath*0.4+ex.bodyY*sc-balUp*0.7-jackArm*25*sc-sq*11.5*sc-Math.max(0,runArm)*6*sc;
-
-  const wrX=sgn*(shW+0.8*sc+jackArm*9.5-Math.pow(jackArm,2)*5.0-sq*2.2*sc)+armDepth*1.15+forwardReach+armSway*1.3+balOut+sinR*(sq*16.0*sc+runArm*9.0);
-  const wrY=-57.5*sc+ex.bodyY*sc-balUp-jackArm*44*sc-sq*24.0*sc-Math.max(0,runArm)*13*sc;
-
-  drawCapsule(shX,shY,slvX,slvY,5.6*sc,4.7*sc,jItem.col);
-  ctx.strokeStyle=jItem.trim||'#ffffff';ctx.lineWidth=1.4*sc;
-  ctx.beginPath();ctx.arc(slvX,slvY,4.6*sc,0.25,Math.PI-0.25);ctx.stroke();
-
-  drawCapsule(slvX,slvY,elX,elY,4.1*sc,3.6*sc,skin);
-  drawCapsule(elX,elY,wrX,wrY,3.5*sc,2.5*sc,skinShade);
-
-  const gloveOrient=(Math.abs(sinR)>0.35)?-Math.sign(sinR):sgn;
-  drawGKGlove(wrX,wrY,sc,gloveOrient,kItem.col);
-}
-
-function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo,ex){
-  const skin='#e4b487',skinShade='#be8450';
-  const wScale=Math.max(0.42,Math.abs(cosR));
-  const depthShift=sinR*6*sc;
-  const shW=(16.5*wScale+4.8)*sc,chestW=(15.5*wScale+4.5)*sc,waistW=(12.2*wScale+4.0)*sc;
-  const bodyY=ex.bodyY*sc;
-
-  const nearSide=(sinR>=0)?1:-1;
-  const farSide=-nearSide;
-  // При присіданні спереду обидві руки витягуються вперед, тому дальню руку не ховаємо за спину
-  const farArmInFront=(!isBack && ex.squat>0.12 && Math.abs(sinR)<0.65);
+  ctx.save();
+  ctx.translate(cx,baseY-jumpY);
 
   [-1,1].forEach(side=>{
-    const sgn=side*(cosR>=0?1:-1);
-    const jugLift=(side===1?jInfo.liftR:jInfo.liftL)*jInfo.blend;
-    const runLift=(side===1?ex.runR:ex.runL);
-    const totalLift=Math.min(1.15,jugLift+runLift);
-    const spread=ex.legSpread*sc*sgn*wScale;
-    const jumpUp=ex.jumpY*sc;
-    const sqKneeOut=ex.squat*2.2*sc*sgn*wScale;
+    const xOff=side*7.5*sc*wScale+sinA*side*2*sc;
+    const kick=side===-1?legKickL:legKickR;
+    const hipX=xOff,hipY=-46*sc+squat;
+    const kneeX=xOff+(side*squat*0.35),kneeY=-25*sc+squat*0.55-kick*0.6;
+    const ankX=xOff,ankY=-3*sc-kick;
 
-    const hipX=sgn*6.4*sc*wScale+depthShift*0.2;
-    const hipY=-55*sc+bodyY;
-
-    const kneeX=sgn*(7.0+totalLift*1.2)*sc*wScale+spread*0.55+sqKneeOut+depthShift*0.35+sinR*(5.5*totalLift+ex.squat*4.5)*sc;
-    const kneeY=-30*sc-totalLift*14*sc+bodyY*0.48-jumpUp;
-
-    const ankleX=sgn*(6.8+totalLift*0.6)*sc*wScale+spread+depthShift*0.5+sinR*(8.5*totalLift-ex.squat*1.5)*sc;
-    const ankleY=-4.5*sc-totalLift*20*sc-jumpUp;
-
-    const shGrad=ctx.createLinearGradient(hipX-8*sc,hipY,hipX+8*sc,hipY);
-    shGrad.addColorStop(0,pItem.col);
-    shGrad.addColorStop(0.82,pItem.col);
-    shGrad.addColorStop(1,pItem.dark||'#1e272e');
-    drawCapsule(hipX,hipY,kneeX,kneeY,8.0*sc,6.4*sc,shGrad);
-
-    ctx.strokeStyle='rgba(255,255,255,0.25)';ctx.lineWidth=1.1*sc;
-    ctx.beginPath();ctx.moveTo(kneeX-6.0*sc,kneeY+0.5*sc);ctx.lineTo(kneeX+6.0*sc,kneeY+0.5*sc);ctx.stroke();
-
-    drawCapsule(kneeX,kneeY,kneeX,kneeY+5.5*sc,4.5*sc,4.2*sc,skin);
-    if(isBack){
-      ctx.strokeStyle='rgba(120,75,40,0.45)';ctx.lineWidth=1.2*sc;
-      ctx.beginPath();ctx.moveTo(kneeX-3.2*sc,kneeY+2.8*sc);ctx.quadraticCurveTo(kneeX,kneeY+3.6*sc,kneeX+3.2*sc,kneeY+2.8*sc);ctx.stroke();
-    }else{
-      ctx.fillStyle=skinShade;ctx.beginPath();ctx.arc(kneeX+sgn*1.0*sc,kneeY+3.0*sc,2.0*sc,0,Math.PI);ctx.fill();
-    }
-
-    const calfX=(kneeX+ankleX)*0.5-sinR*1.0*sc,calfY=(kneeY+ankleY)*0.5;
-    drawCapsule(kneeX,kneeY+5*sc,calfX,calfY,4.5*sc,5.1*sc,jItem.col);
-    drawCapsule(calfX,calfY,ankleX,ankleY,4.9*sc,3.2*sc,jItem.dark||jItem.col);
-
-    ctx.fillStyle=jItem.trim||'#ffffff';
-    ctx.fillRect(kneeX-4.4*sc,kneeY+5.2*sc,8.8*sc,2.0*sc);
-
-    drawFootballBoot(ankleX,ankleY,sc,sgn,cosR,sinR,sItem);
+    drawCapsule(hipX,hipY,kneeX,kneeY,6.5*sc*wScale+2,5.2*sc*wScale+1.5,isBack?sDark:sCol);
+    drawCapsule(kneeX,kneeY,kneeX,kneeY+4*sc,3.8*sc*wScale+1.5,3.5*sc*wScale+1.5,skin);
+    drawCapsule(kneeX,kneeY+3.5*sc,ankX,ankY,4.0*sc*wScale+1.5,2.6*sc*wScale+1.2,jCol);
+    ctx.fillStyle=trim;ctx.fillRect(kneeX-3.5*sc*wScale-1,kneeY+3.5*sc,7*sc*wScale+2,1.6*sc);
+    drawBoot(ankX,ankY,sc,cosA>=0?1:-1,bCol,bAc);
   });
 
-  if(!farArmInFront){
-    drawSingleArm(farSide,sc,cosR,sinR,breath,shW,jItem,skin,skinShade,kItem,jInfo,ex);
-  }
+  ctx.save();
+  ctx.translate(0,-46*sc+squat);
+  ctx.rotate(bodyTwist);
 
-  const torsoGrad=ctx.createLinearGradient(-shW,-100*sc+bodyY,shW,-54*sc+bodyY);
-  torsoGrad.addColorStop(0,jItem.col);
-  torsoGrad.addColorStop(0.68,jItem.col);
-  torsoGrad.addColorStop(1,jItem.dark||'#090d14');
-
-  ctx.fillStyle=torsoGrad;
+  const tW=(16*wScale+5)*sc;
+  const tG=ctx.createLinearGradient(-tW,-42*sc,tW,0);
+  tG.addColorStop(0,jCol);tG.addColorStop(0.75,jCol);tG.addColorStop(1,jDark);
+  ctx.fillStyle=tG;
   ctx.beginPath();
-  ctx.moveTo(-shW,-93*sc+breath+bodyY);
-  ctx.quadraticCurveTo(-shW*0.45,-101*sc+breath+bodyY,0,-101*sc+breath+bodyY);
-  ctx.quadraticCurveTo(shW*0.45,-101*sc+breath+bodyY,shW,-93*sc+breath+bodyY);
-  ctx.lineTo(chestW,-78*sc+breath*0.5+bodyY);
-  ctx.lineTo(waistW,-55*sc+bodyY);
-  ctx.quadraticCurveTo(0,-52*sc+bodyY,-waistW,-55*sc+bodyY);
-  ctx.lineTo(-chestW,-78*sc+breath*0.5+bodyY);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.strokeStyle='rgba(0,0,0,0.13)';ctx.lineWidth=1.0*sc;
-  ctx.beginPath();
-  ctx.moveTo(-waistW*0.55,-62*sc+bodyY);ctx.quadraticCurveTo(0,-65*sc+bodyY,waistW*0.5,-60*sc+bodyY);
-  ctx.moveTo(-chestW*0.45,-75*sc+bodyY);ctx.quadraticCurveTo(depthShift*0.3,-77*sc+bodyY,chestW*0.4,-73*sc+bodyY);
-  ctx.stroke();
-
-  ctx.fillStyle=jItem.trim||'#ffffff';
-  if(isBack){
-    ctx.beginPath();
-    ctx.ellipse(-depthShift*0.4,-99.5*sc+breath+bodyY,5.6*sc,2.2*sc,0,0,Math.PI);
-    ctx.fill();
-  }else{
-    ctx.beginPath();
-    ctx.moveTo(depthShift*0.4-5.8*sc,-100*sc+breath+bodyY);
-    ctx.lineTo(depthShift*0.4,-94*sc+breath+bodyY);
-    ctx.lineTo(depthShift*0.4+5.8*sc,-100*sc+breath+bodyY);
-    ctx.quadraticCurveTo(depthShift*0.4,-101.8*sc+breath+bodyY,depthShift*0.4-5.8*sc,-100*sc+breath+bodyY);
-    ctx.fill();
-  }
+  ctx.moveTo(-tW,-36*sc);ctx.quadraticCurveTo(0,-43*sc,tW,-36*sc);
+  ctx.lineTo(tW*0.84,0);ctx.quadraticCurveTo(0,2*sc,-tW*0.84,0);ctx.closePath();ctx.fill();
 
   if(isBack){
     ctx.fillStyle=p.numCol||'#ffffff';
-    ctx.font=`900 ${Math.round(17*sc)}px sans-serif`;ctx.textAlign='center';
-    ctx.fillText(p.num||'10',-depthShift*0.4,-71*sc+breath+bodyY);
+    ctx.font=`900 ${Math.max(12,18*sc*wScale)}px sans-serif`;ctx.textAlign='center';
+    ctx.fillText(p.num||'10',0,-14*sc);
   }else{
-    const crestX=depthShift*0.5+6.2*sc*wScale,crestY=-87*sc+breath+bodyY;
-    ctx.fillStyle='#feca57';ctx.beginPath();
-    ctx.moveTo(crestX-2.6*sc,crestY-3.0*sc);ctx.lineTo(crestX+2.6*sc,crestY-3.0*sc);
-    ctx.lineTo(crestX+2.2*sc,crestY+1.4*sc);ctx.lineTo(crestX,crestY+3.5*sc);ctx.lineTo(crestX-2.2*sc,crestY+1.4*sc);
-    ctx.closePath();ctx.fill();ctx.strokeStyle='#1e272e';ctx.lineWidth=0.8*sc;ctx.stroke();
-
-    ctx.fillStyle=jItem.trim||'#ffffff';ctx.globalAlpha=0.85;
-    ctx.font=`bold ${Math.max(5,5.2*sc)}px sans-serif`;ctx.textAlign='center';
-    ctx.fillText('CHAMPIONS',depthShift*0.45,-76*sc+breath+bodyY);ctx.globalAlpha=1;
+    ctx.fillStyle=trim;ctx.beginPath();ctx.ellipse(0,-38.5*sc,4.5*sc*wScale+1.5,1.8*sc,0,0,Math.PI);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.85)';ctx.font=`bold ${Math.max(6,6.5*sc)}px sans-serif`;ctx.textAlign='center';
+    if(wScale>0.45)ctx.fillText('CHAMPIONS',0,-20*sc);
+    ctx.fillStyle='#feca57';ctx.beginPath();ctx.arc(tW*0.45,-28*sc,2.2*sc*wScale,0,Math.PI*2);ctx.fill();
   }
 
-  if(farArmInFront){
-    drawSingleArm(farSide,sc,cosR,sinR,breath,shW,jItem,skin,skinShade,kItem,jInfo,ex);
-  }
-  drawSingleArm(nearSide,sc,cosR,sinR,breath,shW,jItem,skin,skinShade,kItem,jInfo,ex);
-}
-/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 5 ] ================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 6 З 6 ] =================== */
-/* ===================================================================== */
-function drawPlayerHead(sc,sinR,isBack,breath,bodyY){
-  const skin='#e4b487',skinShade='#be8450',skinLight='#f6d3af';
-  const headX=sinR*5.5*sc*0.45;
-  const by=breath+bodyY;
+  [-1,1].forEach(side=>{
+    const shX=side*(tW-2*sc),shY=-34*sc;
+    const elX=shX+side*(6+armRaise*4)*sc*wScale;
+    const elY=shY+(14-armRaise*28)*sc;
+    const hdX=elX+side*(3-armRaise*5)*sc*wScale;
+    const hdY=elY+(13-armRaise*26)*sc;
 
-  const neckGrad=ctx.createLinearGradient(headX-4.5*sc,-102*sc+by,headX+4.5*sc,-102*sc+by);
-  neckGrad.addColorStop(0,skinShade);
-  neckGrad.addColorStop(0.5,skin);
-  neckGrad.addColorStop(1,skinShade);
-  drawCapsule(headX,-99*sc+by,headX,-106.5*sc+by,4.6*sc,4.2*sc,neckGrad);
+    drawCapsule(shX,shY,elX,elY,4.4*sc*wScale+1.5,3.5*sc*wScale+1.2,jCol);
+    drawCapsule(elX,elY,hdX,hdY,3.2*sc*wScale+1.2,2.4*sc*wScale+1,skin);
+    ctx.fillStyle=getItem(p.ek).col;
+    ctx.beginPath();ctx.arc(hdX,hdY,3.4*sc,0,Math.PI*2);ctx.fill();
+  });
 
-  ctx.fillStyle=skinShade;ctx.beginPath();
-  ctx.ellipse(headX-8.2*sc,-114.5*sc+by,1.5*sc,2.7*sc,0,0,Math.PI*2);
-  ctx.ellipse(headX+8.2*sc,-114.5*sc+by,1.5*sc,2.7*sc,0,0,Math.PI*2);ctx.fill();
-
-  const faceGrad=ctx.createRadialGradient(headX-2*sc,-117*sc+by,2*sc,headX,-114*sc+by,11.5*sc);
-  faceGrad.addColorStop(0,skinLight);faceGrad.addColorStop(0.65,skin);faceGrad.addColorStop(1,skinShade);
-  ctx.fillStyle=faceGrad;ctx.beginPath();
-  ctx.moveTo(headX-8.2*sc,-117*sc+by);
-  ctx.quadraticCurveTo(headX-8.5*sc,-108.5*sc+by,headX,-104.5*sc+by);
-  ctx.quadraticCurveTo(headX+8.5*sc,-108.5*sc+by,headX+8.2*sc,-117*sc+by);
-  ctx.quadraticCurveTo(headX+8.0*sc,-124.5*sc+by,headX,-124.5*sc+by);
-  ctx.quadraticCurveTo(headX-8.0*sc,-124.5*sc+by,headX-8.2*sc,-117*sc+by);
-  ctx.closePath();ctx.fill();
+  drawCapsule(0,-39*sc,0,-45*sc,3.6*sc,3.2*sc,shade);
+  const fG=ctx.createRadialGradient(-2*sc,-54*sc,1*sc,0,-52*sc,10*sc);
+  fG.addColorStop(0,light);fG.addColorStop(0.65,skin);fG.addColorStop(1,shade);
+  ctx.fillStyle=fG;ctx.beginPath();ctx.ellipse(0,-52*sc,7.2*sc,8.8*sc,0,0,Math.PI*2);ctx.fill();
 
   if(!isBack){
-    const eyeOff=sinR*4.5*sc;
-
-    ctx.fillStyle='#231710';ctx.beginPath();
-    ctx.ellipse(headX+eyeOff-3.2*sc,-117.5*sc+by,2.0*sc,0.5*sc,-0.08,0,Math.PI*2);
-    ctx.ellipse(headX+eyeOff+3.2*sc,-117.5*sc+by,2.0*sc,0.5*sc,0.08,0,Math.PI*2);ctx.fill();
-
-    ctx.fillStyle='#ffffff';ctx.beginPath();
-    ctx.ellipse(headX+eyeOff-3.1*sc,-115.5*sc+by,1.5*sc,0.9*sc,0,0,Math.PI*2);
-    ctx.ellipse(headX+eyeOff+3.1*sc,-115.5*sc+by,1.5*sc,0.9*sc,0,0,Math.PI*2);ctx.fill();
-
-    ctx.fillStyle='#3d2314';ctx.beginPath();
-    ctx.arc(headX+eyeOff-3.0*sc,-115.5*sc+by,0.8*sc,0,Math.PI*2);
-    ctx.arc(headX+eyeOff+3.0*sc,-115.5*sc+by,0.8*sc,0,Math.PI*2);ctx.fill();
-
-    ctx.strokeStyle=skinShade;ctx.lineWidth=1.0*sc;ctx.beginPath();
-    ctx.moveTo(headX+eyeOff,-115.5*sc+by);
-    ctx.lineTo(headX+eyeOff+sinR*1.1*sc,-112.0*sc+by);
-    ctx.lineTo(headX+eyeOff+sinR*0.4*sc,-111.6*sc+by);ctx.stroke();
-
-    ctx.fillStyle='rgba(35,23,16,0.13)';ctx.beginPath();
-    ctx.arc(headX+eyeOff*0.5,-109.2*sc+by,5.8*sc,0.15,Math.PI-0.15);ctx.fill();
-
-    ctx.strokeStyle='#8d5524';ctx.lineWidth=1.1*sc;ctx.beginPath();
-    ctx.moveTo(headX+eyeOff-2.0*sc,-109.0*sc+by);
-    ctx.quadraticCurveTo(headX+eyeOff,-108.3*sc+by,headX+eyeOff+2.0*sc,-109.0*sc+by);ctx.stroke();
+    const eyeShift=sinA*3.2*sc;
+    ctx.fillStyle='#1e272e';
+    ctx.beginPath();
+    ctx.arc(-2.6*sc*wScale+eyeShift,-53*sc,1.0*sc,0,Math.PI*2);
+    ctx.arc(2.6*sc*wScale+eyeShift,-53*sc,1.0*sc,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle='#a8683a';ctx.lineWidth=1.1*sc;
+    ctx.beginPath();ctx.arc(eyeShift,-48.5*sc,2.0*sc*wScale,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
   }
 
   ctx.fillStyle='#191e26';
   if(isBack){
-    ctx.beginPath();
-    ctx.moveTo(headX-8.1*sc,-115*sc+by);
-    ctx.quadraticCurveTo(headX-8.6*sc,-125.5*sc+by,headX,-126.2*sc+by);
-    ctx.quadraticCurveTo(headX+8.6*sc,-125.5*sc+by,headX+8.1*sc,-115*sc+by);
-    ctx.lineTo(headX+5.2*sc,-109.5*sc+by);
-    ctx.quadraticCurveTo(headX,-110.5*sc+by,headX-5.2*sc,-109.5*sc+by);
-    ctx.closePath();
-    ctx.fill();
+    ctx.beginPath();ctx.ellipse(0,-53*sc,7.5*sc,8.5*sc,0,0,Math.PI*2);ctx.fill();
   }else{
-    ctx.beginPath();
-    ctx.moveTo(headX-8.2*sc,-116*sc+by);
-    ctx.quadraticCurveTo(headX-8.8*sc,-126.0*sc+by,headX,-126.8*sc+by);
-    ctx.quadraticCurveTo(headX+8.8*sc,-126.0*sc+by,headX+8.2*sc,-116*sc+by);
-    ctx.quadraticCurveTo(headX+7.0*sc,-121.0*sc+by,headX,-121.0*sc+by);
-    ctx.quadraticCurveTo(headX-7.0*sc,-121.0*sc+by,headX-8.2*sc,-116*sc+by);
-    ctx.closePath();
-    ctx.fill();
-  }
-}
-
-function drawHero(){
-  tAnim+=0.045;
-  if(!dragging){rotY+=velY;velY*=0.95;}
-
-  const badgeEl=document.getElementById('juggleBadge');
-  let liftR=0,liftL=0,ballArc=0,footShift=0;
-
-  if(juggleTimer>0){
-    juggleTimer--;
-    juggleBlend=Math.min(1,juggleBlend+0.08);
-    jugglePhase+=0.062;
-    const cycle=Math.floor(jugglePhase/Math.PI);
-    const sub=jugglePhase%Math.PI;
-    const isRight=(cycle%2===0);
-
-    ballArc=Math.sin(sub)*38;
-    const riseNext=Math.pow(Math.max(0,(sub-Math.PI*0.48)/(Math.PI*0.52)),1.6);
-    const fallPrev=Math.pow(Math.max(0,1-sub/(Math.PI*0.45)),1.6);
-
-    if(isRight){liftR=fallPrev;liftL=riseNext;footShift=Math.cos(sub);}
-    else{liftL=fallPrev;liftR=riseNext;footShift=-Math.cos(sub);}
-
-    if(cycle!==lastCycle){
-      lastCycle=cycle;
-      juggleHits++;
-      playTouchSound();
-    }
-    badgeEl.style.display='block';
-    badgeEl.innerHTML=`⚽ Набивання: <b>${juggleHits}</b>`;
-  }else{
-    juggleBlend=Math.max(0,juggleBlend-0.06);
+    ctx.beginPath();ctx.ellipse(0,-57*sc,7.6*sc,5.2*sc,0,Math.PI*0.92,Math.PI*2.08);ctx.fill();
   }
 
-  const idleMs=Date.now()-lastInteractTime;
-  if(!dragging && juggleTimer<=0 && idleMs>=10000){
-    if(idleMode==='none' || idleSwitchTimer<=0){
-      const modes=['run','squat','jack'];
-      const choices=modes.filter(m=>m!==idleMode);
-      idleMode=choices[Math.floor(Math.random()*choices.length)];
-      idleSwitchTimer=420;
-    }else{
-      idleSwitchTimer--;
-    }
-  }else if(idleMs<10000 || dragging || juggleTimer>0){
-    idleMode='none';
-  }
-
-  const ex={bodyY:0,jumpY:0,runR:0,runL:0,armRunR:0,armRunL:0,squat:0,jack:0,legSpread:0};
-
-  if(idleMode!=='none'){
-    idleBlend=Math.min(1,idleBlend+0.05);
-    idlePhase+=0.085;
-
-    if(idleMode==='run'){
-      ex.runR=Math.max(0,Math.sin(idlePhase))*0.68*idleBlend;
-      ex.runL=Math.max(0,Math.sin(idlePhase+Math.PI))*0.68*idleBlend;
-      ex.bodyY=-Math.abs(Math.sin(idlePhase))*2.8*idleBlend;
-      ex.armRunR=Math.sin(idlePhase+Math.PI)*idleBlend;
-      ex.armRunL=Math.sin(idlePhase)*idleBlend;
-    }else if(idleMode==='squat'){
-      const sq=(0.5-0.5*Math.cos(idlePhase*0.65))*idleBlend;
-      ex.squat=sq;
-      ex.bodyY=sq*15.5;
-    }else if(idleMode==='jack'){
-      const jk=(0.5-0.5*Math.cos(idlePhase*0.95))*idleBlend;
-      ex.jack=jk;
-      ex.legSpread=jk*6.2;
-      ex.jumpY=jk*5.5;
-      ex.bodyY=-jk*5.5;
-    }
-
-    if(juggleTimer<=0){
-      badgeEl.style.display='block';
-      badgeEl.textContent=IDLE_NAMES[idleMode]||'🏃 Розминка';
-    }
-  }else{
-    idleBlend=Math.max(0,idleBlend-0.06);
-    if(juggleTimer<=0 && juggleBlend===0 && idleBlend===0){
-      badgeEl.style.display='none';
-    }
-  }
-
-  ctx.clearRect(0,0,W,H);
-  drawStadiumBackground();
-
-  const cx=W/2,cy=H*0.73;
-  const sc=Math.min(W,H)*0.0036;
-  const cosR=Math.cos(rotY),sinR=Math.sin(rotY);
-  const isBack=cosR<0;
-  const breath=Math.sin(tAnim)*1.0*sc;
-  const wScale=Math.max(0.42,Math.abs(cosR));
-
-  const playerShadowScale=Math.max(0.65,1-ex.jumpY/22);
-  const shGrad=ctx.createRadialGradient(cx,cy+2*sc,3*sc,cx,cy+2*sc,34*sc*playerShadowScale);
-  shGrad.addColorStop(0,'rgba(0,0,0,0.72)');shGrad.addColorStop(0.6,'rgba(0,0,0,0.28)');shGrad.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=shGrad;ctx.beginPath();ctx.ellipse(cx,cy+2*sc,34*sc*playerShadowScale,9.5*sc*playerShadowScale,0,0,Math.PI*2);ctx.fill();
-
-  const jItem=ITEMS[p.ej]||ITEMS.j1;
-  const pItem=ITEMS[p.ep]||ITEMS.p1;
-  const sItem=ITEMS[p.es]||ITEMS.s1;
-  const bItem=ITEMS[p.eb]||ITEMS.b1;
-  const kItem=ITEMS[p.ek]||ITEMS.k1;
-
-  const jInfo={blend:juggleBlend,liftR:liftR,liftL:liftL};
-
-  ctx.save();
-  ctx.translate(cx,cy);
-  drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo,ex);
-  drawPlayerHead(sc,sinR,isBack,breath,ex.bodyY*sc);
   ctx.restore();
+  ctx.restore();
+}
+/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 5 ] ================= -->
+/* ===================================================================== */
+/* ================== [ INDEX.HTML : ЧАСТИНА 6 З 6 ] =================== */
+/* ===================================================================== */
+function drawJuggleBall(){
+  const cx=W*0.5,baseY=H*0.82,sc=Math.min(W,H)*0.0056;
+  if(juggleTimer>0){
+    juggleTimer=Math.max(0,juggleTimer-0.025);
+    jBallY+=jBallVy;
+    jBallVy+=0.42;
+    if(jBallY>0){jBallY=0;jBallVy=0;}
+  }else{
+    jBallY=0;jBallX=18;
+  }
 
-  const restBx=cx+31*sc,restBy=cy-5*sc;
-  const dirSign=(cosR>=0?1:-1);
-  const jugBx=cx+footShift*dirSign*7.2*sc*wScale+sinR*8.5*sc;
-  const jugBy=cy-(31+ballArc)*sc;
+  const bx=cx+jBallX*sc,by=baseY-6*sc+jBallY*sc,rad=6.5*sc;
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  ctx.beginPath();ctx.ellipse(bx,baseY+4*sc,rad*0.9,rad*0.35,0,0,Math.PI*2);ctx.fill();
 
-  const bx=restBx+(jugBx-restBx)*juggleBlend;
-  const by=restBy+(jugBy-restBy)*juggleBlend;
-  const brad=9.0*sc;
+  const bCol=getItem(p.eb).col;
+  const bG=ctx.createRadialGradient(bx-rad*0.3,by-rad*0.3,rad*0.1,bx,by,rad);
+  bG.addColorStop(0,'#ffffff');bG.addColorStop(0.6,bCol);bG.addColorStop(1,'#1e272e');
+  ctx.fillStyle=bG;ctx.beginPath();ctx.arc(bx,by,rad,0,Math.PI*2);ctx.fill();
 
-  const heightRatio=Math.max(0.35,1-(ballArc*juggleBlend)/55);
-  ctx.fillStyle='rgba(0,0,0,0.5)';
-  ctx.beginPath();ctx.ellipse(bx,cy+2*sc,9.2*sc*heightRatio,3.1*sc*heightRatio,0,0,Math.PI*2);ctx.fill();
-
-  const bGrad=ctx.createRadialGradient(bx-3*sc,by-3*sc,1*sc,bx,by,brad);
-  bGrad.addColorStop(0,'#ffffff');bGrad.addColorStop(0.65,bItem.col);bGrad.addColorStop(1,'#1e272e');
-  ctx.fillStyle=bGrad;ctx.beginPath();ctx.arc(bx,by,brad,0,Math.PI*2);ctx.fill();
-
-  const spin=jugglePhase*0.45;
-  ctx.fillStyle='rgba(15,20,30,0.78)';
-  ctx.beginPath();ctx.arc(bx+Math.cos(spin)*2.2*sc,by+Math.sin(spin)*2.2*sc,2.4*sc,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(bx+Math.cos(spin+2.1)*4.2*sc,by+Math.sin(spin+2.1)*4.2*sc,1.8*sc,0,Math.PI*2);ctx.fill();
-  ctx.beginPath();ctx.arc(bx+Math.cos(spin+4.2)*4.2*sc,by+Math.sin(spin+4.2)*4.2*sc,1.8*sc,0,Math.PI*2);ctx.fill();
-
-  requestAnimationFrame(drawHero);
+  ctx.fillStyle='rgba(0,0,0,0.65)';
+  ctx.beginPath();ctx.arc(bx,by,rad*0.32,0,Math.PI*2);ctx.fill();
 }
 
-rsz();updUI();drawHero();
+let t=0;
+function loop(){
+  t+=0.04;
+  if(!isDragging){
+    rotY+=rotVel;
+    rotVel*=0.94;
+  }
+  ctx.clearRect(0,0,W,H);
+  drawArenaBg(t);
+  drawHero3D(t);
+  drawJuggleBall();
+  requestAnimationFrame(loop);
+}
+loop();
 </script>
 </body>
 </html>
-<!-- ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 6 ] ================== -->
+<!-- ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 6 ] ================= -->
