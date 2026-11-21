@@ -337,7 +337,22 @@ const IDLE_PHRASES=[
   'Сьогодні ідеальна погода для хет-трику!',
   'Воротар думає, що вгадає кут. Ага, зараз! 😎',
   'Не забудь забрати щоденний бонус! 🎁',
-  'Давай серію на 20 набивань, слабо? ⚡'
+  'Давай серію на 20 набивань, слабо? ⚡',
+  'Мої нові рукавички ловлять усе, навіть блискавку! 🧤',
+  'Хто стоїть на місці — той не піднімає кубок над головою!',
+  'Перевіримо твою реакцію в серії пенальті? 🎯',
+  'Вболівальники вже скандують наше ім\'я! 📣',
+  'М\'яч скучив за сіткою воріт, випускай мене на поле!',
+  'Один точний удар — і перемога в кишені! 🥇',
+  'Я натренував кручений удар у дев\'ятку, заціниш?',
+  'Не тримай мене на лаві запасних, я в топ-формі! 💪',
+  'Фінал Ліги Чемпіонів сам до нас не прийде!',
+  'Тисни «Швидкий матч», розігріємо воротаря! 🔥',
+  'Мої бутси вже горять — хочуть на газон! 👟',
+  'Зберемо ще трохи монет на легендарний екіп? 💎',
+  'Я готовий тягнути найскладніші м\'ячі! 🥅',
+  'Покрути мене свайпом, глянь який стиль! ✨',
+  'Час показати, хто тут справжній чемпіон! 👑'
 ];
 function speakPhrase(txt){
   if(!p.cfg.snd)return;
@@ -454,6 +469,37 @@ function drawCapsule(x1,y1,x2,y2,r1,r2,col){
   ctx.arc(x1,y1,r1,perp,perp+Math.PI);
   ctx.arc(x2,y2,r2,perp+Math.PI,perp);
   ctx.closePath();ctx.fill();
+}
+
+function drawGlove(x,y,ang,sc,side,col){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(ang-Math.PI/2);
+
+  ctx.fillStyle='#14181d';
+  ctx.beginPath();
+  ctx.roundRect(-2.6*sc,-1.2*sc,5.2*sc,2.2*sc,0.8*sc);
+  ctx.fill();
+
+  ctx.fillStyle=col;
+  ctx.beginPath();
+  ctx.roundRect(-2.7*sc,0.8*sc,5.4*sc,3.4*sc,1.2*sc);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.roundRect((-side*3.9-0.8)*sc,1.4*sc,1.6*sc,2.6*sc,0.8*sc);
+  ctx.fill();
+
+  [-2.0,-0.7,0.7,2.0].forEach((fx,i)=>{
+    const fLen=(i===1||i===2?3.1:2.5)*sc;
+    ctx.beginPath();
+    ctx.roundRect((fx-0.55)*sc,3.7*sc,1.1*sc,fLen,0.55*sc);
+    ctx.fill();
+  });
+
+  ctx.fillStyle='rgba(0,0,0,0.22)';
+  ctx.fillRect(-1.8*sc,1.8*sc,3.6*sc,1.4*sc);
+  ctx.restore();
 }
 
 function drawBoot(x,y,sc,sinA,cosA,side,col,ac){
@@ -634,8 +680,8 @@ function drawHero3D(t){
 
     drawCapsule(shX,shY,elX,elY,4.6*sc,3.7*sc,isNear?jCol:jDark);
     drawCapsule(elX,elY,hdX,hdY,3.4*sc,2.6*sc,isNear?skin:shade);
-    ctx.fillStyle=getItem(p.ek).col;
-    ctx.beginPath();ctx.arc(hdX,hdY,3.5*sc,0,Math.PI*2);ctx.fill();
+    const armAng=Math.atan2(hdY-elY,hdX-elX);
+    drawGlove(hdX,hdY,armAng,sc,side,getItem(p.ek).col);
   };
 
   drawArm(sidesOrder.at(0));
