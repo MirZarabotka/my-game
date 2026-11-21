@@ -1,0 +1,224 @@
+<!-- ===================================================================== -->
+<!-- ================== [ SHOP.HTML : ЧАСТИНА 1 З 2 ] ==================== -->
+<!-- ===================================================================== -->
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Гардероб та Магазин</title>
+<script src="https://telegram.org"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:10px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
+.top-bar{display:flex;justify-content:space-between;align-items:center;background:#131b26;border:1px solid #243347;border-radius:12px;padding:10px 14px;margin-bottom:8px;flex-shrink:0}
+.back-btn{background:#182230;color:#fff;border:1px solid #3c4f66;padding:7px 14px;border-radius:9px;font-weight:bold;font-size:13px;text-decoration:none}
+.cat-tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:8px;flex-shrink:0}
+.ctab{padding:9px 2px;background:#131b26;border:1px solid #243347;color:#8395a7;border-radius:10px;font-weight:bold;font-size:10px;cursor:pointer;text-align:center}
+.ctab.act{background:#1dd1a1;color:#000;border-color:#1dd1a1}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow-y:auto;padding-bottom:14px;flex:1;align-content:start}
+.card{background:#131b26;border:1px solid #243347;border-radius:12px;padding:11px;text-align:center;display:flex;flex-direction:column;justify-content:space-between}
+.card.eq{border:2px solid #1dd1a1;background:rgba(29,209,161,.1)}
+.preview-dot{width:34px;height:34px;border-radius:50%;margin:0 auto 6px;border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:18px}
+.sbtn{width:100%;padding:8px;border:none;border-radius:8px;font-weight:bold;font-size:12px;cursor:pointer;background:#feca57;color:#000;margin-top:8px}
+.sbtn.wear{background:#1dd1a1}.sbtn:disabled{background:#1e2b3c;color:#576574}
+.num-panel{grid-column:span 2;background:#131b26;border:1px solid #243347;border-radius:14px;padding:16px;text-align:center}
+.num-preview{width:76px;height:76px;border-radius:16px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;border:2px solid rgba(255,255,255,.2);box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.num-input{width:110px;padding:10px;font-size:20px;font-weight:bold;text-align:center;border-radius:10px;border:2px solid #3c4f66;background:#0b131e;color:#fff;outline:none}
+.num-input:focus{border-color:#1dd1a1}
+.col-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.col-btn{padding:10px 6px;border-radius:10px;border:2px solid #243347;background:#0b131e;color:#fff;font-weight:bold;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.col-btn.act{border-color:#1dd1a1;background:rgba(29,209,161,.12)}
+.swatch{width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,.4)}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a href="index.html" class="back-btn">← На головну</a>
+  <b style="color:#feca57;font-size:15px">🛍 Гардероб • 💰 <span id="cn">20</span></b>
+</div>
+
+<div class="cat-tabs">
+  <button class="ctab act" id="cat_j" onclick="setCat('j')">👕 Футболки</button>
+  <button class="ctab" id="cat_p" onclick="setCat('p')">🩳 Шорти</button>
+  <button class="ctab" id="cat_s" onclick="setCat('s')">👟 Бутси</button>
+  <button class="ctab" id="cat_n" onclick="setCat('n')">🔢 Номер</button>
+  <button class="ctab" id="cat_g" onclick="setCat('g')">⚽ Інше</button>
+</div>
+
+<div class="grid" id="shopGrid"></div>
+<!-- ================== [ КІНЕЦЬ SHOP.HTML : ЧАСТИНА 1 ] =================== -->
+<!-- ===================================================================== -->
+<!-- ================== [ SHOP.HTML : ЧАСТИНА 2 З 2 ] ==================== -->
+<!-- ===================================================================== -->
+<script>
+try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
+
+const SHOP=[
+  // 6 ФУТБОЛОК (cat: 'j')
+  {id:'j1',cat:'j',n:'Смарагдова',i:'👕',p:0,bn:0,col:'#1dd1a1',d:'Базова клубна футболка'},
+  {id:'j2',cat:'j',n:'Королівська Біла',i:'👕',p:30,bn:0,col:'#f5f6fa',d:'Класична біла форма'},
+  {id:'j3',cat:'j',n:'Червоний Диявол',i:'👕',p:65,bn:0,col:'#eb4d4b',d:'Яскраво-червона футболка'},
+  {id:'j4',cat:'j',n:'Ультрамарин',i:'👕',p:100,bn:0,col:'#3867d6',d:'Синя лігочемпіонська форма'},
+  {id:'j5',cat:'j',n:'Чорний Карбон',i:'👕',p:150,bn:0,col:'#1e272e',d:'Елітна чорна футболка'},
+  {id:'j6',cat:'j',n:'Золотий Чемпіон',i:'👑',p:220,bn:0,col:'#feca57',d:'Легендарна золота футболка'},
+
+  // 6 ШОРТІВ (cat: 'p')
+  {id:'p1',cat:'p',n:'Білі Шорти',i:'🩳',p:0,bn:0,col:'#ffffff',d:'Стандартні білі шорти'},
+  {id:'p2',cat:'p',n:'Чорні Шорти',i:'🩳',p:25,bn:0,col:'#1e272e',d:'Темні спортивні шорти'},
+  {id:'p3',cat:'p',n:'Сині Шорти',i:'🩳',p:50,bn:0,col:'#273c75',d:'Темно-сині шорти'},
+  {id:'p4',cat:'p',n:'Червоні Шорти',i:'🩳',p:75,bn:0,col:'#eb4d4b',d:'Яскраві червоні шорти'},
+  {id:'p5',cat:'p',n:'Неон Блакить',i:'🩳',p:110,bn:0,col:'#00d2ff',d:'Неонові блакитні шорти'},
+  {id:'p6',cat:'p',n:'Золоті Шорти',i:'🩳',p:160,bn:0,col:'#feca57',d:'Чемпіонські золоті шорти'},
+
+  // БУТСИ (cat: 's')
+  {id:'s1',cat:'s',n:'Класик Бутси',i:'👟',p:0,bn:0,col:'#14181d',ac:'#1dd1a1',d:'Базові чорні бутси'},
+  {id:'s2',cat:'s',n:'Білі Фантоми',i:'👟',p:45,bn:0,col:'#f5f6fa',ac:'#eb4d4b',d:'Легкі білі бутси'},
+  {id:'s3',cat:'s',n:'Неон Швидкість',i:'👟',p:90,bn:0,col:'#00d2ff',ac:'#ffffff',d:'Яскраві блакитні бутси'},
+  {id:'s4',cat:'s',n:'Золоті Бутси',i:'👟',p:150,bn:0,col:'#feca57',ac:'#1e272e',d:'Бутси найкращого бомбардира'},
+
+  // М'ЯЧІ ТА РУКАВИЦІ (cat: 'g')
+  {id:'b1',cat:'g',t:'b',n:'М’яч ЛЧ',i:'⚽',p:0,bn:0,col:'#ffffff',d:'Офіційний м’яч турніру'},
+  {id:'b2',cat:'g',t:'b',n:'Вогняний М’яч',i:'🔥',p:20,bn:5,col:'#ff5e57',d:'+5 💰 за кожен гол'},
+  {id:'b3',cat:'g',t:'b',n:'Блискавка',i:'⚡',p:60,bn:12,col:'#00d2ff',d:'+12 💰 за кожен гол'},
+  {id:'b4',cat:'g',t:'b',n:'Золотий М’яч',i:'🏆',p:150,bn:25,col:'#feca57',d:'+25 💰 за кожен гол'},
+  {id:'k1',cat:'g',t:'k',n:'Базові Рукавиці',i:'🧤',p:0,bn:0,col:'#1dd1a1',d:'Звичайні воротарські рукавиці'},
+  {id:'k2',cat:'g',t:'k',n:'Кібер-хват',i:'🦾',p:50,bn:10,col:'#ff9ff3',d:'+10 💰 за кожен сейв'}
+];
+
+const NUM_COLORS=[
+  {n:'Білий',c:'#ffffff'},
+  {n:'Чорний',c:'#11161d'},
+  {n:'Золотий',c:'#feca57'},
+  {n:'Неон',c:'#00d2ff'},
+  {n:'Червоний',c:'#ff5e57'},
+  {n:'Смарагд',c:'#1dd1a1'}
+];
+
+let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null};
+let curCat='j';
+
+function loadWallet(){
+  try{
+    const old=JSON.parse(localStorage.getItem('pc_3d8'));
+    const v=JSON.parse(localStorage.getItem('pc_ucl1'));
+    if(v)p=Object.assign(p,v);
+    else if(old){p=Object.assign(p,old);save();}
+  }catch(e){}
+  if(!p.ej)p.ej='j1';
+  if(!p.ep)p.ep='p1';
+  if(!p.es)p.es='s1';
+  if(!p.num)p.num='10';
+  if(!p.numCol)p.numCol='#ffffff';
+  ['j1','p1','s1','b1','k1'].forEach(id=>{if(!p.ow.includes(id))p.ow.push(id);});
+}
+
+function save(){
+  try{localStorage.setItem('pc_ucl1',JSON.stringify(p))}catch(e){}
+}
+
+loadWallet();
+
+function setCat(c){
+  curCat=c;
+  ['j','p','s','n','g'].forEach(k=>{
+    document.getElementById('cat_'+k).className=(k===c)?'ctab act':'ctab';
+  });
+  renderShop();
+}
+
+function isEquipped(item){
+  if(item.cat==='j')return p.ej===item.id;
+  if(item.cat==='p')return p.ep===item.id;
+  if(item.cat==='s')return p.es===item.id;
+  if(item.t==='b')return p.eb===item.id;
+  if(item.t==='k')return p.ek===item.id;
+  return false;
+}
+
+function updateNumber(val){
+  let clean=String(val).replace(/[^0-9]/g,'').slice(0,2);
+  if(clean==='0'||clean==='00')clean='1';
+  if(!clean)clean='10';
+  p.num=clean;
+  save();
+  const prev=document.getElementById('numPrev');
+  if(prev)prev.textContent=p.num;
+}
+
+function setNumColor(col){
+  p.numCol=col;
+  save();
+  renderShop();
+}
+
+function renderShop(){
+  document.getElementById('cn').textContent=p.cn;
+  const grid=document.getElementById('shopGrid');
+  grid.innerHTML='';
+
+  if(curCat==='n'){
+    const curJersey=(SHOP.find(x=>x.id===p.ej)||SHOP).col;
+    const panel=document.createElement('div');
+    panel.className='num-panel';
+    panel.innerHTML=`
+      <div style="font-size:13px;color:#8395a7;margin-bottom:10px">Вигляд номера на спині вашої футболки</div>
+      <div class="num-preview" id="numPrev" style="background:${curJersey};color:${p.numCol}">${p.num}</div>
+      <div style="font-size:12px;color:#a5b1c2;margin-bottom:6px">Введіть ігровий номер (1–99):</div>
+      <input type="number" min="1" max="99" class="num-input" value="${p.num}" oninput="updateNumber(this.value)">
+      <div style="font-size:12px;color:#a5b1c2;margin-top:16px">Оберіть колір номера:</div>
+      <div class="col-grid">
+        ${NUM_COLORS.map(nc=>`
+          <button class="col-btn ${p.numCol===nc.c?'act':''}" onclick="setNumColor('${nc.c}')">
+            <span class="swatch" style="background:${nc.c}"></span>
+            <span>${nc.n}</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+    grid.appendChild(panel);
+    return;
+  }
+
+  SHOP.filter(x=>x.cat===curCat).forEach(item=>{
+    const owned=p.ow.includes(item.id);
+    const eq=isEquipped(item);
+    const d=document.createElement('div');
+    d.className=eq?'card eq':'card';
+    d.innerHTML=`
+      <div>
+        <div class="preview-dot" style="background:${item.col}">${item.i}</div>
+        <div style="font-weight:bold;font-size:13px;color:#fff">${item.n}</div>
+        <div style="font-size:11px;color:#8395a7;margin-top:4px">${item.d}</div>
+      </div>
+      <button class="sbtn ${owned?'wear':''}" ${(!owned&&p.cn<item.p)?'disabled':''} onclick="buyOrWear('${item.id}')">
+        ${eq?'✅ Одягнено':(owned?'Одягнути':`Купити (${item.p} 💰)`)}
+      </button>`;
+    grid.appendChild(d);
+  });
+}
+
+function buyOrWear(id){
+  const item=SHOP.find(x=>x.id===id);
+  if(!item)return;
+  if(!p.ow.includes(id)){
+    if(p.cn<item.p)return;
+    p.cn-=item.p;
+    p.ow.push(id);
+  }
+  if(item.cat==='j')p.ej=id;
+  else if(item.cat==='p')p.ep=id;
+  else if(item.cat==='s')p.es=id;
+  else if(item.t==='b')p.eb=id;
+  else if(item.t==='k')p.ek=id;
+
+  save();
+  renderShop();
+}
+
+renderShop();
+</script>
+</body>
+</html>
+<!-- ================== [ КІНЕЦЬ SHOP.HTML : ЧАСТИНА 2 ] =================== -->
