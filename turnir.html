@@ -1,3 +1,6 @@
+<!-- ===================================================================== -->
+<!-- ================= [ TURNIR.HTML : ЧАСТИНА 1 З 2 ] =================== -->
+<!-- ===================================================================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -38,7 +41,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:10px;
 <body>
 
 <div class="top-bar">
-  <a href="index.html" class="nav-btn">⚽ Вільна арена</a>
+  <a href="index.html" class="nav-btn" onclick="localStorage.removeItem('pc_play_ucl')">⚽ Вільна арена</a>
   <button id="quitBtn" class="nav-btn" style="display:none;color:#ff6b6b" onclick="askQuit()">🚪 Завершити турнір</button>
 </div>
 
@@ -59,6 +62,10 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:10px;
     </div>
   </div>
 </div>
+<!-- ================ [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 1 ] ================= -->
+<!-- ===================================================================== -->
+<!-- ================= [ TURNIR.HTML : ЧАСТИНА 2 З 2 ] =================== -->
+<!-- ===================================================================== -->
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
 
@@ -98,16 +105,25 @@ function drawRandomBracket(){
 }
 
 let p={pt:0,lv:1,cp:0,cn:20,ow:['b1','k1'],eb:'b1',ek:'k1',ucl:null};
-try{
-  const v=JSON.parse(localStorage.getItem('pc_ucl1'));
-  if(v)p=Object.assign(p,v);
-}catch(e){}
 
-if(!p.ucl)p.ucl=emptyBracket();
+function loadWallet(){
+  try{
+    const old=JSON.parse(localStorage.getItem('pc_3d8'));
+    const v=JSON.parse(localStorage.getItem('pc_ucl1'));
+    if(v)p=Object.assign(p,v);
+    else if(old){p=Object.assign(p,old);save();}
+  }catch(e){}
+  if(!p.ucl)p.ucl=emptyBracket();
+}
 
 function save(){
   try{localStorage.setItem('pc_ucl1',JSON.stringify(p))}catch(e){}
 }
+
+loadWallet();
+
+window.addEventListener('pageshow',()=>{loadWallet();render();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadWallet();render();}});
 
 function showMsg(txt,isOk=false){
   const el=document.getElementById('toast');
@@ -119,6 +135,7 @@ function showMsg(txt,isOk=false){
 }
 
 function openStartModal(){
+  loadWallet();
   if(p.cn<ENTRY_FEE){
     showMsg(`Недостатньо монет! Потрібно ${ENTRY_FEE} 💰 (у вас ${p.cn} 💰)`);
     return;
@@ -132,6 +149,7 @@ function closeModal(){
 
 function confirmStart(){
   closeModal();
+  loadWallet();
   if(p.cn<ENTRY_FEE){
     showMsg(`Недостатньо монет! Потрібно ${ENTRY_FEE} 💰`);
     return;
@@ -258,3 +276,4 @@ render();
 </script>
 </body>
 </html>
+<!-- ================ [ КІНЕЦЬ TURNIR.HTML : ЧАСТИНА 2 ] ================= -->
