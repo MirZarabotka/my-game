@@ -1,5 +1,5 @@
 <!-- ===================================================================== -->
-<!-- ================== [ INDEX.HTML : ЧАСТИНА 1 З 5 ] =================== -->
+<!-- ================== [ INDEX.HTML : ЧАСТИНА 1 З 6 ] =================== -->
 <!-- ===================================================================== -->
 <!DOCTYPE html>
 <html lang="uk">
@@ -64,8 +64,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:10px;
 </div>
 <!-- ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 1 ] ================== -->
 <!-- ===================================================================== -->
-<!-- ===================================================================== -->
-<!-- ================== [ INDEX.HTML : ЧАСТИНА 2 З 5 ] =================== -->
+<!-- ================== [ INDEX.HTML : ЧАСТИНА 2 З 6 ] =================== -->
 <!-- ===================================================================== -->
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
@@ -142,9 +141,19 @@ function playTouchSound(){
 
 let rotY=0.22,velY=0.004,dragging=false,downX=0,lastX=0,tAnim=0;
 let juggleTimer=0,jugglePhase=0,juggleBlend=0,juggleHits=0,lastCycle=-1;
-const stageEl=document.getElementById('stage');
+
+let lastInteractTime=Date.now();
+let idleMode='none';
+let idlePhase=0,idleBlend=0,idleSwitchTimer=0;
+const IDLE_NAMES={run:'🏃 Розминка: Біг на місці',squat:'🏋️ Зарядка: Присідання',jack:'🤸 Зарядка: Стрибки'};
+
+function markUserActive(){
+  lastInteractTime=Date.now();
+  idleMode='none';
+}
 
 function triggerJuggle(){
+  markUserActive();
   if(juggleTimer<=0){
     jugglePhase=0;
     juggleHits=0;
@@ -155,13 +164,17 @@ function triggerJuggle(){
   playTouchSound();
 }
 
+const stageEl=document.getElementById('stage');
+
 stageEl.addEventListener('pointerdown',e=>{
+  markUserActive();
   dragging=true;
   downX=lastX=e.clientX;
   velY=0;
 });
 window.addEventListener('pointermove',e=>{
   if(!dragging)return;
+  markUserActive();
   const dx=e.clientX-lastX;
   lastX=e.clientX;
   if(Math.abs(e.clientX-downX)>8){
@@ -177,7 +190,7 @@ window.addEventListener('pointerup',e=>{
 });
 /* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 2 ] ================== */
 /* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 3 З 5 ] =================== */
+/* ================== [ INDEX.HTML : ЧАСТИНА 3 З 6 ] =================== */
 /* ===================================================================== */
 function drawStadiumBackground(){
   const horizon=H*0.54;
@@ -276,8 +289,7 @@ function drawStadiumBackground(){
 }
 /* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 3 ] ================== */
 /* ===================================================================== */
-/* ===================================================================== */
-/* ================= [ INDEX.HTML : ЧАСТИНА 4A З 5 ] =================== */
+/* ================== [ INDEX.HTML : ЧАСТИНА 4 З 6 ] =================== */
 /* ===================================================================== */
 function drawCapsule(x1,y1,x2,y2,r1,r2,col){
   const dx=x2-x1,dy=y2-y1;
@@ -421,26 +433,74 @@ function drawGKGlove(x,y,sc,sgn,col){
 
   ctx.restore();
 }
-/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4A ] ================= */
+/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4 ] ================== */
 /* ===================================================================== */
-/* ================= [ INDEX.HTML : ЧАСТИНА 4B З 5 ] =================== */
+/* ================== [ INDEX.HTML : ЧАСТИНА 5 З 6 ] =================== */
 /* ===================================================================== */
-function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo){
+function drawSingleArm(side,sc,cosR,sinR,breath,shW,jItem,skin,skinShade,kItem,jInfo,ex){
+  const sgn=side*(cosR>=0?1:-1);
+  const armSway=Math.sin(tAnim+side*0.5)*0.6*sc;
+  const activeArm=(side===1?jInfo.liftL:jInfo.liftR)*jInfo.blend;
+  const balOut=(jInfo.blend*3.5+activeArm*2.5)*sc*sgn;
+  const balUp=(jInfo.blend*2.5+activeArm*3.0)*sc;
+
+  const armDepth=side*sinR*8.5*sc;
+  const forwardReach=sinR*4.2*sc;
+
+  const runArm=(side===1?ex.armRunR:ex.armRunL)*sc;
+  const squatArm=ex.squat*sc;
+  const jackArm=ex.jack*sc;
+
+  const shX=sgn*(shW-2.8*sc)+armDepth*0.35;
+  const shY=-92*sc+breath+ex.bodyY*sc;
+
+  const slvX=sgn*(shW+1.2*sc+jackArm*5.5)+armDepth*0.65+balOut*0.4+sinR*squatArm*3.5;
+  const slvY=-81.5*sc+breath*0.7+ex.bodyY*sc-balUp*0.3-jackArm*11*sc-squatArm*2*sc-Math.abs(runArm)*1.5;
+
+  const elX=sgn*(shW+2.2*sc+jackArm*11.0)+armDepth*0.95+armSway+balOut*0.8+sinR*(squatArm*8.5+runArm*5.0);
+  const elY=-71.5*sc+breath*0.4+ex.bodyY*sc-balUp*0.7-jackArm*25*sc-squatArm*6*sc-Math.max(0,runArm)*6*sc;
+
+  const wrX=sgn*(shW+0.8*sc+jackArm*9.5-Math.pow(jackArm,2)*5.0)+armDepth*1.15+forwardReach+armSway*1.3+balOut+sinR*(squatArm*14.0+runArm*9.0);
+  const wrY=-57.5*sc+ex.bodyY*sc-balUp-jackArm*44*sc-squatArm*11*sc-Math.max(0,runArm)*13*sc;
+
+  drawCapsule(shX,shY,slvX,slvY,5.6*sc,4.7*sc,jItem.col);
+  ctx.strokeStyle=jItem.trim||'#ffffff';ctx.lineWidth=1.4*sc;
+  ctx.beginPath();ctx.arc(slvX,slvY,4.6*sc,0.25,Math.PI-0.25);ctx.stroke();
+
+  drawCapsule(slvX,slvY,elX,elY,4.1*sc,3.6*sc,skin);
+  drawCapsule(elX,elY,wrX,wrY,3.5*sc,2.5*sc,skinShade);
+
+  const gloveOrient=(Math.abs(sinR)>0.35)?-Math.sign(sinR):sgn;
+  drawGKGlove(wrX,wrY,sc,gloveOrient,kItem.col);
+}
+
+function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo,ex){
   const skin='#e4b487',skinShade='#be8450';
   const wScale=Math.max(0.42,Math.abs(cosR));
   const depthShift=sinR*6*sc;
+  const shW=(16.5*wScale+4.8)*sc,chestW=(15.5*wScale+4.5)*sc,waistW=(12.2*wScale+4.0)*sc;
+  const bodyY=ex.bodyY*sc;
 
-  // 1. НОГИ ТА БУТСИ
+  const nearSide=(sinR>=0)?1:-1;
+  const farSide=-nearSide;
+
   [-1,1].forEach(side=>{
     const sgn=side*(cosR>=0?1:-1);
-    const lift=(side===1?jInfo.liftR:jInfo.liftL)*jInfo.blend;
+    const jugLift=(side===1?jInfo.liftR:jInfo.liftL)*jInfo.blend;
+    const runLift=(side===1?ex.runR:ex.runL);
+    const totalLift=Math.min(1.15,jugLift+runLift);
+    const spread=ex.legSpread*sc*sgn*wScale;
+    const jumpUp=ex.jumpY*sc;
+    const sqKneeOut=ex.squat*2.2*sc*sgn*wScale;
 
     const hipX=sgn*6.4*sc*wScale+depthShift*0.2;
-    const hipY=-55*sc;
-    const kneeX=sgn*(7.0+lift*1.2)*sc*wScale+depthShift*0.35+sinR*5.5*sc*lift;
-    const kneeY=-30*sc-lift*14*sc;
-    const ankleX=sgn*(6.8+lift*0.6)*sc*wScale+depthShift*0.5+sinR*8.5*sc*lift;
-    const ankleY=-4.5*sc-lift*21*sc;
+    const hipY=-55*sc+bodyY;
+
+    const kneeX=sgn*(7.0+totalLift*1.2)*sc*wScale+spread*0.55+sqKneeOut+depthShift*0.35+sinR*(5.5*totalLift+ex.squat*4.5)*sc;
+    const kneeY=-30*sc-totalLift*14*sc+bodyY*0.48-jumpUp;
+
+    const ankleX=sgn*(6.8+totalLift*0.6)*sc*wScale+spread+depthShift*0.5+sinR*(8.5*totalLift-ex.squat*1.5)*sc;
+    const ankleY=-4.5*sc-totalLift*20*sc-jumpUp;
 
     const shGrad=ctx.createLinearGradient(hipX-8*sc,hipY,hipX+8*sc,hipY);
     shGrad.addColorStop(0,pItem.col);
@@ -469,51 +529,51 @@ function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo
     drawFootballBoot(ankleX,ankleY,sc,sgn,cosR,sinR,sItem);
   });
 
-  // 2. ТОРС ТА ФУТБОЛКА
-  const shW=(16.5*wScale+4.8)*sc,chestW=(15.5*wScale+4.5)*sc,waistW=(12.2*wScale+4.0)*sc;
-  const torsoGrad=ctx.createLinearGradient(-shW,-100*sc,shW,-54*sc);
+  drawSingleArm(farSide,sc,cosR,sinR,breath,shW,jItem,skin,skinShade,kItem,jInfo,ex);
+
+  const torsoGrad=ctx.createLinearGradient(-shW,-100*sc+bodyY,shW,-54*sc+bodyY);
   torsoGrad.addColorStop(0,jItem.col);
   torsoGrad.addColorStop(0.68,jItem.col);
   torsoGrad.addColorStop(1,jItem.dark||'#090d14');
 
   ctx.fillStyle=torsoGrad;
   ctx.beginPath();
-  ctx.moveTo(-shW,-93*sc+breath);
-  ctx.quadraticCurveTo(-shW*0.45,-101*sc+breath,0,-101*sc+breath);
-  ctx.quadraticCurveTo(shW*0.45,-101*sc+breath,shW,-93*sc+breath);
-  ctx.lineTo(chestW,-78*sc+breath*0.5);
-  ctx.lineTo(waistW,-55*sc);
-  ctx.quadraticCurveTo(0,-52*sc,-waistW,-55*sc);
-  ctx.lineTo(-chestW,-78*sc+breath*0.5);
+  ctx.moveTo(-shW,-93*sc+breath+bodyY);
+  ctx.quadraticCurveTo(-shW*0.45,-101*sc+breath+bodyY,0,-101*sc+breath+bodyY);
+  ctx.quadraticCurveTo(shW*0.45,-101*sc+breath+bodyY,shW,-93*sc+breath+bodyY);
+  ctx.lineTo(chestW,-78*sc+breath*0.5+bodyY);
+  ctx.lineTo(waistW,-55*sc+bodyY);
+  ctx.quadraticCurveTo(0,-52*sc+bodyY,-waistW,-55*sc+bodyY);
+  ctx.lineTo(-chestW,-78*sc+breath*0.5+bodyY);
   ctx.closePath();
   ctx.fill();
 
   ctx.strokeStyle='rgba(0,0,0,0.13)';ctx.lineWidth=1.0*sc;
   ctx.beginPath();
-  ctx.moveTo(-waistW*0.55,-62*sc);ctx.quadraticCurveTo(0,-65*sc,waistW*0.5,-60*sc);
-  ctx.moveTo(-chestW*0.45,-75*sc);ctx.quadraticCurveTo(depthShift*0.3,-77*sc,chestW*0.4,-73*sc);
+  ctx.moveTo(-waistW*0.55,-62*sc+bodyY);ctx.quadraticCurveTo(0,-65*sc+bodyY,waistW*0.5,-60*sc+bodyY);
+  ctx.moveTo(-chestW*0.45,-75*sc+bodyY);ctx.quadraticCurveTo(depthShift*0.3,-77*sc+bodyY,chestW*0.4,-73*sc+bodyY);
   ctx.stroke();
 
   ctx.fillStyle=jItem.trim||'#ffffff';
   if(isBack){
     ctx.beginPath();
-    ctx.ellipse(-depthShift*0.4,-99.5*sc+breath,5.6*sc,2.2*sc,0,0,Math.PI);
+    ctx.ellipse(-depthShift*0.4,-99.5*sc+breath+bodyY,5.6*sc,2.2*sc,0,0,Math.PI);
     ctx.fill();
   }else{
     ctx.beginPath();
-    ctx.moveTo(depthShift*0.4-5.8*sc,-100*sc+breath);
-    ctx.lineTo(depthShift*0.4,-94*sc+breath);
-    ctx.lineTo(depthShift*0.4+5.8*sc,-100*sc+breath);
-    ctx.quadraticCurveTo(depthShift*0.4,-101.8*sc+breath,depthShift*0.4-5.8*sc,-100*sc+breath);
+    ctx.moveTo(depthShift*0.4-5.8*sc,-100*sc+breath+bodyY);
+    ctx.lineTo(depthShift*0.4,-94*sc+breath+bodyY);
+    ctx.lineTo(depthShift*0.4+5.8*sc,-100*sc+breath+bodyY);
+    ctx.quadraticCurveTo(depthShift*0.4,-101.8*sc+breath+bodyY,depthShift*0.4-5.8*sc,-100*sc+breath+bodyY);
     ctx.fill();
   }
 
   if(isBack){
     ctx.fillStyle=p.numCol||'#ffffff';
     ctx.font=`900 ${Math.round(17*sc)}px sans-serif`;ctx.textAlign='center';
-    ctx.fillText(p.num||'10',-depthShift*0.4,-71*sc+breath);
+    ctx.fillText(p.num||'10',-depthShift*0.4,-71*sc+breath+bodyY);
   }else{
-    const crestX=depthShift*0.5+6.2*sc*wScale,crestY=-87*sc+breath;
+    const crestX=depthShift*0.5+6.2*sc*wScale,crestY=-87*sc+breath+bodyY;
     ctx.fillStyle='#feca57';ctx.beginPath();
     ctx.moveTo(crestX-2.6*sc,crestY-3.0*sc);ctx.lineTo(crestX+2.6*sc,crestY-3.0*sc);
     ctx.lineTo(crestX+2.2*sc,crestY+1.4*sc);ctx.lineTo(crestX,crestY+3.5*sc);ctx.lineTo(crestX-2.2*sc,crestY+1.4*sc);
@@ -521,104 +581,85 @@ function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo
 
     ctx.fillStyle=jItem.trim||'#ffffff';ctx.globalAlpha=0.85;
     ctx.font=`bold ${Math.max(5,5.2*sc)}px sans-serif`;ctx.textAlign='center';
-    ctx.fillText('CHAMPIONS',depthShift*0.45,-76*sc+breath);ctx.globalAlpha=1;
+    ctx.fillText('CHAMPIONS',depthShift*0.45,-76*sc+breath+bodyY);ctx.globalAlpha=1;
   }
 
-  // 3. РУКИ ТА ПЕРЧАТКИ
-  [-1,1].forEach(side=>{
-    const sgn=side*(cosR>=0?1:-1);
-    const armSway=Math.sin(tAnim+side*0.5)*0.6*sc;
-    const activeArm=(side===1?jInfo.liftL:jInfo.liftR)*jInfo.blend;
-    const balOut=(jInfo.blend*3.5+activeArm*2.5)*sc*sgn;
-    const balUp=(jInfo.blend*2.5+activeArm*3.0)*sc;
-
-    const shX=sgn*(shW-3.0*sc),shY=-92*sc+breath;
-    const slvX=sgn*(shW+1.4*sc)+depthShift*0.18+balOut*0.4,slvY=-81.5*sc+breath*0.7-balUp*0.3;
-    const elX=sgn*(shW+2.6*sc)+depthShift*0.32+armSway+balOut*0.8,elY=-71.5*sc+breath*0.4-balUp*0.7;
-    const wrX=sgn*(shW+1.2*sc)+depthShift*0.45+armSway*1.3+balOut,wrY=-57.5*sc-balUp;
-
-    drawCapsule(shX,shY,slvX,slvY,5.6*sc,4.7*sc,jItem.col);
-    ctx.strokeStyle=jItem.trim||'#ffffff';ctx.lineWidth=1.4*sc;
-    ctx.beginPath();ctx.arc(slvX,slvY,4.6*sc,0.25,Math.PI-0.25);ctx.stroke();
-
-    drawCapsule(slvX,slvY,elX,elY,4.1*sc,3.6*sc,skin);
-    drawCapsule(elX,elY,wrX,wrY,3.5*sc,2.5*sc,skinShade);
-
-    drawGKGlove(wrX,wrY,sc,sgn,kItem.col);
-  });
+  drawSingleArm(nearSide,sc,cosR,sinR,breath,shW,jItem,skin,skinShade,kItem,jInfo,ex);
 }
-/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4B ] ================= */
-/* ================== [ INDEX.HTML : ЧАСТИНА 5 З 5 ] =================== */
+/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 5 ] ================== */
 /* ===================================================================== */
-function drawPlayerHead(sc,sinR,isBack,breath){
+/* ================== [ INDEX.HTML : ЧАСТИНА 6 З 6 ] =================== */
+/* ===================================================================== */
+function drawPlayerHead(sc,sinR,isBack,breath,bodyY){
   const skin='#e4b487',skinShade='#be8450',skinLight='#f6d3af';
   const headX=sinR*5.5*sc*0.45;
+  const by=breath+bodyY;
 
-  const neckGrad=ctx.createLinearGradient(headX-4.5*sc,-102*sc,headX+4.5*sc,-102*sc);
+  const neckGrad=ctx.createLinearGradient(headX-4.5*sc,-102*sc+by,headX+4.5*sc,-102*sc+by);
   neckGrad.addColorStop(0,skinShade);
   neckGrad.addColorStop(0.5,skin);
   neckGrad.addColorStop(1,skinShade);
-  drawCapsule(headX,-99*sc+breath,headX,-106.5*sc+breath,4.6*sc,4.2*sc,neckGrad);
+  drawCapsule(headX,-99*sc+by,headX,-106.5*sc+by,4.6*sc,4.2*sc,neckGrad);
 
   ctx.fillStyle=skinShade;ctx.beginPath();
-  ctx.ellipse(headX-8.2*sc,-114.5*sc+breath,1.5*sc,2.7*sc,0,0,Math.PI*2);
-  ctx.ellipse(headX+8.2*sc,-114.5*sc+breath,1.5*sc,2.7*sc,0,0,Math.PI*2);ctx.fill();
+  ctx.ellipse(headX-8.2*sc,-114.5*sc+by,1.5*sc,2.7*sc,0,0,Math.PI*2);
+  ctx.ellipse(headX+8.2*sc,-114.5*sc+by,1.5*sc,2.7*sc,0,0,Math.PI*2);ctx.fill();
 
-  const faceGrad=ctx.createRadialGradient(headX-2*sc,-117*sc+breath,2*sc,headX,-114*sc+breath,11.5*sc);
+  const faceGrad=ctx.createRadialGradient(headX-2*sc,-117*sc+by,2*sc,headX,-114*sc+by,11.5*sc);
   faceGrad.addColorStop(0,skinLight);faceGrad.addColorStop(0.65,skin);faceGrad.addColorStop(1,skinShade);
   ctx.fillStyle=faceGrad;ctx.beginPath();
-  ctx.moveTo(headX-8.2*sc,-117*sc+breath);
-  ctx.quadraticCurveTo(headX-8.5*sc,-108.5*sc+breath,headX,-104.5*sc+breath);
-  ctx.quadraticCurveTo(headX+8.5*sc,-108.5*sc+breath,headX+8.2*sc,-117*sc+breath);
-  ctx.quadraticCurveTo(headX+8.0*sc,-124.5*sc+breath,headX,-124.5*sc+breath);
-  ctx.quadraticCurveTo(headX-8.0*sc,-124.5*sc+breath,headX-8.2*sc,-117*sc+breath);
+  ctx.moveTo(headX-8.2*sc,-117*sc+by);
+  ctx.quadraticCurveTo(headX-8.5*sc,-108.5*sc+by,headX,-104.5*sc+by);
+  ctx.quadraticCurveTo(headX+8.5*sc,-108.5*sc+by,headX+8.2*sc,-117*sc+by);
+  ctx.quadraticCurveTo(headX+8.0*sc,-124.5*sc+by,headX,-124.5*sc+by);
+  ctx.quadraticCurveTo(headX-8.0*sc,-124.5*sc+by,headX-8.2*sc,-117*sc+by);
   ctx.closePath();ctx.fill();
 
   if(!isBack){
     const eyeOff=sinR*4.5*sc;
 
     ctx.fillStyle='#231710';ctx.beginPath();
-    ctx.ellipse(headX+eyeOff-3.2*sc,-117.5*sc+breath,2.0*sc,0.5*sc,-0.08,0,Math.PI*2);
-    ctx.ellipse(headX+eyeOff+3.2*sc,-117.5*sc+breath,2.0*sc,0.5*sc,0.08,0,Math.PI*2);ctx.fill();
+    ctx.ellipse(headX+eyeOff-3.2*sc,-117.5*sc+by,2.0*sc,0.5*sc,-0.08,0,Math.PI*2);
+    ctx.ellipse(headX+eyeOff+3.2*sc,-117.5*sc+by,2.0*sc,0.5*sc,0.08,0,Math.PI*2);ctx.fill();
 
     ctx.fillStyle='#ffffff';ctx.beginPath();
-    ctx.ellipse(headX+eyeOff-3.1*sc,-115.5*sc+breath,1.5*sc,0.9*sc,0,0,Math.PI*2);
-    ctx.ellipse(headX+eyeOff+3.1*sc,-115.5*sc+breath,1.5*sc,0.9*sc,0,0,Math.PI*2);ctx.fill();
+    ctx.ellipse(headX+eyeOff-3.1*sc,-115.5*sc+by,1.5*sc,0.9*sc,0,0,Math.PI*2);
+    ctx.ellipse(headX+eyeOff+3.1*sc,-115.5*sc+by,1.5*sc,0.9*sc,0,0,Math.PI*2);ctx.fill();
 
     ctx.fillStyle='#3d2314';ctx.beginPath();
-    ctx.arc(headX+eyeOff-3.0*sc,-115.5*sc+breath,0.8*sc,0,Math.PI*2);
-    ctx.arc(headX+eyeOff+3.0*sc,-115.5*sc+breath,0.8*sc,0,Math.PI*2);ctx.fill();
+    ctx.arc(headX+eyeOff-3.0*sc,-115.5*sc+by,0.8*sc,0,Math.PI*2);
+    ctx.arc(headX+eyeOff+3.0*sc,-115.5*sc+by,0.8*sc,0,Math.PI*2);ctx.fill();
 
     ctx.strokeStyle=skinShade;ctx.lineWidth=1.0*sc;ctx.beginPath();
-    ctx.moveTo(headX+eyeOff,-115.5*sc+breath);
-    ctx.lineTo(headX+eyeOff+sinR*1.1*sc,-112.0*sc+breath);
-    ctx.lineTo(headX+eyeOff+sinR*0.4*sc,-111.6*sc+breath);ctx.stroke();
+    ctx.moveTo(headX+eyeOff,-115.5*sc+by);
+    ctx.lineTo(headX+eyeOff+sinR*1.1*sc,-112.0*sc+by);
+    ctx.lineTo(headX+eyeOff+sinR*0.4*sc,-111.6*sc+by);ctx.stroke();
 
     ctx.fillStyle='rgba(35,23,16,0.13)';ctx.beginPath();
-    ctx.arc(headX+eyeOff*0.5,-109.2*sc+breath,5.8*sc,0.15,Math.PI-0.15);ctx.fill();
+    ctx.arc(headX+eyeOff*0.5,-109.2*sc+by,5.8*sc,0.15,Math.PI-0.15);ctx.fill();
 
     ctx.strokeStyle='#8d5524';ctx.lineWidth=1.1*sc;ctx.beginPath();
-    ctx.moveTo(headX+eyeOff-2.0*sc,-109.0*sc+breath);
-    ctx.quadraticCurveTo(headX+eyeOff,-108.3*sc+breath,headX+eyeOff+2.0*sc,-109.0*sc+breath);ctx.stroke();
+    ctx.moveTo(headX+eyeOff-2.0*sc,-109.0*sc+by);
+    ctx.quadraticCurveTo(headX+eyeOff,-108.3*sc+by,headX+eyeOff+2.0*sc,-109.0*sc+by);ctx.stroke();
   }
 
   ctx.fillStyle='#191e26';
   if(isBack){
     ctx.beginPath();
-    ctx.moveTo(headX-8.1*sc,-115*sc+breath);
-    ctx.quadraticCurveTo(headX-8.6*sc,-125.5*sc+breath,headX,-126.2*sc+breath);
-    ctx.quadraticCurveTo(headX+8.6*sc,-125.5*sc+breath,headX+8.1*sc,-115*sc+breath);
-    ctx.lineTo(headX+5.2*sc,-109.5*sc+breath);
-    ctx.quadraticCurveTo(headX,-110.5*sc+breath,headX-5.2*sc,-109.5*sc+breath);
+    ctx.moveTo(headX-8.1*sc,-115*sc+by);
+    ctx.quadraticCurveTo(headX-8.6*sc,-125.5*sc+by,headX,-126.2*sc+by);
+    ctx.quadraticCurveTo(headX+8.6*sc,-125.5*sc+by,headX+8.1*sc,-115*sc+by);
+    ctx.lineTo(headX+5.2*sc,-109.5*sc+by);
+    ctx.quadraticCurveTo(headX,-110.5*sc+by,headX-5.2*sc,-109.5*sc+by);
     ctx.closePath();
     ctx.fill();
   }else{
     ctx.beginPath();
-    ctx.moveTo(headX-8.2*sc,-116*sc+breath);
-    ctx.quadraticCurveTo(headX-8.8*sc,-126.0*sc+breath,headX,-126.8*sc+breath);
-    ctx.quadraticCurveTo(headX+8.8*sc,-126.0*sc+breath,headX+8.2*sc,-116*sc+breath);
-    ctx.quadraticCurveTo(headX+7.0*sc,-121.0*sc+breath,headX,-121.0*sc+breath);
-    ctx.quadraticCurveTo(headX-7.0*sc,-121.0*sc+breath,headX-8.2*sc,-116*sc+breath);
+    ctx.moveTo(headX-8.2*sc,-116*sc+by);
+    ctx.quadraticCurveTo(headX-8.8*sc,-126.0*sc+by,headX,-126.8*sc+by);
+    ctx.quadraticCurveTo(headX+8.8*sc,-126.0*sc+by,headX+8.2*sc,-116*sc+by);
+    ctx.quadraticCurveTo(headX+7.0*sc,-121.0*sc+by,headX,-121.0*sc+by);
+    ctx.quadraticCurveTo(headX-7.0*sc,-121.0*sc+by,headX-8.2*sc,-116*sc+by);
     ctx.closePath();
     ctx.fill();
   }
@@ -629,33 +670,22 @@ function drawHero(){
   if(!dragging){rotY+=velY;velY*=0.95;}
 
   const badgeEl=document.getElementById('juggleBadge');
-  const cntEl=document.getElementById('juggleCnt');
   let liftR=0,liftL=0,ballArc=0,footShift=0;
 
   if(juggleTimer>0){
     juggleTimer--;
     juggleBlend=Math.min(1,juggleBlend+0.08);
-    // Сповільнений, плавний та природний ритм набивання
     jugglePhase+=0.062;
     const cycle=Math.floor(jugglePhase/Math.PI);
-    const sub=jugglePhase%Math.PI; // 0 = удар ногою, PI/2 = верхня точка, PI = наступний удар
+    const sub=jugglePhase%Math.PI;
     const isRight=(cycle%2===0);
 
-    // Плавна парабола польоту м'яча вгору і вниз
     ballArc=Math.sin(sub)*38;
-    // Нога плавно піднімається назустріч м'ячу перед ударом (sub > 0.55*PI) і опускається після удару (sub < 0.45*PI)
     const riseNext=Math.pow(Math.max(0,(sub-Math.PI*0.48)/(Math.PI*0.52)),1.6);
     const fallPrev=Math.pow(Math.max(0,1-sub/(Math.PI*0.45)),1.6);
 
-    if(isRight){
-      liftR=fallPrev;
-      liftL=riseNext;
-      footShift=Math.cos(sub); // плавний переліт м'яча з правої ноги на ліву
-    }else{
-      liftL=fallPrev;
-      liftR=riseNext;
-      footShift=-Math.cos(sub);
-    }
+    if(isRight){liftR=fallPrev;liftL=riseNext;footShift=Math.cos(sub);}
+    else{liftL=fallPrev;liftR=riseNext;footShift=-Math.cos(sub);}
 
     if(cycle!==lastCycle){
       lastCycle=cycle;
@@ -663,25 +693,74 @@ function drawHero(){
       playTouchSound();
     }
     badgeEl.style.display='block';
-    cntEl.textContent=juggleHits;
+    badgeEl.innerHTML=`⚽ Набивання: <b>${juggleHits}</b>`;
   }else{
     juggleBlend=Math.max(0,juggleBlend-0.06);
-    if(juggleBlend===0)badgeEl.style.display='none';
+  }
+
+  const idleMs=Date.now()-lastInteractTime;
+  if(!dragging && juggleTimer<=0 && idleMs>=10000){
+    if(idleMode==='none' || idleSwitchTimer<=0){
+      const modes=['run','squat','jack'];
+      const choices=modes.filter(m=>m!==idleMode);
+      idleMode=choices[Math.floor(Math.random()*choices.length)];
+      idleSwitchTimer=420;
+    }else{
+      idleSwitchTimer--;
+    }
+  }else if(idleMs<10000 || dragging || juggleTimer>0){
+    idleMode='none';
+  }
+
+  const ex={bodyY:0,jumpY:0,runR:0,runL:0,armRunR:0,armRunL:0,squat:0,jack:0,legSpread:0};
+
+  if(idleMode!=='none'){
+    idleBlend=Math.min(1,idleBlend+0.05);
+    idlePhase+=0.085;
+
+    if(idleMode==='run'){
+      ex.runR=Math.max(0,Math.sin(idlePhase))*0.68*idleBlend;
+      ex.runL=Math.max(0,Math.sin(idlePhase+Math.PI))*0.68*idleBlend;
+      ex.bodyY=-Math.abs(Math.sin(idlePhase))*2.8*idleBlend;
+      ex.armRunR=Math.sin(idlePhase+Math.PI)*idleBlend;
+      ex.armRunL=Math.sin(idlePhase)*idleBlend;
+    }else if(idleMode==='squat'){
+      const sq=(0.5-0.5*Math.cos(idlePhase*0.65))*idleBlend;
+      ex.squat=sq;
+      ex.bodyY=sq*15.5;
+    }else if(idleMode==='jack'){
+      const jk=(0.5-0.5*Math.cos(idlePhase*0.95))*idleBlend;
+      ex.jack=jk;
+      ex.legSpread=jk*6.2;
+      ex.jumpY=jk*5.5;
+      ex.bodyY=-jk*5.5;
+    }
+
+    if(juggleTimer<=0){
+      badgeEl.style.display='block';
+      badgeEl.textContent=IDLE_NAMES[idleMode]||'🏃 Розминка';
+    }
+  }else{
+    idleBlend=Math.max(0,idleBlend-0.06);
+    if(juggleTimer<=0 && juggleBlend===0 && idleBlend===0){
+      badgeEl.style.display='none';
+    }
   }
 
   ctx.clearRect(0,0,W,H);
   drawStadiumBackground();
 
-  const cx=W/2,cy=H*0.77;
-  const sc=Math.min(W,H)*0.0038;
+  const cx=W/2,cy=H*0.73;
+  const sc=Math.min(W,H)*0.0036;
   const cosR=Math.cos(rotY),sinR=Math.sin(rotY);
   const isBack=cosR<0;
   const breath=Math.sin(tAnim)*1.0*sc;
   const wScale=Math.max(0.42,Math.abs(cosR));
 
-  const shGrad=ctx.createRadialGradient(cx,cy+2*sc,3*sc,cx,cy+2*sc,34*sc);
+  const playerShadowScale=Math.max(0.65,1-ex.jumpY/22);
+  const shGrad=ctx.createRadialGradient(cx,cy+2*sc,3*sc,cx,cy+2*sc,34*sc*playerShadowScale);
   shGrad.addColorStop(0,'rgba(0,0,0,0.72)');shGrad.addColorStop(0.6,'rgba(0,0,0,0.28)');shGrad.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=shGrad;ctx.beginPath();ctx.ellipse(cx,cy+2*sc,34*sc,9.5*sc,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=shGrad;ctx.beginPath();ctx.ellipse(cx,cy+2*sc,34*sc*playerShadowScale,9.5*sc*playerShadowScale,0,0,Math.PI*2);ctx.fill();
 
   const jItem=ITEMS[p.ej]||ITEMS.j1;
   const pItem=ITEMS[p.ep]||ITEMS.p1;
@@ -693,11 +772,10 @@ function drawHero(){
 
   ctx.save();
   ctx.translate(cx,cy);
-  drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo);
-  drawPlayerHead(sc,sinR,isBack,breath);
+  drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo,ex);
+  drawPlayerHead(sc,sinR,isBack,breath,ex.bodyY*sc);
   ctx.restore();
 
-  // Плавний перехід м'яча з газону на ногу при набиванні
   const restBx=cx+31*sc,restBy=cy-5*sc;
   const dirSign=(cosR>=0?1:-1);
   const jugBx=cx+footShift*dirSign*7.2*sc*wScale+sinR*8.5*sc;
@@ -728,4 +806,4 @@ rsz();updUI();drawHero();
 </script>
 </body>
 </html>
-/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 5 ] ================== */
+<!-- ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 6 ] ================== -->
