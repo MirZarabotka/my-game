@@ -10,26 +10,31 @@
 body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:10px;display:flex;flex-direction:column;min-height:100vh;user-select:none}
 .top-bar{display:flex;gap:8px;margin-bottom:10px}
 .nav-btn{flex:1;padding:10px;border:none;border-radius:10px;font-weight:bold;font-size:13px;cursor:pointer;text-decoration:none;text-align:center}
-.btn-play{background:#1dd1a1;color:#000}
+.btn-play{background:#182230;color:#fff;border:1px solid #3c4f66}
 .btn-new{background:#182230;color:#fff;border:1px solid #3c4f66}
 .ucl-head{background:linear-gradient(135deg,#0c2461,#1e3799);border:1px solid #4b7bec;border-radius:14px;padding:12px;text-align:center;margin-bottom:10px}
 .stats{display:flex;justify-content:space-around;background:rgba(7,11,20,.45);border-radius:8px;padding:6px;margin-top:8px;font-size:12px;color:#feca57;font-weight:bold}
 .rnd-title{font-size:11px;font-weight:bold;color:#70a1ff;text-transform:uppercase;margin:10px 0 5px;letter-spacing:.5px}
-.match-card{background:#131b26;border:1px solid #243347;border-radius:10px;padding:9px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;font-size:13px}
-.match-card.my{border:1.5px solid #1dd1a1;background:rgba(29,209,161,.12)}
-.match-card.done{opacity:.72}
-.badge{padding:2px 7px;border-radius:6px;background:#0b131e;color:#feca57;font-weight:bold;font-size:12px}
+.match-card{background:#131b26;border:1px solid #243347;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;font-size:13px;transition:transform .15s}
+.match-card.my{border:2px solid #1dd1a1;background:linear-gradient(90deg,rgba(29,209,161,.18),rgba(19,27,38,.95));cursor:pointer;box-shadow:0 0 12px rgba(29,209,161,.2)}
+.match-card.my:active{transform:scale(.98)}
+.match-card.done{opacity:.72;cursor:default;box-shadow:none}
+.badge{padding:4px 10px;border-radius:8px;background:#0b131e;color:#feca57;font-weight:bold;font-size:12px}
+.play-pill{padding:5px 12px;border-radius:8px;background:#1dd1a1;color:#000;font-weight:bold;font-size:12px;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 .champ-box{background:linear-gradient(135deg,#b78628,#feca57);color:#000;border-radius:12px;padding:12px;text-align:center;font-weight:bold;margin-bottom:10px;font-size:14px}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.95);border:1px solid #4b7bec;color:#fff;padding:8px 16px;border-radius:12px;font-size:12px;display:none;white-space:nowrap}
 </style>
 </head>
 <body>
 
 <div class="top-bar">
-  <a href="index.html" class="nav-btn btn-play">⚽ На арену (Грати)</a>
+  <a href="index.html" class="nav-btn btn-play">⚽ Вільна арена</a>
   <button class="nav-btn btn-new" onclick="resetTournament()">🔄 Нове жеребкування</button>
 </div>
 
 <div id="app"></div>
+<div id="toast" class="toast"></div>
 
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
@@ -84,6 +89,19 @@ function resetTournament(){
   render();
 }
 
+function showMsg(txt){
+  const el=document.getElementById('toast');
+  el.textContent=txt;
+  el.style.display='block';
+  clearTimeout(window._t);
+  window._t=setTimeout(()=>el.style.display='none',2200);
+}
+
+function startMyMatch(){
+  localStorage.setItem('pc_play_ucl','1');
+  location.href='index.html?mode=ucl';
+}
+
 function render(){
   const u=p.ucl;
   const curArr=[u.r16,u.qf,u.sf,u.fn][u.rnd]||u.r16;
@@ -94,7 +112,7 @@ function render(){
     <div class="ucl-head">
       <div style="font-size:16px;font-weight:bold;color:#fff">🏆 UEFA CHAMPIONS PENALTY CUP</div>
       <div style="font-size:12px;color:#d1d8e0;margin-top:4px">
-        Наступний суперник: <b style="color:#feca57">${opp.i} ${opp.n}</b>
+        Натисніть на свій матч нижче, щоб вийти на поле проти <b style="color:#feca57">${opp.i} ${opp.n}</b>
       </div>
       <div class="stats">
         <span>Рівень: ${p.lv}</span>
@@ -119,10 +137,18 @@ function render(){
     html+=`<div class="rnd-title">${st.title}</div>`;
     st.list.forEach(m=>{
       const isMy=(m.a.isMe||m.b.isMe);
+      const isPlayable=(isMy && !m.sc && !u.champ);
+      const clickAttr=isPlayable
+        ? `onclick="startMyMatch()"`
+        : `onclick="showMsg('Натисніть на зелений матч із вашим клубом, щоб грати!')"`;
+      const centerTag=isPlayable
+        ? `<span class="play-pill">⚽ ГРАТИ</span>`
+        : `<span class="badge">${m.sc||'VS'}</span>`;
+
       html+=`
-        <div class="match-card ${isMy?'my':''} ${m.sc?'done':''}">
+        <div class="match-card ${isMy?'my':''} ${m.sc?'done':''}" ${clickAttr}>
           <span>${m.a.i} <b>${m.a.n}</b></span>
-          <span class="badge">${m.sc||'VS'}</span>
+          ${centerTag}
           <span><b>${m.b.n}</b> ${m.b.i}</span>
         </div>`;
     });
