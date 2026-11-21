@@ -52,6 +52,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 </div>
 <!-- ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 1 ] ================== -->
 <!-- ===================================================================== -->
+<!-- ===================================================================== -->
 <!-- =================== [ GAME.HTML : ЧАСТИНА 2 З 8 ] =================== -->
 <!-- ===================================================================== -->
 <script>
@@ -104,13 +105,18 @@ function loadWallet(){
   if(!p.ej)p.ej='j1';
   if(!p.ep)p.ep='p1';
   if(!p.es)p.es='s1';
+  if(!p.eb)p.eb='b1';
+  if(!p.ek)p.ek='k1';
   if(!p.num)p.num='10';
   if(!p.numCol)p.numCol='#ffffff';
+  if(isNaN(Number(p.cn)))p.cn=20;
 }
 function save(){try{localStorage.setItem('pc_ucl1',JSON.stringify(p))}catch(e){}}
 loadWallet();
 
-function getItem(id){return SHOP.find(x=>x.id===id)||SHOP[0]}
+function getItem(id){
+  return SHOP.find(x=>x.id===id) || SHOP[0];
+}
 function getCurOpponent(){
   if(isUCLMode && p.ucl && p.ucl.active){
     const arr=[p.ucl.r16,p.ucl.qf,p.ucl.sf,p.ucl.fn][p.ucl.rnd]||p.ucl.r16;
@@ -183,7 +189,7 @@ function snd(type){
   }catch(e){}
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 2 ] ================== */
-/* ===================================================================== */
+  /* ===================================================================== */
 /* =================== [ GAME.HTML : ЧАСТИНА 3 З 8 ] =================== */
 /* ===================================================================== */
 function updUI(){
@@ -197,8 +203,9 @@ function updUI(){
   }else{
     op.textContent=`⚽ Спаринг: ${opp.i} ${opp.n}`;
   }
-  pd.textContent=Array.from({length:5},(_,i)=>pS[i]===1?'🟢':(pS[i]===0?'🔴':'⚪')).join('');
-  bd.textContent=Array.from({length:5},(_,i)=>bS[i]===1?'🟢':(bS[i]===0?'🔴':'⚪')).join('');
+  const totalSlots=Math.max(5,pS.length,bS.length);
+  pd.textContent=Array.from({length:totalSlots},(_,i)=>pS[i]===1?'🟢':(pS[i]===0?'🔴':'⚪')).join('');
+  bd.textContent=Array.from({length:totalSlots},(_,i)=>bS[i]===1?'🟢':(bS[i]===0?'🔴':'⚪')).join('');
   ps.textContent=pS.filter(x=>x===1).length;
   bs.textContent=bS.filter(x=>x===1).length;
 }
@@ -283,7 +290,7 @@ function act(z){
       if(isPlayerShoot){
         pS.push(isGoal?1:0);
         if(isGoal){
-          const winCoins=10+getItem(p.eb).bn;
+          const winCoins=10+(getItem(p.eb).bn||0);
           p.cn+=winCoins;p.pt+=25;crowdMood=1;snd('cheer');
           ms.textContent=`⚽ ГОЛ! +${winCoins} 💰`;ms.style.borderColor='#1dd1a1';
         }else{
@@ -294,7 +301,7 @@ function act(z){
         if(isGoal){
           crowdMood=-1;snd('boo');ms.textContent=`❌ ${getCurOpponent().n} забив!`;ms.style.borderColor='#ff5e57';
         }else{
-          const saveCoins=5+getItem(p.ek).bn;
+          const saveCoins=5+(getItem(p.ek).bn||0);
           p.cn+=saveCoins;p.pt+=20;crowdMood=1;snd('cheer');
           ms.textContent=`🧤 СЕЙВ! +${saveCoins} 💰`;ms.style.borderColor='#1dd1a1';
         }
@@ -335,11 +342,14 @@ function advanceUCL(pGoals,bGoals){
 
 function checkSeries(){
   const pGoals=pS.filter(x=>x===1).length,bGoals=bS.filter(x=>x===1).length;
-  const pRem=5-pS.length,bRem=5-bS.length;
-  const earlyWin=(pGoals>bGoals+bRem)||(bGoals>pGoals+pRem);
-  const fiveDone=(pS.length>=5&&bS.length>=5&&pGoals!==bGoals);
+  const pRem=Math.max(0,5-pS.length),bRem=Math.max(0,5-bS.length);
 
-  if(earlyWin||fiveDone){
+  // Дострокова перемога в основних 5 ударах (суперник уже математично не може наздогнати)
+  const earlyWin=(pS.length<=5 && bS.length<=5) && ((pGoals>bGoals+bRem) || (bGoals>pGoals+pRem));
+  // Завершення після 5+ ударів при рівній кількості спроб та різному рахунку
+  const regularOrSuddenDone=(pS.length>=5 && bS.length>=5 && pS.length===bS.length && pGoals!==bGoals);
+
+  if(earlyWin||regularOrSuddenDone){
     ph='over';busy=false;
     const won=pGoals>bGoals;
     if(won){
@@ -368,7 +378,10 @@ function checkSeries(){
   ph=(ph==='sh')?'sv':'sh';
   resetPositions();busy=false;
   ms.style.borderColor='#feca57';
-  ms.textContent=ph==='sh'?'⚽ Твій удар! Вибери кут':'🧤 Твій сейв! Вгадай кут';
+  const isSudden=(pS.length>=5 && bS.length>=5);
+  ms.textContent=ph==='sh'
+    ?(isSudden?'🔥 До першого промаху! Твій удар':'⚽ Твій удар! Вибери кут')
+    :(isSudden?'🔥 До першого промаху! Твій сейв':'🧤 Твій сейв! Вгадай кут');
   renderCtrl();
 }
 
@@ -389,7 +402,6 @@ function nextMatch(won){
   ms.style.borderColor='#feca57';ms.textContent='⚽ Твій удар! Вибери кут';
 }
 /* ================== [ КІНЕЦЬ GAME.HTML : ЧАСТИНА 3 ] ================== */
-/* ===================================================================== */
 /* =================== [ GAME.HTML : ЧАСТИНА 4 З 8 ] =================== */
 /* ===================================================================== */
 const ctx=c3d.getContext('2d');let W=300,H=300;
