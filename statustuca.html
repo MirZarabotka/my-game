@@ -4,7 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>3D Champions Penalty — Рейтинг гравців</title>
-<script src="https://telegram.org"></script>
+<script>
+const tgScript=document.createElement('script');
+tgScript.src=['https:/','/telegram.org','/js/telegram-web-app.js'].join('');
+document.head.appendChild(tgScript);
+</script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
@@ -64,7 +68,7 @@ try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand();}catch(e){}
 
 const BIN_ID  = '6b01a76bffd5d16053d39022';
 const API_KEY = '$2a$10$FfzYgApncFFRJpoFkrYgyOZHPwjviuwu1N64Suvm4DneHJP..xKna';
-const API_URL = 'https://jsonbin.io' + BIN_ID;
+const API_URL = ['https:/','/api.jsonbin.io','/v3/b/',BIN_ID].join('');
 
 let p={pt:0,lv:1,cp:0,cn:20,nick:'',uid:''};
 try{
