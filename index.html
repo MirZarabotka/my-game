@@ -7,19 +7,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>3D Champions Penalty — Головна</title>
-<script src="https://telegram.org"></script>
+<script>
+const tgScript=document.createElement('script');
+tgScript.src=['https:/','/telegram.org','/js/telegram-web-app.js'].join('');
+document.head.appendChild(tgScript);
+</script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
 .top-box{background:#131b26;border:1px solid #243347;border-radius:12px;padding:7px 12px;margin-bottom:6px;flex-shrink:0}
 .row{display:flex;justify-content:space-between;align-items:center}
 .bar{width:100%;height:5px;background:#1e2b3c;border-radius:4px;overflow:hidden;margin:4px 0}
-.fill{height:100%;background:#1dd1a1;transition:width .3s}
+.fill{height:100%;background:linear-gradient(90deg,#1dd1a1,#00d2ff);transition:width .3s}
 .stage{flex:1;min-height:0;position:relative;border-radius:14px;overflow:hidden;border:2px solid #243347;margin-bottom:8px;background:#09111e;touch-action:none}
 #heroCanvas{width:100%;height:100%;display:block}
-.rank-btn{position:absolute;top:12px;left:12px;z-index:20;background:rgba(13,24,45,.92);border:1.5px solid #4b7bec;color:#feca57;padding:7px 12px;border-radius:12px;font-weight:bold;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;box-shadow:0 4px 12px rgba(0,0,0,.45)}
-.rank-btn:active{transform:scale(.95)}
-.act-badge{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.82);border:1px solid #3867d6;padding:5px 14px;border-radius:14px;font-size:11px;font-weight:bold;color:#70a1ff;pointer-events:none;white-space:nowrap}
+.hud-btn{position:absolute;top:12px;z-index:20;background:rgba(13,24,45,.92);border:1.5px solid #4b7bec;color:#feca57;padding:7px 11px;border-radius:12px;font-weight:bold;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:5px;box-shadow:0 4px 12px rgba(0,0,0,.45);cursor:pointer}
+.hud-btn:active{transform:scale(.95)}
+.rank-btn{left:12px}
+.gift-btn{right:12px;border-color:#feca57;color:#fff}
+.gift-btn.ready{background:linear-gradient(135deg,#feca57,#ff9f43);color:#000;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.act-badge{position:absolute;top:48px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.82);border:1px solid #3867d6;padding:4px 13px;border-radius:14px;font-size:11px;font-weight:bold;color:#70a1ff;pointer-events:none;white-space:nowrap}
+.combo-badge{position:absolute;top:76px;left:50%;transform:translateX(-50%);background:rgba(29,209,161,.2);border:1px solid #1dd1a1;padding:3px 11px;border-radius:12px;font-size:11px;font-weight:bold;color:#1dd1a1;pointer-events:none;display:none}
 .hint-badge{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.82);border:1px solid rgba(255,255,255,.15);padding:4px 12px;border-radius:12px;font-size:10px;color:#dfe4ea;pointer-events:none;white-space:nowrap}
 .menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0}
 .mbtn{border:none;border-radius:13px;padding:12px 8px;font-weight:bold;font-size:13px;cursor:pointer;text-align:center;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
@@ -28,10 +37,18 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 .mbtn.ucl{background:linear-gradient(135deg,#1e3799,#3867d6);color:#fff;border:1px solid #4b7bec}
 .mbtn.shop{background:#182230;color:#feca57;border:1px solid #3c4f66}
 .mbtn span{font-size:10px;font-weight:normal;opacity:.85}
+.modal{position:fixed;inset:0;background:rgba(4,8,16,.85);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.mcard{background:#131b26;border:2px solid #feca57;border-radius:16px;padding:18px;max-width:310px;width:100%;text-align:center}
+.mcard h3{margin:0 0 8px;color:#feca57;font-size:18px}
+.mcard p{margin:0 0 14px;font-size:13px;color:#c8d6e5;line-height:1.4}
+.mcard button{background:linear-gradient(135deg,#1dd1a1,#10ac84);border:none;color:#000;font-weight:bold;padding:10px 22px;border-radius:10px;font-size:14px;cursor:pointer;width:100%}
 </style>
 </head>
 <body>
-
+<!-- ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 1 ] ================= -->
+<!-- ===================================================================== -->
+<!-- ================== [ INDEX.HTML : ЧАСТИНА 2 З 6 ] =================== -->
+<!-- ===================================================================== -->
 <div class="top-box">
   <div class="row">
     <b style="color:#feca57;font-size:13px">Рівень <span id="lv">1</span> • 🏆 ЛЧ: <span id="cp">0</span></b>
@@ -43,15 +60,14 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
     <span style="color:#70a1ff;font-weight:bold" id="clubName">🇺🇦 Твій Клуб</span>
   </div>
 </div>
-<!-- ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 1 ] ================= -->
-<!-- ===================================================================== -->
-<!-- ================== [ INDEX.HTML : ЧАСТИНА 2 З 6 ] =================== -->
-<!-- ===================================================================== -->
+
 <div class="stage" id="stage">
-  <a href="statustuca.html" class="rank-btn">📊 Рейтинг</a>
+  <a href="statustuca.html" class="hud-btn rank-btn">📊 Рейтинг</a>
+  <button class="hud-btn gift-btn" id="giftBtn" onclick="openGift()">🎁 Бонус</button>
   <div class="act-badge" id="actBadge">🏃 Зарядка: Стрибки</div>
+  <div class="combo-badge" id="comboBadge">🔥 Серія набивань: 0</div>
   <canvas id="heroCanvas"></canvas>
-  <div class="hint-badge">👆 Натисни на гравця — набиває м'яч • Проведи — крутиться</div>
+  <div class="hint-badge">👆 Тап по гравцю — набиває м'яч • Свайп — крутиться</div>
 </div>
 
 <div class="menu">
@@ -69,8 +85,23 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
   </a>
 </div>
 
+<div class="modal" id="giftModal">
+  <div class="mcard">
+    <h3>🎁 Щоденний бонус</h3>
+    <p id="giftText">Забирай нагороду за вхід у гру!</p>
+    <button id="giftClaimBtn" onclick="claimGift()">Забрати +50 💰</button>
+  </div>
+</div>
+<!-- ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 2 ] ================= -->
+<!-- ===================================================================== -->
+<!-- ================== [ INDEX.HTML : ЧАСТИНА 3 З 6 ] =================== -->
+<!-- ===================================================================== -->
 <script>
-try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
+try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand();}catch(e){}
+
+const BIN_ID  = '6b01a76bffd5d16053d39022';
+const API_KEY = '$2a$10$FfzYgApncFFRJpoFkrYgyOZHPwjviuwu1N64Suvm4DneHJP..xKna';
+const API_URL = ['https:/','/api.jsonbin.io','/v3/b/',BIN_ID].join('');
 
 const SHOP=[
   {id:'j1',col:'#1dd1a1',dark:'#0d8a68',trim:'#ffffff'},
@@ -86,7 +117,7 @@ const SHOP=[
   {id:'k1',col:'#1dd1a1'},{id:'k2',col:'#ff9ff3'}
 ];
 
-let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null,nick:'',uid:''};
+let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null,nick:'',uid:'',lastGift:0};
 try{
   const old=JSON.parse(localStorage.getItem('pc_3d8'));
   const v=JSON.parse(localStorage.getItem('pc_ucl1'));
@@ -103,7 +134,11 @@ try{
 }catch(e){}
 if(!p.uid)p.uid='u_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
 if(!p.nick)p.nick='Гравець #'+p.uid.slice(-4).toUpperCase();
-try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}
+
+function saveP(){
+  try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}
+}
+saveP();
 
 function getItem(id){return SHOP.find(x=>x.id===id)||SHOP.at(0);}
 
@@ -116,11 +151,69 @@ function updHUD(){
     if(p.ucl.stage==='group')uclSub.textContent=`Групи: Тур ${(p.ucl.gRnd||0)+1} з 6`;
     else uclSub.textContent=`Плей-оф: ${['1/8 Фіналу','1/4 Фіналу','Півфінал','ФІНАЛ'].at(p.ucl.rnd)||'ЛЧ'}`;
   }
+  updGiftBtn();
 }
+
+const DAY_MS=86400000;
+function updGiftBtn(){
+  const left=DAY_MS-(Date.now()-(Number(p.lastGift)||0));
+  if(left<=0){
+    giftBtn.textContent='🎁 +50 💰';
+    giftBtn.classList.add('ready');
+  }else{
+    const hrs=Math.ceil(left/3600000);
+    giftBtn.textContent=`⏳ ${hrs} год`;
+    giftBtn.classList.remove('ready');
+  }
+}
+
+function openGift(){
+  const left=DAY_MS-(Date.now()-(Number(p.lastGift)||0));
+  if(left<=0){
+    giftText.textContent='Твій щоденний бонус гравця Ліги Чемпіонів готовий!';
+    giftClaimBtn.textContent='Забрати +50 💰 та +20 XP';
+    giftClaimBtn.onclick=claimGift;
+  }else{
+    const hrs=Math.floor(left/3600000);
+    const mins=Math.floor((left%3600000)/60000);
+    giftText.textContent=`Наступний подарунок буде доступний через ${hrs} год ${mins} хв.`;
+    giftClaimBtn.textContent='Зрозуміло';
+    giftClaimBtn.onclick=()=>{giftModal.style.display='none';};
+  }
+  giftModal.style.display='flex';
+}
+
+function claimGift(){
+  p.cn=(Number(p.cn)||0)+50;
+  p.pt=(Number(p.pt)||0)+20;
+  while(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
+  p.lastGift=Date.now();
+  saveP();updHUD();
+  giftModal.style.display='none';
+  spawnSparks(W*0.5,H*0.45,'#feca57',18);
+  pushScoreToCloud();
+}
+
+async function pushScoreToCloud(){
+  if(!p||!p.uid)return;
+  try{
+    const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':API_KEY}});
+    if(!r.ok)return;
+    const j=await r.json();
+    const list=Array.isArray(j.record)?j.record:[];
+    const map=new Map();
+    list.forEach(u=>{if(u&&u.uid&&u.uid!=='init')map.set(u.uid,u);});
+    map.set(p.uid,{uid:p.uid,n:p.nick,cn:Number(p.cn)||0,lv:Number(p.lv)||1,cp:Number(p.cp)||0});
+    const top=Array.from(map.values()).sort((a,b)=>(b.cn-a.cn)||(b.cp-a.cp)||(b.lv-a.lv)).slice(0,100);
+    await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':API_KEY},body:JSON.stringify(top)});
+  }catch(e){}
+}
+
 updHUD();
-/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 2 ] ================= */
+pushScoreToCloud();
+/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 3 ] ================= */
 /* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 3 З 6 ] =================== */
+/* ================== [ INDEX.HTML : ЧАСТИНА 4 З 6 ] =================== */
 /* ===================================================================== */
 const canvas=document.getElementById('heroCanvas'),ctx=canvas.getContext('2d');
 let W=300,H=400;
@@ -128,7 +221,15 @@ function rsz(){const r=stage.getBoundingClientRect();if(r.width>0&&r.height>0){W
 window.addEventListener('resize',rsz);rsz();
 
 let rotY=0,rotVel=0,isDragging=false,lastX=0,downX=0,downY=0,downT=0;
-let juggleTimer=0,juggleFoot=1,jBallY=0,jBallVy=0,jBallX=18;
+let juggleTimer=0,juggleFoot=1,jBallY=0,jBallVy=0,jBallX=18,jBallRot=0,combo=0;
+let sparks=[];
+
+function spawnSparks(x,y,col,cnt){
+  for(let i=0;i<cnt;i++){
+    const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*3.5;
+    sparks.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,life:1,col});
+  }
+}
 
 stage.addEventListener('pointerdown',e=>{
   isDragging=true;lastX=downX=e.clientX;downY=e.clientY;downT=Date.now();rotVel=0;
@@ -143,34 +244,43 @@ window.addEventListener('pointerup',e=>{
   const dist=Math.hypot(e.clientX-downX,e.clientY-downY);
   if(dist<10 && (Date.now()-downT)<320){
     juggleTimer=1.0;juggleFoot*=-1;
-    jBallVy=-7.5;jBallX=juggleFoot*16;
-    actBadge.textContent='⚽ Набиває м\'яч!';
+    jBallVy=-8.2;jBallX=juggleFoot*15;
+    combo++;
+    comboBadge.style.display='block';
+    comboBadge.textContent=`🔥 Серія набивань: ${combo}`;
+    actBadge.textContent=combo%5===0?'⭐ Супер-трюк! +1 XP':'⚽ Набиває м\'яч!';
+    spawnSparks(W*0.5+jBallX*2,H*0.75,'#1dd1a1',6);
+    if(combo%5===0){
+      p.pt=(Number(p.pt)||0)+1;
+      if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
+      saveP();updHUD();
+      spawnSparks(W*0.5,H*0.55,'#feca57',14);
+    }
   }
 });
 
 function drawCapsule(x1,y1,x2,y2,r1,r2,col){
-  const perp=Math.atan2(y2-y1,x2-x1)+Math.PI/2;
+  const ang=Math.atan2(y2-y1,x2-x1),perp=ang+Math.PI/2;
   ctx.fillStyle=col;ctx.beginPath();
   ctx.arc(x1,y1,r1,perp,perp+Math.PI);
   ctx.arc(x2,y2,r2,perp+Math.PI,perp);
   ctx.closePath();ctx.fill();
 }
 
-function drawBoot(x,y,sc,side,bootCol,bootAc){
-  ctx.save();ctx.translate(x,y);ctx.scale(side,1);
-  ctx.fillStyle='#dce4e7';
-  [-2.5*sc,0,2.5*sc].forEach(sx=>{ctx.beginPath();ctx.roundRect(sx-0.5*sc,2.2*sc,1.0*sc,0.9*sc,0.2*sc);ctx.fill();});
-  ctx.fillStyle='#0d1117';ctx.beginPath();ctx.ellipse(1.2*sc,2.0*sc,4.6*sc,1.0*sc,0,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle=bootCol;ctx.beginPath();
-  ctx.moveTo(-3.2*sc,-2.2*sc);ctx.lineTo(1.8*sc,-1.8*sc);ctx.quadraticCurveTo(6.2*sc,-0.2*sc,5.6*sc,1.9*sc);
-  ctx.lineTo(-3.4*sc,1.9*sc);ctx.closePath();ctx.fill();
-  ctx.strokeStyle=bootAc;ctx.lineWidth=1.1*sc;ctx.beginPath();ctx.moveTo(-1.5*sc,0.8*sc);ctx.quadraticCurveTo(1.5*sc,1.5*sc,4.5*sc,0.6*sc);ctx.stroke();
+function drawBoot(x,y,sc,dir,col,ac){
+  ctx.save();ctx.translate(x,y);ctx.scale(dir,1);
+  ctx.fillStyle='#111';
+  [-4,0,4].forEach(sx=>ctx.fillRect((sx-1)*sc,2.5*sc,2*sc,1.6*sc));
+  ctx.fillStyle=col;
+  ctx.beginPath();
+  ctx.moveTo(-5*sc,-2*sc);ctx.lineTo(3*sc,-2*sc);
+  ctx.quadraticCurveTo(9.5*sc,-1.5*sc,10*sc,2.5*sc);
+  ctx.lineTo(-5.5*sc,2.5*sc);ctx.closePath();ctx.fill();
+  ctx.fillStyle=ac;
+  ctx.beginPath();ctx.moveTo(-1*sc,-1*sc);ctx.lineTo(6.5*sc,0.5*sc);ctx.lineTo(5.5*sc,2*sc);ctx.lineTo(-2*sc,1*sc);ctx.closePath();ctx.fill();
   ctx.restore();
 }
-/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 3 ] ================= */
-/* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 4 З 6 ] =================== */
-/* ===================================================================== */
+
 function drawArenaBg(t){
   const horY=H*0.54;
   const sky=ctx.createLinearGradient(0,0,0,horY);
@@ -183,9 +293,9 @@ function drawArenaBg(t){
 
   for(let r=0;r<5;r++){
     const ry=horY-H*0.04-r*(H*0.036);
-    ctx.fillStyle=r%2===0?'rgba(255,255,255,0.06)':'rgba(112,161,255,0.08)';
+    ctx.fillStyle=r%2===0?'rgba(255,255,255,0.06)':'rgba(112,161,255,0.09)';
     for(let x=8;x<W-8;x+=11){
-      const bob=Math.sin(t*2+x*0.05+r)*1.5;
+      const bob=Math.sin(t*2.4+x*0.05+r)*1.6;
       ctx.fillRect(x,ry+bob,4,5);
     }
   }
@@ -211,7 +321,7 @@ function drawArenaBg(t){
   ctx.beginPath();ctx.ellipse(W*0.5,horY+H*0.16,W*0.36,H*0.09,0,0,Math.PI*2);ctx.stroke();
   ctx.beginPath();ctx.moveTo(0,horY+H*0.16);ctx.lineTo(W,horY+H*0.16);ctx.stroke();
 }
-/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4 ] ================= */
+/* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4 ] ================= -->
 /* ===================================================================== */
 /* ================== [ INDEX.HTML : ЧАСТИНА 5 З 6 ] =================== */
 /* ===================================================================== */
@@ -229,8 +339,10 @@ function drawHero3D(t){
   let jumpY=0,squat=0,armRaise=0,legKickL=0,legKickR=0,bodyTwist=0;
 
   if(juggleTimer>0){
-    if(juggleFoot===1)legKickR=Math.sin(juggleTimer*Math.PI)*18*sc;
-    else legKickL=Math.sin(juggleTimer*Math.PI)*18*sc;
+    const kCurve=Math.sin(juggleTimer*Math.PI);
+    if(juggleFoot===1){legKickR=kCurve*21*sc;bodyTwist=-0.08*kCurve;}
+    else{legKickL=kCurve*21*sc;bodyTwist=0.08*kCurve;}
+    armRaise=0.35*kCurve;
   }else if(cycle===0){
     actBadge.textContent='🏃 Зарядка: Стрибки';
     const jp=Math.abs(Math.sin(t*4.5));
@@ -243,8 +355,12 @@ function drawHero3D(t){
     bodyTwist=Math.sin(t*2.6)*0.22;armRaise=0.45;
   }
 
-  ctx.fillStyle='rgba(0,0,0,0.42)';
-  const shS=1-(jumpY/(40*sc));
+  const glow=ctx.createRadialGradient(cx,baseY+4*sc,2,cx,baseY+4*sc,30*sc);
+  glow.addColorStop(0,'rgba(29,209,161,0.32)');glow.addColorStop(1,'rgba(29,209,161,0)');
+  ctx.fillStyle=glow;ctx.beginPath();ctx.ellipse(cx,baseY+4*sc,30*sc,9*sc,0,0,Math.PI*2);ctx.fill();
+
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  const shS=1-(jumpY/(42*sc));
   ctx.beginPath();ctx.ellipse(cx,baseY+4*sc,22*sc*shS,6*sc*shS,0,0,Math.PI*2);ctx.fill();
 
   ctx.save();
@@ -254,8 +370,8 @@ function drawHero3D(t){
     const xOff=side*7.5*sc*wScale+sinA*side*2*sc;
     const kick=side===-1?legKickL:legKickR;
     const hipX=xOff,hipY=-46*sc+squat;
-    const kneeX=xOff+(side*squat*0.35),kneeY=-25*sc+squat*0.55-kick*0.6;
-    const ankX=xOff,ankY=-3*sc-kick;
+    const kneeX=xOff+(side*squat*0.35),kneeY=-25*sc+squat*0.55-kick*0.65;
+    const ankX=xOff+(kick>0?sinA*4*sc:0),ankY=-3*sc-kick;
 
     drawCapsule(hipX,hipY,kneeX,kneeY,6.5*sc*wScale+2,5.2*sc*wScale+1.5,isBack?sDark:sCol);
     drawCapsule(kneeX,kneeY,kneeX,kneeY+4*sc,3.8*sc*wScale+1.5,3.5*sc*wScale+1.5,skin);
@@ -264,8 +380,9 @@ function drawHero3D(t){
     drawBoot(ankX,ankY,sc,cosA>=0?1:-1,bCol,bAc);
   });
 
+  const breath=Math.sin(t*3.2)*0.8*sc;
   ctx.save();
-  ctx.translate(0,-46*sc+squat);
+  ctx.translate(0,-46*sc+squat+breath);
   ctx.rotate(bodyTwist);
 
   const tW=(16*wScale+5)*sc;
@@ -282,7 +399,7 @@ function drawHero3D(t){
     ctx.fillText(p.num||'10',0,-14*sc);
   }else{
     ctx.fillStyle=trim;ctx.beginPath();ctx.ellipse(0,-38.5*sc,4.5*sc*wScale+1.5,1.8*sc,0,0,Math.PI);ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.85)';ctx.font=`bold ${Math.max(6,6.5*sc)}px sans-serif`;ctx.textAlign='center';
+    ctx.fillStyle='rgba(255,255,255,0.88)';ctx.font=`bold ${Math.max(6,6.5*sc)}px sans-serif`;ctx.textAlign='center';
     if(wScale>0.45)ctx.fillText('CHAMPIONS',0,-20*sc);
     ctx.fillStyle='#feca57';ctx.beginPath();ctx.arc(tW*0.45,-28*sc,2.2*sc*wScale,0,Math.PI*2);ctx.fill();
   }
@@ -306,14 +423,15 @@ function drawHero3D(t){
   ctx.fillStyle=fG;ctx.beginPath();ctx.ellipse(0,-52*sc,7.2*sc,8.8*sc,0,0,Math.PI*2);ctx.fill();
 
   if(!isBack){
-    const eyeShift=sinA*3.2*sc;
+    const lookBall=juggleTimer>0?(juggleFoot*1.5*sc):0;
+    const eyeShift=sinA*3.2*sc+lookBall;
     ctx.fillStyle='#1e272e';
     ctx.beginPath();
     ctx.arc(-2.6*sc*wScale+eyeShift,-53*sc,1.0*sc,0,Math.PI*2);
     ctx.arc(2.6*sc*wScale+eyeShift,-53*sc,1.0*sc,0,Math.PI*2);
     ctx.fill();
     ctx.strokeStyle='#a8683a';ctx.lineWidth=1.1*sc;
-    ctx.beginPath();ctx.arc(eyeShift,-48.5*sc,2.0*sc*wScale,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
+    ctx.beginPath();ctx.arc(eyeShift,-48.5*sc,2.1*sc*wScale,0.12*Math.PI,0.88*Math.PI);ctx.stroke();
   }
 
   ctx.fillStyle='#191e26';
@@ -327,44 +445,65 @@ function drawHero3D(t){
   ctx.restore();
 }
 /* ================== [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 5 ] ================= */
-/* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 6 З 6 ] =================== */
-/* ===================================================================== */
+<!-- ===================================================================== -->
+<!-- ================== [ INDEX.HTML : ЧАСТИНА 6 З 6 ] =================== -->
+<!-- ===================================================================== -->
 function drawJuggleBall(){
   const cx=W*0.5,baseY=H*0.82,sc=Math.min(W,H)*0.0056;
   if(juggleTimer>0){
     juggleTimer=Math.max(0,juggleTimer-0.025);
     jBallY+=jBallVy;
     jBallVy+=0.42;
-    if(jBallY>0){jBallY=0;jBallVy=0;}
+    jBallRot+=0.18*juggleFoot;
+    if(jBallY>0){
+      jBallY=0;jBallVy=0;
+      if(combo>0){combo=0;comboBadge.style.display='none';}
+    }
   }else{
     jBallY=0;jBallX=18;
+    if(combo>0){combo=0;comboBadge.style.display='none';}
   }
 
   const bx=cx+jBallX*sc,by=baseY-6*sc+jBallY*sc,rad=6.5*sc;
-  ctx.fillStyle='rgba(0,0,0,0.4)';
-  ctx.beginPath();ctx.ellipse(bx,baseY+4*sc,rad*0.9,rad*0.35,0,0,Math.PI*2);ctx.fill();
+  const shScale=Math.max(0.45,1+jBallY/90);
+  ctx.fillStyle='rgba(0,0,0,0.42)';
+  ctx.beginPath();ctx.ellipse(bx,baseY+4*sc,rad*0.95*shScale,rad*0.35*shScale,0,0,Math.PI*2);ctx.fill();
 
   const bCol=getItem(p.eb).col;
   const bG=ctx.createRadialGradient(bx-rad*0.3,by-rad*0.3,rad*0.1,bx,by,rad);
   bG.addColorStop(0,'#ffffff');bG.addColorStop(0.6,bCol);bG.addColorStop(1,'#1e272e');
   ctx.fillStyle=bG;ctx.beginPath();ctx.arc(bx,by,rad,0,Math.PI*2);ctx.fill();
 
-  ctx.fillStyle='rgba(0,0,0,0.65)';
-  ctx.beginPath();ctx.arc(bx,by,rad*0.32,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.translate(bx,by);ctx.rotate(jBallRot);
+  ctx.fillStyle='rgba(0,0,0,0.68)';
+  ctx.beginPath();ctx.arc(0,0,rad*0.3,0,Math.PI*2);ctx.fill();
+  for(let i=0;i<3;i++){
+    const a=i*(Math.PI*2/3);
+    ctx.beginPath();ctx.arc(Math.cos(a)*rad*0.62,Math.sin(a)*rad*0.62,rad*0.2,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawSparks(){
+  sparks=sparks.filter(s=>s.life>0);
+  sparks.forEach(s=>{
+    s.x+=s.vx;s.y+=s.vy;s.vy+=0.15;s.life-=0.035;
+    ctx.globalAlpha=Math.max(0,s.life);
+    ctx.fillStyle=s.col;
+    ctx.beginPath();ctx.arc(s.x,s.y,2.8,0,Math.PI*2);ctx.fill();
+  });
+  ctx.globalAlpha=1;
 }
 
 let t=0;
 function loop(){
   t+=0.04;
-  if(!isDragging){
-    rotY+=rotVel;
-    rotVel*=0.94;
-  }
+  if(!isDragging){rotY+=rotVel;rotVel*=0.94;}
   ctx.clearRect(0,0,W,H);
   drawArenaBg(t);
   drawHero3D(t);
   drawJuggleBall();
+  drawSparks();
   requestAnimationFrame(loop);
 }
 loop();
