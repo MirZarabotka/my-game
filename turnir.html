@@ -6,7 +6,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Ліга Чемпіонів — Вхід у турнір</title>
+<title>Ліга Чемпіонів — Турнірна сітка</title>
 <script src="https://telegram.org"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -41,7 +41,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:10px;
 <body>
 
 <div class="top-bar">
-  <a href="index.html" class="nav-btn" onclick="localStorage.removeItem('pc_play_ucl')">⚽ Вільна арена</a>
+  <a href="index.html" class="nav-btn" onclick="localStorage.removeItem('pc_play_ucl')">🏠 Головна</a>
   <button id="quitBtn" class="nav-btn" style="display:none;color:#ff6b6b" onclick="askQuit()">🚪 Завершити турнір</button>
 </div>
 
@@ -97,14 +97,14 @@ function drawRandomBracket(){
   const pool=[...CLUBS].sort(()=>Math.random()-0.5);
   const myClub={n:'Твій Клуб',i:'🇺🇦',c:'#1dd1a1',isMe:true};
   const r16=[];
-  r16.push({a:myClub,b:pool,sc:null});
+  r16.push({a:myClub,b:pool[0],sc:null});
   for(let i=1;i<15;i+=2){
     r16.push({a:pool[i],b:pool[i+1],sc:null});
   }
   return{active:true,rnd:0,r16,qf:[],sf:[],fn:[],champ:null};
 }
 
-let p={pt:0,lv:1,cp:0,cn:20,ow:['b1','k1'],eb:'b1',ek:'k1',ucl:null};
+let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','s1','b1','k1'],ej:'j1',es:'s1',eb:'b1',ek:'k1',ucl:null};
 
 function loadWallet(){
   try{
@@ -113,6 +113,8 @@ function loadWallet(){
     if(v)p=Object.assign(p,v);
     else if(old){p=Object.assign(p,old);save();}
   }catch(e){}
+  if(!p.ej)p.ej='j1';
+  if(!p.es)p.es='s1';
   if(!p.ucl)p.ucl=emptyBracket();
 }
 
@@ -169,7 +171,7 @@ function askQuit(){
 
 function startMyMatch(){
   localStorage.setItem('pc_play_ucl','1');
-  location.href='index.html?mode=ucl';
+  location.href='game.html?mode=ucl';
 }
 
 function render(){
@@ -212,7 +214,7 @@ function render(){
 
   quitBtn.style.display='block';
   const curArr=[u.r16,u.qf,u.sf,u.fn][u.rnd]||u.r16;
-  const myMatch=curArr.find(m=>m.a.isMe||m.b.isMe)||curArr;
+  const myMatch=curArr.find(m=>m.a.isMe||m.b.isMe)||curArr[0];
   const opp=myMatch.a.isMe?myMatch.b:myMatch.a;
 
   let html=`
