@@ -206,7 +206,7 @@ async function pushScoreToCloud(){
   }catch(e){}
 }
 
-function getItem(id){return SHOP.find(x=>x.id===id)||SHOP;}
+function getItem(id){return SHOP.find(x=>x.id===id)||SHOP[0];}
 
 function updUI(){
   lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
@@ -232,7 +232,7 @@ function claimBonus(){
   if((p.lastBonus||0)+86400000>Date.now())return;
   p.cn+=50;p.pt+=20;p.lastBonus=Date.now();
   if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
-  playTone(580,0.25);vib(40);save();updUI();pushScoreToCloud();closeModal('mBonus');
+  playKickSfx(true);vib(40);save();updUI();pushScoreToCloud();closeModal('mBonus');
 }
 
 function openModal(id){document.getElementById(id).classList.add('open');}
@@ -267,22 +267,42 @@ function renderShop(){
 
 function buyOrEq(id,eqKey){
   const it=getItem(id);
-  if(p.ow.includes(id)){p[eqKey]=id;playTone(440,0.12);vib(20);save();renderShop();return;}
-  if(p.cn<it.pr){playTone(160,0.2);return;}
-  p.cn-=it.pr;p.ow.push(id);p[eqKey]=id;playTone(620,0.22);vib(35);save();updUI();renderShop();pushScoreToCloud();
+  if(p.ow.includes(id)){p[eqKey]=id;playKickSfx(false);vib(20);save();renderShop();return;}
+  if(p.cn<it.pr){playKickSfx(false);return;}
+  p.cn-=it.pr;p.ow.push(id);p[eqKey]=id;playKickSfx(true);vib(35);save();updUI();renderShop();pushScoreToCloud();
 }
 let ac=null;
-function playTone(freq,dur){
+function playKickSfx(isHead){
   if(!p.opt.snd)return;
   try{
-    if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
-    const now=ac.currentTime,o=ac.createOscillator(),g=ac.createGain();
-    o.type='sine';o.frequency.setValueAtTime(freq,now);o.frequency.exponentialRampToValueAtTime(freq*0.45,now+dur);
-    g.gain.setValueAtTime(0.22,now);g.gain.exponentialRampToValueAtTime(0.001,now+dur);
-    o.connect(g);g.connect(ac.destination);o.start(now);o.stop(now+dur);
+    if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended')ac.resume();
+    const now=ac.currentTime;
+
+    // 1. Низький глухий басовий удар камери м'яча (145 Гц -> 42 Гц)
+    const osc=ac.createOscillator(),g=ac.createGain();
+    osc.type='triangle';
+    const baseF=isHead?175:145;
+    osc.frequency.setValueAtTime(baseF,now);
+    osc.frequency.exponentialRampToValueAtTime(42,now+0.13);
+    g.gain.setValueAtTime(0.45,now);
+    g.gain.exponentialRampToValueAtTime(0.001,now+0.14);
+    osc.connect(g);g.connect(ac.destination);
+    osc.start(now);osc.stop(now+0.15);
+
+    // 2. Короткий акустичний "шльопок" шкіри (відфільтрований білий шум)
+    const bufLen=Math.floor(ac.sampleRate*0.045);
+    const buf=ac.createBuffer(1,bufLen,ac.sampleRate);
+    const data=buf.getChannelData(0);
+    for(let i=0;i<bufLen;i++)data[i]=(Math.random()*2-1)*Math.exp(-i/(bufLen*0.35));
+    const noise=ac.createBufferSource();noise.buffer=buf;
+    const flt=ac.createBiquadFilter();flt.type='bandpass';flt.frequency.value=isHead?1100:850;flt.Q.value=1.2;
+    const ng=ac.createGain();ng.gain.setValueAtTime(0.32,now);ng.gain.exponentialRampToValueAtTime(0.01,now+0.045);
+    noise.connect(flt);flt.connect(ng);ng.connect(ac.destination);
+    noise.start(now);
   }catch(e){}
 }
-function vib(ms){if(p.opt.vib){try{window.Telegram.WebApp.HapticFeedback.impactOccurred('light');}catch(e){if(navigator.vibrate)navigator.vibrate(ms);}}}
+function vib(ms){if(p.opt.vib){try{window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');}catch(e){if(navigator.vibrate)navigator.vibrate(ms);}}}
 
 const PHRASES=[
   '⚽ Погнали на стадіон!','🔥 Дивись, як тримаю м’яч!','🏆 Кубок ЛЧ буде наш!','⚡ Чиста техніка!',
@@ -296,13 +316,11 @@ function sayPhrase(custom){
   speechTxt=custom||PHRASES[Math.floor(Math.random()*PHRASES.length)];
   speechTimer=130;
 }
-
 const cHero=document.getElementById('cHero'),ctx=cHero.getContext('2d');
 let W=300,H=300;
 function rsz(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=cHero.width=r.width;H=cHero.height=r.height;}}
 window.addEventListener('resize',rsz);
 
-// Плавне авто-обертання на 360° за 3 секунди після свайпу та повернення обличчям
 let rotY=0,dragX=null,moved=false,autoSpin=null;
 let jugLeft=0,jugMode='foot',jugCount=0,jugPhase=0,activeFoot=-1,ballY=0,ballVy=0,ballX=-24,ballSpin=0,sparks=[],lastTapTs=0;
 
@@ -318,17 +336,11 @@ ar.addEventListener('pointerdown',e=>{if(e.target.closest('.pill'))return;dragX=
 window.addEventListener('pointermove',e=>{
   if(dragX===null)return;
   const dx=e.clientX-dragX;
-  if(Math.abs(dx)>5){
-    moved=true;
-    autoSpin=null;
-    rotY+=dx*0.015;
-    dragX=e.clientX;
-  }
+  if(Math.abs(dx)>5){moved=true;autoSpin=null;rotY+=dx*0.015;dragX=e.clientX;}
 });
 window.addEventListener('pointerup',e=>{
   if(dragX===null)return;
   if(moved){
-    // Запускаємо плавний оберт на 360° за 3000 мс із фінішем рівно обличчям (rotY = 0)
     const dir=(e.clientX-dragX)>=0?1:-1;
     const norm=((rotY%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
     const target=dir>0?(Math.PI*2):0;
@@ -336,12 +348,8 @@ window.addEventListener('pointerup',e=>{
     sayPhrase('🔄 Оціни форму з усіх боків!');
   }else{
     const now=Date.now();
-    if(now-lastTapTs<340){
-      // Подвійне натискання -> набивання на голові!
-      startJuggle('head');
-    }else{
-      startJuggle('foot');
-    }
+    if(now-lastTapTs<340)startJuggle('head');
+    else startJuggle('foot');
     lastTapTs=now;
   }
   dragX=null;
@@ -349,13 +357,11 @@ window.addEventListener('pointerup',e=>{
 
 function startJuggle(mode){
   if(jugLeft>0&&jugMode===mode)return;
-  jugMode=mode;
-  jugLeft=5;
+  jugMode=mode;jugLeft=5;
   if(mode==='head'){
     stTxt.textContent='🤯 Набиває головою!';
     sayPhrase('🔥 Дивись, гра головою!');
-    ballVy=-14.2;
-    ballX=0;
+    ballVy=-14.2;ballX=0;
   }else{
     stTxt.textContent='⚡ Набиває ногами...';
     sayPhrase();
@@ -370,16 +376,14 @@ function kickBallUp(){
 
   if(jugMode==='head'){
     ballVy=-8.2;ballX=0;
-    playTone(220+jugCount*6,0.12);vib(25);
+    playKickSfx(true);vib(25);
   }else{
     activeFoot*=-1;ballVy=-10.2;ballX=activeFoot*24;
-    playTone(150+jugCount*6,0.12);vib(20);
+    playKickSfx(false);vib(20);
   }
 
-  // Кожні 10 набивань: +1 бал рейтингу (cp) + 5 монет!
   if(jugCount%10===0){
-    p.cp=(Number(p.cp)||0)+1;
-    p.cn+=5;p.pt+=15;
+    p.cp=(Number(p.cp)||0)+1;p.cn+=5;p.pt+=15;
     if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
     save();updUI();pushScoreToCloud();
     sayPhrase('🏆 +1 бал рейтингу та +5 💰!');
@@ -387,8 +391,7 @@ function kickBallUp(){
   }else if(jugCount%5===0){
     p.cn+=2;p.pt+=5;
     if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
-    save();updUI();
-    sayPhrase();
+    save();updUI();sayPhrase();
     spawnSparks(W*0.5,H*0.56,'#1dd1a1');
   }else{
     spawnSparks(W*0.5+ballX,jugMode==='head'?H*0.36:H*0.76,'#70a1ff');
@@ -447,213 +450,282 @@ function drawStadiumBg(){
 }
 const INK='#14181e';
 
-function drawStylizedBoot(x,y,sc,dirSign,bCol,bAc){
+// Бутса, що дивиться вперед у перспективі (носок на глядача) та розвертається при обертанні на 360°
+function drawFrontBoot(x,y,sc,side,cosA,sinA,bCol,bAc){
   ctx.save();ctx.translate(x,y);
-  if(dirSign<0)ctx.scale(-1,1);
+  const absSin=Math.abs(sinA);
 
-  ctx.fillStyle='#191e26';ctx.strokeStyle=INK;ctx.lineWidth=2*sc;
-  ctx.beginPath();ctx.roundRect(-10*sc,3*sc,28*sc,6*sc,3*sc);ctx.fill();ctx.stroke();
+  if(absSin>0.55){
+    // Профільний вигляд при повороті вбік
+    if(sinA<0)ctx.scale(-1,1);
+    ctx.fillStyle='#191e26';ctx.strokeStyle=INK;ctx.lineWidth=2*sc;
+    ctx.beginPath();ctx.roundRect(-9*sc,4*sc,27*sc,6*sc,3*sc);ctx.fill();ctx.stroke();
 
-  ctx.fillStyle=bCol;ctx.beginPath();
-  ctx.moveTo(-10*sc,-7*sc);ctx.lineTo(4*sc,-7*sc);
-  ctx.quadraticCurveTo(19*sc,-3*sc,18*sc,4*sc);
-  ctx.lineTo(-10*sc,4*sc);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle=bCol;ctx.beginPath();
+    ctx.moveTo(-9*sc,-7*sc);ctx.lineTo(4*sc,-7*sc);
+    ctx.quadraticCurveTo(18*sc,-3*sc,17*sc,5*sc);ctx.lineTo(-9*sc,5*sc);ctx.closePath();ctx.fill();ctx.stroke();
 
-  ctx.fillStyle=bAc;ctx.beginPath();
-  ctx.moveTo(-5*sc,3*sc);ctx.quadraticCurveTo(4*sc,-3*sc,15*sc,2*sc);ctx.lineTo(9*sc,4*sc);ctx.closePath();ctx.fill();
+    ctx.fillStyle=bAc;ctx.beginPath();
+    ctx.moveTo(-4*sc,4*sc);ctx.quadraticCurveTo(4*sc,-2*sc,14*sc,3*sc);ctx.lineTo(8*sc,5*sc);ctx.closePath();ctx.fill();
+  }else{
+    // Фронтальний 3/4 вигляд — носок бутси дивиться вперед на гравця!
+    const toeShift=(side*2.2+sinA*6)*sc;
+    // Підошва та передні шипи
+    ctx.fillStyle='#191e26';ctx.strokeStyle=INK;ctx.lineWidth=2*sc;
+    ctx.beginPath();ctx.roundRect(-8.5*sc+toeShift*0.4,3*sc,17*sc,8*sc,4*sc);ctx.fill();ctx.stroke();
+
+    // Об'ємний носок бутси, направлений вперед
+    const bg=ctx.createLinearGradient(0,-7*sc,0,9*sc);
+    bg.addColorStop(0,'#ffffff');bg.addColorStop(0.25,bCol);bg.addColorStop(1,'#14181e');
+    ctx.fillStyle=bg;ctx.beginPath();
+    ctx.moveTo(-7.5*sc,-6*sc);ctx.lineTo(7.5*sc,-6*sc);
+    ctx.quadraticCurveTo(9.5*sc+toeShift,3*sc,8.5*sc+toeShift,8*sc);
+    ctx.quadraticCurveTo(toeShift,10.5*sc,-8.5*sc+toeShift,8*sc);
+    ctx.quadraticCurveTo(-9.5*sc+toeShift,3*sc,-7.5*sc,-6*sc);
+    ctx.closePath();ctx.fill();ctx.stroke();
+
+    // Фірмова V-смуга на підйомі та шнурівка спереду
+    ctx.strokeStyle=bAc;ctx.lineWidth=2.2*sc;
+    ctx.beginPath();ctx.moveTo(-5*sc,-1*sc);ctx.lineTo(toeShift,4.5*sc);ctx.lineTo(5*sc,-1*sc);ctx.stroke();
+    ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5*sc;
+    ctx.beginPath();ctx.moveTo(-2.5*sc,-3*sc);ctx.lineTo(2.5*sc,-3*sc);ctx.stroke();
+  }
   ctx.restore();
 }
 
+// Справжня воротарська рукавиця з манжетою-липучкою, розширеною долонею та пальцями
+function drawKeeperGlove(x,y,sc,side,gCol){
+  ctx.save();ctx.translate(x,y);ctx.rotate(side*0.15);
+  ctx.strokeStyle=INK;ctx.lineWidth=1.9*sc;
+
+  // Манжет із застібкою
+  ctx.fillStyle='#191e26';
+  ctx.beginPath();ctx.roundRect(-5.5*sc,-3*sc,11*sc,4.5*sc,1.5*sc);ctx.fill();ctx.stroke();
+
+  // Основна долоня рукавиці
+  ctx.fillStyle=gCol;
+  ctx.beginPath();ctx.roundRect(-7*sc,1*sc,14*sc,10.5*sc,3.5*sc);ctx.fill();ctx.stroke();
+
+  // 4 пальці рукавиці
+  [-4.6,-1.5,1.5,4.6].forEach((fx,i)=>{
+    const fh=[5.2,6.2,5.8,4.6][i]*sc;
+    ctx.beginPath();ctx.roundRect((fx-1.4)*sc,10.5*sc,2.8*sc,fh,1.3*sc);ctx.fill();ctx.stroke();
+  });
+
+  // Великий палець всередину
+  ctx.beginPath();ctx.roundRect(-side*8.8*sc,3.5*sc,3.6*sc,5.5*sc,1.6*sc);ctx.fill();ctx.stroke();
+  ctx.restore();
+}
 function drawStylizedHero(cx,cy,sc){
   const cosA=Math.cos(rotY),sinA=Math.sin(rotY);
   const facingBack=cosA<0;
-  // Замість сплющення в смужку (0.1) зберігаємо реальну об'ємну ширину корпусу впрофіль (0.68..1.0)
-  const bodyW=0.68+0.32*Math.abs(cosA);
+  const bodyW=0.72+0.28*Math.abs(cosA);
   const j=getItem(p.ej),sh=getItem(p.ep),bt=getItem(p.es),gl=getItem(p.ek);
   const hasGloves=(p.ek&&p.ek!=='k1');
   const skin='#f4be8e',skinSh='#d69663';
 
   const headJump=(jugPhase>0&&jugMode==='head')?Math.sin(jugPhase*Math.PI)*20*sc:0;
-  const breath=Math.sin(tAnim*2.2)*2.2*sc-headJump;
+  const breath=Math.sin(tAnim*2.2)*2.0*sc-headJump;
 
   // Контактна тінь на полі
-  const sg=ctx.createRadialGradient(cx,cy+4*sc,6*sc,cx,cy+4*sc,62*sc);
+  const sg=ctx.createRadialGradient(cx,cy+5*sc,6*sc,cx,cy+5*sc,62*sc);
   sg.addColorStop(0,'rgba(0,0,0,0.62)');sg.addColorStop(0.65,'rgba(0,0,0,0.22)');sg.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=sg;ctx.beginPath();ctx.ellipse(cx,cy+4*sc,62*sc,14*sc,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=sg;ctx.beginPath();ctx.ellipse(cx,cy+5*sc,62*sc,14*sc,0,0,Math.PI*2);ctx.fill();
 
   const kickSw=(jugPhase>0&&jugMode==='foot')?Math.sin(jugPhase*Math.PI):0;
   const layers=[];
 
-  // 1. НОГИ З 3D-ГЛИБИНОЮ Z (ПРИ ПОВОРОТІ ВБІК ПЕРЕДНЯ НОГА ПЕРЕКРИВАЄ ЗАДНЮ)
+  // 1. ГАРМОНІЙНІ НОГИ ТА ШТАНИНИ ШОРТІВ ІЗ Z-ГЛИБИНОЮ
   [-1,1].forEach(side=>{
     const kickNow=(jugPhase>0&&jugMode==='foot'&&side===activeFoot);
     const liftY=kickNow?kickSw*26*sc:headJump*0.7;
     const zDepth=side*sinA;
 
-    const hipX=side*16*cosA*sc,hipY=-78*sc+breath*0.3;
-    const kneeX=side*20*cosA*sc+sinA*6*sc,kneeY=-44*sc-liftY*0.75;
-    const ankX=side*21*cosA*sc+sinA*10*sc,ankY=-8*sc-liftY;
+    const hipX=side*12.5*cosA*sc,hipY=-78*sc+breath*0.3;
+    const kneeX=side*15.5*cosA*sc+sinA*5*sc,kneeY=-44*sc-liftY*0.75;
+    const ankX=side*16.5*cosA*sc+sinA*8*sc,ankY=-9*sc-liftY;
 
     layers.push({z:zDepth,draw:()=>{
-      ctx.lineWidth=14*sc;ctx.strokeStyle=INK;
+      // Гомілка в гетрі
+      ctx.lineWidth=13*sc;ctx.strokeStyle=INK;
       ctx.beginPath();ctx.moveTo(kneeX,kneeY);ctx.lineTo(ankX,ankY);ctx.stroke();
-      ctx.lineWidth=10*sc;ctx.strokeStyle=j.col;
+      ctx.lineWidth=9*sc;ctx.strokeStyle=j.col;
       ctx.beginPath();ctx.moveTo(kneeX,kneeY);ctx.lineTo(ankX,ankY);ctx.stroke();
 
-      ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=2*sc;ctx.strokeStyle=INK;
-      ctx.beginPath();ctx.roundRect(kneeX-6.5*sc,kneeY+2*sc,13*sc,5*sc,2*sc);ctx.fill();ctx.stroke();
+      // Манжет гетра
+      ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=1.9*sc;ctx.strokeStyle=INK;
+      ctx.beginPath();ctx.roundRect(kneeX-6*sc,kneeY+2*sc,12*sc,4.5*sc,2*sc);ctx.fill();ctx.stroke();
 
-      ctx.fillStyle=skin;ctx.beginPath();ctx.arc(kneeX,kneeY,6.5*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
+      // Відкрите коліно атлета
+      ctx.fillStyle=skin;ctx.beginPath();ctx.arc(kneeX,kneeY,6*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
 
-      ctx.fillStyle=sh.col;ctx.lineWidth=2.2*sc;
+      // Плавна анатомічна штанина шортів (ширина точно підходить до тазу)
+      ctx.fillStyle=sh.col;ctx.lineWidth=2.1*sc;
       ctx.beginPath();
-      ctx.moveTo(hipX-12.5*bodyW*sc,hipY);
-      ctx.lineTo(hipX+12.5*bodyW*sc,hipY);
-      ctx.lineTo(kneeX+10.5*bodyW*sc,kneeY-4*sc);
-      ctx.lineTo(kneeX-10.5*bodyW*sc,kneeY-4*sc);
+      ctx.moveTo(hipX-10.5*bodyW*sc,hipY);
+      ctx.lineTo(hipX+10.5*bodyW*sc,hipY);
+      ctx.lineTo(kneeX+9.5*bodyW*sc,kneeY-4*sc);
+      ctx.lineTo(kneeX-9.5*bodyW*sc,kneeY-4*sc);
       ctx.closePath();ctx.fill();ctx.stroke();
 
-      const bootDir=Math.abs(sinA)>0.3?Math.sign(sinA):(facingBack?-side:side);
-      drawStylizedBoot(ankX,ankY,sc,bootDir,bt.col,bt.ac||'#1dd1a1');
+      // Бутси, що дивляться вперед на глядача
+      drawFrontBoot(ankX,ankY,sc,side,cosA,sinA,bt.col,bt.ac||'#1dd1a1');
     }});
   });
-  // 2. ОБ'ЄМНИЙ ТОРС ТА ФУТБОЛКА (Z = 0)
+  // 2. ЄДИНИЙ ТАЗОВИЙ ПОЯС ШОРТІВ І ПРИТАЛЕНА ФУТБОЛКА (Z = 0)
   layers.push({z:0,draw:()=>{
-    const topW=31*bodyW*sc,botW=24*bodyW*sc;
-    const topY=-136*sc+breath,botY=-72*sc+breath*0.3;
+    const shTopW=27.5*bodyW*sc,waistW=21.5*bodyW*sc,pelvisW=23.5*bodyW*sc;
+    const topY=-136*sc+breath,hemY=-78*sc+breath*0.3,pelvisY=-65*sc+breath*0.2;
 
-    ctx.fillStyle=j.col;ctx.lineWidth=2.4*sc;ctx.strokeStyle=INK;
+    // Тазовий пояс шортів (з'єднує дві штанини в один суцільний виріб без зазорів)
+    ctx.fillStyle=sh.col;ctx.lineWidth=2.1*sc;ctx.strokeStyle=INK;
     ctx.beginPath();
-    ctx.moveTo(-topW,topY);
-    ctx.quadraticCurveTo(0,topY-10*sc,topW,topY);
-    ctx.lineTo(botW,botY);
-    ctx.quadraticCurveTo(0,botY+5*sc,-botW,botY);
+    ctx.moveTo(-waistW,hemY-2*sc);
+    ctx.lineTo(waistW,hemY-2*sc);
+    ctx.lineTo(pelvisW,pelvisY);
+    ctx.quadraticCurveTo(0,pelvisY+5*sc,-pelvisW,pelvisY);
     ctx.closePath();ctx.fill();ctx.stroke();
 
-    // Об'ємна тінь збоку торсу при обертанні
-    ctx.fillStyle='rgba(0,0,0,0.15)';
+    // Центральний шов шортів
+    ctx.strokeStyle='rgba(20,24,30,0.35)';ctx.lineWidth=1.5*sc;
+    ctx.beginPath();ctx.moveTo(sinA*4*sc,hemY+2*sc);ctx.lineTo(sinA*3*sc,pelvisY+3*sc);ctx.stroke();
+
+    // Приталена спортивна футболка з природним напуском поверх пояса шортів
+    ctx.fillStyle=j.col;ctx.lineWidth=2.3*sc;ctx.strokeStyle=INK;
     ctx.beginPath();
-    ctx.moveTo(0,topY-5*sc);ctx.quadraticCurveTo(topW*0.5,topY-3*sc,topW,topY);
-    ctx.lineTo(botW,botY);ctx.quadraticCurveTo(botW*0.5,botY+3*sc,0,botY+2*sc);
+    ctx.moveTo(-shTopW,topY);
+    ctx.quadraticCurveTo(0,topY-9*sc,shTopW,topY);
+    ctx.quadraticCurveTo(shTopW*0.92,(topY+hemY)*0.5,waistW*1.04,hemY);
+    ctx.quadraticCurveTo(0,hemY+5*sc,-waistW*1.04,hemY);
+    ctx.quadraticCurveTo(-shTopW*0.92,(topY+hemY)*0.5,-shTopW,topY);
+    ctx.closePath();ctx.fill();ctx.stroke();
+
+    // Об'ємна тінь збоку футболки
+    ctx.fillStyle='rgba(0,0,0,0.14)';
+    ctx.beginPath();
+    ctx.moveTo(0,topY-4*sc);ctx.quadraticCurveTo(shTopW*0.5,topY-2*sc,shTopW,topY);
+    ctx.quadraticCurveTo(shTopW*0.92,(topY+hemY)*0.5,waistW*1.04,hemY);
+    ctx.quadraticCurveTo(waistW*0.5,hemY+3*sc,0,hemY+2.5*sc);
     ctx.closePath();ctx.fill();
 
-    // Бокові вставки форми
+    // Бокові вставки футболки
     if(Math.abs(cosA)>0.22){
       ctx.fillStyle=j.trim||'#ffffff';
       [-1,1].forEach(s=>{
         ctx.beginPath();
-        ctx.moveTo(s*topW*0.86,topY+14*sc);
-        ctx.lineTo(s*botW*0.95,botY-4*sc);
-        ctx.lineTo(s*botW*0.75,botY-4*sc);
-        ctx.lineTo(s*topW*0.72,topY+22*sc);
+        ctx.moveTo(s*shTopW*0.86,topY+14*sc);
+        ctx.lineTo(s*waistW*0.98,hemY-3*sc);
+        ctx.lineTo(s*waistW*0.80,hemY-3*sc);
+        ctx.lineTo(s*shTopW*0.74,topY+22*sc);
         ctx.closePath();ctx.fill();
       });
     }
 
-    // Комір і емблема спереду або номер на спині
-    const turnX=sinA*12*sc;
+    // Комір і герб спереду або номер на спині
+    const turnX=sinA*11*sc;
     if(!facingBack){
-      ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=2*sc;ctx.strokeStyle=INK;
-      ctx.beginPath();ctx.moveTo(-10*Math.abs(cosA)*sc+turnX,topY-2*sc);ctx.lineTo(turnX,topY+11*sc);ctx.lineTo(10*Math.abs(cosA)*sc+turnX,topY-2*sc);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=1.9*sc;ctx.strokeStyle=INK;
+      ctx.beginPath();ctx.moveTo(-9.5*Math.abs(cosA)*sc+turnX,topY-2*sc);ctx.lineTo(turnX,topY+10*sc);ctx.lineTo(9.5*Math.abs(cosA)*sc+turnX,topY-2*sc);ctx.closePath();ctx.fill();ctx.stroke();
 
       if(Math.abs(cosA)>0.25){
-        ctx.fillStyle='#feca57';ctx.beginPath();ctx.arc(turnX+11*Math.abs(cosA)*sc,topY+22*sc,5*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
+        ctx.fillStyle='#feca57';ctx.beginPath();ctx.arc(turnX+10*Math.abs(cosA)*sc,topY+21*sc,4.6*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
       }
     }else{
-      ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=2*sc;ctx.strokeStyle=INK;
-      ctx.beginPath();ctx.ellipse(turnX,topY-2*sc,10*Math.abs(cosA)*sc,3.5*sc,0,0,Math.PI);ctx.fill();ctx.stroke();
+      ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=1.9*sc;ctx.strokeStyle=INK;
+      ctx.beginPath();ctx.ellipse(turnX,topY-2*sc,9.5*Math.abs(cosA)*sc,3.2*sc,0,0,Math.PI);ctx.fill();ctx.stroke();
 
       if(Math.abs(cosA)>0.22){
-        ctx.save();ctx.translate(turnX,topY+44*sc);ctx.scale(Math.abs(cosA),1);
-        ctx.fillStyle=p.numCol||'#ffffff';ctx.strokeStyle=INK;ctx.lineWidth=3.5*sc;
-        ctx.font=`900 ${32*sc}px sans-serif`;ctx.textAlign='center';
+        ctx.save();ctx.translate(turnX,topY+41*sc);ctx.scale(Math.abs(cosA),1);
+        ctx.fillStyle=p.numCol||'#ffffff';ctx.strokeStyle=INK;ctx.lineWidth=3.2*sc;
+        ctx.font=`900 ${30*sc}px sans-serif`;ctx.textAlign='center';
         ctx.strokeText(String(p.num||'10'),0,0);ctx.fillText(String(p.num||'10'),0,0);
         ctx.restore();
       }
     }
   }});
 
-  // 3. РУКИ З 3D-ПЕРЕКРИТТЯМ КОРПУСУ (ПЕРЕДНЯ РУКА НАД ТОРСОМ, ЗАДНЯ — ПІД ТОРСОМ)
+  // 3. РУКИ З ВОРОТАРСЬКИМИ РУКАВИЦЯМИ АБО КИСТЯМИ
   [-1,1].forEach(side=>{
     const bal=(jugPhase>0)?(side===activeFoot?-7*sc:9*sc):Math.sin(tAnim*2+side)*3*sc;
     const zArm=side*sinA*1.5;
-    const shX=side*27*cosA*sc,shY=-128*sc+breath;
-    const elX=side*38*cosA*sc+sinA*10*sc,elY=-104*sc-bal*0.4;
-    const hdX=side*35*cosA*sc+sinA*18*sc,hdY=-82*sc-bal*0.8;
+    const shX=side*24*cosA*sc,shY=-128*sc+breath;
+    const elX=side*34*cosA*sc+sinA*9*sc,elY=-105*sc-bal*0.4;
+    const hdX=side*32*cosA*sc+sinA*16*sc,hdY=-84*sc-bal*0.8;
 
     layers.push({z:zArm,draw:()=>{
-      ctx.lineWidth=12*sc;ctx.strokeStyle=INK;
+      ctx.lineWidth=11.5*sc;ctx.strokeStyle=INK;
       ctx.beginPath();ctx.moveTo(elX,elY);ctx.lineTo(hdX,hdY);ctx.stroke();
-      ctx.lineWidth=8.5*sc;ctx.strokeStyle=skin;
+      ctx.lineWidth=8*sc;ctx.strokeStyle=skin;
       ctx.beginPath();ctx.moveTo(elX,elY);ctx.lineTo(hdX,hdY);ctx.stroke();
 
-      ctx.lineWidth=13*sc;ctx.strokeStyle=INK;
+      ctx.lineWidth=12.5*sc;ctx.strokeStyle=INK;
       ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(elX,elY);ctx.stroke();
-      ctx.lineWidth=9.5*sc;ctx.strokeStyle=skin;
+      ctx.lineWidth=9*sc;ctx.strokeStyle=skin;
       ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(elX,elY);ctx.stroke();
 
       const slvX=shX+(elX-shX)*0.55,slvY=shY+(elY-shY)*0.55;
-      ctx.lineWidth=16*sc;ctx.strokeStyle=INK;
+      ctx.lineWidth=15*sc;ctx.strokeStyle=INK;
       ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(slvX,slvY);ctx.stroke();
-      ctx.lineWidth=12*sc;ctx.strokeStyle=j.col;
+      ctx.lineWidth=11*sc;ctx.strokeStyle=j.col;
       ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(slvX,slvY);ctx.stroke();
 
-      ctx.fillStyle=hasGloves?gl.col:skin;ctx.lineWidth=2*sc;ctx.strokeStyle=INK;
-      ctx.beginPath();ctx.arc(hdX,hdY,hasGloves?7.5*sc:5.8*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
+      if(hasGloves){
+        drawKeeperGlove(hdX,hdY,sc,side,gl.col);
+      }else{
+        ctx.fillStyle=skin;ctx.lineWidth=2*sc;ctx.strokeStyle=INK;
+        ctx.beginPath();ctx.arc(hdX,hdY,5.5*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
+      }
     }});
   });
-  // 4. ГОЛОВА ТА ОБЛИЧЧЯ З ОБ'ЄМНИМ ПОВОРОТОМ (Z = 0.2)
+  // 4. ГОЛОВА ТА ОБЛИЧЧЯ (Z = 0.2)
   layers.push({z:0.2,draw:()=>{
     const headY=-164*sc+breath;
     const headW=0.78+0.22*Math.abs(cosA);
 
-    ctx.fillStyle=skinSh;ctx.lineWidth=2.2*sc;ctx.strokeStyle=INK;
-    ctx.beginPath();ctx.roundRect(-7*sc,-145*sc+breath,14*sc,14*sc,4*sc);ctx.fill();ctx.stroke();
+    ctx.fillStyle=skinSh;ctx.lineWidth=2.1*sc;ctx.strokeStyle=INK;
+    ctx.beginPath();ctx.roundRect(-6.5*sc,-145*sc+breath,13*sc,14*sc,4*sc);ctx.fill();ctx.stroke();
 
-    // Вухо збоку голови
     ctx.fillStyle=skin;
     [-1,1].forEach(s=>{
-      ctx.beginPath();ctx.arc(s*18*headW*sc-sinA*5*sc,headY+2*sc,4.5*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.arc(s*17.5*headW*sc-sinA*5*sc,headY+2*sc,4.3*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
     });
 
-    // Обличчя
     ctx.fillStyle=skin;
-    ctx.beginPath();ctx.roundRect(-18*headW*sc,headY-20*sc,36*headW*sc,38*sc,16*sc);ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.roundRect(-17.5*headW*sc,headY-20*sc,35*headW*sc,38*sc,16*sc);ctx.fill();ctx.stroke();
 
     if(!facingBack&&Math.abs(cosA)>0.18){
       const fx=sinA*10*sc,eyeW=Math.max(0.45,Math.abs(cosA));
       ctx.fillStyle='#231810';
-      ctx.beginPath();ctx.roundRect(fx-11*eyeW*sc,headY-7*sc,7*eyeW*sc,2.5*sc,1.2*sc);ctx.fill();
-      ctx.beginPath();ctx.roundRect(fx+4*eyeW*sc,headY-7*sc,7*eyeW*sc,2.5*sc,1.2*sc);ctx.fill();
+      ctx.beginPath();ctx.roundRect(fx-10.5*eyeW*sc,headY-7*sc,6.8*eyeW*sc,2.4*sc,1.2*sc);ctx.fill();
+      ctx.beginPath();ctx.roundRect(fx+3.7*eyeW*sc,headY-7*sc,6.8*eyeW*sc,2.4*sc,1.2*sc);ctx.fill();
 
-      ctx.beginPath();ctx.arc(fx-7.5*eyeW*sc,headY-1*sc,2.6*sc,0,Math.PI*2);ctx.arc(fx+7.5*eyeW*sc,headY-1*sc,2.6*sc,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(fx-7.2*eyeW*sc,headY-1*sc,2.5*sc,0,Math.PI*2);ctx.arc(fx+7.2*eyeW*sc,headY-1*sc,2.5*sc,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#ffffff';
-      ctx.beginPath();ctx.arc(fx-8.3*eyeW*sc,headY-2*sc,1.0*sc,0,Math.PI*2);ctx.arc(fx+6.7*eyeW*sc,headY-2*sc,1.0*sc,0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(fx-8.0*eyeW*sc,headY-2*sc,1.0*sc,0,Math.PI*2);ctx.arc(fx+6.4*eyeW*sc,headY-2*sc,1.0*sc,0,Math.PI*2);ctx.fill();
 
       ctx.strokeStyle=skinSh;ctx.lineWidth=2*sc;
       ctx.beginPath();ctx.moveTo(fx,headY-1*sc);ctx.lineTo(fx+sinA*3*sc,headY+5*sc);ctx.stroke();
 
       ctx.strokeStyle=INK;ctx.lineWidth=2*sc;
-      ctx.beginPath();ctx.arc(fx,headY+8*sc,5.5*eyeW*sc,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
+      ctx.beginPath();ctx.arc(fx,headY+8*sc,5.2*eyeW*sc,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
     }
 
-    // Об'ємна зачіска
-    ctx.fillStyle='#241911';ctx.strokeStyle=INK;ctx.lineWidth=2.3*sc;
+    ctx.fillStyle='#241911';ctx.strokeStyle=INK;ctx.lineWidth=2.2*sc;
     if(facingBack){
       ctx.beginPath();
-      ctx.moveTo(-19*headW*sc,headY+2*sc);
-      ctx.quadraticCurveTo(-21*headW*sc,headY-26*sc,0,headY-27*sc);
-      ctx.quadraticCurveTo(21*headW*sc,headY-26*sc,19*headW*sc,headY+2*sc);
-      ctx.lineTo(13*headW*sc,headY+12*sc);ctx.lineTo(-13*headW*sc,headY+12*sc);
+      ctx.moveTo(-18.5*headW*sc,headY+2*sc);
+      ctx.quadraticCurveTo(-20.5*headW*sc,headY-26*sc,0,headY-27*sc);
+      ctx.quadraticCurveTo(20.5*headW*sc,headY-26*sc,18.5*headW*sc,headY+2*sc);
+      ctx.lineTo(12.5*headW*sc,headY+12*sc);ctx.lineTo(-12.5*headW*sc,headY+12*sc);
       ctx.closePath();ctx.fill();ctx.stroke();
     }else{
       ctx.beginPath();
-      ctx.moveTo(-19*headW*sc,headY-5*sc);
-      ctx.quadraticCurveTo(-21*headW*sc,headY-26*sc,-2*headW*sc,headY-27*sc);
-      ctx.quadraticCurveTo(10*headW*sc,headY-31*sc,18*headW*sc,headY-19*sc);
-      ctx.quadraticCurveTo(21*headW*sc,headY-12*sc,19*headW*sc,headY-5*sc);
+      ctx.moveTo(-18.5*headW*sc,headY-5*sc);
+      ctx.quadraticCurveTo(-20.5*headW*sc,headY-26*sc,-2*headW*sc,headY-27*sc);
+      ctx.quadraticCurveTo(10*headW*sc,headY-31*sc,17.5*headW*sc,headY-19*sc);
+      ctx.quadraticCurveTo(20.5*headW*sc,headY-12*sc,18.5*headW*sc,headY-5*sc);
       ctx.quadraticCurveTo(8*headW*sc,headY-14*sc,-4*headW*sc,headY-12*sc);
-      ctx.quadraticCurveTo(-12*headW*sc,headY-14*sc,-19*headW*sc,headY-5*sc);
+      ctx.quadraticCurveTo(-12*headW*sc,headY-14*sc,-18.5*headW*sc,headY-5*sc);
       ctx.closePath();ctx.fill();ctx.stroke();
     }
   }});
@@ -663,16 +735,21 @@ function drawStylizedHero(cx,cy,sc){
   layers.sort((a,b)=>a.z-b.z).forEach(l=>l.draw());
   ctx.restore();
 
-  // Хмарка з розмовною фразою над головою гравця
+  // Хмарка з розмовними фразами піднята значно вище голови, щоб не перекривати зачіску!
   if(speechTimer>0&&speechTxt){
     speechTimer--;
     const alpha=Math.min(1,speechTimer/20);
     ctx.save();ctx.globalAlpha=alpha;
-    ctx.font=`bold ${Math.max(11,Math.round(12*sc))}px sans-serif`;
-    const tw=ctx.measureText(speechTxt).width+22,th=26*sc;
-    const bx=cx,by=cy-215*sc+breath;
-    ctx.fillStyle='rgba(13,22,38,0.94)';ctx.strokeStyle='#feca57';ctx.lineWidth=1.6;
+    ctx.font=`bold ${Math.max(11,Math.round(11.5*sc))}px sans-serif`;
+    const tw=ctx.measureText(speechTxt).width+22,th=25*sc;
+    const bx=cx,by=Math.max(96,cy-236*sc+breath);
+    ctx.fillStyle='rgba(13,22,38,0.95)';ctx.strokeStyle='#feca57';ctx.lineWidth=1.6;
     ctx.beginPath();ctx.roundRect(bx-tw*0.5,by-th*0.5,tw,th,12);ctx.fill();ctx.stroke();
+
+    // Маленький хвостик хмарки вниз до гравця
+    ctx.fillStyle='#feca57';
+    ctx.beginPath();ctx.moveTo(bx-5,by+th*0.5);ctx.lineTo(bx+5,by+th*0.5);ctx.lineTo(bx,by+th*0.5+6);ctx.closePath();ctx.fill();
+
     ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(speechTxt,bx,by);
     ctx.restore();
@@ -720,7 +797,6 @@ function loop(){
   tAnim+=0.05;
   ctx.clearRect(0,0,W,H);
 
-  // Плавний 3-секундний авто-оберт на 360° із фінішем рівно обличчям (rotY = 0)
   if(autoSpin){
     const pr=Math.min(1,(performance.now()-autoSpin.start)/autoSpin.dur);
     const ease=1-Math.pow(1-pr,3);
@@ -730,8 +806,8 @@ function loop(){
 
   if(jugPhase>0)jugPhase=Math.max(0,jugPhase-0.085);
 
-  const heroScale=Math.min(W/290,H/270)*1.05;
-  const baseX=W*0.5,baseY=H*0.88;
+  const heroScale=Math.min(W/300,H/295)*0.98;
+  const baseX=W*0.5,baseY=H*0.89;
   const bRad=Math.max(12,15*heroScale);
   const headHitY=-186*heroScale;
 
