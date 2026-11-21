@@ -277,7 +277,7 @@ function drawStadiumBackground(){
 /* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 3 ] ================== */
 /* ===================================================================== */
 /* ===================================================================== */
-/* ================== [ INDEX.HTML : ЧАСТИНА 4 З 5 ] =================== */
+/* ================= [ INDEX.HTML : ЧАСТИНА 4A З 5 ] =================== */
 /* ===================================================================== */
 function drawCapsule(x1,y1,x2,y2,r1,r2,col){
   const dx=x2-x1,dy=y2-y1;
@@ -289,6 +289,103 @@ function drawCapsule(x1,y1,x2,y2,r1,r2,col){
   ctx.arc(x2,y2,r2,perp+Math.PI,perp);
   ctx.closePath();
   ctx.fill();
+}
+
+function drawFootballBoot(x,y,sc,sgn,cosR,sinR,sItem){
+  ctx.save();
+  ctx.translate(x,y);
+
+  const isBack=cosR<0;
+  const dir=(Math.abs(sinR)>0.28)?Math.sign(sinR):sgn*0.42;
+  const sideFactor=Math.min(1,Math.abs(sinR)*1.25+0.35);
+
+  if(isBack&&Math.abs(sinR)<0.35){
+    ctx.fillStyle='#0b0f14';
+    ctx.beginPath();
+    ctx.roundRect(-3.8*sc,2.0*sc,7.6*sc,1.7*sc,0.8*sc);
+    ctx.fill();
+
+    ctx.fillStyle='#cfd6de';
+    ctx.fillRect(-3.0*sc,3.6*sc,1.4*sc,1.1*sc);
+    ctx.fillRect(1.6*sc,3.6*sc,1.4*sc,1.1*sc);
+
+    ctx.fillStyle=sItem.col;
+    ctx.beginPath();
+    ctx.moveTo(-3.4*sc,-2.2*sc);
+    ctx.lineTo(3.4*sc,-2.2*sc);
+    ctx.lineTo(3.8*sc,2.2*sc);
+    ctx.lineTo(-3.8*sc,2.2*sc);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle=sItem.ac||'#1dd1a1';
+    ctx.fillRect(-1.1*sc,-2.0*sc,2.2*sc,3.8*sc);
+    ctx.restore();
+    return;
+  }
+
+  ctx.scale(dir>=0?1:-1,1);
+  const len=(5.2+4.8*sideFactor)*sc;
+  const heelX=-3.6*sc;
+  const toeX=len;
+
+  ctx.fillStyle='#dce4e7';
+  [heelX+1.0*sc,heelX+3.2*sc,toeX-3.4*sc,toeX-1.2*sc].forEach(sx=>{
+    ctx.beginPath();
+    ctx.roundRect(sx-0.6*sc,3.2*sc,1.2*sc,1.2*sc,0.3*sc);
+    ctx.fill();
+  });
+
+  ctx.fillStyle='#0d1117';
+  ctx.beginPath();
+  ctx.moveTo(heelX-0.4*sc,2.2*sc);
+  ctx.quadraticCurveTo((heelX+toeX)*0.45,1.6*sc,toeX+0.4*sc,2.3*sc);
+  ctx.lineTo(toeX+0.2*sc,3.4*sc);
+  ctx.quadraticCurveTo((heelX+toeX)*0.45,2.9*sc,heelX-0.2*sc,3.4*sc);
+  ctx.closePath();
+  ctx.fill();
+
+  const bootGrad=ctx.createLinearGradient(heelX,-3.5*sc,toeX,2.5*sc);
+  bootGrad.addColorStop(0,sItem.col);
+  bootGrad.addColorStop(0.75,sItem.col);
+  bootGrad.addColorStop(1,'#11161d');
+
+  ctx.fillStyle=bootGrad;
+  ctx.beginPath();
+  ctx.moveTo(heelX,-3.0*sc);
+  ctx.quadraticCurveTo(heelX+2.0*sc,-2.2*sc,heelX+3.2*sc,-2.8*sc);
+  ctx.quadraticCurveTo(heelX+5.5*sc,-0.8*sc,toeX-1.2*sc,0.4*sc);
+  ctx.quadraticCurveTo(toeX+1.0*sc,1.0*sc,toeX+0.3*sc,2.4*sc);
+  ctx.lineTo(heelX-0.3*sc,2.3*sc);
+  ctx.quadraticCurveTo(heelX-0.8*sc,-0.5*sc,heelX,-3.0*sc);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle='#1e272e';
+  ctx.beginPath();
+  ctx.ellipse(heelX+1.6*sc,-2.8*sc,2.6*sc,1.1*sc,-0.15,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle=sItem.ac||'#1dd1a1';
+  ctx.lineWidth=1.4*sc;
+  ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(heelX+1.8*sc,0.6*sc);
+  ctx.quadraticCurveTo((heelX+toeX)*0.55,-0.3*sc,toeX-1.6*sc,1.3*sc);
+  ctx.stroke();
+
+  ctx.strokeStyle='rgba(255,255,255,0.75)';
+  ctx.lineWidth=0.85*sc;
+  for(let i=0;i<3;i++){
+    const lx=heelX+(3.8+i*1.5)*sc;
+    const ly=(-1.8+i*0.65)*sc;
+    ctx.beginPath();
+    ctx.moveTo(lx,ly);
+    ctx.lineTo(lx+0.9*sc,ly+0.8*sc);
+    ctx.stroke();
+  }
+
+  ctx.restore();
 }
 
 function drawGKGlove(x,y,sc,sgn,col){
@@ -324,23 +421,24 @@ function drawGKGlove(x,y,sc,sgn,col){
 
   ctx.restore();
 }
-
+/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4A ] ================= */
+/* ===================================================================== */
+/* ================= [ INDEX.HTML : ЧАСТИНА 4B З 5 ] =================== */
+/* ===================================================================== */
 function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo){
   const skin='#e4b487',skinShade='#be8450';
   const wScale=Math.max(0.42,Math.abs(cosR));
   const depthShift=sinR*6*sc;
 
-  // 1. АНАТОМІЧНІ НОГИ З ПЛАВНИМ ПІДЙОМОМ КОЛІНА І СТОПИ ПРИ ЧЕКАНЦІ
+  // 1. НОГИ ТА БУТСИ
   [-1,1].forEach(side=>{
     const sgn=side*(cosR>=0?1:-1);
     const lift=(side===1?jInfo.liftR:jInfo.liftL)*jInfo.blend;
 
     const hipX=sgn*6.4*sc*wScale+depthShift*0.2;
     const hipY=-55*sc;
-    // Коліно плавно згинається і виноситься трохи вперед/вгору
     const kneeX=sgn*(7.0+lift*1.2)*sc*wScale+depthShift*0.35+sinR*5.5*sc*lift;
     const kneeY=-30*sc-lift*14*sc;
-    // Стопа піднімається назустріч м'ячу
     const ankleX=sgn*(6.8+lift*0.6)*sc*wScale+depthShift*0.5+sinR*8.5*sc*lift;
     const ankleY=-4.5*sc-lift*21*sc;
 
@@ -368,25 +466,10 @@ function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo
     ctx.fillStyle=jItem.trim||'#ffffff';
     ctx.fillRect(kneeX-4.4*sc,kneeY+5.2*sc,8.8*sc,2.0*sc);
 
-    if(isBack){
-      ctx.fillStyle='#0d1117';
-      ctx.beginPath();ctx.ellipse(ankleX,ankleY+2.6*sc,4.4*sc,2.0*sc,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=sItem.col;
-      ctx.beginPath();ctx.ellipse(ankleX,ankleY+1.0*sc,4.2*sc,3.0*sc,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=sItem.ac||'#1dd1a1';
-      ctx.fillRect(ankleX-1.2*sc,ankleY-1.5*sc,2.4*sc,3.5*sc);
-    }else{
-      const bootDir=sinR*7*sc+sgn*2.0*sc;
-      ctx.fillStyle='#0d1117';
-      ctx.beginPath();ctx.ellipse(ankleX+bootDir*0.4,ankleY+3.0*sc,8.0*sc,2.1*sc,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=sItem.col;
-      ctx.beginPath();ctx.ellipse(ankleX+bootDir*0.45,ankleY+1.4*sc,8.0*sc,3.4*sc,0,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle=sItem.ac||'#1dd1a1';
-      ctx.beginPath();ctx.ellipse(ankleX+bootDir*0.5,ankleY+0.9*sc,3.8*sc,1.3*sc,0.15,0,Math.PI*2);ctx.fill();
-    }
+    drawFootballBoot(ankleX,ankleY,sc,sgn,cosR,sinR,sItem);
   });
 
-  // 2. АТЛЕТИЧНИЙ ТОРС
+  // 2. ТОРС ТА ФУТБОЛКА
   const shW=(16.5*wScale+4.8)*sc,chestW=(15.5*wScale+4.5)*sc,waistW=(12.2*wScale+4.0)*sc;
   const torsoGrad=ctx.createLinearGradient(-shW,-100*sc,shW,-54*sc);
   torsoGrad.addColorStop(0,jItem.col);
@@ -441,7 +524,7 @@ function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo
     ctx.fillText('CHAMPIONS',depthShift*0.45,-76*sc+breath);ctx.globalAlpha=1;
   }
 
-  // 3. РУКИ З БАЛАНСУВАННЯМ ПІД ЧАС ЧЕКАНКИ ТА ПЕРЧАТКАМИ
+  // 3. РУКИ ТА ПЕРЧАТКИ
   [-1,1].forEach(side=>{
     const sgn=side*(cosR>=0?1:-1);
     const armSway=Math.sin(tAnim+side*0.5)*0.6*sc;
@@ -464,8 +547,7 @@ function drawPlayerBody(sc,cosR,sinR,isBack,breath,jItem,pItem,sItem,kItem,jInfo
     drawGKGlove(wrX,wrY,sc,sgn,kItem.col);
   });
 }
-/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4 ] ================== */
-/* ===================================================================== */
+/* ================= [ КІНЕЦЬ INDEX.HTML : ЧАСТИНА 4B ] ================= */
 /* ================== [ INDEX.HTML : ЧАСТИНА 5 З 5 ] =================== */
 /* ===================================================================== */
 function drawPlayerHead(sc,sinR,isBack,breath){
