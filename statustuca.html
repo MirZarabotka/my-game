@@ -8,9 +8,6 @@
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
-.tabs{display:flex;gap:6px;margin-bottom:6px;flex-shrink:0}
-.tab{flex:1;padding:8px 6px;background:#131b26;border:1px solid #243347;color:#fff;border-radius:10px;font-weight:bold;font-size:12px;cursor:pointer;text-align:center;text-decoration:none}
-.tab.on{background:#152547;color:#70a1ff;border-color:#3867d6}
 .box{background:#131b26;border:1px solid #243347;border-radius:12px;padding:9px 12px;margin-bottom:6px;flex-shrink:0}
 .row{display:flex;justify-content:space-between;align-items:center;gap:6px}
 .inp{background:#09101c;border:1px solid #2f435e;color:#fff;padding:7px 10px;border-radius:8px;font-size:12px;flex:1;outline:none}
@@ -18,7 +15,7 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 .btn{background:#1e3799;border:1px solid #4b7bec;color:#fff;padding:7px 11px;border-radius:8px;font-weight:bold;font-size:12px;cursor:pointer;white-space:nowrap}
 .btn:active{transform:scale(.96)}
 .btn.grn{background:#1dd1a1;border-color:#1dd1a1;color:#000}
-.board{flex:1;overflow-y:auto;background:linear-gradient(180deg,#0b1322,#101c30);border:1px solid #243347;border-radius:14px;padding:8px}
+.board{flex:1;overflow-y:auto;background:linear-gradient(180deg,#0b1322,#101c30);border:1px solid #243347;border-radius:14px;padding:8px;margin-bottom:8px}
 .item{display:flex;align-items:center;justify-content:space-between;background:#131f33;border:1px solid #203454;border-radius:10px;padding:8px 10px;margin-bottom:6px;font-size:13px}
 .item.me{border:1.5px solid #1dd1a1;background:rgba(29,209,161,.14)}
 .item.top1{border-color:#feca57;background:rgba(254,202,87,.12)}
@@ -29,10 +26,30 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
 .name{font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sub{font-size:10px;color:#8395a7;margin-top:2px}
 .coins{font-weight:900;color:#feca57;font-size:14px;text-align:right;flex-shrink:0}
-.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#1dd1a1;color:#000;padding:7px 16px;border-radius:14px;font-weight:bold;font-size:12px;display:none;z-index:99}
+.tabs{display:flex;gap:6px;flex-shrink:0}
+.tab{flex:1;padding:10px 6px;background:#131b26;border:1px solid #243347;color:#fff;border-radius:10px;font-weight:bold;font-size:12px;cursor:pointer;text-align:center;text-decoration:none}
+.tab.on{background:#152547;color:#70a1ff;border-color:#3867d6}
+.status{text-align:center;font-size:11px;color:#8395a7;padding:12px}
+.toast{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);background:#1dd1a1;color:#000;padding:7px 16px;border-radius:14px;font-weight:bold;font-size:12px;display:none;z-index:99}
 </style>
 </head>
 <body>
+
+<div class="box">
+  <div class="row" style="margin-bottom:6px">
+    <b style="color:#feca57;font-size:13px">🌍 Реальні гравці • Топ за монетами</b>
+    <span id="myPos" style="font-size:11px;color:#1dd1a1;font-weight:bold">Місце: #—</span>
+  </div>
+  <div class="row">
+    <input type="text" id="nickInp" class="inp" maxlength="18" placeholder="Твій нікнейм...">
+    <button class="btn grn" onclick="saveNick()">💾 Зберегти</button>
+    <button class="btn" onclick="syncLeaderboard(true)">🔄 Оновити</button>
+  </div>
+</div>
+
+<div class="board" id="board">
+  <div class="status">⏳ Завантаження реальних гравців...</div>
+</div>
 
 <div class="tabs">
   <a href="index.html" class="tab">🏠 Головна</a>
@@ -40,71 +57,41 @@ body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;d
   <a href="statustuca.html" class="tab on">📊 Рейтинг</a>
 </div>
 
-<div class="box">
-  <div class="row" style="margin-bottom:6px">
-    <b style="color:#feca57;font-size:13px">👤 Твій профіль у рейтингу</b>
-    <span id="myPos" style="font-size:11px;color:#1dd1a1;font-weight:bold">Місце: #—</span>
-  </div>
-  <div class="row">
-    <input type="text" id="nickInp" class="inp" maxlength="18" placeholder="Твій нікнейм...">
-    <button class="btn grn" onclick="saveNick()">💾 Зберегти</button>
-  </div>
-  <div class="row" style="margin-top:6px">
-    <input type="text" id="friendCode" class="inp" placeholder="Встав код друга, щоб додати...">
-    <button class="btn" onclick="addFriend()">➕ Додати</button>
-    <button class="btn" style="background:#243347;border-color:#3c4f66" onclick="copyMyCode()">📤 Мій код</button>
-  </div>
-</div>
-
-<div class="board" id="board"></div>
-<div class="toast" id="toast">Скопійовано!</div>
+<div class="toast" id="toast">Оновлено!</div>
 
 <script>
 try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand()}catch(e){}
 
-let p={pt:0,lv:1,cp:0,cn:20,nick:''};
+const BIN_ID  = '6b01a76bffd5d16053d39022';
+const API_KEY = '$2a$10$FfzYgApncFFRJpoFkrYgyOZHPwjviuwu1N64Suvm4DneHJP..xKna';
+const API_URL = `https://jsonbin.io{BIN_ID}`;
+
+let p={pt:0,lv:1,cp:0,cn:20,nick:'',uid:''};
 try{
   const v=JSON.parse(localStorage.getItem('pc_ucl1'));
   if(v)p=Object.assign(p,v);
 }catch(e){}
 
-// Підтягуємо ім'я з Telegram, якщо нік ще не заданий
 try{
   const tgUser=window.Telegram?.WebApp?.initDataUnsafe?.user;
-  if(tgUser && !p.nick){
-    p.nick=tgUser.first_name+(tgUser.username?` (@${tgUser.username})`:'');
-    localStorage.setItem('pc_ucl1',JSON.stringify(p));
+  if(tgUser){
+    p.uid='tg_'+tgUser.id;
+    if(!p.nick){
+      p.nick=tgUser.first_name+(tgUser.username?` (@${tgUser.username})`:'');
+    }
   }
 }catch(e){}
 
-if(!p.nick) p.nick='Гравець #'+Math.floor(1000+Math.random()*8999);
+if(!p.uid) p.uid='u_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+if(!p.nick) p.nick='Гравець #'+p.uid.slice(-4).toUpperCase();
+try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}
+
 document.getElementById('nickInp').value=p.nick;
-
-// Базові суперники рейтингу
-const BASE_PLAYERS=[
-  {id:'b1',n:'Максим_UA 🇺🇦',cn:1850,lv:14,cp:4},
-  {id:'b2',n:'Andriy_Goal ⚽',cn:1420,lv:12,cp:3},
-  {id:'b3',n:'Danylo_Pro 🔥',cn:1150,lv:10,cp:2},
-  {id:'b4',n:'Taras_10 👑',cn:890,lv:8,cp:2},
-  {id:'b5',n:'Artem_Kyiv',cn:640,lv:7,cp:1},
-  {id:'b6',n:'Vlad_Striker',cn:470,lv:6,cp:1},
-  {id:'b7',n:'Oleksandr_7',cn:310,lv:5,cp:0},
-  {id:'b8',n:'Nazar_GK 🧤',cn:190,lv:4,cp:0},
-  {id:'b9',n:'Bohdan_22',cn:110,lv:3,cp:0},
-  {id:'b10',n:'Denys_Junior',cn:45,lv:2,cp:0}
-];
-
-function getFriends(){
-  try{return JSON.parse(localStorage.getItem('pc_friends')||'[]');}catch(e){return [];}
-}
-function saveFriends(arr){
-  try{localStorage.setItem('pc_friends',JSON.stringify(arr));}catch(e){}
-}
 
 function showToast(txt){
   const t=document.getElementById('toast');
   t.textContent=txt;t.style.display='block';
-  setTimeout(()=>{t.style.display='none';},2000);
+  setTimeout(()=>{t.style.display='none';},2200);
 }
 
 function saveNick(){
@@ -112,64 +99,41 @@ function saveNick(){
   if(!val)return;
   p.nick=val;
   try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}
-  renderBoard();
-  showToast('✅ Нікнейм оновлено!');
+  syncLeaderboard(true);
 }
 
-function copyMyCode(){
-  const payload=btoa(unescape(encodeURIComponent(JSON.stringify({
-    id:'f_'+p.nick.toLowerCase().replace(/\s+/g,'_'),
+function renderList(players){
+  const me={
+    uid:p.uid,
     n:p.nick,
     cn:Number(p.cn)||0,
     lv:Number(p.lv)||1,
     cp:Number(p.cp)||0
-  }))));
-  navigator.clipboard?.writeText(payload);
-  showToast('📤 Твій код скопійовано! Надішли другу');
-}
-
-function addFriend(){
-  const raw=document.getElementById('friendCode').value.trim();
-  if(!raw)return;
-  try{
-    const data=JSON.parse(decodeURIComponent(escape(atob(raw))));
-    if(!data.n || typeof data.cn!=='number')throw new Error();
-    const friends=getFriends().filter(f=>f.id!==data.id);
-    friends.push({id:data.id||('f_'+Date.now()),n:data.n+' 🤝',cn:data.cn,lv:data.lv||1,cp:data.cp||0});
-    saveFriends(friends);
-    document.getElementById('friendCode').value='';
-    renderBoard();
-    showToast(`🎉 Додано: ${data.n}`);
-  }catch(e){
-    showToast('❌ Невірний код гравця');
-  }
-}
-
-function renderBoard(){
-  const me={
-    id:'me',
-    n:p.nick+' (Ти)',
-    cn:Number(p.cn)||0,
-    lv:Number(p.lv)||1,
-    cp:Number(p.cp)||0,
-    isMe:true
   };
 
-  const all=[me,...getFriends(),...BASE_PLAYERS];
-  // Сортуємо за монетами (від більшого до меншого), при рівності — за кубками ЛЧ
+  const map=new Map();
+  if(Array.isArray(players)){
+    players.forEach(u=>{
+      if(u && u.uid && u.uid!=='init' && u.n && typeof u.cn==='number') map.set(u.uid,u);
+    });
+  }
+  map.set(me.uid,me);
+
+  const all=Array.from(map.values());
   all.sort((a,b)=>(b.cn-a.cn)||(b.cp-a.cp)||(b.lv-a.lv));
 
-  const myIndex=all.findIndex(x=>x.isMe);
-  document.getElementById('myPos').textContent=`Твоє місце: #${myIndex+1} з ${all.length}`;
+  const myIdx=all.findIndex(x=>x.uid===me.uid);
+  document.getElementById('myPos').textContent=`Твоє місце: #${myIdx+1} з ${all.length}`;
 
   const medals=['🥇','🥈','🥉'];
   const html=all.map((u,idx)=>{
+    const isMe=(u.uid===me.uid);
     const rankStr=idx<3?medals.at(idx):`#${idx+1}`;
-    const cls=`item ${u.isMe?'me':''} ${idx===0?'top1':(idx===1?'top2':(idx===2?'top3':''))}`;
+    const cls=`item ${isMe?'me':''} ${idx===0?'top1':(idx===1?'top2':(idx===2?'top3':''))}`;
     return `<div class="${cls}">
       <div class="rank">${rankStr}</div>
       <div class="info">
-        <div class="name">${u.n}</div>
+        <div class="name">${u.n}${isMe?' (Ти)':''}</div>
         <div class="sub">Рівень ${u.lv} • 🏆 Кубків ЛЧ: ${u.cp}</div>
       </div>
       <div class="coins">💰 ${u.cn}</div>
@@ -177,9 +141,39 @@ function renderBoard(){
   }).join('');
 
   document.getElementById('board').innerHTML=html;
+  return all.slice(0,100);
 }
 
-renderBoard();
+async function syncLeaderboard(notify){
+  let remote=[];
+  try{
+    const res=await fetch(API_URL+'/latest',{
+      headers:{'X-Master-Key':API_KEY}
+    });
+    if(res.ok){
+      const json=await res.json();
+      if(Array.isArray(json.record)) remote=json.record;
+    }
+  }catch(e){}
+
+  const updatedTop=renderList(remote);
+
+  try{
+    const putRes=await fetch(API_URL,{
+      method:'PUT',
+      headers:{
+        'Content-Type':'application/json',
+        'X-Master-Key':API_KEY
+      },
+      body:JSON.stringify(updatedTop)
+    });
+    if(putRes.ok && notify) showToast('✅ Онлайн-рейтинг оновлено!');
+  }catch(e){
+    if(notify) showToast('⚠️ Помилка з\'єднання з сервером');
+  }
+}
+
+syncLeaderboard(false);
 </script>
 </body>
 </html>
