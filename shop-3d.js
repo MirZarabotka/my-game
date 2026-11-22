@@ -172,7 +172,7 @@ export function initShop3D(state) {
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
             ctx.fillRect(203, 0, 22, 512);
-            ctx.fillRect(348, 0, 164, 512);
+            ctx.fillRect(378, 0, 134, 512);
         }
 
         const tex = new THREE.CanvasTexture(canvas);
