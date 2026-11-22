@@ -53,6 +53,7 @@ export function initShop3D(state) {
         #toast.show { transform: translateX(-50%) translateY(0); }
     `;
     document.head.appendChild(fixStyle);
+
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
 
@@ -104,13 +105,39 @@ export function initShop3D(state) {
         }
     }
 
-    const gloveMat = new THREE.MeshStandardMaterial({ roughness: 0.5 });
-    const leftGlove = new THREE.Mesh(new THREE.BoxGeometry(10, 15, 7), gloveMat);
-    const rightGlove = new THREE.Mesh(new THREE.BoxGeometry(10, 15, 7), gloveMat);
-    leftGlove.visible = false;
-    rightGlove.visible = false;
+    const gloveBackMat = new THREE.MeshStandardMaterial({ roughness: 0.45 });
+    const glovePalmMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
 
-    // Збільшений на 40% номер (34x34)
+    function buildKeeperGlove(isLeft) {
+        const group = new THREE.Group();
+
+        const body = new THREE.Mesh(new THREE.CapsuleGeometry(4.2, 6.5, 8, 16), gloveBackMat);
+        body.scale.set(1.05, 1.0, 0.58);
+        body.position.set(0, 7.5, 0);
+        group.add(body);
+
+        const palm = new THREE.Mesh(new THREE.CapsuleGeometry(3.8, 6.0, 8, 16), glovePalmMat);
+        palm.scale.set(1.0, 0.98, 0.35);
+        palm.position.set(isLeft ? -1.4 : 1.4, 7.5, 0.8);
+        group.add(palm);
+
+        const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(1.5, 3.2, 6, 12), gloveBackMat);
+        thumb.position.set(isLeft ? -1.2 : 1.2, 5.2, 3.8);
+        thumb.rotation.x = 0.55;
+        group.add(thumb);
+
+        const wrist = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 3.8, 3.2, 16), glovePalmMat);
+        wrist.scale.set(1.05, 1.0, 0.75);
+        wrist.position.set(0, 1.2, 0);
+        group.add(wrist);
+
+        group.visible = false;
+        return group;
+    }
+
+    const leftGlove = buildKeeperGlove(true);
+    const rightGlove = buildKeeperGlove(false);
+
     const backNumberMat = new THREE.MeshBasicMaterial({
         transparent: true,
         side: THREE.DoubleSide,
@@ -121,7 +148,6 @@ export function initShop3D(state) {
 
     let playerModel = null;
     let mixer = null;
-
     function updateBackNumber() {
         const canvas = document.createElement('canvas');
         canvas.width = 256;
@@ -210,7 +236,8 @@ export function initShop3D(state) {
 
         updateBackNumber();
 
-        gloveMat.color.set(gloveItem.c1);
+        gloveBackMat.color.set(gloveItem.c1);
+        glovePalmMat.color.set(gloveItem.c2);
         leftGlove.visible = (state.activeTab === 'gloves');
         rightGlove.visible = (state.activeTab === 'gloves');
 
@@ -276,7 +303,6 @@ export function initShop3D(state) {
         if (rightHand) rightHand.add(rightGlove);
 
         if (spineBone) {
-            // Опускаємо трохи нижче (y = 1.5) і притискаємо до спини (z = -11.3)
             backNumberMesh.position.set(0, 1.5, -11.3);
             backNumberMesh.rotation.set(0, Math.PI, 0);
             spineBone.add(backNumberMesh);
