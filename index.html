@@ -36,7 +36,6 @@
             filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
         }
 
-        /* Кнопки дій внизу */
         .menu-actions {
             display: flex;
             justify-content: center;
@@ -129,7 +128,7 @@
 
         <div class="menu-actions">
             <a href="shop.html" class="btn btn-shop">👕 ПРИМІРОЧНА</a>
-            <button class="btn btn-play" onclick="startGame()">ГРАТИ ⚽</button>
+            <button class="btn btn-play" id="start-btn">ГРАТИ ⚽</button>
         </div>
     </div>
 
@@ -173,7 +172,6 @@
         rimLight.position.set(-3, 4, -4);
         scene.add(rimLight);
 
-        // П'єдестал-газон
         const turf = new THREE.Mesh(
             new THREE.CylinderGeometry(1.15, 1.25, 0.12, 48),
             new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.85 })
@@ -207,12 +205,11 @@
                 const savedBoots = localStorage.getItem('bootsColor');
 
                 playerModel.traverse((child) => {
-                    if (child.isMesh) {
+                    if (child.isMesh && child.material) {
                         child.castShadow = true;
                         child.receiveShadow = true;
                         const name = child.name.toLowerCase();
 
-                        // Застосовуємо збережений у примірочній одяг
                         if (savedBoots && name.includes('shoe')) {
                             child.material.color.set(savedBoots);
                         } else if (savedKit && !name.includes('shoe') && !name.includes('hair') && !name.includes('eye')) {
@@ -223,9 +220,10 @@
 
                 scene.add(playerModel);
 
-                if (gltf.animations && gltf.animations.length > 0) {
+                const firstAnim = gltf.animations.at(0);
+                if (firstAnim) {
                     mixer = new THREE.AnimationMixer(playerModel);
-                    mixer.clipAction(gltf.animations[0]).play();
+                    mixer.clipAction(firstAnim).play();
                 }
 
                 const loaderScreen = document.getElementById('loader-screen');
@@ -237,12 +235,16 @@
                     const percent = Math.round((xhr.loaded / xhr.total) * 100);
                     document.getElementById('loader-text').innerText = `Завантаження гравця... ${percent}%`;
                 }
+            },
+            (error) => {
+                document.getElementById('loader-text').innerText = 'Помилка завантаження player.glb!';
+                console.error(error);
             }
         );
 
-        window.startGame = () => {
+        document.getElementById('start-btn').addEventListener('click', () => {
             alert('Перехід у матч! Далі створимо сцену зі стадіоном і ударом пенальті ⚽');
-        };
+        });
 
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
