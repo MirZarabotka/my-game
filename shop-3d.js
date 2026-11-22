@@ -140,15 +140,13 @@ export function initShop3D(state) {
             ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
-            // Точні зони правого (0..42) та лівого (165..220) рукавів
-            ctx.fillRect(0, 0, 42, 512);
-            ctx.fillRect(165, 0, 55, 512);
-            ctx.fillRect(465, 0, 47, 512);
+            ctx.fillRect(0, 0, 52, 512);
+            ctx.fillRect(188, 0, 50, 512);
         }
 
-        // Номер рівно по центру спини (x = 278, y = 215)
+        // Номер рівно по центру спини
         ctx.fillStyle = state.numColor;
-        ctx.strokeStyle = '#000000';
+        ctx.strokeStyle = state.numColor === '#000000' ? '#ffffff' : '#000000';
         ctx.lineWidth = 8;
         ctx.font = '900 92px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
