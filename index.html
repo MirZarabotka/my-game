@@ -237,11 +237,11 @@
             } else if (jersey.pattern === 'hoops') {
                 for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
             } else if (jersey.pattern === 'half') {
-                ctx.fillRect(110, 0, 130, 512);
-                ctx.fillRect(375, 0, 137, 512);
+                ctx.fillRect(105, 0, 60, 512);
+                ctx.fillRect(340, 0, 85, 512);
             } else if (jersey.pattern === 'centerBand') {
-                ctx.fillRect(90, 0, 65, 512);
-                ctx.fillRect(345, 0, 65, 512);
+                ctx.fillRect(85, 0, 45, 512);
+                ctx.fillRect(318, 0, 45, 512);
             } else if (jersey.pattern === 'chestBand') {
                 ctx.fillRect(0, 160, 512, 130);
             } else if (jersey.pattern === 'sash') {
@@ -249,19 +249,18 @@
                 ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
                 ctx.closePath(); ctx.fill();
             } else if (jersey.pattern === 'sleeves') {
-                ctx.fillRect(0, 0, 42, 512);
-                ctx.fillRect(235, 0, 45, 512);
-                ctx.fillRect(470, 0, 42, 512);
+                ctx.fillRect(0, 0, 52, 512);
+                ctx.fillRect(425, 0, 60, 512);
             }
 
             ctx.fillStyle = numCol;
-            ctx.strokeStyle = '#000000';
+            ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
             ctx.lineWidth = 8;
             ctx.font = '900 92px "Segoe UI", sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.strokeText(num, 375, 215);
-            ctx.fillText(num, 375, 215);
+            ctx.strokeText(num, 340, 215);
+            ctx.fillText(num, 340, 215);
 
             const tex = new THREE.CanvasTexture(canvas);
             tex.flipY = false;
@@ -269,7 +268,6 @@
             tex.needsUpdate = true;
             return tex;
         }
-
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
