@@ -130,7 +130,6 @@
     </style>
 </head>
 <body>
-
     <div id="loader-screen">
         <div class="spinner"></div>
         <div id="loader-text">Завантаження гравця...</div>
@@ -205,6 +204,14 @@
         turf.receiveShadow = true;
         scene.add(turf);
 
+        const ballMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(0.14, 24, 24),
+            new THREE.MeshStandardMaterial({ roughness: 0.4 })
+        );
+        ballMesh.position.set(0.38, 0.14, 0.26);
+        ballMesh.castShadow = true;
+        scene.add(ballMesh);
+
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.enablePan = false;
@@ -221,8 +228,183 @@
                 for (const child of [...obj.children]) walkModel(child, callback);
             }
         }
+        const leftGloveHolder = new THREE.Group();
+        const rightGloveHolder = new THREE.Group();
+        let leftHandBone = null;
+        let rightHandBone = null;
+        let leftForeArmBone = null;
+        let rightForeArmBone = null;
+        let glovesLoaded = false;
+        const gloveMaterials = [];
 
-        function createJerseyTexture(jersey, num, numCol) {
+        function makeBrightDetailTexture(sourceTex) {
+            if (!sourceTex || !sourceTex.image) return null;
+            try {
+                const img = sourceTex.image;
+                const w = img.width || 512;
+                const h = img.height || 512;
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+
+                const imgData = ctx.getImageData(0, 0, w, h);
+                const data = imgData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    const lum = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
+                    const boosted = Math.min(255, Math.round((0.55 + lum * 0.45) * 255));
+                    data[i] = boosted;
+                    data[i + 1] = boosted;
+                    data[i + 2] = boosted;
+                }
+                ctx.putImageData(imgData, 0, 0);
+
+                const cleanTex = new THREE.CanvasTexture(canvas);
+                cleanTex.flipY = sourceTex.flipY;
+                cleanTex.colorSpace = THREE.SRGBColorSpace;
+                cleanTex.needsUpdate = true;
+                return cleanTex;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function extractSingleGlove(gloveScene, pickLeft) {
+            gloveScene.updateMatrixWorld(true);
+            const fullBox = new THREE.Box3().setFromObject(gloveScene);
+            const midX = (fullBox.min.x + fullBox.max.x) * 0.5;
+            const isSingle = (fullBox.max.x - fullBox.min.x) < (fullBox.max.y - fullBox.min.y) * 1.1;
+
+            const meshGroup = new THREE.Group();
+
+            gloveScene.traverse((node) => {
+                if (!node.isMesh || !node.geometry) return;
+                const geo = node.geometry.clone();
+                geo.applyMatrix4(node.matrixWorld);
+
+                if (!isSingle && geo.index) {
+                    const pos = geo.attributes.position;
+                    const idx = geo.index.array;
+                    const filtered = [];
+                    for (let i = 0; i < idx.length; i += 3) {
+                        const cx = (pos.getX(idx[i]) + pos.getX(idx[i + 1]) + pos.getX(idx[i + 2])) / 3;
+                        if (pickLeft ? cx < midX : cx >= midX) {
+                            filtered.push(idx[i], idx[i + 1], idx[i + 2]);
+                        }
+                    }
+                    if (filtered.length === 0) return;
+                    geo.setIndex(filtered);
+                }
+
+                geo.computeBoundingBox();
+                const mats = Array.isArray(node.material) ? node.material : [node.material];
+                const clonedMats = mats.map((m) => {
+                    const detailMap = makeBrightDetailTexture(m.map);
+                    const c = new THREE.MeshStandardMaterial({
+                        map: detailMap,
+                        normalMap: m.normalMap || null,
+                        roughness: 0.55,
+                        metalness: 0.05,
+                        side: THREE.DoubleSide
+                    });
+                    gloveMaterials.push(c);
+                    return c;
+                });
+
+                const mesh = new THREE.Mesh(geo, clonedMats.length === 1 ? clonedMats.at(0) : clonedMats);
+                mesh.castShadow = true;
+                mesh.frustumCulled = false;
+                meshGroup.add(mesh);
+            });
+
+            const box = new THREE.Box3().setFromObject(meshGroup);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+
+            const cuffThresholdY = box.min.y + size.y * 0.15;
+            let minCuffX = Infinity, maxCuffX = -Infinity;
+            let minCuffZ = Infinity, maxCuffZ = -Infinity;
+            let foundCuff = false;
+
+            meshGroup.traverse((m) => {
+                if (!m.isMesh || !m.geometry) return;
+                const pos = m.geometry.attributes.position;
+                const idx = m.geometry.index;
+                if (idx) {
+                    for (let i = 0; i < idx.count; i++) {
+                        const vi = idx.getX(i);
+                        const y = pos.getY(vi);
+                        if (y <= cuffThresholdY) {
+                            const x = pos.getX(vi);
+                            const z = pos.getZ(vi);
+                            if (x < minCuffX) minCuffX = x;
+                            if (x > maxCuffX) maxCuffX = x;
+                            if (z < minCuffZ) minCuffZ = z;
+                            if (z > maxCuffZ) maxCuffZ = z;
+                            foundCuff = true;
+                        }
+                    }
+                }
+            });
+
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            const pivotX = foundCuff ? (minCuffX + maxCuffX) * 0.5 : center.x;
+            const pivotZ = foundCuff ? (minCuffZ + maxCuffZ) * 0.5 : center.z;
+
+            const maxDim = Math.max(size.x, size.y, size.z) || 1;
+            const norm = 1.0 / maxDim;
+
+            meshGroup.scale.setScalar(norm);
+            meshGroup.position.set(-pivotX * norm, -box.min.y * norm, -pivotZ * norm);
+
+            const unit = new THREE.Group();
+            unit.add(meshGroup);
+            unit.rotation.y = pickLeft ? Math.PI : 0;
+            return unit;
+        }
+
+        function attachToSleeveEnd(holder, foreArmBone, handBone) {
+            const armBone = foreArmBone || (handBone && handBone.parent);
+            if (!armBone) return;
+
+            const wristPos = handBone ? handBone.position.clone() : new THREE.Vector3(0, 24, 0);
+            const foreLen = wristPos.length() || 24;
+            const dir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
+
+            const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+            holder.quaternion.copy(q);
+
+            const gloveSize = foreLen * 2.2;
+            holder.scale.setScalar(gloveSize);
+            holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.25);
+            armBone.add(holder);
+        }
+
+        function mountGloveModel(gloveScene, gloveColorHex) {
+            gloveMaterials.length = 0;
+            const rightUnit = extractSingleGlove(gloveScene, false);
+            const leftUnit = extractSingleGlove(gloveScene, true);
+
+            rightGloveHolder.clear();
+            leftGloveHolder.clear();
+            rightGloveHolder.add(rightUnit);
+            leftGloveHolder.add(leftUnit);
+
+            attachToSleeveEnd(rightGloveHolder, rightForeArmBone, rightHandBone);
+            attachToSleeveEnd(leftGloveHolder, leftForeArmBone, leftHandBone);
+
+            const cleanColor = new THREE.Color(gloveColorHex);
+            gloveMaterials.forEach((m) => {
+                m.color.copy(cleanColor);
+                m.needsUpdate = true;
+            });
+
+            glovesLoaded = true;
+        }
+
+        function createJerseyTexture(jersey) {
             const canvas = document.createElement('canvas');
             canvas.width = 512;
             canvas.height = 512;
@@ -238,10 +420,10 @@
                 for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
             } else if (jersey.pattern === 'half') {
                 ctx.fillRect(105, 0, 60, 512);
-                ctx.fillRect(340, 0, 85, 512);
+                ctx.fillRect(265, 0, 85, 512);
             } else if (jersey.pattern === 'centerBand') {
                 ctx.fillRect(85, 0, 45, 512);
-                ctx.fillRect(318, 0, 45, 512);
+                ctx.fillRect(245, 0, 45, 512);
             } else if (jersey.pattern === 'chestBand') {
                 ctx.fillRect(0, 160, 512, 130);
             } else if (jersey.pattern === 'sash') {
@@ -249,18 +431,9 @@
                 ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
                 ctx.closePath(); ctx.fill();
             } else if (jersey.pattern === 'sleeves') {
-                ctx.fillRect(0, 0, 52, 512);
-                ctx.fillRect(425, 0, 60, 512);
+                ctx.fillRect(203, 0, 22, 512);
+                ctx.fillRect(398, 0, 114, 512);
             }
-
-            ctx.fillStyle = numCol;
-            ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
-            ctx.lineWidth = 8;
-            ctx.font = '900 92px "Segoe UI", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.strokeText(num, 340, 215);
-            ctx.fillText(num, 340, 215);
 
             const tex = new THREE.CanvasTexture(canvas);
             tex.flipY = false;
@@ -268,6 +441,47 @@
             tex.needsUpdate = true;
             return tex;
         }
+        function createBackNumberTexture(num, numCol) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 256, 256);
+
+            ctx.fillStyle = numCol;
+            ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
+            ctx.lineWidth = 10;
+            ctx.font = '900 165px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeText(num, 128, 128);
+            ctx.fillText(num, 128, 128);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.needsUpdate = true;
+            return tex;
+        }
+
+        function createBallTexture(c1, c2) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = c1;
+            ctx.fillRect(0, 0, 256, 128);
+            ctx.fillStyle = c2;
+            for (let x = 16; x < 256; x += 48) {
+                for (let y = 20; y < 128; y += 44) {
+                    ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.needsUpdate = true;
+            return tex;
+        }
+
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
@@ -282,16 +496,41 @@
             const jId = localStorage.getItem('eq_jerseys') || 'j1';
             const sId = localStorage.getItem('eq_shorts') || 's1';
             const bId = localStorage.getItem('eq_boots') || 'b1';
+            const gId = localStorage.getItem('eq_gloves') || 'g1';
+            const ballId = localStorage.getItem('eq_balls') || 'ball1';
             const num = localStorage.getItem('eq_number') || '10';
             const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
 
             const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
             const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
             const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
+            const gloveItem = CATALOG.gloves.find(x => x.id === gId) || CATALOG.gloves.at(0);
+            const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
 
-            const jerseyTex = createJerseyTexture(jersey, num, numCol);
+            ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
+            ballMesh.material.needsUpdate = true;
+
+            const jerseyTex = createJerseyTexture(jersey);
+            let spineBone = null;
 
             walkModel(playerModel, (child) => {
+                if (child.isBone && child.name) {
+                    const n = child.name.toLowerCase();
+                    if (n.includes('forearm') && n.includes('left')) leftForeArmBone = child;
+                    if (n.includes('forearm') && n.includes('right')) rightForeArmBone = child;
+
+                    if (n.includes('hand') && n.includes('left') && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
+                        leftHandBone = child;
+                    }
+                    if (n.includes('hand') && n.includes('right') && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
+                        rightHandBone = child;
+                    }
+
+                    if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) {
+                        spineBone = child;
+                    }
+                }
+
                 if (!child.isMesh || !child.material) return;
                 child.castShadow = true;
                 child.receiveShadow = true;
@@ -320,7 +559,41 @@
                 }
             });
 
+            const backNumberMat = new THREE.MeshBasicMaterial({
+                map: createBackNumberTexture(num, numCol),
+                transparent: true,
+                side: THREE.DoubleSide,
+                polygonOffset: true,
+                polygonOffsetFactor: -4
+            });
+            const backNumberMesh = new THREE.Mesh(new THREE.PlaneGeometry(34, 34), backNumberMat);
+
+            if (spineBone) {
+                backNumberMesh.position.set(0, 1.5, -11.3);
+                backNumberMesh.rotation.set(0, Math.PI, 0);
+                spineBone.add(backNumberMesh);
+            } else {
+                backNumberMesh.scale.set(0.01, 0.01, 0.01);
+                backNumberMesh.position.set(0, 1.21, -0.113);
+                backNumberMesh.rotation.y = Math.PI;
+                playerModel.add(backNumberMesh);
+            }
+
             scene.add(playerModel);
+
+            loader.load(
+                './glove.glb?v=3',
+                (gloveGltf) => {
+                    try {
+                        const gScene = gloveGltf.scene || (gloveGltf.scenes && gloveGltf.scenes.at(0));
+                        if (gScene) mountGloveModel(gScene, gloveItem.c1);
+                    } catch (e) {
+                        console.error('Помилка рукавиць:', e);
+                    }
+                },
+                undefined,
+                (err) => console.error('Помилка завантаження glove.glb:', err)
+            );
 
             const firstAnim = gltf.animations && gltf.animations.at(0);
             if (firstAnim) {
@@ -334,7 +607,7 @@
         });
 
         document.getElementById('start-btn').addEventListener('click', () => {
-            alert('Екіпірування та монети збережено! Далі створюємо сам матч пенальті ⚽');
+            window.location.href = 'game.html';
         });
 
         window.addEventListener('resize', () => {
@@ -343,14 +616,22 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        const clock = new THREE.Clock();
-        function animate() {
+        let lastTime = performance.now();
+        function animate(now) {
             requestAnimationFrame(animate);
-            if (mixer) mixer.update(clock.getDelta());
+            const dt = (now - lastTime) * 0.001;
+            lastTime = now;
+
+            if (mixer) mixer.update(dt);
+            if (glovesLoaded) {
+                if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
+                if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
+            }
+            ballMesh.rotation.y += 0.01;
             controls.update();
             renderer.render(scene, camera);
         }
-        animate();
+        requestAnimationFrame(animate);
     </script>
 </body>
 </html>
