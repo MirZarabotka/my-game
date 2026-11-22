@@ -158,21 +158,51 @@ export function initShop3D(state) {
 
         const box = new THREE.Box3().setFromObject(meshGroup);
         const size = new THREE.Vector3();
-        const center = new THREE.Vector3();
         box.getSize(size);
+
+        // Знаходимо центр саме нижнього отвору манжета (нижні 15% висоти), а не всієї долоні з великим пальцем
+        const cuffThresholdY = box.min.y + size.y * 0.15;
+        let minCuffX = Infinity, maxCuffX = -Infinity;
+        let minCuffZ = Infinity, maxCuffZ = -Infinity;
+        let foundCuff = false;
+
+        meshGroup.traverse((m) => {
+            if (!m.isMesh || !m.geometry) return;
+            const pos = m.geometry.attributes.position;
+            const idx = m.geometry.index;
+            if (idx) {
+                for (let i = 0; i < idx.count; i++) {
+                    const vi = idx.getX(i);
+                    const y = pos.getY(vi);
+                    if (y <= cuffThresholdY) {
+                        const x = pos.getX(vi);
+                        const z = pos.getZ(vi);
+                        if (x < minCuffX) minCuffX = x;
+                        if (x > maxCuffX) maxCuffX = x;
+                        if (z < minCuffZ) minCuffZ = z;
+                        if (z > maxCuffZ) maxCuffZ = z;
+                        foundCuff = true;
+                    }
+                }
+            }
+        });
+
+        const center = new THREE.Vector3();
         box.getCenter(center);
+        const pivotX = foundCuff ? (minCuffX + maxCuffX) * 0.5 : center.x;
+        const pivotZ = foundCuff ? (minCuffZ + maxCuffZ) * 0.5 : center.z;
 
         const maxDim = Math.max(size.x, size.y, size.z) || 1;
         const norm = 1.0 / maxDim;
 
         meshGroup.scale.setScalar(norm);
-        meshGroup.position.set(-center.x * norm, -box.min.y * norm, -center.z * norm);
+        meshGroup.position.set(-pivotX * norm, -box.min.y * norm, -pivotZ * norm);
 
-        const rotateGroup = new THREE.Group();
-        rotateGroup.add(meshGroup);
-        rotateGroup.rotation.y = pickLeft ? Math.PI / 2 : -Math.PI / 2;
-
-        return rotateGroup;
+        const unit = new THREE.Group();
+        unit.add(meshGroup);
+        // У glove.glb долоні вже дивляться одна на одну (до тіла), тому rotation.y = 0
+        unit.rotation.y = 0;
+        return unit;
     }
 
     function mountGloveModel(gloveScene) {
@@ -201,9 +231,9 @@ export function initShop3D(state) {
         const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
         holder.quaternion.copy(q);
 
-        const gloveSize = foreLen * 0.92;
+        const gloveSize = foreLen * 0.88;
         holder.scale.setScalar(gloveSize);
-        holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.28);
+        holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.22);
         armBone.add(holder);
     }
 
