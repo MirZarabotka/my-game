@@ -199,7 +199,7 @@ export function initShop3D(state) {
 
         const unit = new THREE.Group();
         unit.add(meshGroup);
-        unit.rotation.y = 0;
+        unit.rotation.y = pickLeft ? Math.PI : 0;
         return unit;
     }
 
@@ -229,7 +229,7 @@ export function initShop3D(state) {
         const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
         holder.quaternion.copy(q);
 
-        const gloveSize = foreLen * 1.22;
+        const gloveSize = foreLen * 2.44;
         holder.scale.setScalar(gloveSize);
         holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.25);
         armBone.add(holder);
