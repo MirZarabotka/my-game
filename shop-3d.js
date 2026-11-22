@@ -110,13 +110,14 @@ export function initShop3D(state) {
     leftGlove.visible = false;
     rightGlove.visible = false;
 
+    // Збільшений на 40% номер (34x34)
     const backNumberMat = new THREE.MeshBasicMaterial({
         transparent: true,
         side: THREE.DoubleSide,
         polygonOffset: true,
         polygonOffsetFactor: -4
     });
-    const backNumberMesh = new THREE.Mesh(new THREE.PlaneGeometry(24, 24), backNumberMat);
+    const backNumberMesh = new THREE.Mesh(new THREE.PlaneGeometry(34, 34), backNumberMat);
 
     let playerModel = null;
     let mixer = null;
@@ -131,7 +132,7 @@ export function initShop3D(state) {
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = state.numColor === '#000000' ? '#ffffff' : '#000000';
         ctx.lineWidth = 10;
-        ctx.font = '900 130px "Segoe UI", sans-serif';
+        ctx.font = '900 165px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.strokeText(state.number, 128, 128);
@@ -275,12 +276,13 @@ export function initShop3D(state) {
         if (rightHand) rightHand.add(rightGlove);
 
         if (spineBone) {
-            backNumberMesh.position.set(0, 6, -13.5);
+            // Опускаємо трохи нижче (y = 1.5) і притискаємо до спини (z = -11.3)
+            backNumberMesh.position.set(0, 1.5, -11.3);
             backNumberMesh.rotation.set(0, Math.PI, 0);
             spineBone.add(backNumberMesh);
         } else {
             backNumberMesh.scale.set(0.01, 0.01, 0.01);
-            backNumberMesh.position.set(0, 1.26, -0.135);
+            backNumberMesh.position.set(0, 1.21, -0.113);
             backNumberMesh.rotation.y = Math.PI;
             playerModel.add(backNumberMesh);
         }
