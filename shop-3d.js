@@ -18,13 +18,13 @@ export function initShop3D(state) {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     container.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 1.25));
+    scene.add(new THREE.AmbientLight(0xffffff, 1.3));
     const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
     dirLight.position.set(2, 5, 4);
     dirLight.castShadow = true;
     scene.add(dirLight);
 
-    const backLight = new THREE.DirectionalLight(0x93c5fd, 1.1);
+    const backLight = new THREE.DirectionalLight(0xffffff, 1.4);
     backLight.position.set(-2, 4, -4);
     scene.add(backLight);
 
@@ -65,13 +65,10 @@ export function initShop3D(state) {
         callback(obj);
         if (Array.isArray(obj.children)) {
             const list = [...obj.children];
-            for (const child of list) {
-                walkModel(child, callback);
-            }
+            for (const child of list) walkModel(child, callback);
         }
     }
 
-    let originalShirtImage = null;
     let playerModel = null;
     let mixer = null;
 
@@ -81,13 +78,9 @@ export function initShop3D(state) {
 
         ctx.fillStyle = jersey.c2;
         if (jersey.pattern === 'stripes') {
-            for (let x = 0; x < width; x += 32) {
-                ctx.fillRect(x, 0, 16, height);
-            }
+            for (let x = 0; x < width; x += 28) ctx.fillRect(x, 0, 14, height);
         } else if (jersey.pattern === 'hoops') {
-            for (let y = 0; y < height; y += 36) {
-                ctx.fillRect(0, y, width, 18);
-            }
+            for (let y = 0; y < height; y += 34) ctx.fillRect(0, y, width, 17);
         } else if (jersey.pattern === 'half') {
             ctx.fillRect(width * 0.25, 0, width * 0.25, height);
             ctx.fillRect(width * 0.75, 0, width * 0.25, height);
@@ -95,13 +88,12 @@ export function initShop3D(state) {
             ctx.fillRect(width * 0.16, 0, width * 0.18, height);
             ctx.fillRect(width * 0.66, 0, width * 0.18, height);
         } else if (jersey.pattern === 'chestBand') {
-            ctx.fillRect(0, height * 0.32, width, height * 0.28);
+            ctx.fillRect(0, height * 0.3, width, height * 0.28);
         } else if (jersey.pattern === 'sash') {
             ctx.beginPath();
             ctx.moveTo(0, 0); ctx.lineTo(width * 0.15, 0);
             ctx.lineTo(width * 0.5, height); ctx.lineTo(width * 0.35, height);
             ctx.closePath(); ctx.fill();
-            
             ctx.beginPath();
             ctx.moveTo(width * 0.5, 0); ctx.lineTo(width * 0.65, 0);
             ctx.lineTo(width, height); ctx.lineTo(width * 0.85, height);
@@ -121,26 +113,20 @@ export function initShop3D(state) {
         canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
-        // Заливаємо футболку на верхню зону UV (y: 0..310) по всій ширині (512)
-        drawJerseyPattern(ctx, jersey, 512, 310);
+        // 1. Футболка на верхню половину UV (перед + спина + рукави)
+        drawJerseyPattern(ctx, jersey, 512, 305);
 
-        // Заливаємо шорти та гетри на нижню зону UV (y: 310..512)
+        // 2. Шорти та гетри на нижню половину UV
         ctx.fillStyle = shortItem.c1;
-        ctx.fillRect(0, 310, 512, 202);
+        ctx.fillRect(0, 305, 512, 207);
         ctx.fillStyle = shortItem.c2;
         ctx.fillRect(0, 385, 512, 26);
 
-        if (originalShirtImage) {
-            ctx.globalCompositeOperation = 'multiply';
-            ctx.drawImage(originalShirtImage, 0, 0, 512, 512);
-            ctx.globalCompositeOperation = 'source-over';
-        }
-
-        // Номер на спині
+        // 3. Номер на спині
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 5;
-        ctx.font = '900 70px "Segoe UI", sans-serif';
+        ctx.lineWidth = 6;
+        ctx.font = '900 72px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.strokeText(state.number, 384, 145);
@@ -149,6 +135,7 @@ export function initShop3D(state) {
         const tex = new THREE.CanvasTexture(canvas);
         tex.flipY = false;
         tex.colorSpace = THREE.SRGBColorSpace;
+        tex.needsUpdate = true;
         return tex;
     }
 
@@ -169,6 +156,7 @@ export function initShop3D(state) {
         }
         const tex = new THREE.CanvasTexture(canvas);
         tex.colorSpace = THREE.SRGBColorSpace;
+        tex.needsUpdate = true;
         return tex;
     }
 
@@ -192,14 +180,16 @@ export function initShop3D(state) {
             if (child.isMesh && child.material) {
                 const name = (child.name || '').toLowerCase();
                 if (name.includes('shoe') || name.includes('boot')) {
-                    child.material = child.material.clone();
-                    child.material.color.set(bootItem.c1);
+                    child.material = new THREE.MeshStandardMaterial({
+                        color: bootItem.c1,
+                        roughness: 0.45
+                    });
                 } else if (!name.includes('body') && !name.includes('hair') && !name.includes('eye') && !name.includes('head')) {
-                    // Усе інше, що не є шкірою, волоссям чи очима — це форма!
-                    child.material = child.material.clone();
-                    child.material.map = kitTexture;
-                    child.material.color.set('#ffffff');
-                    child.material.needsUpdate = true;
+                    // Замінюємо матеріал форми повністю, щоб старий синьо-червоний колір зник на 100%
+                    child.material = new THREE.MeshStandardMaterial({
+                        map: kitTexture,
+                        roughness: 0.75
+                    });
                 }
             }
         });
@@ -221,10 +211,6 @@ export function initShop3D(state) {
             if (child.isMesh) {
                 child.castShadow = true;
                 child.receiveShadow = true;
-                const name = (child.name || '').toLowerCase();
-                if (!name.includes('body') && !name.includes('hair') && !name.includes('eye') && child.material && child.material.map) {
-                    originalShirtImage = child.material.map.image;
-                }
             }
             if (child.isBone && child.name) {
                 if (child.name.includes('LeftHand')) leftHandBone = child;
