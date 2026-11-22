@@ -116,16 +116,13 @@ export function initShop3D(state) {
         patternCanvas.height = size;
         const pCtx = patternCanvas.getContext('2d');
 
-        // 1. Вся верхня частина текстури (0..330) по всій ширині — симетричний візерунок футболки
         drawJerseyPattern(pCtx, jersey, size, 330);
 
-        // 2. Вся нижня частина текстури (330..512) по всій ширині — симетричні шорти
         pCtx.fillStyle = shortItem.c1;
         pCtx.fillRect(0, 330, size, 182);
         pCtx.fillStyle = shortItem.c2;
         pCtx.fillRect(0, 405, size, 24);
 
-        // Номер на спині
         pCtx.fillStyle = state.numColor;
         pCtx.strokeStyle = '#000000';
         pCtx.lineWidth = 6;
@@ -154,21 +151,24 @@ export function initShop3D(state) {
                 const g = origData.data[i + 1];
                 const b = origData.data[i + 2];
 
-                const isSkin = (
-                    r > 135 && g > 85 && b > 55 &&
-                    r > g && g > b &&
-                    (r - g) >= 12 && (r - g) <= 68 &&
-                    (g - b) >= 8 && (g - b) <= 55
-                );
                 const py = Math.floor((i / 4) / size);
-                const isShoe = (py > 410 && r < 75 && g < 75 && b < 75);
+
+                const isSkin = (
+                    r > 145 && g > 95 && b > 65 &&
+                    r > g && g > b &&
+                    (r - g) >= 10 && (r - g) <= 62 &&
+                    (g - b) >= 8 && (g - b) <= 50
+                );
+
+                const isShoe = (py > 415 && r < 70 && g < 70 && b < 70);
 
                 if (isShoe) {
                     origData.data[i] = bR;
                     origData.data[i + 1] = bG;
                     origData.data[i + 2] = bB;
                 } else if (!isSkin) {
-                    const shade = Math.min(1.25, Math.max(0.6, (r + g + b) / 360));
+                    const brightness = (r + g + b) / 3;
+                    const shade = Math.min(1.15, Math.max(0.75, 0.8 + brightness / 600));
                     origData.data[i] = Math.min(255, patData.data[i] * shade);
                     origData.data[i + 1] = Math.min(255, patData.data[i + 1] * shade);
                     origData.data[i + 2] = Math.min(255, patData.data[i + 2] * shade);
