@@ -113,16 +113,13 @@ export function initShop3D(state) {
         canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
-        // 1. Футболка на верхню половину UV (перед + спина + рукави)
         drawJerseyPattern(ctx, jersey, 512, 305);
 
-        // 2. Шорти та гетри на нижню половину UV
         ctx.fillStyle = shortItem.c1;
         ctx.fillRect(0, 305, 512, 207);
         ctx.fillStyle = shortItem.c2;
         ctx.fillRect(0, 385, 512, 26);
 
-        // 3. Номер на спині
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 6;
@@ -160,6 +157,32 @@ export function initShop3D(state) {
         return tex;
     }
 
+    function applyMaterialChange(mat, meshName, kitTexture, bootColor) {
+        if (!mat) return mat;
+        const mName = (mat.name || '').toLowerCase();
+        const combined = `${meshName} ${mName}`;
+
+        if (combined.includes('shoe') || combined.includes('boot')) {
+            const newMat = mat.clone();
+            newMat.map = null;
+            newMat.color.set(bootColor);
+            newMat.needsUpdate = true;
+            return newMat;
+        }
+        if (combined.includes('hair') || combined.includes('eye') || combined.includes('lash')) {
+            return mat;
+        }
+        // Якщо це окремий матеріал форми (наприклад, Ch38_Shirt або другий слот матеріалу)
+        if (mName.includes('shirt') || mName.includes('cloth') || meshName.includes('shirt')) {
+            const newMat = mat.clone();
+            newMat.map = kitTexture;
+            newMat.color.set('#ffffff');
+            newMat.needsUpdate = true;
+            return newMat;
+        }
+        return mat;
+    }
+
     function updateAppearance() {
         const bootItem = CATALOG.boots.find(x => x.id === state.preview.boots) || CATALOG.boots.at(0);
         const gloveItem = CATALOG.gloves.find(x => x.id === state.preview.gloves) || CATALOG.gloves.at(0);
@@ -178,18 +201,21 @@ export function initShop3D(state) {
 
         walkModel(playerModel, (child) => {
             if (child.isMesh && child.material) {
-                const name = (child.name || '').toLowerCase();
-                if (name.includes('shoe') || name.includes('boot')) {
-                    child.material = new THREE.MeshStandardMaterial({
-                        color: bootItem.c1,
-                        roughness: 0.45
+                const meshName = (child.name || '').toLowerCase();
+                if (Array.isArray(child.material)) {
+                    child.material = child.material.map((m, idx) => {
+                        // У моделях Mixamo з мультиматеріалом слот 1 (або з назвою Shirt) — це одяг
+                        if (idx === 1 || (m.name || '').toLowerCase().includes('shirt')) {
+                            const cloned = m.clone();
+                            cloned.map = kitTexture;
+                            cloned.color.set('#ffffff');
+                            cloned.needsUpdate = true;
+                            return cloned;
+                        }
+                        return applyMaterialChange(m, meshName, kitTexture, bootItem.c1);
                     });
-                } else if (!name.includes('body') && !name.includes('hair') && !name.includes('eye') && !name.includes('head')) {
-                    // Замінюємо матеріал форми повністю, щоб старий синьо-червоний колір зник на 100%
-                    child.material = new THREE.MeshStandardMaterial({
-                        map: kitTexture,
-                        roughness: 0.75
-                    });
+                } else {
+                    child.material = applyMaterialChange(child.material, meshName, kitTexture, bootItem.c1);
                 }
             }
         });
