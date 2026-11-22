@@ -61,8 +61,10 @@ function applyColors(kitHex, bootsHex) {
         if (child.isMesh && child.material) {
             const name = child.name.toLowerCase();
             if (bootsHex && name.includes('shoe')) {
+                child.material = child.material.clone();
                 child.material.color.set(bootsHex);
             } else if (kitHex && name.includes('shirt')) {
+                child.material = child.material.clone();
                 child.material.color.set(kitHex);
             }
         }
