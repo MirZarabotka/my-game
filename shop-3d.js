@@ -64,8 +64,8 @@ export function initShop3D(state) {
     let mixer = null;
 
     function createKitTexture() {
-        const jersey = CATALOG.jerseys.find(x => x.id === state.preview.jerseys) || CATALOG.jerseys[0];
-        const shortItem = CATALOG.shorts.find(x => x.id === state.preview.shorts) || CATALOG.shorts[0];
+        const jersey = CATALOG.jerseys.find(x => x.id === state.preview.jerseys) || CATALOG.jerseys.at(0);
+        const shortItem = CATALOG.shorts.find(x => x.id === state.preview.shorts) || CATALOG.shorts.at(0);
 
         const canvas = document.createElement('canvas');
         canvas.width = 512;
@@ -143,9 +143,9 @@ export function initShop3D(state) {
     }
 
     function updateAppearance() {
-        const bootItem = CATALOG.boots.find(x => x.id === state.preview.boots) || CATALOG.boots[0];
-        const gloveItem = CATALOG.gloves.find(x => x.id === state.preview.gloves) || CATALOG.gloves[0];
-        const ballItem = CATALOG.balls.find(x => x.id === state.preview.balls) || CATALOG.balls[0];
+        const bootItem = CATALOG.boots.find(x => x.id === state.preview.boots) || CATALOG.boots.at(0);
+        const gloveItem = CATALOG.gloves.find(x => x.id === state.preview.gloves) || CATALOG.gloves.at(0);
+        const ballItem = CATALOG.balls.find(x => x.id === state.preview.balls) || CATALOG.balls.at(0);
 
         ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
         ballMesh.material.needsUpdate = true;
