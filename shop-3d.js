@@ -116,11 +116,15 @@ export function initShop3D(state) {
         patternCanvas.height = size;
         const pCtx = patternCanvas.getContext('2d');
 
-        drawJerseyPattern(pCtx, jersey, size, 305);
+        drawJerseyPattern(pCtx, jersey, size, 340);
+
         pCtx.fillStyle = shortItem.c1;
-        pCtx.fillRect(0, 305, size, 207);
+        pCtx.fillRect(0, 340, 260, 172);
         pCtx.fillStyle = shortItem.c2;
-        pCtx.fillRect(0, 385, size, 26);
+        pCtx.fillRect(0, 410, 260, 24);
+
+        pCtx.fillStyle = jersey.pattern === 'sleeves' ? jersey.c2 : jersey.c1;
+        pCtx.fillRect(260, 340, 252, 172);
 
         pCtx.fillStyle = state.numColor;
         pCtx.strokeStyle = '#000000';
@@ -150,7 +154,6 @@ export function initShop3D(state) {
                 const g = origData.data[i + 1];
                 const b = origData.data[i + 2];
 
-                // Точний фільтр тільки для бежевої шкіри (червоний рукав тепер не пропускається)
                 const isSkin = (
                     r > 135 && g > 85 && b > 55 &&
                     r > g && g > b &&
