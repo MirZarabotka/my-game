@@ -116,16 +116,7 @@ export function initShop3D(state) {
     const gloveMaterials = [];
 
     function mountGloveModel(gloveScene) {
-        gloveScene.updateMatrixWorld(true);
-        const rawBox = new THREE.Box3();
-        gloveScene.traverse((n) => {
-            if (n.isMesh) {
-                n.geometry.computeBoundingBox();
-                const b = n.geometry.boundingBox.clone().applyMatrix4(n.matrixWorld);
-                rawBox.union(b);
-            }
-        });
-
+        const rawBox = new THREE.Box3().setFromObject(gloveScene);
         const size = new THREE.Vector3();
         const center = new THREE.Vector3();
         rawBox.getSize(size);
@@ -138,15 +129,18 @@ export function initShop3D(state) {
         const rModel = gloveScene.clone(true);
 
         rModel.traverse((node) => {
-            if (node.isMesh && node.material) {
-                const mats = Array.isArray(node.material) ? node.material : [node.material];
-                node.material = mats.map((m) => {
-                    const cloned = m.clone();
-                    cloned.side = THREE.DoubleSide;
-                    gloveMaterials.push(cloned);
-                    return cloned;
-                });
-                if (node.material.length === 1) node.material = node.material.at(0);
+            if (node.isMesh) {
+                node.frustumCulled = false;
+                if (node.material) {
+                    const mats = Array.isArray(node.material) ? node.material : [node.material];
+                    node.material = mats.map((m) => {
+                        const cloned = m.clone();
+                        cloned.side = THREE.DoubleSide;
+                        gloveMaterials.push(cloned);
+                        return cloned;
+                    });
+                    if (node.material.length === 1) node.material = node.material.at(0);
+                }
             }
         });
 
@@ -156,11 +150,11 @@ export function initShop3D(state) {
             -rawBox.min.y * normScale,
             -center.z * normScale
         );
-        // Внутрішньою долонею до тіла (-X), великим пальцем вперед (+Z)
+        // Внутрішня долоня до тіла, великий палець вперед
         rModel.rotation.y = Math.PI / 2;
         rightUnit.add(rModel);
 
-        // Ліва рукавиця — дзеркальна, теж внутрішньою долонею до тіла
+        // Ліва рукавиця — точне дзеркало правої, теж внутрішньою долонею до тіла
         const leftUnit = rightUnit.clone(true);
         leftUnit.scale.x = -1;
 
@@ -176,19 +170,15 @@ export function initShop3D(state) {
         const armBone = foreArmBone || (handBone && handBone.parent);
         if (!armBone) return;
 
-        armBone.updateWorldMatrix(true, false);
-        const worldScale = new THREE.Vector3();
-        armBone.getWorldScale(worldScale);
-        const invScale = 1.0 / (worldScale.x || 1);
-
         const wristPos = handBone ? handBone.position.clone() : new THREE.Vector3(0, 24, 0);
+        const foreLen = wristPos.length() || 24;
         const dir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
 
         const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
         holder.quaternion.copy(q);
-        // Реальний світовий розмір рукавиці: 0.21 м (21 см) у будь-якій ієрархії кісток
-        holder.scale.setScalar(0.21 * invScale);
-        holder.position.copy(wristPos).addScaledVector(dir, -0.02 * invScale);
+        const gloveSize = foreLen * 0.78;
+        holder.scale.setScalar(gloveSize);
+        holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.1);
         armBone.add(holder);
     }
     const backNumberMat = new THREE.MeshBasicMaterial({
@@ -339,6 +329,9 @@ export function initShop3D(state) {
     const loader = new GLTFLoader();
     loader.setDRACOLoader(dracoLoader);
 
+    // Окремий чистий завантажувач для glove.glb (без Draco)
+    const gloveLoader = new GLTFLoader();
+
     loader.load('player.glb', (gltf) => {
         playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
         if (!playerModel) return;
@@ -377,10 +370,18 @@ export function initShop3D(state) {
 
         scene.add(playerModel);
 
-        loader.load('glove.glb', (gloveGltf) => {
-            const gScene = gloveGltf.scene || (gloveGltf.scenes && gloveGltf.scenes.at(0));
-            if (gScene) mountGloveModel(gScene);
-        });
+        gloveLoader.load(
+            './glove.glb',
+            (gloveGltf) => {
+                const gScene = gloveGltf.scene || (gloveGltf.scenes && gloveGltf.scenes.at(0));
+                if (gScene) mountGloveModel(gScene);
+            },
+            undefined,
+            (err) => {
+                const hint = document.querySelector('.swipe-hint');
+                if (hint) hint.textContent = 'Помилка glove.glb: ' + (err.message || '404');
+            }
+        );
 
         updateAppearance();
 
