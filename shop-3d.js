@@ -116,14 +116,12 @@ export function initShop3D(state) {
         patternCanvas.height = size;
         const pCtx = patternCanvas.getContext('2d');
 
-        // Малюємо нову форму та шорти на допоміжному полотні
         drawJerseyPattern(pCtx, jersey, size, 305);
         pCtx.fillStyle = shortItem.c1;
         pCtx.fillRect(0, 305, size, 207);
         pCtx.fillStyle = shortItem.c2;
         pCtx.fillRect(0, 385, size, 26);
 
-        // Номер на спині
         pCtx.fillStyle = state.numColor;
         pCtx.strokeStyle = '#000000';
         pCtx.lineWidth = 6;
@@ -133,7 +131,6 @@ export function initShop3D(state) {
         pCtx.strokeText(state.number, 384, 145);
         pCtx.fillText(state.number, 384, 145);
 
-        // Якщо є оригінальна текстура моделі — зберігаємо пікселі шкіри (обличчя, руки, ноги), а форму замінюємо!
         if (baseTextureImg) {
             const outCanvas = document.createElement('canvas');
             outCanvas.width = size;
@@ -153,19 +150,22 @@ export function initShop3D(state) {
                 const g = origData.data[i + 1];
                 const b = origData.data[i + 2];
 
-                // Визначаємо пікселі природної шкіри (теплий персиковий тон)
-                const isSkin = (r > 125 && g > 75 && b > 50 && r > g + 15 && g > b + 8 && (r - b) > 35);
-                // Визначаємо пікселі взуття (дуже темні пікселі внизу текстури)
+                // Точний фільтр тільки для бежевої шкіри (червоний рукав тепер не пропускається)
+                const isSkin = (
+                    r > 135 && g > 85 && b > 55 &&
+                    r > g && g > b &&
+                    (r - g) >= 12 && (r - g) <= 68 &&
+                    (g - b) >= 8 && (g - b) <= 55
+                );
                 const py = Math.floor((i / 4) / size);
-                const isShoe = (py > 410 && r < 70 && g < 70 && b < 70);
+                const isShoe = (py > 410 && r < 75 && g < 75 && b < 75);
 
                 if (isShoe) {
                     origData.data[i] = bR;
                     origData.data[i + 1] = bG;
                     origData.data[i + 2] = bB;
                 } else if (!isSkin) {
-                    // Усе інше (футболка, рукави, спина, шорти) отримує новий дизайн зі збереженням тіней складок
-                    const shade = Math.min(1.25, Math.max(0.55, (r + g + b) / 380));
+                    const shade = Math.min(1.25, Math.max(0.6, (r + g + b) / 360));
                     origData.data[i] = Math.min(255, patData.data[i] * shade);
                     origData.data[i + 1] = Math.min(255, patData.data[i + 1] * shade);
                     origData.data[i + 2] = Math.min(255, patData.data[i + 2] * shade);
