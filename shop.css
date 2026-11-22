@@ -1,55 +1,265 @@
-<!DOCTYPE html>
-<html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Penalty Master 3D — Гардероб</title>
-    <link rel="stylesheet" href="shop.css">
-</head>
-<body>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; }
+body {
+    background: #0b1120;
+    color: #f8fafc;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
 
-    <div class="top-nav">
-        <a href="index.html" class="back-btn">← На головну</a>
-        <div class="header-stats">
-            <span>👕 Гардероб</span>
-            <span class="coins-badge" id="coins-display">💰 500</span>
-        </div>
-    </div>
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: #0f172a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 10;
+}
+.back-btn {
+    text-decoration: none;
+    background: #1e293b;
+    color: #f8fafc;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: background 0.2s;
+}
+.back-btn:hover { background: #334155; }
 
-    <div class="preview-card">
-        <div class="viewport-box">
-            <div id="canvas-container"></div>
-            <div class="swipe-hint">↔ Крути пальцем</div>
-        </div>
+.header-stats {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+.coins-badge {
+    background: rgba(234, 179, 8, 0.15);
+    color: #facc15;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(234, 179, 8, 0.4);
+    font-weight: 800;
+}
 
-        <div class="right-controls">
-            <div class="tabs-grid" id="tabs-bar">
-                <button class="tab-btn active" data-tab="jerseys">👕 Футболки</button>
-                <button class="tab-btn" data-tab="shorts">🩳 Шорти</button>
-                <button class="tab-btn" data-tab="boots">👟 Бутси</button>
-                <button class="tab-btn" data-tab="gloves">🧤 Рукавиці</button>
-                <button class="tab-btn" data-tab="balls">⚽ М'ячі</button>
-                <button class="tab-btn" data-tab="number">#️⃣ Номер</button>
-            </div>
+/* Верхній блок: зліва 3D-гравець, справа вкладки */
+.preview-card {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(180deg, #0f172a 0%, #131c31 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    height: 36vh;
+    min-height: 245px;
+    max-height: 310px;
+}
 
-            <div class="selected-bar">
-                <span class="selected-name" id="preview-title">Блауграна (Барса)</span>
-                <button class="action-btn equipped" id="preview-action-btn">Одягнено ✓</button>
-            </div>
-        </div>
-    </div>
+.viewport-box {
+    position: relative;
+    width: 46%;
+    max-width: 240px;
+    height: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 35%, #1d4ed8 0%, #0f172a 75%);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+}
+#canvas-container { width: 100%; height: 100%; cursor: grab; touch-action: none; }
+#canvas-container:active { cursor: grabbing; }
 
-    <div class="items-scroll" id="items-scroll"></div>
-    <div id="toast">Недостатньо монет! Зіграй матч, щоб заробити ⚽</div>
+.swipe-hint {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.65);
+    color: #cbd5e1;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    pointer-events: none;
+    white-space: nowrap;
+}
 
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "./libs/three.module.js"
-            }
-        }
-    </script>
+/* Права частина верхнього блоку: сітка вкладок + кнопка покупки */
+.right-controls {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+}
 
-    <script type="module" src="shop.js"></script>
-</body>
-</html>
+.tabs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 7px;
+    flex: 1;
+}
+
+.tab-btn {
+    background: #1e293b;
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 6px 8px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.15s;
+}
+.tab-btn:hover { border-color: rgba(56, 189, 248, 0.4); }
+.tab-btn.active {
+    background: #22c55e;
+    color: #052e16;
+    border-color: #4ade80;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.selected-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.selected-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.action-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 800;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+.action-btn:active { transform: scale(0.97); }
+.action-btn.equipped { background: #1e293b; color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.35); cursor: default; }
+.action-btn.equip { background: #22c55e; color: #052e16; }
+.action-btn.buy { background: linear-gradient(135deg, #facc15, #eab308); color: #422006; }
+.action-btn.no-coins { background: #334155; color: #94a3b8; cursor: not-allowed; }
+
+/* Нижня сітка товарів */
+.items-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px 24px 16px;
+}
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.card {
+    background: #131c31;
+    border: 2px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.2s;
+}
+.card:hover { transform: translateY(-2px); border-color: rgba(56, 189, 248, 0.4); }
+.card.equipped { border-color: #22c55e; background: rgba(34, 197, 94, 0.08); }
+.card.inspecting { border-color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+
+.card-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.45rem;
+    font-weight: 900;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.35);
+}
+.card-title { font-size: 0.88rem; font-weight: 800; color: #f8fafc; margin-bottom: 3px; }
+.card-desc { font-size: 0.72rem; color: #94a3b8; margin-bottom: 10px; min-height: 28px; }
+
+.card-btn {
+    width: 100%;
+    padding: 7px 10px;
+    border-radius: 10px;
+    border: none;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+.card-btn.equipped-btn { background: #1e293b; color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+.card-btn.owned-btn { background: #334155; color: #f8fafc; }
+.card-btn.buy-btn { background: #facc15; color: #422006; }
+
+.number-panel {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #131c31;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.number-panel h4 { font-size: 0.9rem; margin-bottom: 10px; color: #cbd5e1; }
+.num-colors { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.num-color-dot {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 2px solid #ffffff; cursor: pointer;
+}
+.num-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+    gap: 8px;
+}
+.num-cell {
+    background: #1e293b;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 0;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+.num-cell.selected { background: #22c55e; color: #052e16; border-color: #4ade80; }
+
+#toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #ef4444;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    transition: transform 0.3s;
+    z-index: 100;
+    white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
