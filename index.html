@@ -271,15 +271,12 @@
             patternCanvas.height = size;
             const pCtx = patternCanvas.getContext('2d');
 
-            drawJerseyPattern(pCtx, jersey, size, 340);
+            drawJerseyPattern(pCtx, jersey, size, 330);
 
             pCtx.fillStyle = shortItem.c1;
-            pCtx.fillRect(0, 340, 260, 172);
+            pCtx.fillRect(0, 330, size, 182);
             pCtx.fillStyle = shortItem.c2;
-            pCtx.fillRect(0, 410, 260, 24);
-
-            pCtx.fillStyle = jersey.pattern === 'sleeves' ? jersey.c2 : jersey.c1;
-            pCtx.fillRect(260, 340, 252, 172);
+            pCtx.fillRect(0, 405, size, 24);
 
             pCtx.fillStyle = numCol;
             pCtx.strokeStyle = '#000000';
@@ -287,8 +284,8 @@
             pCtx.font = '900 72px "Segoe UI", sans-serif';
             pCtx.textAlign = 'center';
             pCtx.textBaseline = 'middle';
-            pCtx.strokeText(num, 384, 145);
-            pCtx.fillText(num, 384, 145);
+            pCtx.strokeText(num, 256, 150);
+            pCtx.fillText(num, 256, 150);
 
             if (baseImg) {
                 const outCanvas = document.createElement('canvas');
