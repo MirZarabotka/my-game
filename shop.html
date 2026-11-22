@@ -1,517 +1,209 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Гардероб та Магазин</title>
-<script>
-const tgScript=document.createElement('script');
-tgScript.src=['https:/','/telegram.org','/js/telegram-web-app.js'].join('');
-document.head.appendChild(tgScript);
-</script>
-<style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
-.top-bar{display:flex;justify-content:space-between;align-items:center;background:#131b26;border:1px solid #243347;border-radius:12px;padding:8px 12px;margin-bottom:6px;flex-shrink:0}
-.back-btn{background:#182230;color:#fff;border:1px solid #3c4f66;padding:6px 12px;border-radius:9px;font-weight:bold;font-size:12px;text-decoration:none}
-.fit-box{display:flex;gap:10px;background:linear-gradient(180deg,#0c1526,#131f33);border:1.5px solid #2c4268;border-radius:14px;padding:8px;margin-bottom:6px;height:290px;flex-shrink:0;position:relative}
-.fit-stage{width:215px;height:100%;background:#08101d;border:1px solid #243347;border-radius:12px;position:relative;overflow:hidden;flex-shrink:0;cursor:pointer}
-#fitCanvas{width:100%;height:100%;display:block}
-.flip-btn{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(13,24,45,.92);border:1.5px solid #4b7bec;color:#70a1ff;font-size:11px;font-weight:bold;padding:5px 12px;border-radius:9px;cursor:pointer;white-space:nowrap}
-.fit-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0;padding:4px 2px}
-.fit-title{font-size:11px;color:#70a1ff;font-weight:bold;text-transform:uppercase;letter-spacing:.4px}
-.fit-name{font-size:17px;font-weight:900;color:#fff;margin:4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fit-desc{font-size:12px;color:#95a5a6;line-height:1.35}
-.fit-actions{display:flex;flex-direction:column;gap:6px;margin-top:6px}
-.confirm-btn{width:100%;padding:11px 8px;border:none;border-radius:10px;font-weight:900;font-size:12px;cursor:pointer;background:linear-gradient(135deg,#1dd1a1,#10ac84);color:#000;box-shadow:0 3px 10px rgba(29,209,161,.3)}
-.confirm-btn:disabled{background:#1e2b3c;color:#576574;box-shadow:none;cursor:default}
-.cancel-btn{width:100%;padding:7px;border:1px solid #3c4f66;border-radius:9px;background:#182230;color:#dfe4ea;font-size:11px;font-weight:bold;cursor:pointer}
-.cat-tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:6px;flex-shrink:0}
-.ctab{padding:8px 2px;background:#131b26;border:1px solid #243347;color:#8395a7;border-radius:9px;font-weight:bold;font-size:10px;cursor:pointer;text-align:center}
-.ctab.act{background:#1dd1a1;color:#000;border-color:#1dd1a1}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;overflow-y:auto;padding-bottom:14px;flex:1;align-content:start}
-.card{background:#131b26;border:1.5px solid #243347;border-radius:12px;padding:10px;text-align:center;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;transition:border-color .15s}
-.card.eq{border-color:#1dd1a1;background:rgba(29,209,161,.08)}
-.card.prv{border-color:#feca57;background:rgba(254,202,87,.12)}
-.preview-dot{width:34px;height:34px;border-radius:50%;margin:0 auto 5px;border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:17px}
-.sbtn{width:100%;padding:7px;border:none;border-radius:8px;font-weight:bold;font-size:11px;cursor:pointer;background:#feca57;color:#000;margin-top:7px}
-.sbtn.wear{background:#1dd1a1}.sbtn.prv{background:#ff9f43;color:#000}.sbtn.owned{background:#243347;color:#dfe4ea}
-.num-panel{grid-column:span 2;background:#131b26;border:1px solid #243347;border-radius:14px;padding:14px;text-align:center}
-.num-input{width:110px;padding:9px;font-size:20px;font-weight:bold;text-align:center;border-radius:10px;border:2px solid #3c4f66;background:#0b131e;color:#fff;outline:none}
-.num-input:focus{border-color:#1dd1a1}
-.col-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
-.col-btn{padding:9px 5px;border-radius:9px;border:2px solid #243347;background:#0b131e;color:#fff;font-weight:bold;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
-.col-btn.act{border-color:#1dd1a1;background:rgba(29,209,161,.12)}
-.swatch{width:13px;height:13px;border-radius:50%;border:1px solid rgba(255,255,255,.4)}
-.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#1dd1a1;color:#000;padding:7px 16px;border-radius:12px;font-weight:bold;font-size:12px;display:none;z-index:99}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Penalty Master 3D — Примірочна</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; }
+        body {
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 35%, #1e3a8a 0%, #0f172a 70%, #020617 100%);
+            color: #ffffff;
+        }
+        #canvas-container { width: 100vw; height: 100vh; display: block; cursor: grab; }
+        #canvas-container:active { cursor: grabbing; }
+
+        .ui-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .back-btn {
+            pointer-events: auto;
+            text-decoration: none;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.2s;
+        }
+        .back-btn:hover { background: #2563eb; border-color: #38bdf8; }
+
+        .camera-views {
+            pointer-events: auto;
+            display: flex;
+            gap: 6px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .cam-btn {
+            background: transparent;
+            color: #cbd5e1;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cam-btn.active, .cam-btn:hover { background: #2563eb; color: #ffffff; }
+
+        .wardrobe {
+            pointer-events: auto;
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(12px);
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.15);
+            width: 280px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+        }
+        .wardrobe h3 { font-size: 1.1rem; margin-bottom: 16px; color: #f8fafc; }
+        .section { margin-bottom: 18px; }
+        .section:last-child { margin-bottom: 0; }
+        .section label {
+            display: block;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+        .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+        .swatch {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.85);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .swatch:hover { transform: scale(1.15); box-shadow: 0 0 12px rgba(255,255,255,0.6); }
+
+        .bottom-bar { display: flex; justify-content: center; pointer-events: auto; }
+        .save-btn {
+            background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+            color: white;
+            text-decoration: none;
+            padding: 15px 44px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            border-radius: 50px;
+            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.45);
+            transition: transform 0.2s;
+        }
+        .save-btn:hover { transform: translateY(-2px); }
+
+        #loader-screen {
+            position: absolute;
+            inset: 0;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            transition: opacity 0.4s;
+        }
+        .spinner {
+            width: 44px; height: 44px;
+            border: 4px solid rgba(56, 189, 248, 0.2);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 640px) {
+            .ui-layer { padding: 16px; }
+            .wardrobe { width: 100%; padding: 14px; }
+            .save-btn { width: 100%; text-align: center; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="top-bar">
-  <a href="index.html" class="back-btn">← На головну</a>
-  <b style="color:#feca57;font-size:14px">🛍 Гардероб • 💰 <span id="cn">20</span></b>
-</div>
-
-<div class="fit-box">
-  <div class="fit-stage" onclick="flipModel()">
-    <canvas id="fitCanvas"></canvas>
-    <button class="flip-btn" id="flipBtn">🔄 Спина</button>
-  </div>
-  <div class="fit-info">
-    <div>
-      <div class="fit-title" id="fitStatus">👕 Поточний образ</div>
-      <div class="fit-name" id="fitName">Смарагдова форма</div>
-      <div class="fit-desc" id="fitDesc">Натисни на будь-який товар нижче, щоб приміряти його на гравця</div>
+    <div id="loader-screen">
+        <div class="spinner"></div>
+        <div id="loader-text">Завантаження роздягальні... 0%</div>
     </div>
-    <div class="fit-actions" id="fitActions"></div>
-  </div>
-</div>
 
-<div class="cat-tabs">
-  <button class="ctab act" id="cat_j" onclick="setCat('j')">👕 Футб.</button>
-  <button class="ctab" id="cat_p" onclick="setCat('p')">🩳 Шорти</button>
-  <button class="ctab" id="cat_s" onclick="setCat('s')">👟 Бутси</button>
-  <button class="ctab" id="cat_b" onclick="setCat('b')">⚽ М'ячі</button>
-  <button class="ctab" id="cat_k" onclick="setCat('k')">🧤 Рукав.</button>
-  <button class="ctab" id="cat_n" onclick="setCat('n')">🔢 Номер</button>
-</div>
+    <div id="canvas-container"></div>
 
-<div class="grid" id="shopGrid"></div>
-<div class="toast" id="toast">Готово!</div>
-<script>
-try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand();}catch(e){}
+    <div class="ui-layer">
+        <div class="top-bar">
+            <a href="index.html" class="back-btn">← На головну</a>
 
-const BIN_ID  = '6b01a76bffd5d16053d39022';
-const API_KEY = '$2a$10$FfzYgApncFFRJpoFkrYgyOZHPwjviuwu1N64Suvm4DneHJP..xKna';
-const API_URL = ['https:/','/api.jsonbin.io','/v3/b/',BIN_ID].join('');
+            <div class="camera-views">
+                <button class="cam-btn active" data-view="full">Весь зріст</button>
+                <button class="cam-btn" data-view="kit">Форма</button>
+                <button class="cam-btn" data-view="boots">Бутси</button>
+            </div>
+        </div>
 
-const SHOP=[
-  {id:'j1',cat:'j',n:'Смарагдова',i:'👕',p:0,col:'#1dd1a1',dark:'#0d8a68',trim:'#ffffff',d:'Базова клубна футболка'},
-  {id:'j2',cat:'j',n:'Королівська Біла',i:'👕',p:30,col:'#f5f6fa',dark:'#cfd6de',trim:'#1e272e',d:'Класична біла форма'},
-  {id:'j3',cat:'j',n:'Червоний Диявол',i:'👕',p:60,col:'#eb4d4b',dark:'#96201f',trim:'#ffffff',d:'Яскраво-червона футболка'},
-  {id:'j4',cat:'j',n:'Ультрамарин',i:'👕',p:90,col:'#3867d6',dark:'#193275',trim:'#feca57',d:'Синя лігочемпіонська форма'},
-  {id:'j5',cat:'j',n:'Чорний Карбон',i:'👕',p:130,col:'#1e272e',dark:'#0b0f14',trim:'#1dd1a1',d:'Елітна чорна футболка'},
-  {id:'j6',cat:'j',n:'Золотий Чемпіон',i:'👑',p:180,col:'#feca57',dark:'#b8860b',trim:'#1e272e',d:'Чемпіонська золота футболка'},
-  {id:'j7',cat:'j',n:'Неон Блакить',i:'👕',p:220,col:'#00d2ff',dark:'#007a99',trim:'#ffffff',d:'Крижаний неоновий стиль'},
-  {id:'j8',cat:'j',n:'Пурпурний Шторм',i:'👕',p:260,col:'#8854d0',dark:'#4b2482',trim:'#feca57',d:'Королівський фіолетовий колір'},
-  {id:'j9',cat:'j',n:'Помаранчевий Вибух',i:'👕',p:300,col:'#fa8231',dark:'#a84b0d',trim:'#1e272e',d:'Вогняна енергія атаки'},
-  {id:'j10',cat:'j',n:'М’ятний Лід',i:'👕',p:340,col:'#2bcbba',dark:'#0f7a6e',trim:'#ffffff',d:'Освіжаючий бірюзовий комплект'},
-  {id:'j11',cat:'j',n:'Бордовий Гранат',i:'👕',p:380,col:'#b33939',dark:'#6b1818',trim:'#feca57',d:'Класика великих стадіонів'},
-  {id:'j12',cat:'j',n:'Рожевий Фламінго',i:'👕',p:430,col:'#ff6b81',dark:'#a82b3e',trim:'#1e272e',d:'Яскравий сучасний стиль'},
-  {id:'j13',cat:'j',n:'Срібний Титан',i:'👕',p:490,col:'#a5b1c2',dark:'#596275',trim:'#00d2ff',d:'Металевий блиск броні'},
-  {id:'j14',cat:'j',n:'Лайм Енерджі',i:'👕',p:560,col:'#a3cb38',dark:'#5c7814',trim:'#1e272e',d:'Ультра-яскравий салатовий'},
-  {id:'j15',cat:'j',n:'Галактика ЛЧ',i:'🌌',p:650,col:'#2c2c54',dark:'#13132b',trim:'#feca57',d:'Легендарна форма фіналіста'},
-  {id:'j16',cat:'j',n:'Кобальт Шторм',i:'👕',p:740,col:'#0652DD',dark:'#032a73',trim:'#ffffff',d:'Глибокий океанський синій'},
-  {id:'j17',cat:'j',n:'Малиновий Грім',i:'👕',p:830,col:'#B53471',dark:'#63183c',trim:'#feca57',d:'Королівський малиновий відтінок'},
-  {id:'j18',cat:'j',n:'Оливковий Рейнджер',i:'👕',p:920,col:'#009432',dark:'#004d1a',trim:'#ffffff',d:'Тактичний зелений камуфляж'},
-  {id:'j19',cat:'j',n:'Платиновий Блиск',i:'💎',p:1020,col:'#d1d8e0',dark:'#778ca3',trim:'#1e272e',d:'Ексклюзивна платинова серія'},
-  {id:'j20',cat:'j',n:'Імператор Вогню',i:'🔥',p:1200,col:'#EA2027',dark:'#7a0c10',trim:'#feca57',d:'Найвищий титул бомбардира'},
-  {id:'p1',cat:'p',n:'Білі Шорти',i:'🩳',p:0,col:'#ffffff',dark:'#cfd6de',d:'Стандартні білі шорти'},
-  {id:'p2',cat:'p',n:'Чорні Шорти',i:'🩳',p:25,col:'#1e272e',dark:'#0b0f14',d:'Темні спортивні шорти'},
-  {id:'p3',cat:'p',n:'Сині Шорти',i:'🩳',p:45,col:'#273c75',dark:'#111d42',d:'Темно-сині шорти'},
-  {id:'p4',cat:'p',n:'Червоні Шорти',i:'🩳',p:70,col:'#eb4d4b',dark:'#96201f',d:'Яскраві червоні шорти'},
-  {id:'p5',cat:'p',n:'Неон Блакить',i:'🩳',p:95,col:'#00d2ff',dark:'#007a99',d:'Неонові блакитні шорти'},
-  {id:'p6',cat:'p',n:'Золоті Шорти',i:'🩳',p:125,col:'#feca57',dark:'#b8860b',d:'Чемпіонські золоті шорти'},
-  {id:'p7',cat:'p',n:'Смарагдові Шорти',i:'🩳',p:155,col:'#1dd1a1',dark:'#0d8a68',d:'Зелені клубні шорти'},
-  {id:'p8',cat:'p',n:'Фіолетові Шорти',i:'🩳',p:185,col:'#8854d0',dark:'#4b2482',d:'Стильні пурпурні шорти'},
-  {id:'p9',cat:'p',n:'Оранжеві Шорти',i:'🩳',p:215,col:'#fa8231',dark:'#a84b0d',d:'Яскраві помаранчеві шорти'},
-  {id:'p10',cat:'p',n:'Бірюзові Шорти',i:'🩳',p:245,col:'#2bcbba',dark:'#0f7a6e',d:'Легкі бірюзові шорти'},
-  {id:'p11',cat:'p',n:'Бордові Шорти',i:'🩳',p:280,col:'#b33939',dark:'#6b1818',d:'Гранатові шорти профі'},
-  {id:'p12',cat:'p',n:'Рожеві Шорти',i:'🩳',p:315,col:'#ff6b81',dark:'#a82b3e',d:'Модні рожеві шорти'},
-  {id:'p13',cat:'p',n:'Срібні Шорти',i:'🩳',p:355,col:'#a5b1c2',dark:'#596275',d:'Титанові сірі шорти'},
-  {id:'p14',cat:'p',n:'Лаймові Шорти',i:'🩳',p:400,col:'#a3cb38',dark:'#5c7814',d:'Салатові шорти швидкості'},
-  {id:'p15',cat:'p',n:'Галактик Шорти',i:'🌌',p:450,col:'#2c2c54',dark:'#13132b',d:'Елітні шорти Ліги Чемпіонів'},
-  {id:'p16',cat:'p',n:'Кобальт Шорти',i:'🩳',p:500,col:'#0652DD',dark:'#032a73',d:'Насичені сині шорти'},
-  {id:'p17',cat:'p',n:'Малинові Шорти',i:'🩳',p:555,col:'#B53471',dark:'#63183c',d:'Стильний малиновий крій'},
-  {id:'p18',cat:'p',n:'Оливкові Шорти',i:'🩳',p:610,col:'#009432',dark:'#004d1a',d:'Міцна тканина профі'},
-  {id:'p19',cat:'p',n:'Платинові Шорти',i:'💎',p:680,col:'#d1d8e0',dark:'#778ca3',d:'Сріблясто-білий преміум'},
-  {id:'p20',cat:'p',n:'Вогняні Шорти',i:'🔥',p:760,col:'#EA2027',dark:'#7a0c10',d:'Легендарні червоні шорти'},
-  {id:'s1',cat:'s',n:'Класик Бутси',i:'👟',p:0,col:'#14181d',ac:'#1dd1a1',d:'Базові чорні бутси'},
-  {id:'s2',cat:'s',n:'Білі Фантоми',i:'👟',p:35,col:'#f5f6fa',ac:'#eb4d4b',d:'Легкі білі бутси'},
-  {id:'s3',cat:'s',n:'Неон Швидкість',i:'👟',p:70,col:'#00d2ff',ac:'#ffffff',d:'Блакитні бутси прискорення'},
-  {id:'s4',cat:'s',n:'Золоті Бутси',i:'👟',p:110,col:'#feca57',ac:'#1e272e',d:'Бутси найкращого бомбардира'},
-  {id:'s5',cat:'s',n:'Червона Лють',i:'👟',p:145,col:'#eb4d4b',ac:'#feca57',d:'Вогняний контроль м’яча'},
-  {id:'s6',cat:'s',n:'Смарагд Гадюка',i:'👟',p:180,col:'#1dd1a1',ac:'#14181d',d:'Ідеальне зчеплення з газоном'},
-  {id:'s7',cat:'s',n:'Кібер Вольт',i:'👟',p:215,col:'#a3cb38',ac:'#ffffff',d:'Електричний лаймовий дизайн'},
-  {id:'s8',cat:'s',n:'Пурпурний Туман',i:'👟',p:250,col:'#8854d0',ac:'#00d2ff',d:'Магія дриблінгу'},
-  {id:'s9',cat:'s',n:'Сонячний Спалах',i:'👟',p:290,col:'#fa8231',ac:'#ffffff',d:'Потужний удар із підйому'},
-  {id:'s10',cat:'s',n:'Крижаний Шторм',i:'👟',p:330,col:'#dff9fb',ac:'#00a8ff',d:'Холоднокровна точність'},
-  {id:'s11',cat:'s',n:'Стелс Карбон',i:'👟',p:370,col:'#2f3542',ac:'#ff4757',d:'Невидима швидкість профі'},
-  {id:'s12',cat:'s',n:'Королівський Синій',i:'👟',p:410,col:'#1e3799',ac:'#feca57',d:'Бутси капітана команди'},
-  {id:'s13',cat:'s',n:'Рожевий Нітро',i:'👟',p:455,col:'#ff6b81',ac:'#ffffff',d:'Ультралегкий корпус'},
-  {id:'s14',cat:'s',n:'Срібна Куля',i:'👟',p:500,col:'#ced6e0',ac:'#1e272e',d:'Аеродинамічний профіль'},
-  {id:'s15',cat:'s',n:'Діамант ЛЧ',i:'💎',p:580,col:'#70a1ff',ac:'#feca57',d:'Елітні бутси турніру'},
-  {id:'s16',cat:'s',n:'Кобальт Спринт',i:'👟',p:640,col:'#0652DD',ac:'#00d2ff',d:'Максимальний розгін з місця'},
-  {id:'s17',cat:'s',n:'Малиновий Лазер',i:'👟',p:710,col:'#B53471',ac:'#ffffff',d:'Снайперська точність пасу'},
-  {id:'s18',cat:'s',n:'Смарагд Титан',i:'👟',p:780,col:'#009432',ac:'#feca57',d:'Броньовані шипи профі'},
-  {id:'s19',cat:'s',n:'Платина Аеро',i:'👟',p:860,col:'#d1d8e0',ac:'#ff4757',d:'Невагомий карбон'},
-  {id:'s20',cat:'s',n:'Бутси Легенди',i:'👑',p:980,col:'#EA2027',ac:'#feca57',d:'Абсолютний шедевр взуття'},
+        <div class="wardrobe">
+            <h3>👕 Примірочна</h3>
+            
+            <div class="section">
+                <label>Колір форми</label>
+                <div class="swatches" id="kit-swatches">
+                    <button class="swatch" style="background: #ffffff;" data-color="#ffffff"></button>
+                    <button class="swatch" style="background: #ef4444;" data-color="#ef4444"></button>
+                    <button class="swatch" style="background: #2563eb;" data-color="#2563eb"></button>
+                    <button class="swatch" style="background: #facc15;" data-color="#facc15"></button>
+                    <button class="swatch" style="background: #10b981;" data-color="#10b981"></button>
+                    <button class="swatch" style="background: #334155;" data-color="#334155"></button>
+                </div>
+            </div>
 
-  {id:'b1',cat:'b',n:'М’яч ЛЧ',i:'⚽',p:0,bn:0,col:'#ffffff',d:'Офіційний м’яч турніру'},
-  {id:'b2',cat:'b',n:'Вогняний М’яч',i:'🔥',p:25,bn:5,col:'#ff5e57',d:'+5 💰 за кожен гол'},
-  {id:'b3',cat:'b',n:'Блискавка',i:'⚡',p:55,bn:10,col:'#00d2ff',d:'+10 💰 за кожен гол'},
-  {id:'b4',cat:'b',n:'Смарагд Сфера',i:'🟢',p:90,bn:15,col:'#1dd1a1',d:'+15 💰 за кожен гол'},
-  {id:'b5',cat:'b',n:'Золотий М’яч',i:'🏆',p:130,bn:22,col:'#feca57',d:'+22 💰 за кожен гол'},
-  {id:'b6',cat:'b',n:'Плазма Шар',i:'🟣',p:175,bn:30,col:'#8854d0',d:'+30 💰 за кожен гол'},
-  {id:'b7',cat:'b',n:'Токсик Лайм',i:'☢️',p:220,bn:38,col:'#a3cb38',d:'+38 💰 за кожен гол'},
-  {id:'b8',cat:'b',n:'Сонячне Ядро',i:'☀️',p:270,bn:46,col:'#fa8231',d:'+46 💰 за кожен гол'},
-  {id:'b9',cat:'b',n:'Крижана Комета',i:'❄️',p:320,bn:55,col:'#70a1ff',d:'+55 💰 за кожен гол'},
-  {id:'b10',cat:'b',n:'Рубіновий Удар',i:'♦️',p:375,bn:65,col:'#eb4d4b',d:'+65 💰 за кожен гол'},
-  {id:'b11',cat:'b',n:'Рожевий Неон',i:'🌸',p:430,bn:76,col:'#ff6b81',d:'+76 💰 за кожен гол'},
-  {id:'b12',cat:'b',n:'Титановий М’яч',i:'⚙️',p:490,bn:88,col:'#a5b1c2',d:'+88 💰 за кожен гол'},
-  {id:'b13',cat:'b',n:'Чорна Діра',i:'🌑',p:555,bn:100,col:'#2f3542',d:'+100 💰 за кожен гол'},
-  {id:'b14',cat:'b',n:'Метеорит ЛЧ',i:'☄️',p:630,bn:120,col:'#ff9f43',d:'+120 💰 за кожен гол'},
-  {id:'b15',cat:'b',n:'Галактичний Кубок',i:'🌌',p:720,bn:145,col:'#5352ed',d:'+145 💰 за кожен гол'},
-  {id:'b16',cat:'b',n:'Кобальт Вихор',i:'🌀',p:810,bn:170,col:'#0652DD',d:'+170 💰 за кожен гол'},
-  {id:'b17',cat:'b',n:'Малиновий Імпульс',i:'🔮',p:900,bn:195,col:'#B53471',d:'+195 💰 за кожен гол'},
-  {id:'b18',cat:'b',n:'Смарагд Квазар',i:'✳️',p:1000,bn:225,col:'#009432',d:'+225 💰 за кожен гол'},
-  {id:'b19',cat:'b',n:'Платина Зірка',i:'💠',p:1120,bn:260,col:'#d1d8e0',d:'+260 💰 за кожен гол'},
-  {id:'b20',cat:'b',n:'Супернова ЛЧ',i:'💥',p:1300,bn:300,col:'#EA2027',d:'+300 💰 за кожен гол'},
-  {id:'k1',cat:'k',n:'Базові Рукавиці',i:'🧤',p:0,bn:0,col:'#1dd1a1',d:'Звичайні воротарські рукавиці'},
-  {id:'k2',cat:'k',n:'Кібер-хват',i:'🦾',p:45,bn:10,col:'#ff9ff3',d:'+10 💰 за кожен сейв'},
-  {id:'k3',cat:'k',n:'Золота Стіна',i:'🧤',p:85,bn:18,col:'#feca57',d:'+18 💰 за кожен сейв'},
-  {id:'k4',cat:'k',n:'Вогняний Щит',i:'🔥',p:125,bn:25,col:'#ff5e57',d:'+25 💰 за кожен сейв'},
-  {id:'k5',cat:'k',n:'Крижаний Блок',i:'❄️',p:165,bn:33,col:'#00d2ff',d:'+33 💰 за кожен сейв'},
-  {id:'k6',cat:'k',n:'Титан Сталь',i:'🛡️',p:210,bn:42,col:'#a5b1c2',d:'+42 💰 за кожен сейв'},
-  {id:'k7',cat:'k',n:'Пурпур Магніт',i:'🧲',p:255,bn:52,col:'#8854d0',d:'+52 💰 за кожен сейв'},
-  {id:'k8',cat:'k',n:'Неон Пульс',i:'⚡',p:305,bn:62,col:'#a3cb38',d:'+62 💰 за кожен сейв'},
-  {id:'k9',cat:'k',n:'Сонячний Бар’єр',i:'☀️',p:355,bn:74,col:'#fa8231',d:'+74 💰 за кожен сейв'},
-  {id:'k10',cat:'k',n:'Тінь Пантери',i:'🐾',p:410,bn:86,col:'#2f3542',d:'+86 💰 за кожен сейв'},
-  {id:'k11',cat:'k',n:'Рубіновий Хват',i:'♦️',p:470,bn:100,col:'#eb4d4b',d:'+100 💰 за кожен сейв'},
-  {id:'k12',cat:'k',n:'Білий Ангел',i:'🕊️',p:530,bn:115,col:'#f5f6fa',d:'+115 💰 за кожен сейв'},
-  {id:'k13',cat:'k',n:'Луска Дракона',i:'🐉',p:600,bn:132,col:'#20bf6b',d:'+132 💰 за кожен сейв'},
-  {id:'k14',cat:'k',n:'Діамант Сейв',i:'💎',p:680,bn:155,col:'#70a1ff',d:'+155 💰 за кожен сейв'},
-  {id:'k15',cat:'k',n:'Легенда Воріт',i:'👑',p:780,bn:180,col:'#ff9f43',d:'+180 💰 за кожен сейв'},
-  {id:'k16',cat:'k',n:'Кобальт Замок',i:'🔒',p:860,bn:205,col:'#0652DD',d:'+205 💰 за кожен сейв'},
-  {id:'k17',cat:'k',n:'Малиновий Щит',i:'🛡️',p:950,bn:235,col:'#B53471',d:'+235 💰 за кожен сейв'},
-  {id:'k18',cat:'k',n:'Смарагд Бастіон',i:'🏰',p:1050,bn:265,col:'#009432',d:'+265 💰 за кожен сейв'},
-  {id:'k19',cat:'k',n:'Платина Сейв',i:'💠',p:1170,bn:300,col:'#d1d8e0',d:'+300 💰 за кожен сейв'},
-  {id:'k20',cat:'k',n:'Абсолютний Нуль',i:'🌌',p:1350,bn:350,col:'#EA2027',d:'+350 💰 за кожен сейв'}
-];
+            <div class="section">
+                <label>Колір бутс</label>
+                <div class="swatches" id="boots-swatches">
+                    <button class="swatch" style="background: #111111;" data-color="#111111"></button>
+                    <button class="swatch" style="background: #f97316;" data-color="#f97316"></button>
+                    <button class="swatch" style="background: #ec4899;" data-color="#ec4899"></button>
+                    <button class="swatch" style="background: #06b6d4;" data-color="#06b6d4"></button>
+                    <button class="swatch" style="background: #a3e635;" data-color="#a3e635"></button>
+                </div>
+            </div>
+        </div>
 
-const NUM_COLORS=[
-  {n:'Білий',c:'#ffffff'},{n:'Чорний',c:'#11161d'},
-  {n:'Золотий',c:'#feca57'},{n:'Неон',c:'#00d2ff'},
-  {n:'Червоний',c:'#ff5e57'},{n:'Смарагд',c:'#1dd1a1'}
-];
-let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null,nick:'',uid:''};
-let curCat='j';
-let preview={};
-let viewBack=false;
+        <div class="bottom-bar">
+            <a href="index.html" class="save-btn">ЗБЕРЕГТИ ТА ВИЙТИ ✓</a>
+        </div>
+    </div>
 
-function loadWallet(){
-  try{
-    const old=JSON.parse(localStorage.getItem('pc_3d8'));
-    const v=JSON.parse(localStorage.getItem('pc_ucl1'));
-    if(v)p=Object.assign(p,v);
-    else if(old){p=Object.assign(p,old);save();}
-  }catch(e){}
-  if(!p.ej)p.ej='j1';
-  if(!p.ep)p.ep='p1';
-  if(!p.es)p.es='s1';
-  if(!p.eb)p.eb='b1';
-  if(!p.ek)p.ek='k1';
-  if(!p.num)p.num='10';
-  if(!p.numCol)p.numCol='#ffffff';
-  ['j1','p1','s1','b1','k1'].forEach(id=>{if(!p.ow.includes(id))p.ow.push(id);});
-}
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com",
+                "three/addons/": "https://unpkg.com"
+            }
+        }
+    </script>
 
-function save(){try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}}
-loadWallet();
-
-function getItem(id){return SHOP.find(x=>x.id===id)||SHOP.at(0);}
-
-function showToast(txt){
-  const t=document.getElementById('toast');
-  t.textContent=txt;t.style.display='block';
-  setTimeout(()=>{t.style.display='none';},2200);
-}
-
-async function pushScoreToCloud(){
-  if(!p||!p.uid)return;
-  try{
-    const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':API_KEY}});
-    if(!r.ok)return;
-    const j=await r.json();
-    const list=Array.isArray(j.record)?j.record:[];
-    const map=new Map();
-    list.forEach(u=>{if(u&&u.uid&&u.uid!=='init')map.set(u.uid,u);});
-    map.set(p.uid,{uid:p.uid,n:p.nick||('Гравець #'+p.uid.slice(-4)),cn:Number(p.cn)||0,lv:Number(p.lv)||1,cp:Number(p.cp)||0});
-    const top=Array.from(map.values()).sort((a,b)=>(b.cn-a.cn)||(b.cp-a.cp)||(b.lv-a.lv)).slice(0,100);
-    await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':API_KEY},body:JSON.stringify(top)});
-  }catch(e){}
-}
-
-function flipModel(){
-  viewBack=!viewBack;
-  document.getElementById('flipBtn').textContent=viewBack?'🔄 Обличчя':'🔄 Спина';
-}
-
-function setCat(c){
-  curCat=c;
-  ['j','p','s','b','k','n'].forEach(k=>{
-    document.getElementById('cat_'+k).className=(k===c)?'ctab act':'ctab';
-  });
-  if(c==='n' && !viewBack)flipModel();
-  renderShop();
-}
-
-function isEquipped(item){
-  return p['e'+item.cat]===item.id;
-}
-
-function tryItem(id){
-  const item=getItem(id);
-  preview[item.cat]=id;
-  if(p.ow.includes(id)){
-    p['e'+item.cat]=id;
-    save();
-  }
-  updateFittingPanel(item);
-  renderShop();
-}
-
-function cancelPreview(cat){
-  delete preview[cat];
-  const eqItem=getItem(p['e'+cat]);
-  updateFittingPanel(eqItem);
-  renderShop();
-}
-
-function confirmBuy(id){
-  const item=getItem(id);
-  if(p.ow.includes(id) || p.cn<item.p)return;
-  p.cn-=item.p;
-  p.ow.push(id);
-  p['e'+item.cat]=id;
-  delete preview[item.cat];
-  save();
-  pushScoreToCloud();
-  showToast(`✅ Куплено: ${item.n}!`);
-  updateFittingPanel(item);
-  renderShop();
-}
-
-function updateFittingPanel(item){
-  const st=document.getElementById('fitStatus');
-  const nm=document.getElementById('fitName');
-  const ds=document.getElementById('fitDesc');
-  const ac=document.getElementById('fitActions');
-  if(!item)return;
-
-  const owned=p.ow.includes(item.id);
-  nm.textContent=`${item.i} ${item.n}`;
-  ds.textContent=item.d;
-
-  if(owned){
-    st.textContent='✅ Одягнено на гравця';
-    st.style.color='#1dd1a1';
-    ac.innerHTML='';
-  }else{
-    st.textContent='👀 Візуальна примірка';
-    st.style.color='#feca57';
-    const canBuy=p.cn>=item.p;
-    ac.innerHTML=`
-      <button class="confirm-btn" ${canBuy?'':'disabled'} onclick="confirmBuy('${item.id}')">
-        ${canBuy?`✅ Підтвердити покупку (${item.p} 💰)`:`❌ Не вистачає (${item.p} 💰)`}
-      </button>
-      <button class="cancel-btn" onclick="cancelPreview('${item.cat}')">✖ Скасувати примірку</button>
-    `;
-  }
-}
-function updateNumber(val){
-  let clean=String(val).replace(/[^0-9]/g,'').slice(0,2);
-  if(clean==='0'||clean==='00')clean='1';
-  if(!clean)clean='10';
-  p.num=clean;
-  save();
-}
-
-function setNumColor(col){
-  p.numCol=col;
-  save();
-  renderShop();
-}
-
-function renderShop(){
-  document.getElementById('cn').textContent=p.cn;
-  const g=document.getElementById('shopGrid');
-
-  if(curCat==='n'){
-    document.getElementById('fitStatus').textContent='🔢 Номер на спині';
-    document.getElementById('fitStatus').style.color='#70a1ff';
-    document.getElementById('fitName').textContent=`Номер #${p.num}`;
-    document.getElementById('fitDesc').textContent='Введи число від 1 до 99 та обери колір друку на формі';
-    document.getElementById('fitActions').innerHTML='';
-
-    const colsHtml=NUM_COLORS.map(c=>`
-      <button class="col-btn ${p.numCol===c.c?'act':''}" onclick="setNumColor('${c.c}')">
-        <span class="swatch" style="background:${c.c}"></span>${c.n}
-      </button>
-    `).join('');
-
-    g.innerHTML=`
-      <div class="num-panel">
-        <div style="font-size:12px;color:#8395a7;margin-bottom:8px">Ігровий номер (від 1 до 99):</div>
-        <input type="text" inputmode="numeric" maxlength="2" class="num-input" value="${p.num}" oninput="updateNumber(this.value)">
-        <div style="font-size:12px;color:#8395a7;margin-top:14px">Колір номера на спині:</div>
-        <div class="col-grid">${colsHtml}</div>
-      </div>
-    `;
-    return;
-  }
-
-  const items=SHOP.filter(x=>x.cat===curCat);
-  g.innerHTML=items.map(item=>{
-    const owned=p.ow.includes(item.id);
-    const eq=isEquipped(item);
-    const isPrv=preview[item.cat]===item.id && !owned;
-    const dotBg=item.ac?`linear-gradient(135deg,${item.col} 55%,${item.ac} 55%)`:item.col;
-
-    let btnCls='sbtn';
-    let btnTxt=`👀 Приміряти • ${item.p} 💰`;
-    if(eq){btnCls+=' wear';btnTxt='✅ Одягнено';}
-    else if(owned){btnCls+=' owned';btnTxt='👕 Одягти';}
-    else if(isPrv){btnCls+=' prv';btnTxt=`⚡ Приміряється (${item.p} 💰)`;}
-
-    return `<div class="card ${eq?'eq':''} ${isPrv?'prv':''}" onclick="tryItem('${item.id}')">
-      <div>
-        <div class="preview-dot" style="background:${dotBg}">${item.i}</div>
-        <b style="font-size:12px">${item.n}</b>
-        <div style="font-size:10px;color:#8395a7;margin-top:3px">${item.d}</div>
-      </div>
-      <button class="${btnCls}">${btnTxt}</button>
-    </div>`;
-  }).join('');
-}
-
-updateFittingPanel(getItem(p.ej));
-renderShop();
-const fCanvas=document.getElementById('fitCanvas'),fCtx=fCanvas.getContext('2d');
-fCanvas.width=430;fCanvas.height=580;
-
-function fCapsule(x1,y1,x2,y2,r1,r2,col){
-  const ang=Math.atan2(y2-y1,x2-x1),perp=ang+Math.PI/2;
-  fCtx.fillStyle=col;fCtx.beginPath();
-  fCtx.arc(x1,y1,r1,perp,perp+Math.PI);
-  fCtx.arc(x2,y2,r2,perp+Math.PI,perp);
-  fCtx.closePath();fCtx.fill();
-}
-
-function drawMannequin(t){
-  const W=fCanvas.width,H=fCanvas.height;
-  fCtx.clearRect(0,0,W,H);
-
-  const bg=fCtx.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#0a1426');bg.addColorStop(0.56,'#142847');
-  bg.addColorStop(0.56,'#1e5c24');bg.addColorStop(1,'#16441b');
-  fCtx.fillStyle=bg;fCtx.fillRect(0,0,W,H);
-
-  const curJ=getItem(preview.j||p.ej);
-  const curP=getItem(preview.p||p.ep);
-  const curS=getItem(preview.s||p.es);
-  const curB=getItem(preview.b||p.eb);
-  const curK=getItem(preview.k||p.ek);
-
-  const cx=W*0.5,baseY=H*0.76,sc=3.55;
-  const skin='#e4b487',shade='#be8450',light='#f6d3af';
-  const breath=Math.sin(t*2.5)*2.0;
-
-  fCtx.fillStyle='rgba(0,0,0,0.45)';
-  fCtx.beginPath();fCtx.ellipse(cx,baseY+12,68,16,0,0,Math.PI*2);fCtx.fill();
-
-  [-1,1].forEach(side=>{
-    const xOff=side*7.8*sc;
-    const hipY=baseY-44*sc,kneeY=baseY-23*sc,ankY=baseY-3*sc;
-    fCapsule(cx+xOff,hipY,cx+xOff,kneeY,20,16.5,viewBack?(curP.dark||curP.col):curP.col);
-    fCapsule(cx+xOff,kneeY,cx+xOff,kneeY+14,13,12,skin);
-    fCapsule(cx+xOff,kneeY+12,cx+xOff,ankY,14,10,curJ.col);
-    fCtx.fillStyle=curJ.trim||'#fff';
-    fCtx.fillRect(cx+xOff-13,kneeY+12,26,5.5);
-
-    fCtx.save();fCtx.translate(cx+xOff,ankY);
-    fCtx.fillStyle='#111';fCtx.fillRect(-13,7,26,6);
-    fCtx.fillStyle=curS.col;
-    fCtx.beginPath();fCtx.roundRect(-15,-7,30,15.5,6.5);fCtx.fill();
-    fCtx.fillStyle=curS.ac||'#1dd1a1';
-    fCtx.fillRect(-8.5,-1.5,17,4.5);
-    fCtx.restore();
-  });
-
-  const ty=baseY-46*sc+breath;
-  const tG=fCtx.createLinearGradient(cx-58,ty-135,cx+58,ty);
-  tG.addColorStop(0,curJ.col);tG.addColorStop(1,curJ.dark||curJ.col);
-  fCtx.fillStyle=tG;
-  fCtx.beginPath();
-  fCtx.moveTo(cx-58,ty-120);fCtx.quadraticCurveTo(cx,ty-142,cx+58,ty-120);
-  fCtx.lineTo(cx+50,ty+4);fCtx.quadraticCurveTo(cx,ty+10,cx-50,ty+4);fCtx.closePath();fCtx.fill();
-
-  if(viewBack){
-    fCtx.fillStyle=p.numCol||'#ffffff';
-    fCtx.font='900 62px sans-serif';fCtx.textAlign='center';
-    fCtx.fillText(p.num||'10',cx,ty-40);
-  }else{
-    fCtx.fillStyle=curJ.trim||'#fff';
-    fCtx.beginPath();fCtx.ellipse(cx,ty-128,17.5,6.5,0,0,Math.PI);fCtx.fill();
-    fCtx.fillStyle='rgba(255,255,255,0.88)';fCtx.font='bold 18px sans-serif';fCtx.textAlign='center';
-    fCtx.fillText('CHAMPIONS',cx,ty-66);
-    fCtx.fillStyle='#feca57';fCtx.beginPath();fCtx.arc(cx+26,ty-90,7,0,Math.PI*2);fCtx.fill();
-  }
-
-  [-1,1].forEach(side=>{
-    const shX=cx+side*53,shY=ty-112;
-    const elX=shX+side*20,elY=shY+47;
-    const hdX=elX+side*8,hdY=elY+40;
-    fCapsule(shX,shY,elX,elY,15.5,12.5,curJ.col);
-    fCapsule(elX,elY,hdX,hdY,11.5,9.5,skin);
-
-    fCtx.save();fCtx.translate(hdX,hdY);
-    fCtx.fillStyle='#14181d';fCtx.fillRect(-9,-4.5,18,7);
-    fCtx.fillStyle=curK.col;
-    fCtx.beginPath();fCtx.roundRect(-9.5,2.5,19,12.5,3.5);fCtx.fill();
-    [-6.6,-2.2,2.2,6.6].forEach(fx=>{
-      fCtx.beginPath();fCtx.roundRect(fx-1.7,13.5,3.4,9.5,1.6);fCtx.fill();
-    });
-    fCtx.restore();
-  });
-
-  fCapsule(cx,ty-130,cx,ty-152,12.5,11.5,shade);
-  fCtx.fillStyle='#191e26';
-  fCtx.beginPath();fCtx.ellipse(cx,ty-180,28.5,30,0,0,Math.PI*2);fCtx.fill();
-
-  const fG=fCtx.createRadialGradient(cx-6.5,ty-180,3,cx,ty-174,31);
-  fG.addColorStop(0,light);fG.addColorStop(0.65,skin);fG.addColorStop(1,shade);
-  fCtx.fillStyle=fG;fCtx.beginPath();fCtx.ellipse(cx,ty-174,26,30,0,0,Math.PI*2);fCtx.fill();
-
-  if(!viewBack){
-    fCtx.fillStyle='#1e272e';
-    fCtx.beginPath();fCtx.arc(cx-9,ty-177,3.5,0,Math.PI*2);fCtx.arc(cx+9,ty-177,3.5,0,Math.PI*2);fCtx.fill();
-    fCtx.strokeStyle='#a8683a';fCtx.lineWidth=3.5;
-    fCtx.beginPath();fCtx.arc(cx,ty-163,7,0.12*Math.PI,0.88*Math.PI);fCtx.stroke();
-    fCtx.fillStyle='#191e26';
-    fCtx.beginPath();fCtx.ellipse(cx,ty-194,27,14.5,0,Math.PI*0.95,Math.PI*2.05);fCtx.fill();
-  }else{
-    fCtx.fillStyle='#191e26';
-    fCtx.beginPath();fCtx.ellipse(cx,ty-177,27.5,31,0,0,Math.PI*2);fCtx.fill();
-  }
-
-  const bx=cx+62,by=baseY-16,rad=20;
-  fCtx.fillStyle='rgba(0,0,0,0.4)';
-  fCtx.beginPath();fCtx.ellipse(bx,baseY+7,18,6.5,0,0,Math.PI*2);fCtx.fill();
-  const bG=fCtx.createRadialGradient(bx-6.5,by-6.5,3,bx,by,rad);
-  bG.addColorStop(0,'#ffffff');bG.addColorStop(0.6,curB.col);bG.addColorStop(1,'#1e272e');
-  fCtx.fillStyle=bG;fCtx.beginPath();fCtx.arc(bx,by,rad,0,Math.PI*2);fCtx.fill();
-  fCtx.fillStyle='rgba(0,0,0,0.65)';
-  fCtx.beginPath();fCtx.arc(bx,by,6.5,0,Math.PI*2);fCtx.fill();
-}
-let ft=0;
-function fitLoop(){
-  ft+=0.04;
-  drawMannequin(ft);
-  requestAnimationFrame(fitLoop);
-}
-fitLoop();
-</script>
+    <script type="module" src="shop.js"></script>
 </body>
 </html>
