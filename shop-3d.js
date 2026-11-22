@@ -104,50 +104,64 @@ export function initShop3D(state) {
         }
     }
 
-    const gloveBackMat = new THREE.MeshStandardMaterial({ roughness: 0.45 });
-    const glovePalmMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
+    const gloveBackMat = new THREE.MeshStandardMaterial({ roughness: 0.42 });
+    const glovePalmMat = new THREE.MeshStandardMaterial({ roughness: 0.65 });
 
     function buildKeeperGlove(isLeft) {
         const group = new THREE.Group();
         const dir = isLeft ? -1 : 1;
 
-        const wrist = new THREE.Mesh(new THREE.CylinderGeometry(4.4, 4.6, 4.0, 16), glovePalmMat);
-        wrist.scale.set(0.95, 1.0, 1.15);
-        wrist.position.set(0, 0, 0);
+        // Округла еластична манжета на зап'ясті
+        const wrist = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.5, 3.6, 20), gloveBackMat);
+        wrist.scale.set(0.95, 1.0, 1.2);
+        wrist.position.set(0, 0.5, 0);
         group.add(wrist);
 
-        const palmBack = new THREE.Mesh(new THREE.BoxGeometry(6.6, 9.0, 9.8), gloveBackMat);
-        palmBack.position.set(-dir * 0.6, 5.2, 0);
+        // Ремінець-липучка
+        const strap = new THREE.Mesh(new THREE.CylinderGeometry(4.4, 4.4, 1.5, 20), glovePalmMat);
+        strap.scale.set(0.97, 1.0, 1.22);
+        strap.position.set(0, 0.8, 0);
+        group.add(strap);
+
+        // Зовнішня сторона рукавиці (назовні від тіла: +dir * X)
+        const palmBack = new THREE.Mesh(new THREE.CapsuleGeometry(4.6, 4.5, 8, 16), gloveBackMat);
+        palmBack.scale.set(0.75, 1.0, 1.15);
+        palmBack.position.set(dir * 1.4, 5.8, 0);
         group.add(palmBack);
 
-        const palmFront = new THREE.Mesh(new THREE.BoxGeometry(2.6, 8.8, 9.6), glovePalmMat);
-        palmFront.position.set(dir * 2.2, 5.2, 0);
+        // Внутрішня латексна долоня (дивиться до тіла/стегна: -dir * X)
+        const palmFront = new THREE.Mesh(new THREE.CapsuleGeometry(4.3, 4.3, 8, 16), glovePalmMat);
+        palmFront.scale.set(0.45, 0.98, 1.12);
+        palmFront.position.set(-dir * 1.6, 5.8, 0);
         group.add(palmFront);
 
+        // 4 анатомічні пальці
         const fingerSpecs = [
-            { z: 3.4, len: 5.5, r: 1.35 },
-            { z: 1.1, len: 6.4, r: 1.4 },
-            { z: -1.1, len: 5.8, r: 1.35 },
-            { z: -3.4, len: 4.6, r: 1.2 }
+            { z: 3.3, len: 4.8, r: 1.25 },
+            { z: 1.1, len: 5.6, r: 1.3 },
+            { z: -1.1, len: 5.1, r: 1.25 },
+            { z: -3.3, len: 4.0, r: 1.1 }
         ];
 
         fingerSpecs.forEach((f) => {
-            const fingerBack = new THREE.Mesh(new THREE.CapsuleGeometry(f.r, f.len, 6, 12), gloveBackMat);
-            fingerBack.position.set(-dir * 0.2, 9.5 + f.len * 0.45, f.z);
+            const fingerBack = new THREE.Mesh(new THREE.CapsuleGeometry(f.r, f.len, 8, 14), gloveBackMat);
+            fingerBack.position.set(dir * 0.6, 9.8 + f.len * 0.45, f.z);
             group.add(fingerBack);
 
-            const fingerPalm = new THREE.Mesh(new THREE.CapsuleGeometry(f.r * 0.9, f.len * 0.92, 6, 12), glovePalmMat);
-            fingerPalm.position.set(dir * 1.1, 9.5 + f.len * 0.45, f.z);
+            const fingerPalm = new THREE.Mesh(new THREE.CapsuleGeometry(f.r * 0.88, f.len * 0.92, 8, 14), glovePalmMat);
+            fingerPalm.position.set(-dir * 0.7, 9.8 + f.len * 0.45, f.z);
             group.add(fingerPalm);
         });
 
-        const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(1.5, 4.4, 6, 12), glovePalmMat);
-        thumb.position.set(dir * 1.8, 4.2, 5.2);
-        thumb.rotation.x = 0.52;
-        thumb.rotation.z = -dir * 0.2;
+        // Великий палець (спереду, повернутий до долоні)
+        const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(1.4, 3.8, 8, 14), glovePalmMat);
+        thumb.position.set(-dir * 1.4, 4.8, 4.8);
+        thumb.rotation.x = 0.48;
+        thumb.rotation.z = dir * 0.22;
         group.add(thumb);
 
-        group.position.set(0, 3.2, -2.2);
+        // Посадка точно на кисть руки, щоб пальці гравця були всередині рукавиці
+        group.position.set(-dir * 0.4, 2.2, -0.4);
         group.visible = false;
         return group;
     }
