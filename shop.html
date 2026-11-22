@@ -19,25 +19,24 @@
     <div class="preview-card">
         <div class="viewport-box">
             <div id="canvas-container"></div>
-            <button class="rotate-btn" id="flip-btn">🔄 Спина / Перед</button>
+            <div class="swipe-hint">↔ Крути пальцем</div>
         </div>
-        <div class="item-details">
-            <div>
-                <span class="status-tag" id="preview-status">✅ ОДЯГНЕНО НА ГРАВЦЯ</span>
-                <h2 id="preview-title">Блауграна (Барса)</h2>
-                <p id="preview-desc">Синьо-гранатові вертикальні смуги</p>
-            </div>
-            <button class="action-btn equipped" id="preview-action-btn">Одягнено ✓</button>
-        </div>
-    </div>
 
-    <div class="tabs-bar" id="tabs-bar">
-        <button class="tab-btn active" data-tab="jerseys">👕 Футболки (20)</button>
-        <button class="tab-btn" data-tab="shorts">🩳 Шорти (20)</button>
-        <button class="tab-btn" data-tab="boots">👟 Бутси (20)</button>
-        <button class="tab-btn" data-tab="gloves">🧤 Рукавиці (20)</button>
-        <button class="tab-btn" data-tab="balls">⚽ М'ячі (20)</button>
-        <button class="tab-btn" data-tab="number">#️⃣ Номер</button>
+        <div class="right-controls">
+            <div class="tabs-grid" id="tabs-bar">
+                <button class="tab-btn active" data-tab="jerseys">👕 Футболки</button>
+                <button class="tab-btn" data-tab="shorts">🩳 Шорти</button>
+                <button class="tab-btn" data-tab="boots">👟 Бутси</button>
+                <button class="tab-btn" data-tab="gloves">🧤 Рукавиці</button>
+                <button class="tab-btn" data-tab="balls">⚽ М'ячі</button>
+                <button class="tab-btn" data-tab="number">#️⃣ Номер</button>
+            </div>
+
+            <div class="selected-bar">
+                <span class="selected-name" id="preview-title">Блауграна (Барса)</span>
+                <button class="action-btn equipped" id="preview-action-btn">Одягнено ✓</button>
+            </div>
+        </div>
     </div>
 
     <div class="items-scroll" id="items-scroll"></div>
