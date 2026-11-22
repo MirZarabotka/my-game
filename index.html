@@ -541,8 +541,9 @@
         }
         stadiumGroup.add(createGoal(-29.8, 0));
         stadiumGroup.add(createGoal(29.8, Math.PI));
-        const tierMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85 });
-        const roofMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.4 });
+        const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
+        const railMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
 
         function createBannerTexture() {
             const canvas = document.createElement('canvas');
@@ -588,124 +589,190 @@
         adRight.position.set(24.0, 0.62, 0);
         stadiumGroup.add(adBack, adFront, adLeft, adRight);
 
+        const railBack = new THREE.Mesh(new THREE.BoxGeometry(52, 0.08, 0.08), railMat);
+        railBack.position.set(0, 1.55, -32.8);
+        const railLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 66), railMat);
+        railLeft.position.set(-24.8, 1.55, 0);
+        const railRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 66), railMat);
+        railRight.position.set(24.8, 1.55, 0);
+        stadiumGroup.add(railBack, railLeft, railRight);
+
+        const seatPositions = [];
         const fanPositions = [];
         const phonePositions = [];
-        const jerseyColors = [0xef4444, 0x3b82f6, 0xfacc15, 0x22c55e, 0xf8fafc, 0xf97316, 0x38bdf8, 0xa855f7];
+        const jerseyColors = [0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0xea580c, 0x0284c7, 0x9333ea, 0x1e293b];
         const skinColors = [0xffdbac, 0xf1c27d, 0xe0ac69, 0xc68642, 0x8d5524];
+        const hairColors = [0x1c1917, 0x451a03, 0x78350f, 0xd97706, 0x57534e];
 
-        const numRows = 8;
+        const numRows = 9;
         for (let r = 0; r < numRows; r++) {
-            const rowY = 1.25 + r * 0.72;
-            const rowDepth = 1.1;
+            const rowY = 1.35 + r * 0.68;
+            const rowDepth = 1.05;
 
-            const zDist = 33.5 + r * 1.05;
+            const zDist = 33.4 + r * 1.02;
             const stepW = 54 + r * 2;
-            const stepGeoZ = new THREE.BoxGeometry(stepW, 0.7, rowDepth);
+            const stepGeoZ = new THREE.BoxGeometry(stepW, 0.68, rowDepth);
 
             const backStep = new THREE.Mesh(stepGeoZ, tierMat);
-            backStep.position.set(0, rowY - 0.35, -zDist);
+            backStep.position.set(0, rowY - 0.34, -zDist);
             const frontStep = new THREE.Mesh(stepGeoZ, tierMat);
-            frontStep.position.set(0, rowY - 0.35, zDist);
+            frontStep.position.set(0, rowY - 0.34, zDist);
             stadiumGroup.add(backStep, frontStep);
 
-            for (let x = -stepW * 0.46; x <= stepW * 0.46; x += 1.05) {
-                if (Math.random() > 0.1) {
-                    const fx = x + (Math.random() - 0.5) * 0.25;
-                    const hasPhone = Math.random() > 0.74;
-                    fanPositions.push({ x: fx, y: rowY, z: -zDist, rotY: 0, phase: Math.random() * 6.28, hasPhone });
-                    if (hasPhone) phonePositions.push({ x: fx + 0.18, y: rowY + 0.78, z: -zDist + 0.28, phase: Math.random() * 10 });
+            for (let x = -stepW * 0.46; x <= stepW * 0.46; x += 0.85) {
+                const isAisle = Math.abs((Math.abs(x) % 11) - 5.5) < 0.75;
+                if (isAisle) continue;
+
+                seatPositions.push({ x, y: rowY + 0.12, z: -zDist, rotY: 0 });
+                seatPositions.push({ x, y: rowY + 0.12, z: zDist, rotY: Math.PI });
+
+                if (Math.random() > 0.16) {
+                    const fx = x + (Math.random() - 0.5) * 0.15;
+                    const hasPhone = Math.random() > 0.78;
+                    const hasScarf = !hasPhone && Math.random() > 0.72;
+                    fanPositions.push({ x: fx, y: rowY, z: -zDist + 0.08, rotY: 0, phase: Math.random() * 6.28, hasPhone, hasScarf });
+                    if (hasPhone) phonePositions.push({ x: fx + 0.15, y: rowY + 0.82, z: -zDist + 0.32, phase: Math.random() * 10 });
                 }
-                if (Math.random() > 0.1) {
-                    const fx = x + (Math.random() - 0.5) * 0.25;
-                    fanPositions.push({ x: fx, y: rowY, z: zDist, rotY: Math.PI, phase: Math.random() * 6.28, hasPhone: false });
+                if (Math.random() > 0.16) {
+                    const fx = x + (Math.random() - 0.5) * 0.15;
+                    fanPositions.push({ x: fx, y: rowY, z: zDist - 0.08, rotY: Math.PI, phase: Math.random() * 6.28, hasPhone: false, hasScarf: false });
                 }
             }
-
-            const xDist = 25.5 + r * 1.05;
+            const xDist = 25.4 + r * 1.02;
             const stepL = 66 + r * 2;
-            const stepGeoX = new THREE.BoxGeometry(rowDepth, 0.7, stepL);
+            const stepGeoX = new THREE.BoxGeometry(rowDepth, 0.68, stepL);
 
             const leftStep = new THREE.Mesh(stepGeoX, tierMat);
-            leftStep.position.set(-xDist, rowY - 0.35, 0);
+            leftStep.position.set(-xDist, rowY - 0.34, 0);
             const rightStep = new THREE.Mesh(stepGeoX, tierMat);
-            rightStep.position.set(xDist, rowY - 0.35, 0);
+            rightStep.position.set(xDist, rowY - 0.34, 0);
             stadiumGroup.add(leftStep, rightStep);
 
-            for (let z = -stepL * 0.46; z <= stepL * 0.46; z += 1.1) {
-                if (Math.random() > 0.12) {
-                    const fz = z + (Math.random() - 0.5) * 0.25;
-                    const hasPhone = Math.random() > 0.76;
-                    fanPositions.push({ x: -xDist, y: rowY, z: fz, rotY: Math.PI / 2, phase: Math.random() * 6.28, hasPhone });
-                    if (hasPhone) phonePositions.push({ x: -xDist + 0.28, y: rowY + 0.78, z: fz, phase: Math.random() * 10 });
+            for (let z = -stepL * 0.46; z <= stepL * 0.46; z += 0.9) {
+                const isAisle = Math.abs((Math.abs(z) % 12) - 6.0) < 0.75;
+                if (isAisle) continue;
+
+                seatPositions.push({ x: -xDist, y: rowY + 0.12, z, rotY: Math.PI / 2 });
+                seatPositions.push({ x: xDist, y: rowY + 0.12, z, rotY: -Math.PI / 2 });
+
+                if (Math.random() > 0.18) {
+                    const fz = z + (Math.random() - 0.5) * 0.15;
+                    const hasPhone = Math.random() > 0.8;
+                    const hasScarf = !hasPhone && Math.random() > 0.72;
+                    fanPositions.push({ x: -xDist + 0.08, y: rowY, z: fz, rotY: Math.PI / 2, phase: Math.random() * 6.28, hasPhone, hasScarf });
+                    if (hasPhone) phonePositions.push({ x: -xDist + 0.32, y: rowY + 0.82, z: fz, phase: Math.random() * 10 });
                 }
-                if (Math.random() > 0.12) {
-                    const fz = z + (Math.random() - 0.5) * 0.25;
-                    const hasPhone = Math.random() > 0.76;
-                    fanPositions.push({ x: xDist, y: rowY, z: fz, rotY: -Math.PI / 2, phase: Math.random() * 6.28, hasPhone });
-                    if (hasPhone) phonePositions.push({ x: xDist - 0.28, y: rowY + 0.78, z: fz, phase: Math.random() * 10 });
+                if (Math.random() > 0.18) {
+                    const fz = z + (Math.random() - 0.5) * 0.15;
+                    const hasPhone = Math.random() > 0.8;
+                    const hasScarf = !hasPhone && Math.random() > 0.72;
+                    fanPositions.push({ x: xDist - 0.08, y: rowY, z: fz, rotY: -Math.PI / 2, phase: Math.random() * 6.28, hasPhone, hasScarf });
+                    if (hasPhone) phonePositions.push({ x: xDist - 0.32, y: rowY + 0.82, z: fz, phase: Math.random() * 10 });
                 }
             }
         }
-        const backRoof = new THREE.Mesh(new THREE.BoxGeometry(68, 0.4, 11), roofMat);
-        backRoof.position.set(0, 9.0, -37.5);
-        const frontRoof = new THREE.Mesh(new THREE.BoxGeometry(68, 0.4, 11), roofMat);
-        frontRoof.position.set(0, 9.0, 37.5);
-        const leftRoof = new THREE.Mesh(new THREE.BoxGeometry(11, 0.4, 82), roofMat);
-        leftRoof.position.set(-29.5, 9.0, 0);
-        const rightRoof = new THREE.Mesh(new THREE.BoxGeometry(11, 0.4, 82), roofMat);
-        rightRoof.position.set(29.5, 9.0, 0);
+
+        const backRoof = new THREE.Mesh(new THREE.BoxGeometry(70, 0.45, 12), roofMat);
+        backRoof.position.set(0, 9.4, -38.0);
+        const frontRoof = new THREE.Mesh(new THREE.BoxGeometry(70, 0.45, 12), roofMat);
+        frontRoof.position.set(0, 9.4, 38.0);
+        const leftRoof = new THREE.Mesh(new THREE.BoxGeometry(12, 0.45, 84), roofMat);
+        leftRoof.position.set(-30.0, 9.4, 0);
+        const rightRoof = new THREE.Mesh(new THREE.BoxGeometry(12, 0.45, 84), roofMat);
+        rightRoof.position.set(30.0, 9.4, 0);
         stadiumGroup.add(backRoof, frontRoof, leftRoof, rightRoof);
-
-        const count = fanPositions.length;
-        const torsoGeo = new THREE.BoxGeometry(0.46, 0.56, 0.24);
-        const headGeo = new THREE.SphereGeometry(0.145, 10, 10);
-        const armGeo = new THREE.BoxGeometry(0.11, 0.46, 0.11);
-
-        const bodyMat = new THREE.MeshStandardMaterial({ roughness: 0.65 });
-        const skinMat = new THREE.MeshStandardMaterial({ roughness: 0.55 });
-
-        const torsosInstanced = new THREE.InstancedMesh(torsoGeo, bodyMat, count);
-        const headsInstanced = new THREE.InstancedMesh(headGeo, skinMat, count);
-        const leftArmsInstanced = new THREE.InstancedMesh(armGeo, skinMat, count);
-        const rightArmsInstanced = new THREE.InstancedMesh(armGeo, skinMat, count);
 
         const dummy = new THREE.Object3D();
         const tmpColor = new THREE.Color();
 
+        const seatGeo = new THREE.BoxGeometry(0.48, 0.34, 0.38);
+        const seatMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.45 });
+        const seatsInstanced = new THREE.InstancedMesh(seatGeo, seatMat, seatPositions.length);
+        seatPositions.forEach((s, idx) => {
+            dummy.position.set(s.x, s.y, s.z);
+            dummy.rotation.set(0, s.rotY, 0);
+            dummy.scale.set(1, 1, 1);
+            dummy.updateMatrix();
+            seatsInstanced.setMatrixAt(idx, dummy.matrix);
+        });
+        seatsInstanced.instanceMatrix.needsUpdate = true;
+        stadiumGroup.add(seatsInstanced);
+        const count = fanPositions.length;
+        const torsoGeo = new THREE.CapsuleGeometry(0.21, 0.34, 6, 10);
+        const headGeo = new THREE.SphereGeometry(0.135, 12, 12);
+        const hairGeo = new THREE.SphereGeometry(0.142, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.58);
+        const armGeo = new THREE.CapsuleGeometry(0.052, 0.36, 4, 8);
+        const scarfGeo = new THREE.BoxGeometry(0.68, 0.11, 0.04);
+
+        const bodyMat = new THREE.MeshStandardMaterial({ roughness: 0.72 });
+        const skinMat = new THREE.MeshStandardMaterial({ roughness: 0.55 });
+        const hairMat = new THREE.MeshStandardMaterial({ roughness: 0.85 });
+
+        const torsosInstanced = new THREE.InstancedMesh(torsoGeo, bodyMat, count);
+        const headsInstanced = new THREE.InstancedMesh(headGeo, skinMat, count);
+        const hairsInstanced = new THREE.InstancedMesh(hairGeo, hairMat, count);
+        const leftArmsInstanced = new THREE.InstancedMesh(armGeo, skinMat, count);
+        const rightArmsInstanced = new THREE.InstancedMesh(armGeo, skinMat, count);
+
+        const scarfFans = fanPositions.filter(f => f.hasScarf);
+        const scarfsInstanced = new THREE.InstancedMesh(scarfGeo, bodyMat, Math.max(1, scarfFans.length));
+
         fanPositions.forEach((f, idx) => {
             const jColor = jerseyColors[idx % jerseyColors.length];
             const sColor = skinColors[idx % skinColors.length];
+            const hColor = hairColors[idx % hairColors.length];
 
-            dummy.position.set(f.x, f.y + 0.28, f.z);
+            dummy.position.set(f.x, f.y + 0.34, f.z);
             dummy.rotation.set(0, f.rotY, 0);
-            dummy.scale.set(1, 1, 1);
+            dummy.scale.set(1.15, 1.0, 0.68);
             dummy.updateMatrix();
             torsosInstanced.setMatrixAt(idx, dummy.matrix);
             tmpColor.setHex(jColor);
             torsosInstanced.setColorAt(idx, tmpColor);
 
-            dummy.position.set(f.x, f.y + 0.72, f.z);
+            dummy.position.set(f.x, f.y + 0.76, f.z);
+            dummy.scale.set(0.95, 1.08, 0.98);
             dummy.updateMatrix();
             headsInstanced.setMatrixAt(idx, dummy.matrix);
             tmpColor.setHex(sColor);
             headsInstanced.setColorAt(idx, tmpColor);
 
+            dummy.position.set(f.x, f.y + 0.775, f.z);
+            dummy.scale.set(0.98, 1.05, 1.02);
+            dummy.updateMatrix();
+            hairsInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpColor.setHex(hColor);
+            hairsInstanced.setColorAt(idx, tmpColor);
+
             const cosR = Math.cos(f.rotY);
             const sinR = Math.sin(f.rotY);
-            dummy.position.set(f.x - 0.29 * cosR, f.y + 0.32, f.z + 0.29 * sinR);
-            dummy.rotation.set(0, f.rotY, 0.12);
+            dummy.scale.set(1, 1, 1);
+
+            dummy.position.set(f.x - 0.27 * cosR, f.y + 0.36, f.z + 0.27 * sinR);
+            dummy.rotation.set(0, f.rotY, 0.14);
             dummy.updateMatrix();
             leftArmsInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpColor.setHex(sColor);
             leftArmsInstanced.setColorAt(idx, tmpColor);
 
-            dummy.position.set(f.x + 0.29 * cosR, f.y + 0.32, f.z - 0.29 * sinR);
-            dummy.rotation.set(0, f.rotY, -0.12);
+            dummy.position.set(f.x + 0.27 * cosR, f.y + 0.36, f.z - 0.27 * sinR);
+            dummy.rotation.set(0, f.rotY, -0.14);
             dummy.updateMatrix();
             rightArmsInstanced.setMatrixAt(idx, dummy.matrix);
             rightArmsInstanced.setColorAt(idx, tmpColor);
         });
 
-        [torsosInstanced, headsInstanced, leftArmsInstanced, rightArmsInstanced].forEach((mesh) => {
+        scarfFans.forEach((f, idx) => {
+            dummy.position.set(f.x, f.y + 1.02, f.z);
+            dummy.rotation.set(0, f.rotY, 0);
+            dummy.scale.set(1, 1, 1);
+            dummy.updateMatrix();
+            scarfsInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpColor.setHex(jerseyColors[(idx * 3) % jerseyColors.length]);
+            scarfsInstanced.setColorAt(idx, tmpColor);
+        });
+
+        [torsosInstanced, headsInstanced, hairsInstanced, leftArmsInstanced, rightArmsInstanced, scarfsInstanced].forEach((mesh) => {
             mesh.instanceMatrix.needsUpdate = true;
             if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
             stadiumGroup.add(mesh);
@@ -717,6 +784,7 @@
         phonePositions.forEach((p, idx) => {
             dummy.position.set(p.x, p.y, p.z);
             dummy.lookAt(0, 1.2, 0);
+            dummy.scale.set(1, 1, 1);
             dummy.updateMatrix();
             phonesInstanced.setMatrixAt(idx, dummy.matrix);
         });
@@ -729,7 +797,7 @@
             [-28, -36],
             [28, -36],
             [-28, 36],
-           
+            [28, 36]
         ];
         lightTowers.forEach(([px, pz]) => {
             const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 19, 10), poleMat);
@@ -1128,7 +1196,6 @@
             }
 
             scene.add(playerModel);
-
             loader.load(
                 './glove.glb?v=3',
                 (gloveGltf) => {
@@ -1154,6 +1221,7 @@
             console.error('Помилка завантаження player.glb:', err);
             hideLoader();
         });
+
         document.getElementById('start-btn').addEventListener('click', () => {
             window.location.href = 'game.html';
         });
@@ -1186,7 +1254,7 @@
         toggleShadowsBtn.addEventListener('click', () => {
             highGraphics = !highGraphics;
             renderer.shadowMap.enabled = highGraphics;
-            [torsosInstanced, headsInstanced, leftArmsInstanced, rightArmsInstanced, phonesInstanced].forEach(m => {
+            [torsosInstanced, headsInstanced, hairsInstanced, leftArmsInstanced, rightArmsInstanced, scarfsInstanced, phonesInstanced].forEach(m => {
                 m.visible = highGraphics;
             });
             toggleShadowsBtn.textContent = highGraphics ? '✨ Тіні та деталізація: ВИСОКА' : '⚡ Тіні та деталізація: НИЗЬКА';
@@ -1229,32 +1297,51 @@
                     const sinR = Math.sin(f.rotY);
 
                     dummy.rotation.set(0, f.rotY, 0);
-                    dummy.scale.set(1, 1, 1);
-
-                    dummy.position.set(f.x, f.y + 0.28 + bounce, f.z);
+                    dummy.scale.set(1.15, 1.0, 0.68);
+                    dummy.position.set(f.x, f.y + 0.34 + bounce, f.z);
                     dummy.updateMatrix();
                     torsosInstanced.setMatrixAt(i, dummy.matrix);
 
-                    dummy.position.set(f.x, f.y + 0.72 + bounce, f.z);
+                    dummy.scale.set(0.95, 1.08, 0.98);
+                    dummy.position.set(f.x, f.y + 0.76 + bounce, f.z);
                     dummy.updateMatrix();
                     headsInstanced.setMatrixAt(i, dummy.matrix);
 
-                    const armRaise = wave > 0.3 ? 0.32 : 0;
-                    dummy.position.set(f.x - 0.29 * cosR, f.y + 0.32 + bounce + armRaise, f.z + 0.29 * sinR);
-                    dummy.rotation.set(wave > 0.3 ? -2.6 : 0, f.rotY, 0.15);
+                    dummy.scale.set(0.98, 1.05, 1.02);
+                    dummy.position.set(f.x, f.y + 0.775 + bounce, f.z);
+                    dummy.updateMatrix();
+                    hairsInstanced.setMatrixAt(i, dummy.matrix);
+
+                    dummy.scale.set(1, 1, 1);
+                    const armRaise = (wave > 0.3 || f.hasScarf) ? 0.34 : 0;
+                    dummy.position.set(f.x - 0.27 * cosR, f.y + 0.36 + bounce + armRaise, f.z + 0.27 * sinR);
+                    dummy.rotation.set((wave > 0.3 || f.hasScarf) ? -2.65 : 0, f.rotY, 0.14);
                     dummy.updateMatrix();
                     leftArmsInstanced.setMatrixAt(i, dummy.matrix);
 
-                    const rightRaise = f.hasPhone ? 0.38 : armRaise;
-                    dummy.position.set(f.x + 0.29 * cosR, f.y + 0.32 + bounce + rightRaise, f.z - 0.29 * sinR);
-                    dummy.rotation.set((f.hasPhone || wave > 0.3) ? -2.4 : 0, f.rotY, -0.15);
+                    const rightRaise = (f.hasPhone || f.hasScarf) ? 0.38 : armRaise;
+                    dummy.position.set(f.x + 0.27 * cosR, f.y + 0.36 + bounce + rightRaise, f.z - 0.27 * sinR);
+                    dummy.rotation.set((f.hasPhone || wave > 0.3 || f.hasScarf) ? -2.45 : 0, f.rotY, -0.14);
                     dummy.updateMatrix();
                     rightArmsInstanced.setMatrixAt(i, dummy.matrix);
                 }
                 torsosInstanced.instanceMatrix.needsUpdate = true;
                 headsInstanced.instanceMatrix.needsUpdate = true;
+                hairsInstanced.instanceMatrix.needsUpdate = true;
                 leftArmsInstanced.instanceMatrix.needsUpdate = true;
                 rightArmsInstanced.instanceMatrix.needsUpdate = true;
+
+                for (let i = 0; i < scarfFans.length; i++) {
+                    const f = scarfFans[i];
+                    const wave = Math.sin(t * 4.2 + f.phase);
+                    const bounce = Math.max(0, wave) * 0.13;
+                    dummy.position.set(f.x, f.y + 1.04 + bounce, f.z);
+                    dummy.rotation.set(0, f.rotY, Math.sin(t * 6 + f.phase) * 0.08);
+                    dummy.scale.set(1, 1, 1);
+                    dummy.updateMatrix();
+                    scarfsInstanced.setMatrixAt(i, dummy.matrix);
+                }
+                scarfsInstanced.instanceMatrix.needsUpdate = true;
             }
 
             if (phonesInstanced.visible) {
