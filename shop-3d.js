@@ -111,47 +111,43 @@ export function initShop3D(state) {
         const group = new THREE.Group();
         const dir = isLeft ? -1 : 1;
 
-        const wrist = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.4, 3.8, 16), glovePalmMat);
-        wrist.scale.set(0.85, 1.0, 1.15);
+        const wrist = new THREE.Mesh(new THREE.CylinderGeometry(4.4, 4.6, 4.0, 16), glovePalmMat);
+        wrist.scale.set(0.95, 1.0, 1.15);
         wrist.position.set(0, 0, 0);
         group.add(wrist);
 
-        const palmBack = new THREE.Mesh(new THREE.BoxGeometry(4.8, 8.6, 8.8), gloveBackMat);
-        palmBack.position.set(-dir * 0.4, 5.2, 0.2);
+        const palmBack = new THREE.Mesh(new THREE.BoxGeometry(6.2, 9.0, 9.4), gloveBackMat);
+        palmBack.position.set(-dir * 0.6, 5.2, 0);
         group.add(palmBack);
 
-        const palmFront = new THREE.Mesh(new THREE.BoxGeometry(2.2, 8.4, 8.6), glovePalmMat);
-        palmFront.position.set(dir * 1.8, 5.2, 0.2);
+        const palmFront = new THREE.Mesh(new THREE.BoxGeometry(2.4, 8.8, 9.2), glovePalmMat);
+        palmFront.position.set(dir * 2.2, 5.2, 0);
         group.add(palmFront);
 
         const fingerSpecs = [
-            { z: 3.1, len: 5.2, r: 1.1 },
-            { z: 1.0, len: 6.0, r: 1.15 },
-            { z: -1.1, len: 5.5, r: 1.1 },
-            { z: -3.1, len: 4.4, r: 0.98 }
+            { z: 3.3, len: 5.5, r: 1.3 },
+            { z: 1.1, len: 6.4, r: 1.35 },
+            { z: -1.1, len: 5.8, r: 1.3 },
+            { z: -3.3, len: 4.6, r: 1.15 }
         ];
 
         fingerSpecs.forEach((f) => {
             const fingerBack = new THREE.Mesh(new THREE.CapsuleGeometry(f.r, f.len, 6, 12), gloveBackMat);
-            fingerBack.position.set(0.0, 9.2 + f.len * 0.45, f.z);
-            fingerBack.rotation.z = -dir * 0.08;
+            fingerBack.position.set(-dir * 0.2, 9.5 + f.len * 0.45, f.z);
             group.add(fingerBack);
 
-            const fingerPalm = new THREE.Mesh(new THREE.CapsuleGeometry(f.r * 0.88, f.len * 0.92, 6, 12), glovePalmMat);
-            fingerPalm.position.set(dir * 0.85, 9.2 + f.len * 0.45, f.z);
-            fingerPalm.rotation.z = -dir * 0.08;
+            const fingerPalm = new THREE.Mesh(new THREE.CapsuleGeometry(f.r * 0.9, f.len * 0.92, 6, 12), glovePalmMat);
+            fingerPalm.position.set(dir * 1.1, 9.5 + f.len * 0.45, f.z);
             group.add(fingerPalm);
         });
 
-        const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(1.3, 4.2, 6, 12), glovePalmMat);
-        thumb.position.set(dir * 1.6, 4.0, 5.0);
+        const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(1.45, 4.4, 6, 12), glovePalmMat);
+        thumb.position.set(dir * 1.8, 4.2, 5.2);
         thumb.rotation.x = 0.52;
         thumb.rotation.z = -dir * 0.2;
         group.add(thumb);
 
-        // Посадка точно на кінець рукава (передпліччя) поверх кисті
-        group.position.set(0, 23.5, 0.4);
-        group.rotation.z = dir * 0.06;
+        group.position.set(0, 1.0, 0);
         group.visible = false;
         return group;
     }
@@ -306,22 +302,22 @@ export function initShop3D(state) {
         playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
         if (!playerModel) return;
 
-        let leftForeArm = null;
-        let rightForeArm = null;
+        let leftHand = null;
+        let rightHand = null;
         let spineBone = null;
 
         walkModel(playerModel, (child) => {
             if (child.isBone && child.name) {
-                if (child.name.includes('LeftForeArm')) leftForeArm = child;
-                if (child.name.includes('RightForeArm')) rightForeArm = child;
+                if (child.name.includes('LeftHand')) leftHand = child;
+                if (child.name.includes('RightHand')) rightHand = child;
                 if (child.name.includes('Spine2') || (!spineBone && child.name.includes('Spine1'))) {
                     spineBone = child;
                 }
             }
         });
 
-        if (leftForeArm) leftForeArm.add(leftGlove);
-        if (rightForeArm) rightForeArm.add(rightGlove);
+        if (leftHand) leftHand.add(leftGlove);
+        if (rightHand) rightHand.add(rightGlove);
 
         if (spineBone) {
             backNumberMesh.position.set(0, 1.5, -11.3);
