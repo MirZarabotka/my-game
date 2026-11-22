@@ -75,44 +75,42 @@ export function initShop3D(state) {
     let playerModel = null;
     let mixer = null;
 
-    function drawJerseyPattern(ctx, jersey, offsetX, width, height) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(offsetX, 0, width, height);
-        ctx.clip();
-
+    function drawJerseyPattern(ctx, jersey, width, height) {
         ctx.fillStyle = jersey.c1;
-        ctx.fillRect(offsetX, 0, width, height);
+        ctx.fillRect(0, 0, width, height);
 
         ctx.fillStyle = jersey.c2;
         if (jersey.pattern === 'stripes') {
-            for (let x = offsetX; x < offsetX + width; x += 32) {
+            for (let x = 0; x < width; x += 32) {
                 ctx.fillRect(x, 0, 16, height);
             }
         } else if (jersey.pattern === 'hoops') {
             for (let y = 0; y < height; y += 36) {
-                ctx.fillRect(offsetX, y, width, 18);
+                ctx.fillRect(0, y, width, 18);
             }
         } else if (jersey.pattern === 'half') {
-            ctx.fillRect(offsetX + width / 2, 0, width / 2, height);
+            ctx.fillRect(width * 0.25, 0, width * 0.25, height);
+            ctx.fillRect(width * 0.75, 0, width * 0.25, height);
         } else if (jersey.pattern === 'centerBand') {
-            ctx.fillRect(offsetX + width * 0.32, 0, width * 0.36, height);
+            ctx.fillRect(width * 0.16, 0, width * 0.18, height);
+            ctx.fillRect(width * 0.66, 0, width * 0.18, height);
         } else if (jersey.pattern === 'chestBand') {
-            ctx.fillRect(offsetX, height * 0.32, width, height * 0.28);
+            ctx.fillRect(0, height * 0.32, width, height * 0.28);
         } else if (jersey.pattern === 'sash') {
             ctx.beginPath();
-            ctx.moveTo(offsetX, 0);
-            ctx.lineTo(offsetX + width * 0.25, 0);
-            ctx.lineTo(offsetX + width, height);
-            ctx.lineTo(offsetX + width * 0.75, height);
-            ctx.closePath();
-            ctx.fill();
+            ctx.moveTo(0, 0); ctx.lineTo(width * 0.15, 0);
+            ctx.lineTo(width * 0.5, height); ctx.lineTo(width * 0.35, height);
+            ctx.closePath(); ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(width * 0.5, 0); ctx.lineTo(width * 0.65, 0);
+            ctx.lineTo(width, height); ctx.lineTo(width * 0.85, height);
+            ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
-            ctx.fillRect(offsetX, 0, width * 0.22, height);
-            ctx.fillRect(offsetX + width * 0.78, 0, width * 0.22, height);
+            ctx.fillRect(0, 0, width * 0.12, height);
+            ctx.fillRect(width * 0.38, 0, width * 0.24, height);
+            ctx.fillRect(width * 0.88, 0, width * 0.12, height);
         }
-
-        ctx.restore();
     }
     function createKitTexture() {
         const jersey = CATALOG.jerseys.find(x => x.id === state.preview.jerseys) || CATALOG.jerseys.at(0);
@@ -123,13 +121,14 @@ export function initShop3D(state) {
         canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
+        // Заливаємо футболку на верхню зону UV (y: 0..310) по всій ширині (512)
+        drawJerseyPattern(ctx, jersey, 512, 310);
+
+        // Заливаємо шорти та гетри на нижню зону UV (y: 310..512)
         ctx.fillStyle = shortItem.c1;
-        ctx.fillRect(0, 0, 512, 512);
+        ctx.fillRect(0, 310, 512, 202);
         ctx.fillStyle = shortItem.c2;
         ctx.fillRect(0, 385, 512, 26);
-
-        drawJerseyPattern(ctx, jersey, 0, 256, 305);
-        drawJerseyPattern(ctx, jersey, 256, 256, 305);
 
         if (originalShirtImage) {
             ctx.globalCompositeOperation = 'multiply';
@@ -137,6 +136,7 @@ export function initShop3D(state) {
             ctx.globalCompositeOperation = 'source-over';
         }
 
+        // Номер на спині
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 5;
@@ -191,14 +191,15 @@ export function initShop3D(state) {
         walkModel(playerModel, (child) => {
             if (child.isMesh && child.material) {
                 const name = (child.name || '').toLowerCase();
-                if (name.includes('shirt')) {
+                if (name.includes('shoe') || name.includes('boot')) {
+                    child.material = child.material.clone();
+                    child.material.color.set(bootItem.c1);
+                } else if (!name.includes('body') && !name.includes('hair') && !name.includes('eye') && !name.includes('head')) {
+                    // Усе інше, що не є шкірою, волоссям чи очима — це форма!
                     child.material = child.material.clone();
                     child.material.map = kitTexture;
                     child.material.color.set('#ffffff');
                     child.material.needsUpdate = true;
-                } else if (name.includes('shoe')) {
-                    child.material = child.material.clone();
-                    child.material.color.set(bootItem.c1);
                 }
             }
         });
@@ -221,7 +222,7 @@ export function initShop3D(state) {
                 child.castShadow = true;
                 child.receiveShadow = true;
                 const name = (child.name || '').toLowerCase();
-                if (name.includes('shirt') && child.material && child.material.map) {
+                if (!name.includes('body') && !name.includes('hair') && !name.includes('eye') && child.material && child.material.map) {
                     originalShirtImage = child.material.map.image;
                 }
             }
