@@ -56,88 +56,61 @@ export function initShop3D(state) {
         }
     }
 
-    const shirtMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
-    const sleeveMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
-    const shortMat = new THREE.MeshStandardMaterial({ roughness: 0.75 });
-    const bootMat = new THREE.MeshStandardMaterial({ roughness: 0.4 });
     const gloveMat = new THREE.MeshStandardMaterial({ roughness: 0.5 });
-
-    const torsoMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.155, 0.135, 0.44, 24), shirtMat);
-    torsoMesh.position.set(0, 0.12, 0.01);
-    torsoMesh.scale.set(1.18, 1, 0.76);
-
-    const leftSleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.058, 0.048, 0.22, 16), sleeveMat);
-    leftSleeve.position.set(0, 0.11, 0);
-
-    const rightSleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.058, 0.048, 0.22, 16), sleeveMat);
-    rightSleeve.position.set(0, 0.11, 0);
-
-    const pelvisShort = new THREE.Mesh(new THREE.CylinderGeometry(0.145, 0.15, 0.18, 20), shortMat);
-    pelvisShort.position.set(0, -0.02, 0.01);
-    pelvisShort.scale.set(1.15, 1, 0.8);
-
-    const leftLegShort = new THREE.Mesh(new THREE.CylinderGeometry(0.082, 0.072, 0.22, 16), shortMat);
-    leftLegShort.position.set(0, 0.11, 0);
-
-    const rightLegShort = new THREE.Mesh(new THREE.CylinderGeometry(0.082, 0.072, 0.22, 16), shortMat);
-    rightLegShort.position.set(0, 0.11, 0);
-
-    const leftBoot = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.07, 0.23), bootMat);
-    leftBoot.position.set(0, 0.03, 0.05);
-
-    const rightBoot = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.07, 0.23), bootMat);
-    rightBoot.position.set(0, 0.03, 0.05);
-
-    const leftGlove = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.15, 0.07), gloveMat);
-    const rightGlove = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.15, 0.07), gloveMat);
+    const leftGlove = new THREE.Mesh(new THREE.BoxGeometry(10, 15, 7), gloveMat);
+    const rightGlove = new THREE.Mesh(new THREE.BoxGeometry(10, 15, 7), gloveMat);
     leftGlove.visible = false;
     rightGlove.visible = false;
+
+    let playerModel = null;
+    let mixer = null;
+
     function createJerseyTexture(jersey) {
         const canvas = document.createElement('canvas');
         canvas.width = 512;
-        canvas.height = 256;
+        canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
         ctx.fillStyle = jersey.c1;
-        ctx.fillRect(0, 0, 512, 256);
+        ctx.fillRect(0, 0, 512, 512);
 
         ctx.fillStyle = jersey.c2;
         if (jersey.pattern === 'stripes') {
-            for (let x = 0; x < 512; x += 32) ctx.fillRect(x, 0, 16, 256);
+            for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512);
         } else if (jersey.pattern === 'hoops') {
-            for (let y = 0; y < 256; y += 32) ctx.fillRect(0, y, 512, 16);
+            for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
         } else if (jersey.pattern === 'half') {
-            ctx.fillRect(128, 0, 128, 256);
-            ctx.fillRect(384, 0, 128, 256);
+            ctx.fillRect(256, 0, 256, 512);
         } else if (jersey.pattern === 'centerBand') {
-            ctx.fillRect(96, 0, 64, 256);
-            ctx.fillRect(352, 0, 64, 256);
+            ctx.fillRect(180, 0, 152, 512);
         } else if (jersey.pattern === 'chestBand') {
-            ctx.fillRect(0, 80, 512, 75);
+            ctx.fillRect(0, 160, 512, 130);
         } else if (jersey.pattern === 'sash') {
             ctx.beginPath();
-            ctx.moveTo(40, 0); ctx.lineTo(100, 0); ctx.lineTo(220, 256); ctx.lineTo(160, 256);
+            ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
             ctx.closePath(); ctx.fill();
-            ctx.beginPath();
-            ctx.moveTo(296, 0); ctx.lineTo(356, 0); ctx.lineTo(476, 256); ctx.lineTo(416, 256);
-            ctx.closePath(); ctx.fill();
+        } else if (jersey.pattern === 'sleeves') {
+            // Рукави у розгортці моделі лежать по краях (0..130 та 382..512)
+            ctx.fillRect(0, 0, 135, 512);
+            ctx.fillRect(377, 0, 135, 512);
         }
 
+        // Номер на спині
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 6;
-        ctx.font = '900 84px "Segoe UI", sans-serif';
+        ctx.lineWidth = 7;
+        ctx.font = '900 96px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 384, 125);
-        ctx.fillText(state.number, 384, 125);
+        ctx.strokeText(state.number, 256, 220);
+        ctx.fillText(state.number, 256, 220);
 
         const tex = new THREE.CanvasTexture(canvas);
+        tex.flipY = false;
         tex.colorSpace = THREE.SRGBColorSpace;
         tex.needsUpdate = true;
         return tex;
     }
-
     function createBallTexture(c1, c2) {
         const canvas = document.createElement('canvas');
         canvas.width = 256;
@@ -164,19 +137,45 @@ export function initShop3D(state) {
         const gloveItem = CATALOG.gloves.find(x => x.id === state.preview.gloves) || CATALOG.gloves.at(0);
         const ballItem = CATALOG.balls.find(x => x.id === state.preview.balls) || CATALOG.balls.at(0);
 
-        shirtMat.map = createJerseyTexture(jersey);
-        shirtMat.needsUpdate = true;
-
-        sleeveMat.color.set(jersey.pattern === 'sleeves' ? jersey.c2 : jersey.c1);
-        shortMat.color.set(shortItem.c1);
-        bootMat.color.set(bootItem.c1);
         gloveMat.color.set(gloveItem.c1);
-
         leftGlove.visible = (state.activeTab === 'gloves');
         rightGlove.visible = (state.activeTab === 'gloves');
 
         ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
         ballMesh.material.needsUpdate = true;
+
+        if (!playerModel) return;
+
+        const jerseyTex = createJerseyTexture(jersey);
+
+        walkModel(playerModel, (child) => {
+            if (!child.isMesh || !child.material) return;
+            const name = (child.name || '').toLowerCase();
+
+            // Визначаємо, яка саме це деталь 3D-моделі (обличчя, очі й ноги не чіпаємо!)
+            if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
+                child.material = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.7 });
+            } else if (name.includes('short') || name.includes('pant')) {
+                child.material = new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.75 });
+            } else if (name.includes('shoe') || name.includes('boot')) {
+                child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
+            } else if (Array.isArray(child.material)) {
+                // Якщо меш має кілька матеріалів (наприклад: 0 - тіло, 1 - футболка, 2 - шорти, 3 - бутси)
+                child.material = child.material.map((m, idx) => {
+                    const mName = (m.name || '').toLowerCase();
+                    if (mName.includes('shirt') || mName.includes('top') || idx === 1) {
+                        return new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.7 });
+                    }
+                    if (mName.includes('short') || idx === 2) {
+                        return new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.75 });
+                    }
+                    if (mName.includes('shoe') || mName.includes('boot') || idx === 3) {
+                        return new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
+                    }
+                    return m;
+                });
+            }
+        });
     }
 
     const dracoLoader = new DRACOLoader();
@@ -184,39 +183,21 @@ export function initShop3D(state) {
     const loader = new GLTFLoader();
     loader.setDRACOLoader(dracoLoader);
 
-    let playerModel = null;
-    let mixer = null;
-
     loader.load('player.glb', (gltf) => {
         playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
         if (!playerModel) return;
 
-        const bones = {};
+        let leftHand = null;
+        let rightHand = null;
         walkModel(playerModel, (child) => {
             if (child.isBone && child.name) {
-                if (child.name.includes('Spine1')) bones.spine = child;
-                if (child.name.includes('LeftArm') && !child.name.includes('Fore')) bones.leftArm = child;
-                if (child.name.includes('RightArm') && !child.name.includes('Fore')) bones.rightArm = child;
-                if (child.name.includes('Hips')) bones.hips = child;
-                if (child.name.includes('LeftUpLeg')) bones.leftLeg = child;
-                if (child.name.includes('RightUpLeg')) bones.rightLeg = child;
-                if (child.name.includes('LeftFoot')) bones.leftFoot = child;
-                if (child.name.includes('RightFoot')) bones.rightFoot = child;
-                if (child.name.includes('LeftHand')) bones.leftHand = child;
-                if (child.name.includes('RightHand')) bones.rightHand = child;
+                if (child.name.includes('LeftHand')) leftHand = child;
+                if (child.name.includes('RightHand')) rightHand = child;
             }
         });
 
-        if (bones.spine) bones.spine.add(torsoMesh);
-        if (bones.leftArm) bones.leftArm.add(leftSleeve);
-        if (bones.rightArm) bones.rightArm.add(rightSleeve);
-        if (bones.hips) bones.hips.add(pelvisShort);
-        if (bones.leftLeg) bones.leftLeg.add(leftLegShort);
-        if (bones.rightLeg) bones.rightLeg.add(rightLegShort);
-        if (bones.leftFoot) bones.leftFoot.add(leftBoot);
-        if (bones.rightFoot) bones.rightFoot.add(rightBoot);
-        if (bones.leftHand) bones.leftHand.add(leftGlove);
-        if (bones.rightHand) bones.rightHand.add(rightGlove);
+        if (leftHand) leftHand.add(leftGlove);
+        if (rightHand) rightHand.add(rightGlove);
 
         scene.add(playerModel);
         updateAppearance();
