@@ -5,7 +5,6 @@ import { OrbitControls } from './libs/OrbitControls.js';
 import { CATALOG } from './shop-catalog.js';
 
 export function initShop3D(state) {
-    // Примусово фіксуємо ширину правого блоку кнопок, щоб нічого не обрізалося
     const fixStyle = document.createElement('style');
     fixStyle.textContent = `
         html, body { width: 100vw !important; max-width: 100vw !important; overflow-x: hidden !important; }
@@ -93,11 +92,11 @@ export function initShop3D(state) {
         } else if (jersey.pattern === 'hoops') {
             for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
         } else if (jersey.pattern === 'half') {
-            ctx.fillRect(128, 0, 128, 512);
-            ctx.fillRect(345, 0, 167, 512);
+            ctx.fillRect(110, 0, 130, 512);
+            ctx.fillRect(375, 0, 137, 512);
         } else if (jersey.pattern === 'centerBand') {
-            ctx.fillRect(95, 0, 66, 512);
-            ctx.fillRect(312, 0, 66, 512);
+            ctx.fillRect(90, 0, 65, 512);
+            ctx.fillRect(345, 0, 65, 512);
         } else if (jersey.pattern === 'chestBand') {
             ctx.fillRect(0, 160, 512, 130);
         } else if (jersey.pattern === 'sash') {
@@ -105,21 +104,20 @@ export function initShop3D(state) {
             ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
-            // Рукави у цій моделі знаходяться в зонах 0..65, 195..285 та 415..512
-            ctx.fillRect(0, 0, 65, 512);
-            ctx.fillRect(195, 0, 90, 512);
-            ctx.fillRect(415, 0, 97, 512);
+            ctx.fillRect(0, 0, 42, 512);
+            ctx.fillRect(235, 0, 45, 512);
+            ctx.fillRect(470, 0, 42, 512);
         }
 
-        // Номер рівно по центру спини (x = 345, y = 205)
+        // Номер рівно по центру спини
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 7;
-        ctx.font = '900 86px "Segoe UI", sans-serif';
+        ctx.lineWidth = 8;
+        ctx.font = '900 92px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 345, 205);
-        ctx.fillText(state.number, 345, 205);
+        ctx.strokeText(state.number, 375, 215);
+        ctx.fillText(state.number, 375, 215);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.flipY = false;
