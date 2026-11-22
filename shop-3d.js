@@ -53,7 +53,6 @@ export function initShop3D(state) {
         #toast.show { transform: translateX(-50%) translateY(0); }
     `;
     document.head.appendChild(fixStyle);
-
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
 
@@ -121,6 +120,7 @@ export function initShop3D(state) {
 
     let playerModel = null;
     let mixer = null;
+
     function updateBackNumber() {
         const canvas = document.createElement('canvas');
         canvas.width = 256;
@@ -171,8 +171,9 @@ export function initShop3D(state) {
             ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
-            ctx.fillRect(200, 0, 26, 512);
-            ctx.fillRect(455, 0, 57, 512);
+            ctx.fillRect(0, 0, 38, 512);
+            ctx.fillRect(200, 0, 32, 512);
+            ctx.fillRect(445, 0, 67, 512);
         }
 
         const tex = new THREE.CanvasTexture(canvas);
