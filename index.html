@@ -210,8 +210,10 @@
                         const name = child.name.toLowerCase();
 
                         if (savedBoots && name.includes('shoe')) {
+                            child.material = child.material.clone();
                             child.material.color.set(savedBoots);
                         } else if (savedKit && name.includes('shirt')) {
+                            child.material = child.material.clone();
                             child.material.color.set(savedKit);
                         }
                     }
