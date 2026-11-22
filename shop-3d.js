@@ -53,7 +53,6 @@ export function initShop3D(state) {
         #toast.show { transform: translateX(-50%) translateY(0); }
     `;
     document.head.appendChild(fixStyle);
-
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
 
@@ -110,34 +109,53 @@ export function initShop3D(state) {
 
     function buildKeeperGlove(isLeft) {
         const group = new THREE.Group();
+        const dir = isLeft ? -1 : 1;
 
-        const body = new THREE.Mesh(new THREE.CapsuleGeometry(4.2, 6.5, 8, 16), gloveBackMat);
-        body.scale.set(1.05, 1.0, 0.58);
-        body.position.set(0, 7.5, 0);
-        group.add(body);
-
-        const palm = new THREE.Mesh(new THREE.CapsuleGeometry(3.8, 6.0, 8, 16), glovePalmMat);
-        palm.scale.set(1.0, 0.98, 0.35);
-        palm.position.set(isLeft ? -1.4 : 1.4, 7.5, 0.8);
-        group.add(palm);
-
-        const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(1.5, 3.2, 6, 12), gloveBackMat);
-        thumb.position.set(isLeft ? -1.2 : 1.2, 5.2, 3.8);
-        thumb.rotation.x = 0.55;
-        group.add(thumb);
-
-        const wrist = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 3.8, 3.2, 16), glovePalmMat);
-        wrist.scale.set(1.05, 1.0, 0.75);
-        wrist.position.set(0, 1.2, 0);
+        const wrist = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.6, 3.0, 16), glovePalmMat);
+        wrist.scale.set(0.75, 1.0, 1.15);
+        wrist.position.set(0, -0.5, 0);
         group.add(wrist);
 
+        const palmBack = new THREE.Mesh(new THREE.BoxGeometry(3.8, 7.5, 7.6), gloveBackMat);
+        palmBack.position.set(-dir * 0.4, 4.2, 0.2);
+        group.add(palmBack);
+
+        const palmFront = new THREE.Mesh(new THREE.BoxGeometry(1.6, 7.3, 7.4), glovePalmMat);
+        palmFront.position.set(dir * 1.4, 4.2, 0.2);
+        group.add(palmFront);
+
+        const fingerSpecs = [
+            { z: 2.7, len: 4.6, r: 0.95 },
+            { z: 0.9, len: 5.3, r: 1.0 },
+            { z: -0.9, len: 4.9, r: 0.95 },
+            { z: -2.6, len: 3.9, r: 0.85 }
+        ];
+
+        fingerSpecs.forEach((f) => {
+            const fingerBack = new THREE.Mesh(new THREE.CapsuleGeometry(f.r, f.len, 6, 12), gloveBackMat);
+            fingerBack.position.set(0.1, 7.8 + f.len * 0.45, f.z);
+            fingerBack.rotation.z = -dir * 0.12;
+            group.add(fingerBack);
+
+            const fingerPalm = new THREE.Mesh(new THREE.CapsuleGeometry(f.r * 0.85, f.len * 0.9, 6, 12), glovePalmMat);
+            fingerPalm.position.set(dir * 0.65, 7.8 + f.len * 0.45, f.z);
+            fingerPalm.rotation.z = -dir * 0.12;
+            group.add(fingerPalm);
+        });
+
+        const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(1.15, 3.6, 6, 12), glovePalmMat);
+        thumb.position.set(dir * 1.2, 3.2, 4.4);
+        thumb.rotation.x = 0.55;
+        thumb.rotation.z = -dir * 0.25;
+        group.add(thumb);
+
+        group.position.set(-dir * 1.2, 1.2, 0.3);
         group.visible = false;
         return group;
     }
 
     const leftGlove = buildKeeperGlove(true);
     const rightGlove = buildKeeperGlove(false);
-
     const backNumberMat = new THREE.MeshBasicMaterial({
         transparent: true,
         side: THREE.DoubleSide,
@@ -148,6 +166,7 @@ export function initShop3D(state) {
 
     let playerModel = null;
     let mixer = null;
+
     function updateBackNumber() {
         const canvas = document.createElement('canvas');
         canvas.width = 256;
