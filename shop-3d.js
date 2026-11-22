@@ -79,7 +79,6 @@ export function initShop3D(state) {
     );
     turf.position.y = -0.05;
     scene.add(turf);
-
     const ballMesh = new THREE.Mesh(
         new THREE.SphereGeometry(0.14, 24, 24),
         new THREE.MeshStandardMaterial({ roughness: 0.4 })
@@ -113,6 +112,7 @@ export function initShop3D(state) {
     let rightHandBone = null;
     let leftForeArmBone = null;
     let rightForeArmBone = null;
+    let glovesLoaded = false;
     const gloveMaterials = [];
 
     function extractSingleGlove(gloveScene, pickLeft) {
@@ -177,11 +177,14 @@ export function initShop3D(state) {
         const rightUnit = extractSingleGlove(gloveScene, false);
         const leftUnit = extractSingleGlove(gloveScene, true);
 
+        rightGloveHolder.clear();
+        leftGloveHolder.clear();
         rightGloveHolder.add(rightUnit);
         leftGloveHolder.add(leftUnit);
 
         attachToSleeveEnd(rightGloveHolder, rightForeArmBone, rightHandBone);
         attachToSleeveEnd(leftGloveHolder, leftForeArmBone, leftHandBone);
+        glovesLoaded = true;
         updateAppearance();
     }
 
@@ -195,11 +198,13 @@ export function initShop3D(state) {
 
         const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
         holder.quaternion.copy(q);
-        const gloveSize = foreLen * 0.78;
+
+        const gloveSize = foreLen * 0.92;
         holder.scale.setScalar(gloveSize);
-        holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.1);
+        holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.32);
         armBone.add(holder);
     }
+
     const backNumberMat = new THREE.MeshBasicMaterial({
         transparent: true,
         side: THREE.DoubleSide,
@@ -290,6 +295,7 @@ export function initShop3D(state) {
         tex.needsUpdate = true;
         return tex;
     }
+
     function updateAppearance() {
         const jersey = CATALOG.jerseys.find(x => x.id === state.preview.jerseys) || CATALOG.jerseys.at(0);
         const shortItem = CATALOG.shorts.find(x => x.id === state.preview.shorts) || CATALOG.shorts.at(0);
@@ -299,15 +305,14 @@ export function initShop3D(state) {
 
         updateBackNumber();
 
-        leftGloveHolder.visible = true;
-        rightGloveHolder.visible = true;
+        leftGloveHolder.visible = glovesLoaded;
+        rightGloveHolder.visible = glovesLoaded;
 
         const tintColor = new THREE.Color(gloveItem.c1).lerp(new THREE.Color('#ffffff'), 0.35);
         gloveMaterials.forEach((m) => {
             m.color.copy(tintColor);
             m.needsUpdate = true;
         });
-
         ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
         ballMesh.material.needsUpdate = true;
 
@@ -387,13 +392,20 @@ export function initShop3D(state) {
         scene.add(playerModel);
 
         loader.load(
-            './glove.glb?v=2',
+            './glove.glb?v=3',
             (gloveGltf) => {
-                const gScene = gloveGltf.scene || (gloveGltf.scenes && gloveGltf.scenes.at(0));
-                if (gScene) mountGloveModel(gScene);
+                try {
+                    const gScene = gloveGltf.scene || (gloveGltf.scenes && gloveGltf.scenes.at(0));
+                    if (gScene) mountGloveModel(gScene);
+                } catch (e) {
+                    console.error('Помилка обробки мешу рукавиць:', e);
+                    const hint = document.querySelector('.swipe-hint');
+                    if (hint) hint.textContent = 'Помилка мешу: ' + e.message;
+                }
             },
             undefined,
             (err) => {
+                console.error('Помилка завантаження glove.glb:', err);
                 const hint = document.querySelector('.swipe-hint');
                 if (hint) hint.textContent = 'Помилка: ' + (err.message || 'load');
             }
@@ -414,17 +426,22 @@ export function initShop3D(state) {
         renderer.setSize(container.clientWidth, container.clientHeight);
     });
 
-    const clock = new THREE.Clock();
-    function animate() {
+    let lastTime = performance.now();
+    function animate(now) {
         requestAnimationFrame(animate);
-        if (mixer) mixer.update(clock.getDelta());
-        if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
-        if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
+        const dt = (now - lastTime) * 0.001;
+        lastTime = now;
+
+        if (mixer) mixer.update(dt);
+        if (glovesLoaded) {
+            if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
+            if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
+        }
         ballMesh.rotation.y += 0.01;
         controls.update();
         renderer.render(scene, camera);
     }
-    animate();
+    requestAnimationFrame(animate);
 
     return {
         updateAppearance,
