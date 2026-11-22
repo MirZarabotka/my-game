@@ -113,7 +113,6 @@ export function initShop3D(state) {
     let leftForeArmBone = null;
     let rightForeArmBone = null;
     let glovesLoaded = false;
-    const fingerBones = [];
     const gloveMaterials = [];
 
     function extractSingleGlove(gloveScene, pickLeft) {
@@ -171,6 +170,8 @@ export function initShop3D(state) {
 
         const rotateGroup = new THREE.Group();
         rotateGroup.add(meshGroup);
+        rotateGroup.rotation.y = pickLeft ? Math.PI / 2 : -Math.PI / 2;
+
         return rotateGroup;
     }
 
@@ -183,23 +184,27 @@ export function initShop3D(state) {
         rightGloveHolder.add(rightUnit);
         leftGloveHolder.add(leftUnit);
 
-        attachToHand(rightGloveHolder, rightHandBone, false);
-        attachToHand(leftGloveHolder, leftHandBone, true);
+        attachToSleeveEnd(rightGloveHolder, rightForeArmBone, rightHandBone);
+        attachToSleeveEnd(leftGloveHolder, leftForeArmBone, leftHandBone);
         glovesLoaded = true;
         updateAppearance();
     }
 
-    function attachToHand(holder, handBone, isLeft) {
-        if (!handBone) return;
+    function attachToSleeveEnd(holder, foreArmBone, handBone) {
+        const armBone = foreArmBone || (handBone && handBone.parent);
+        if (!armBone) return;
 
-        const handLen = handBone.position.length() || 22;
-        const gloveSize = handLen * 0.85;
+        const wristPos = handBone ? handBone.position.clone() : new THREE.Vector3(0, 24, 0);
+        const foreLen = wristPos.length() || 24;
+        const dir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
 
+        const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+        holder.quaternion.copy(q);
+
+        const gloveSize = foreLen * 0.92;
         holder.scale.setScalar(gloveSize);
-        holder.position.set(0, -gloveSize * 0.25, 0);
-        holder.rotation.set(0, isLeft ? Math.PI / 2 : -Math.PI / 2, 0);
-
-        handBone.add(holder);
+        holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.28);
+        armBone.add(holder);
     }
 
     const backNumberMat = new THREE.MeshBasicMaterial({
@@ -369,10 +374,6 @@ export function initShop3D(state) {
                     rightHandBone = child;
                 }
 
-                if (n.includes('thumb') || n.includes('index') || n.includes('middle') || n.includes('ring') || n.includes('pinky')) {
-                    fingerBones.push(child);
-                }
-
                 if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) {
                     spineBone = child;
                 }
@@ -435,9 +436,8 @@ export function initShop3D(state) {
 
         if (mixer) mixer.update(dt);
         if (glovesLoaded) {
-            for (let i = 0; i < fingerBones.length; i++) {
-                fingerBones[i].scale.setScalar(0.001);
-            }
+            if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
+            if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
         }
 
         ballMesh.rotation.y += 0.01;
