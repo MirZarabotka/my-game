@@ -59,6 +59,18 @@ export function initShop3D(state) {
         targetRotationY = targetRotationY === 0 ? Math.PI : 0;
     });
 
+    // Безпечний обхід усіх частин 3D-моделі без системного traverse
+    function walkModel(obj, callback) {
+        if (!obj) return;
+        callback(obj);
+        if (Array.isArray(obj.children)) {
+            const list = [...obj.children];
+            for (const child of list) {
+                walkModel(child, callback);
+            }
+        }
+    }
+
     let originalShirtImage = null;
     let playerModel = null;
     let mixer = null;
@@ -158,9 +170,9 @@ export function initShop3D(state) {
 
         const kitTexture = createKitTexture();
 
-        playerModel.traverse((child) => {
+        walkModel(playerModel, (child) => {
             if (child.isMesh && child.material) {
-                const name = child.name.toLowerCase();
+                const name = (child.name || '').toLowerCase();
                 if (name.includes('shirt')) {
                     child.material = child.material.clone();
                     child.material.map = kitTexture;
@@ -180,32 +192,34 @@ export function initShop3D(state) {
     loader.setDRACOLoader(dracoLoader);
 
     loader.load('player.glb', (gltf) => {
-        playerModel = gltf.scene;
+        playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
+        if (!playerModel) return;
+
         let leftHandBone = null;
         let rightHandBone = null;
 
-        playerModel.traverse((child) => {
+        walkModel(playerModel, (child) => {
             if (child.isMesh) {
                 child.castShadow = true;
                 child.receiveShadow = true;
-                if (child.name.toLowerCase().includes('shirt') && child.material.map) {
+                const name = (child.name || '').toLowerCase();
+                if (name.includes('shirt') && child.material && child.material.map) {
                     originalShirtImage = child.material.map.image;
                 }
             }
-            if (child.isBone) {
+            if (child.isBone && child.name) {
                 if (child.name.includes('LeftHand')) leftHandBone = child;
                 if (child.name.includes('RightHand')) rightHandBone = child;
             }
         });
 
-        // Додаємо рукавиці вже ПІСЛЯ завершення traverse
         if (leftHandBone) leftHandBone.add(leftGlove);
         if (rightHandBone) rightHandBone.add(rightGlove);
 
         scene.add(playerModel);
         updateAppearance();
 
-        const firstAnim = gltf.animations.at(0);
+        const firstAnim = gltf.animations && gltf.animations.at(0);
         if (firstAnim) {
             mixer = new THREE.AnimationMixer(playerModel);
             mixer.clipAction(firstAnim).play();
