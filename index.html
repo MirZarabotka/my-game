@@ -187,13 +187,13 @@
         renderer.toneMappingExposure = 1.1;
         container.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 1.1));
+        scene.add(new THREE.AmbientLight(0xffffff, 1.25));
         const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
         keyLight.position.set(3, 6, 4);
         keyLight.castShadow = true;
         scene.add(keyLight);
 
-        const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.3);
+        const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.4);
         rimLight.position.set(-3, 4, -4);
         scene.add(rimLight);
 
@@ -218,124 +218,52 @@
             if (!obj) return;
             callback(obj);
             if (Array.isArray(obj.children)) {
-                const list = [...obj.children];
-                for (const child of list) walkModel(child, callback);
+                for (const child of [...obj.children]) walkModel(child, callback);
             }
         }
 
-        function drawJerseyPattern(ctx, jersey, width, height) {
+        function createJerseyTexture(jersey, num, numCol) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
             ctx.fillStyle = jersey.c1;
-            ctx.fillRect(0, 0, width, height);
+            ctx.fillRect(0, 0, 512, 512);
+
             ctx.fillStyle = jersey.c2;
             if (jersey.pattern === 'stripes') {
-                for (let x = 0; x < width; x += 28) ctx.fillRect(x, 0, 14, height);
+                for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512);
             } else if (jersey.pattern === 'hoops') {
-                for (let y = 0; y < height; y += 34) ctx.fillRect(0, y, width, 17);
+                for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
             } else if (jersey.pattern === 'half') {
-                ctx.fillRect(width * 0.25, 0, width * 0.25, height);
-                ctx.fillRect(width * 0.75, 0, width * 0.25, height);
+                ctx.fillRect(110, 0, 130, 512);
+                ctx.fillRect(375, 0, 137, 512);
             } else if (jersey.pattern === 'centerBand') {
-                ctx.fillRect(width * 0.16, 0, width * 0.18, height);
-                ctx.fillRect(width * 0.66, 0, width * 0.18, height);
+                ctx.fillRect(90, 0, 65, 512);
+                ctx.fillRect(345, 0, 65, 512);
             } else if (jersey.pattern === 'chestBand') {
-                ctx.fillRect(0, height * 0.3, width, height * 0.28);
+                ctx.fillRect(0, 160, 512, 130);
             } else if (jersey.pattern === 'sash') {
                 ctx.beginPath();
-                ctx.moveTo(0, 0); ctx.lineTo(width * 0.15, 0);
-                ctx.lineTo(width * 0.5, height); ctx.lineTo(width * 0.35, height);
-                ctx.closePath(); ctx.fill();
-                ctx.beginPath();
-                ctx.moveTo(width * 0.5, 0); ctx.lineTo(width * 0.65, 0);
-                ctx.lineTo(width, height); ctx.lineTo(width * 0.85, height);
+                ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
                 ctx.closePath(); ctx.fill();
             } else if (jersey.pattern === 'sleeves') {
-                ctx.fillRect(0, 0, width * 0.12, height);
-                ctx.fillRect(width * 0.38, 0, width * 0.24, height);
-                ctx.fillRect(width * 0.88, 0, width * 0.12, height);
-            }
-        }
-        function createSmartKitTexture(baseImg) {
-            const jId = localStorage.getItem('eq_jerseys') || 'j1';
-            const sId = localStorage.getItem('eq_shorts') || 's1';
-            const bId = localStorage.getItem('eq_boots') || 'b1';
-            const num = localStorage.getItem('eq_number') || '10';
-            const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
-
-            const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
-            const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
-            const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
-
-            const size = 512;
-            const patternCanvas = document.createElement('canvas');
-            patternCanvas.width = size;
-            patternCanvas.height = size;
-            const pCtx = patternCanvas.getContext('2d');
-
-            drawJerseyPattern(pCtx, jersey, size, 330);
-
-            pCtx.fillStyle = shortItem.c1;
-            pCtx.fillRect(0, 330, size, 182);
-            pCtx.fillStyle = shortItem.c2;
-            pCtx.fillRect(0, 405, size, 24);
-
-            pCtx.fillStyle = numCol;
-            pCtx.strokeStyle = '#000000';
-            pCtx.lineWidth = 6;
-            pCtx.font = '900 72px "Segoe UI", sans-serif';
-            pCtx.textAlign = 'center';
-            pCtx.textBaseline = 'middle';
-            pCtx.strokeText(num, 256, 150);
-            pCtx.fillText(num, 256, 150);
-
-            if (baseImg) {
-                const outCanvas = document.createElement('canvas');
-                outCanvas.width = size;
-                outCanvas.height = size;
-                const oCtx = outCanvas.getContext('2d');
-                oCtx.drawImage(baseImg, 0, 0, size, size);
-
-                const origData = oCtx.getImageData(0, 0, size, size);
-                const patData = pCtx.getImageData(0, 0, size, size);
-                const bootCol = new THREE.Color(bootItem.c1);
-                const bR = Math.round(bootCol.r * 255);
-                const bG = Math.round(bootCol.g * 255);
-                const bB = Math.round(bootCol.b * 255);
-
-                for (let i = 0; i < origData.data.length; i += 4) {
-                    const r = origData.data[i];
-                    const g = origData.data[i + 1];
-                    const b = origData.data[i + 2];
-
-                    const isSkin = (
-                        r > 135 && g > 85 && b > 55 &&
-                        r > g && g > b &&
-                        (r - g) >= 12 && (r - g) <= 68 &&
-                        (g - b) >= 8 && (g - b) <= 55
-                    );
-                    const py = Math.floor((i / 4) / size);
-                    const isShoe = (py > 410 && r < 75 && g < 75 && b < 75);
-
-                    if (isShoe) {
-                        origData.data[i] = bR;
-                        origData.data[i + 1] = bG;
-                        origData.data[i + 2] = bB;
-                    } else if (!isSkin) {
-                        const shade = Math.min(1.25, Math.max(0.6, (r + g + b) / 360));
-                        origData.data[i] = Math.min(255, patData.data[i] * shade);
-                        origData.data[i + 1] = Math.min(255, patData.data[i + 1] * shade);
-                        origData.data[i + 2] = Math.min(255, patData.data[i + 2] * shade);
-                    }
-                }
-                oCtx.putImageData(origData, 0, 0);
-
-                const tex = new THREE.CanvasTexture(outCanvas);
-                tex.flipY = false;
-                tex.colorSpace = THREE.SRGBColorSpace;
-                tex.needsUpdate = true;
-                return tex;
+                ctx.fillRect(0, 0, 42, 512);
+                ctx.fillRect(235, 0, 45, 512);
+                ctx.fillRect(470, 0, 42, 512);
             }
 
-            const tex = new THREE.CanvasTexture(patternCanvas);
+            ctx.fillStyle = numCol;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 8;
+            ctx.font = '900 92px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeText(num, 375, 215);
+            ctx.fillText(num, 375, 215);
+
+            const tex = new THREE.CanvasTexture(canvas);
             tex.flipY = false;
             tex.colorSpace = THREE.SRGBColorSpace;
             tex.needsUpdate = true;
@@ -353,33 +281,44 @@
             const playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
             if (!playerModel) return;
 
-            let baseImg = null;
-            walkModel(playerModel, (child) => {
-                if (child.isMesh && child.material) {
-                    const name = (child.name || '').toLowerCase();
-                    if (!name.includes('hair') && !name.includes('eye')) {
-                        const mat = Array.isArray(child.material) ? child.material.at(0) : child.material;
-                        if (mat && mat.map && mat.map.image) baseImg = mat.map.image;
-                    }
-                }
-            });
-
-            const kitTex = createSmartKitTexture(baseImg);
+            const jId = localStorage.getItem('eq_jerseys') || 'j1';
+            const sId = localStorage.getItem('eq_shorts') || 's1';
             const bId = localStorage.getItem('eq_boots') || 'b1';
+            const num = localStorage.getItem('eq_number') || '10';
+            const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
+
+            const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
+            const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
             const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
 
-            walkModel(playerModel, (child) => {
-                if (child.isMesh && child.material) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                    const name = (child.name || '').toLowerCase();
-                    if (name.includes('hair') || name.includes('eye') || name.includes('lash')) return;
+            const jerseyTex = createJerseyTexture(jersey, num, numCol);
 
-                    if (name.includes('shoe') || name.includes('boot')) {
-                        child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.45 });
-                    } else {
-                        child.material = new THREE.MeshStandardMaterial({ map: kitTex, roughness: 0.75 });
-                    }
+            walkModel(playerModel, (child) => {
+                if (!child.isMesh || !child.material) return;
+                child.castShadow = true;
+                child.receiveShadow = true;
+                const name = (child.name || '').toLowerCase();
+
+                if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
+                    child.material = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.7 });
+                } else if (name.includes('short') || name.includes('pant')) {
+                    child.material = new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.75 });
+                } else if (name.includes('shoe') || name.includes('boot')) {
+                    child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
+                } else if (Array.isArray(child.material)) {
+                    child.material = child.material.map((m, idx) => {
+                        const mName = (m.name || '').toLowerCase();
+                        if (mName.includes('shirt') || mName.includes('top') || idx === 1) {
+                            return new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.7 });
+                        }
+                        if (mName.includes('short') || idx === 2) {
+                            return new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.75 });
+                        }
+                        if (mName.includes('shoe') || mName.includes('boot') || idx === 3) {
+                            return new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
+                        }
+                        return m;
+                    });
                 }
             });
 
