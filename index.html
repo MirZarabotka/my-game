@@ -25,7 +25,24 @@
             top: 18px;
             right: 18px;
             display: flex;
-            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+        }
+        .sound-btn {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(10px);
+            color: #f8fafc;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.45);
         }
         .coins-pill {
             background: rgba(15, 23, 42, 0.78);
@@ -46,7 +63,7 @@
             transform: translateY(-50%);
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 11px;
             pointer-events: auto;
             z-index: 10;
         }
@@ -54,18 +71,18 @@
         .nav-card {
             text-decoration: none;
             border: 1px solid rgba(255, 255, 255, 0.14);
-            background: rgba(15, 23, 42, 0.72);
+            background: rgba(15, 23, 42, 0.74);
             backdrop-filter: blur(12px);
-            padding: 12px 16px 12px 14px;
+            padding: 11px 15px 11px 14px;
             border-radius: 16px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 12px;
-            min-width: 158px;
+            gap: 11px;
+            min-width: 164px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.42);
             transition: transform 0.2s, border-color 0.2s, background 0.2s;
         }
 
@@ -81,26 +98,29 @@
 
         .nav-card.play-card::before { background: #22c55e; box-shadow: 0 0 12px #22c55e; }
         .nav-card.shop-card::before { background: #38bdf8; box-shadow: 0 0 12px #38bdf8; }
+        .nav-card.settings-card::before { background: #f59e0b; box-shadow: 0 0 12px #f59e0b; }
 
         .nav-card:hover {
             transform: translateX(5px);
-            background: rgba(30, 41, 59, 0.88);
+            background: rgba(30, 41, 59, 0.9);
         }
         .nav-card.play-card:hover { border-color: rgba(34, 197, 94, 0.65); }
         .nav-card.shop-card:hover { border-color: rgba(56, 189, 248, 0.65); }
+        .nav-card.settings-card:hover { border-color: rgba(245, 158, 11, 0.65); }
 
         .nav-icon {
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             border-radius: 11px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             flex-shrink: 0;
         }
         .play-card .nav-icon { background: rgba(34, 197, 94, 0.2); }
         .shop-card .nav-icon { background: rgba(56, 189, 248, 0.2); }
+        .settings-card .nav-icon { background: rgba(245, 158, 11, 0.2); }
 
         .nav-text {
             display: flex;
@@ -108,15 +128,89 @@
             text-align: left;
         }
         .nav-title {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 800;
             color: #ffffff;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
         }
         .nav-sub {
-            font-size: 0.68rem;
+            font-size: 0.66rem;
             font-weight: 600;
             color: #94a3b8;
+        }
+
+        /* Модальне вікно налаштувань */
+        #settings-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 40;
+            pointer-events: auto;
+            padding: 20px;
+        }
+        #settings-modal.open { display: flex; }
+        .modal-box {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 22px;
+            width: 100%;
+            max-width: 340px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.65);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 800; }
+        .close-modal {
+            background: #1e293b;
+            color: #cbd5e1;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .setting-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .setting-row label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+        }
+        .setting-row input[type="range"] {
+            width: 100%;
+            accent-color: #22c55e;
+            cursor: pointer;
+        }
+        .toggle-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: #1e293b;
+            color: #f8fafc;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .toggle-btn.active {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            color: #4ade80;
         }
 
         #loader-screen {
@@ -144,13 +238,14 @@
 <body>
     <div id="loader-screen">
         <div class="spinner"></div>
-        <div id="loader-text">Вихід на стадіон...</div>
+        <div id="loader-text">Завантаження стадіону...</div>
     </div>
 
     <div id="canvas-container"></div>
 
     <div class="ui-layer">
         <div class="top-hud">
+            <button class="sound-btn" id="quick-sound-btn" title="Звук трибун">🔊</button>
             <div class="coins-pill" id="home-coins">💰 500</div>
         </div>
 
@@ -169,6 +264,32 @@
                     <span class="nav-sub">Форма та бутси</span>
                 </div>
             </a>
+            <button class="nav-card settings-card" id="settings-btn">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-text">
+                    <span class="nav-title">НАЛАШТУВАННЯ</span>
+                    <span class="nav-sub">Звук та графіка</span>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <div id="settings-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>⚙️ Налаштування</h3>
+                <button class="close-modal" id="close-settings">✕</button>
+            </div>
+            <div class="setting-row">
+                <label>Гучність трибун <span id="vol-label">70%</span></label>
+                <input type="range" id="stadium-vol" min="0" max="100" value="70">
+            </div>
+            <div class="setting-row">
+                <button class="toggle-btn active" id="toggle-crowd-sound">🔊 Спів та гул трибун: УВІМК</button>
+            </div>
+            <div class="setting-row">
+                <button class="toggle-btn active" id="toggle-shadows">✨ Тіні та деталізація: ВИСОКА</button>
+            </div>
         </div>
     </div>
 
@@ -191,10 +312,117 @@
         }
         document.getElementById('home-coins').innerText = `💰 ${localStorage.getItem('player_coins')}`;
 
+        // --- АУДІО-СИНТЕЗАТОР СТАДІОНУ (Спів, кричалки та гул вболівальників) ---
+        class StadiumChantAudio {
+            constructor() {
+                this.ctx = null;
+                this.masterGain = null;
+                this.enabled = localStorage.getItem('stadium_sound') !== 'off';
+                this.volume = Number(localStorage.getItem('stadium_vol') || 70) / 100;
+                this.started = false;
+            }
+
+            init() {
+                if (this.started || !this.enabled) return;
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+
+                this.ctx = new AudioCtx();
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = this.volume * 0.45;
+                this.masterGain.connect(this.ctx.destination);
+
+                // 1. Постійний гул 40 000 глядачів (фільтрований шум)
+                const bufferSize = this.ctx.sampleRate * 4;
+                const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                let b0 = 0, b1 = 0, b2 = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    b0 = 0.997 * b0 + white * 0.029;
+                    b1 = 0.985 * b1 + white * 0.032;
+                    b2 = 0.950 * b2 + white * 0.048;
+                    output[i] = (b0 + b1 + b2) * 0.35;
+                }
+
+                const crowdNoise = this.ctx.createBufferSource();
+                crowdNoise.buffer = noiseBuffer;
+                crowdNoise.loop = true;
+
+                const crowdFilter = this.ctx.createBiquadFilter();
+                crowdFilter.type = 'bandpass';
+                crowdFilter.frequency.value = 480;
+                crowdFilter.Q.value = 0.7;
+
+                crowdNoise.connect(crowdFilter);
+                crowdFilter.connect(this.masterGain);
+                crowdNoise.start();
+
+                // 2. Ритмічний спів трибун ("Оле-Оле-Оле!")
+                const chantNotes = [261.63, 293.66, 329.63, 293.66, 329.63, 392.00];
+                let step = 0;
+                setInterval(() => {
+                    if (!this.enabled || !this.ctx || this.ctx.state !== 'running') return;
+                    const now = this.ctx.currentTime;
+                    const freq = chantNotes[step % chantNotes.length];
+                    step++;
+
+                    [-4, 0, 5].forEach((detune) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        const filter = this.ctx.createBiquadFilter();
+
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, now);
+                        osc.detune.value = detune * 6;
+
+                        filter.type = 'lowpass';
+                        filter.frequency.value = 620;
+
+                        gain.gain.setValueAtTime(0.0001, now);
+                        gain.gain.linearRampToValueAtTime(0.045, now + 0.14);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.65);
+
+                        osc.connect(filter);
+                        filter.connect(gain);
+                        gain.connect(this.masterGain);
+
+                        osc.start(now);
+                        osc.stop(now + 0.68);
+                    });
+                }, 720);
+
+                this.started = true;
+            }
+
+            setVolume(v) {
+                this.volume = v;
+                localStorage.setItem('stadium_vol', String(Math.round(v * 100)));
+                if (this.masterGain) this.masterGain.gain.value = this.enabled ? v * 0.45 : 0;
+            }
+
+            toggle() {
+                this.enabled = !this.enabled;
+                localStorage.setItem('stadium_sound', this.enabled ? 'on' : 'off');
+                if (this.enabled && !this.started) this.init();
+                if (this.ctx && this.ctx.state === 'suspended' && this.enabled) this.ctx.resume();
+                if (this.masterGain) this.masterGain.gain.value = this.enabled ? this.volume * 0.45 : 0;
+                return this.enabled;
+            }
+        }
+
+        const stadiumAudio = new StadiumChantAudio();
+        const unlockAudio = () => {
+            stadiumAudio.init();
+            if (stadiumAudio.ctx && stadiumAudio.ctx.state === 'suspended' && stadiumAudio.enabled) {
+                stadiumAudio.ctx.resume();
+            }
+        };
+        window.addEventListener('pointerdown', unlockAudio, { once: true });
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x09162e);
-        scene.fog = new THREE.FogExp2(0x09162e, 0.014);
+        scene.background = new THREE.Color(0x071326);
+        scene.fog = new THREE.FogExp2(0x071326, 0.012);
 
         const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 180);
         camera.position.set(-0.45, 1.35, 3.5);
@@ -207,7 +435,6 @@
         renderer.toneMappingExposure = 1.15;
         container.appendChild(renderer.domElement);
 
-        // Освітлення стадіону
         scene.add(new THREE.AmbientLight(0xdbeafe, 1.05));
         const sunLight = new THREE.DirectionalLight(0xffffff, 2.3);
         sunLight.position.set(8, 16, 10);
@@ -218,14 +445,12 @@
         backStadiumLight.position.set(-10, 12, -16);
         scene.add(backStadiumLight);
 
-        // Текстура смугастого газону з розміткою штрафного майданчика
         function createPitchTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
             canvas.height = 1024;
             const ctx = canvas.getContext('2d');
 
-            // Смуги трави
             const stripeCount = 12;
             const stripeH = 1024 / stripeCount;
             for (let i = 0; i < stripeCount; i++) {
@@ -233,15 +458,12 @@
                 ctx.fillRect(0, i * stripeH, 1024, stripeH);
             }
 
-            // Біла розмітка поля
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.lineWidth = 7;
 
-            // Зовнішній периметр поля
             ctx.strokeRect(48, 48, 928, 928);
 
-            // Центральна лінія та коло
             ctx.beginPath();
             ctx.moveTo(48, 512);
             ctx.lineTo(976, 512);
@@ -251,7 +473,6 @@
             ctx.arc(512, 512, 95, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Штрафний майданчик (далекий — позаду гравця)
             ctx.strokeRect(256, 48, 512, 180);
             ctx.strokeRect(384, 48, 256, 68);
             ctx.beginPath();
@@ -261,7 +482,6 @@
             ctx.arc(512, 175, 85, 0.22 * Math.PI, 0.78 * Math.PI);
             ctx.stroke();
 
-            // Штрафний майданчик (ближній — перед гравцем)
             ctx.strokeRect(256, 796, 512, 180);
             ctx.strokeRect(384, 908, 256, 68);
             ctx.beginPath();
@@ -280,7 +500,6 @@
         const stadiumGroup = new THREE.Group();
         scene.add(stadiumGroup);
 
-        // Поле (44x64 м, гравець стоїть у центрі поля біля 11-метрової/центральної зони)
         const pitch = new THREE.Mesh(
             new THREE.PlaneGeometry(46, 66),
             new THREE.MeshStandardMaterial({ map: createPitchTexture(), roughness: 0.85 })
@@ -289,16 +508,14 @@
         pitch.receiveShadow = true;
         stadiumGroup.add(pitch);
 
-        // Бігова доріжка навколо газону
         const track = new THREE.Mesh(
-            new THREE.PlaneGeometry(58, 78),
+            new THREE.PlaneGeometry(62, 82),
             new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 })
         );
         track.rotation.x = -Math.PI / 2;
         track.position.y = -0.02;
         stadiumGroup.add(track);
 
-        // Ворота позаду гравця (на лінії z = -29.8)
         function createGoal(zPos, rotY) {
             const goal = new THREE.Group();
             const postMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
@@ -329,324 +546,118 @@
         }
         stadiumGroup.add(createGoal(-29.8, 0));
         stadiumGroup.add(createGoal(29.8, Math.PI));
-
-        // 360° трибуни навколо всього стадіону
-        const standMat1 = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.8 });
-        const standMat2 = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85 });
+        const tierMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85 });
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.4 });
         const adBoardMat = new THREE.MeshBasicMaterial({ color: 0x0284c7 });
 
-        // Задня та передня трибуни
-        [-36, 36].forEach((z) => {
-            const lowerTier = new THREE.Mesh(new THREE.BoxGeometry(56, 5.5, 8), standMat1);
-            lowerTier.position.set(0, 2.75, z);
-            const upperTier = new THREE.Mesh(new THREE.BoxGeometry(62, 6.5, 9), standMat2);
-            upperTier.position.set(0, 8.2, z + (z < 0 ? -3 : 3));
-            const ad = new THREE.Mesh(new THREE.BoxGeometry(48, 0.9, 0.2), adBoardMat);
-            ad.position.set(0, 0.45, z + (z < 0 ? 4.2 : -4.2));
-            stadiumGroup.add(lowerTier, upperTier, ad);
-        });
+        const fanPositions = [];
+        const phonePositions = [];
+        const fanColors = [0xef4444, 0x3b82f6, 0xfacc15, 0x22c55e, 0xffffff, 0xf97316, 0x38bdf8];
 
-        // Ліва та права трибуни
-        [-27, 27].forEach((x) => {
-            const lowerTier = new THREE.Mesh(new THREE.BoxGeometry(8, 5.5, 76), standMat1);
-            lowerTier.position.set(x, 2.75, 0);
-            const upperTier = new THREE.Mesh(new THREE.BoxGeometry(9, 6.5, 82), standMat2);
-            upperTier.position.set(x + (x < 0 ? -3 : 3), 8.2, 0);
-            const ad = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.9, 68), adBoardMat);
-            ad.position.set(x + (x < 0 ? 4.2 : -4.2), 0.45, 0);
-            stadiumGroup.add(lowerTier, upperTier, ad);
-        });
+        const numRows = 8;
+        for (let r = 0; r < numRows; r++) {
+            const rowY = 0.9 + r * 0.72;
+            const rowDepth = 1.1;
 
-        // 4 прожекторні щогли по кутах стадіону
+            const zDist = 33.5 + r * 1.05;
+            const stepW = 54 + r * 2;
+            const stepGeoZ = new THREE.BoxGeometry(stepW, 0.7, rowDepth);
+
+            const backStep = new THREE.Mesh(stepGeoZ, tierMat);
+            backStep.position.set(0, rowY - 0.35, -zDist);
+            const frontStep = new THREE.Mesh(stepGeoZ, tierMat);
+            frontStep.position.set(0, rowY - 0.35, zDist);
+            stadiumGroup.add(backStep, frontStep);
+
+            for (let x = -stepW * 0.46; x <= stepW * 0.46; x += 1.35) {
+                if (Math.random() > 0.12) {
+                    fanPositions.push({ x: x + (Math.random() - 0.5) * 0.3, y: rowY + 0.35, z: -zDist, phase: Math.random() * 6.28 });
+                    if (Math.random() > 0.72) phonePositions.push({ x, y: rowY + 0.62, z: -zDist + 0.25, phase: Math.random() * 10 });
+                }
+                if (Math.random() > 0.12) {
+                    fanPositions.push({ x: x + (Math.random() - 0.5) * 0.3, y: rowY + 0.35, z: zDist, phase: Math.random() * 6.28 });
+                }
+            }
+
+            const xDist = 25.5 + r * 1.05;
+            const stepL = 66 + r * 2;
+            const stepGeoX = new THREE.BoxGeometry(rowDepth, 0.7, stepL);
+
+            const leftStep = new THREE.Mesh(stepGeoX, tierMat);
+            leftStep.position.set(-xDist, rowY - 0.35, 0);
+            const rightStep = new THREE.Mesh(stepGeoX, tierMat);
+            rightStep.position.set(xDist, rowY - 0.35, 0);
+            stadiumGroup.add(leftStep, rightStep);
+
+            for (let z = -stepL * 0.46; z <= stepL * 0.46; z += 1.45) {
+                if (Math.random() > 0.15) {
+                    fanPositions.push({ x: -xDist, y: rowY + 0.35, z, phase: Math.random() * 6.28 });
+                    if (Math.random() > 0.78) phonePositions.push({ x: -xDist + 0.25, y: rowY + 0.62, z, phase: Math.random() * 10 });
+                }
+                if (Math.random() > 0.15) {
+                    fanPositions.push({ x: xDist, y: rowY + 0.35, z, phase: Math.random() * 6.28 });
+                    if (Math.random() > 0.78) phonePositions.push({ x: xDist - 0.25, y: rowY + 0.62, z, phase: Math.random() * 10 });
+                }
+            }
+        }
+
+        const backRoof = new THREE.Mesh(new THREE.BoxGeometry(68, 0.4, 11), roofMat);
+        backRoof.position.set(0, 8.6, -37.5);
+        const frontRoof = new THREE.Mesh(new THREE.BoxGeometry(68, 0.4, 11), roofMat);
+        frontRoof.position.set(0, 8.6, 37.5);
+        const leftRoof = new THREE.Mesh(new THREE.BoxGeometry(11, 0.4, 82), roofMat);
+        leftRoof.position.set(-29.5, 8.6, 0);
+        const rightRoof = new THREE.Mesh(new THREE.BoxGeometry(11, 0.4, 82), roofMat);
+        rightRoof.position.set(29.5, 8.6, 0);
+        stadiumGroup.add(backRoof, frontRoof, leftRoof, rightRoof);
+
+        const adBack = new THREE.Mesh(new THREE.BoxGeometry(50, 0.85, 0.2), adBoardMat);
+        adBack.position.set(0, 0.42, -32.2);
+        const adLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.85, 64), adBoardMat);
+        adLeft.position.set(-24.2, 0.42, 0);
+        const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.85, 64), adBoardMat);
+        adRight.position.set(24.2, 0.42, 0);
+        stadiumGroup.add(adBack, adLeft, adRight);
+
+        const fanGeo = new THREE.CapsuleGeometry(0.22, 0.45, 4, 8);
+        const fanMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
+        const fansInstanced = new THREE.InstancedMesh(fanGeo, fanMat, fanPositions.length);
+        const dummy = new THREE.Object3D();
+        const tmpColor = new THREE.Color();
+
+        fanPositions.forEach((f, idx) => {
+            dummy.position.set(f.x, f.y, f.z);
+            dummy.updateMatrix();
+            fansInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpColor.setHex(fanColors[idx % fanColors.length]);
+            fansInstanced.setColorAt(idx, tmpColor);
+        });
+        fansInstanced.instanceMatrix.needsUpdate = true;
+        if (fansInstanced.instanceColor) fansInstanced.instanceColor.needsUpdate = true;
+        stadiumGroup.add(fansInstanced);
+
+        const phoneGeo = new THREE.BoxGeometry(0.14, 0.22, 0.04);
+        const phoneMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe });
+        const phonesInstanced = new THREE.InstancedMesh(phoneGeo, phoneMat, phonePositions.length);
+        phonePositions.forEach((p, idx) => {
+            dummy.position.set(p.x, p.y, p.z);
+            dummy.lookAt(0, 1.2, 0);
+            dummy.updateMatrix();
+            phonesInstanced.setMatrixAt(idx, dummy.matrix);
+        });
+        phonesInstanced.instanceMatrix.needsUpdate = true;
+        stadiumGroup.add(phonesInstanced);
+
         const poleMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.6, roughness: 0.4 });
         const lampMat = new THREE.MeshBasicMaterial({ color: 0xf0f9ff });
-        [[-26, -35], [26, -35], [-26, 35], [26, 35]].forEach(([px, pz]) => {
+        [[-28, -36], [28, -36], [-28, 36],].forEach(([px, pz]) => {
             const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 19, 10), poleMat);
             pole.position.set(px, 9.5, pz);
-            const panel = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.8, 0.4), lampMat);
+            const panel = new THREE.Mesh(new THREE.BoxGeometry(3.8, 1.8, 0.4), lampMat);
             panel.position.set(px, 18.8, pz);
             panel.lookAt(0, 0, 0);
             stadiumGroup.add(pole, panel);
         });
-        const ballMesh = new THREE.Mesh(
-            new THREE.SphereGeometry(0.14, 24, 24),
-            new THREE.MeshStandardMaterial({ roughness: 0.4 })
-        );
-        ballMesh.position.set(0.38, 0.14, 0.26);
-        ballMesh.castShadow = true;
-        scene.add(ballMesh);
-
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.enablePan = false;
-        controls.minDistance = 2.2;
-        controls.maxDistance = 5.0;
-        controls.maxPolarAngle = Math.PI / 2 - 0.02;
-        controls.target.set(-0.32, 0.95, 0);
-        controls.update();
-
-        function walkModel(obj, callback) {
-            if (!obj) return;
-            callback(obj);
-            if (Array.isArray(obj.children)) {
-                for (const child of [...obj.children]) walkModel(child, callback);
-            }
-        }
-
-        const leftGloveHolder = new THREE.Group();
-        const rightGloveHolder = new THREE.Group();
-        let leftHandBone = null;
-        let rightHandBone = null;
-        let leftForeArmBone = null;
-        let rightForeArmBone = null;
-        let glovesLoaded = false;
-        const gloveMaterials = [];
-
-        function makeBrightDetailTexture(sourceTex) {
-            if (!sourceTex || !sourceTex.image) return null;
-            try {
-                const img = sourceTex.image;
-                const w = img.width || 512;
-                const h = img.height || 512;
-                const canvas = document.createElement('canvas');
-                canvas.width = w;
-                canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-
-                const imgData = ctx.getImageData(0, 0, w, h);
-                const data = imgData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    const lum = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
-                    const boosted = Math.min(255, Math.round((0.55 + lum * 0.45) * 255));
-                    data[i] = boosted;
-                    data[i + 1] = boosted;
-                    data[i + 2] = boosted;
-                }
-                ctx.putImageData(imgData, 0, 0);
-
-                const cleanTex = new THREE.CanvasTexture(canvas);
-                cleanTex.flipY = sourceTex.flipY;
-                cleanTex.colorSpace = THREE.SRGBColorSpace;
-                cleanTex.needsUpdate = true;
-                return cleanTex;
-            } catch (e) {
-                return null;
-            }
-        }
-
-        function extractSingleGlove(gloveScene, pickLeft) {
-            gloveScene.updateMatrixWorld(true);
-            const fullBox = new THREE.Box3().setFromObject(gloveScene);
-            const midX = (fullBox.min.x + fullBox.max.x) * 0.5;
-            const isSingle = (fullBox.max.x - fullBox.min.x) < (fullBox.max.y - fullBox.min.y) * 1.1;
-
-            const meshGroup = new THREE.Group();
-
-            gloveScene.traverse((node) => {
-                if (!node.isMesh || !node.geometry) return;
-                const geo = node.geometry.clone();
-                geo.applyMatrix4(node.matrixWorld);
-
-                if (!isSingle && geo.index) {
-                    const pos = geo.attributes.position;
-                    const idx = geo.index.array;
-                    const filtered = [];
-                    for (let i = 0; i < idx.length; i += 3) {
-                        const cx = (pos.getX(idx[i]) + pos.getX(idx[i + 1]) + pos.getX(idx[i + 2])) / 3;
-                        if (pickLeft ? cx < midX : cx >= midX) {
-                            filtered.push(idx[i], idx[i + 1], idx[i + 2]);
-                        }
-                    }
-                    if (filtered.length === 0) return;
-                    geo.setIndex(filtered);
-                }
-
-                geo.computeBoundingBox();
-                const mats = Array.isArray(node.material) ? node.material : [node.material];
-                const clonedMats = mats.map((m) => {
-                    const detailMap = makeBrightDetailTexture(m.map);
-                    const c = new THREE.MeshStandardMaterial({
-                        map: detailMap,
-                        normalMap: m.normalMap || null,
-                        roughness: 0.55,
-                        metalness: 0.05,
-                        side: THREE.DoubleSide
-                    });
-                    gloveMaterials.push(c);
-                    return c;
-                });
-
-                const mesh = new THREE.Mesh(geo, clonedMats.length === 1 ? clonedMats.at(0) : clonedMats);
-                mesh.castShadow = true;
-                mesh.frustumCulled = false;
-                meshGroup.add(mesh);
-            });
-
-            const box = new THREE.Box3().setFromObject(meshGroup);
-            const size = new THREE.Vector3();
-            box.getSize(size);
-
-            const cuffThresholdY = box.min.y + size.y * 0.15;
-            let minCuffX = Infinity, maxCuffX = -Infinity;
-            let minCuffZ = Infinity, maxCuffZ = -Infinity;
-            let foundCuff = false;
-
-            meshGroup.traverse((m) => {
-                if (!m.isMesh || !m.geometry) return;
-                const pos = m.geometry.attributes.position;
-                const idx = m.geometry.index;
-                if (idx) {
-                    for (let i = 0; i < idx.count; i++) {
-                        const vi = idx.getX(i);
-                        const y = pos.getY(vi);
-                        if (y <= cuffThresholdY) {
-                            const x = pos.getX(vi);
-                            const z = pos.getZ(vi);
-                            if (x < minCuffX) minCuffX = x;
-                            if (x > maxCuffX) maxCuffX = x;
-                            if (z < minCuffZ) minCuffZ = z;
-                            if (z > maxCuffZ) maxCuffZ = z;
-                            foundCuff = true;
-                        }
-                    }
-                }
-            });
-
-            const center = new THREE.Vector3();
-            box.getCenter(center);
-            const pivotX = foundCuff ? (minCuffX + maxCuffX) * 0.5 : center.x;
-            const pivotZ = foundCuff ? (minCuffZ + maxCuffZ) * 0.5 : center.z;
-
-            const maxDim = Math.max(size.x, size.y, size.z) || 1;
-            const norm = 1.0 / maxDim;
-
-            meshGroup.scale.setScalar(norm);
-            meshGroup.position.set(-pivotX * norm, -box.min.y * norm, -pivotZ * norm);
-
-            const unit = new THREE.Group();
-            unit.add(meshGroup);
-            unit.rotation.y = pickLeft ? Math.PI : 0;
-            return unit;
-        }
-
-        function attachToSleeveEnd(holder, foreArmBone, handBone) {
-            const armBone = foreArmBone || (handBone && handBone.parent);
-            if (!armBone) return;
-
-            const wristPos = handBone ? handBone.position.clone() : new THREE.Vector3(0, 24, 0);
-            const foreLen = wristPos.length() || 24;
-            const dir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
-
-            const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-            holder.quaternion.copy(q);
-
-            const gloveSize = foreLen * 2.2;
-            holder.scale.setScalar(gloveSize);
-            holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.25);
-            armBone.add(holder);
-        }
-
-        function mountGloveModel(gloveScene, gloveColorHex) {
-            gloveMaterials.length = 0;
-            const rightUnit = extractSingleGlove(gloveScene, false);
-            const leftUnit = extractSingleGlove(gloveScene, true);
-
-            rightGloveHolder.clear();
-            leftGloveHolder.clear();
-            rightGloveHolder.add(rightUnit);
-            leftGloveHolder.add(leftUnit);
-
-            attachToSleeveEnd(rightGloveHolder, rightForeArmBone, rightHandBone);
-            attachToSleeveEnd(leftGloveHolder, leftForeArmBone, leftHandBone);
-
-            const cleanColor = new THREE.Color(gloveColorHex);
-            gloveMaterials.forEach((m) => {
-                m.color.copy(cleanColor);
-                m.needsUpdate = true;
-            });
-
-            glovesLoaded = true;
-        }
-
-        function createJerseyTexture(jersey) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 512;
-            canvas.height = 512;
-            const ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = jersey.c1;
-            ctx.fillRect(0, 0, 512, 512);
-
-            ctx.fillStyle = jersey.c2;
-            if (jersey.pattern === 'stripes') {
-                for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512);
-            } else if (jersey.pattern === 'hoops') {
-                for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
-            } else if (jersey.pattern === 'half') {
-                ctx.fillRect(105, 0, 60, 512);
-                ctx.fillRect(265, 0, 85, 512);
-            } else if (jersey.pattern === 'centerBand') {
-                ctx.fillRect(85, 0, 45, 512);
-                ctx.fillRect(245, 0, 45, 512);
-            } else if (jersey.pattern === 'chestBand') {
-                ctx.fillRect(0, 160, 512, 130);
-            } else if (jersey.pattern === 'sash') {
-                ctx.beginPath();
-                ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
-                ctx.closePath(); ctx.fill();
-            } else if (jersey.pattern === 'sleeves') {
-                ctx.fillRect(203, 0, 22, 512);
-                ctx.fillRect(398, 0, 114, 512);
-            }
-
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.flipY = false;
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.needsUpdate = true;
-            return tex;
-        }
-        function createBackNumberTexture(num, numCol) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, 256, 256);
-
-            ctx.fillStyle = numCol;
-            ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
-            ctx.lineWidth = 10;
-            ctx.font = '900 165px "Segoe UI", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.strokeText(num, 128, 128);
-            ctx.fillText(num, 128, 128);
-
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.needsUpdate = true;
-            return tex;
-        }
-
-        function createBallTexture(c1, c2) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 128;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = c1;
-            ctx.fillRect(0, 0, 256, 128);
-            ctx.fillStyle = c2;
-            for (let x = 16; x < 256; x += 48) {
-                for (let y = 20; y < 128; y += 44) {
-                    ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fill();
-                }
-            }
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.needsUpdate = true;
-            return tex;
-        }
-
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
@@ -723,7 +734,6 @@
                     });
                 }
             });
-
             const backNumberMat = new THREE.MeshBasicMaterial({
                 map: createBackNumberTexture(num, numCol),
                 transparent: true,
@@ -775,6 +785,45 @@
             window.location.href = 'game.html';
         });
 
+        const settingsModal = document.getElementById('settings-modal');
+        const quickSoundBtn = document.getElementById('quick-sound-btn');
+        const toggleSoundBtn = document.getElementById('toggle-crowd-sound');
+        const volSlider = document.getElementById('stadium-vol');
+        const volLabel = document.getElementById('vol-label');
+        const toggleShadowsBtn = document.getElementById('toggle-shadows');
+
+        function syncSoundUI(isOn) {
+            quickSoundBtn.textContent = isOn ? '🔊' : '🔇';
+            toggleSoundBtn.textContent = isOn ? '🔊 Спів та гул трибун: УВІМК' : '🔇 Спів та гул трибун: ВИМК';
+            toggleSoundBtn.classList.toggle('active', isOn);
+        }
+        syncSoundUI(stadiumAudio.enabled);
+        volSlider.value = Math.round(stadiumAudio.volume * 100);
+        volLabel.textContent = `${volSlider.value}%`;
+
+        quickSoundBtn.addEventListener('click', () => syncSoundUI(stadiumAudio.toggle()));
+        toggleSoundBtn.addEventListener('click', () => syncSoundUI(stadiumAudio.toggle()));
+        volSlider.addEventListener('input', (e) => {
+            const val = Number(e.target.value);
+            volLabel.textContent = `${val}%`;
+            stadiumAudio.setVolume(val / 100);
+        });
+        let highGraphics = true;
+        toggleShadowsBtn.addEventListener('click', () => {
+            highGraphics = !highGraphics;
+            renderer.shadowMap.enabled = highGraphics;
+            fansInstanced.visible = highGraphics;
+            phonesInstanced.visible = highGraphics;
+            toggleShadowsBtn.textContent = highGraphics ? '✨ Тіні та деталізація: ВИСОКА' : '⚡ Тіні та деталізація: НИЗЬКА';
+            toggleShadowsBtn.classList.toggle('active', highGraphics);
+        });
+
+        document.getElementById('settings-btn').addEventListener('click', () => settingsModal.classList.add('open'));
+        document.getElementById('close-settings').addEventListener('click', () => settingsModal.classList.remove('open'));
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) settingsModal.classList.remove('open');
+        });
+
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -786,12 +835,39 @@
             requestAnimationFrame(animate);
             const dt = (now - lastTime) * 0.001;
             lastTime = now;
+            const t = now * 0.001;
 
             if (mixer) mixer.update(dt);
             if (glovesLoaded) {
                 if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
                 if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
             }
+
+            if (fansInstanced.visible) {
+                for (let i = 0; i < fanPositions.length; i += 3) {
+                    const f = fanPositions[i];
+                    const bounce = Math.max(0, Math.sin(t * 4.5 + f.phase)) * 0.14;
+                    dummy.position.set(f.x, f.y + bounce, f.z);
+                    dummy.rotation.set(0, 0, 0);
+                    dummy.updateMatrix();
+                    fansInstanced.setMatrixAt(i, dummy.matrix);
+                }
+                fansInstanced.instanceMatrix.needsUpdate = true;
+            }
+
+            if (phonesInstanced.visible) {
+                for (let i = 0; i < phonePositions.length; i++) {
+                    const p = phonePositions[i];
+                    const flash = Math.sin(t * 9 + p.phase) > 0.92 ? 1.8 : 0.9;
+                    dummy.position.set(p.x, p.y, p.z);
+                    dummy.lookAt(0, 1.2, 0);
+                    dummy.scale.setScalar(flash);
+                    dummy.updateMatrix();
+                    phonesInstanced.setMatrixAt(i, dummy.matrix);
+                }
+                phonesInstanced.instanceMatrix.needsUpdate = true;
+            }
+
             ballMesh.rotation.y += 0.01;
             controls.update();
             renderer.render(scene, camera);
