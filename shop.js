@@ -62,7 +62,7 @@ function applyColors(kitHex, bootsHex) {
             const name = child.name.toLowerCase();
             if (bootsHex && name.includes('shoe')) {
                 child.material.color.set(bootsHex);
-            } else if (kitHex && !name.includes('shoe') && !name.includes('hair') && !name.includes('eye')) {
+            } else if (kitHex && name.includes('shirt')) {
                 child.material.color.set(kitHex);
             }
         }
