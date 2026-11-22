@@ -98,11 +98,11 @@ export function initShop3D(state) {
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 7;
-        ctx.font = '900 96px "Segoe UI", sans-serif';
+        ctx.font = '900 90px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 384, 210);
-        ctx.fillText(state.number, 384, 210);
+        ctx.strokeText(state.number, 435, 210);
+        ctx.fillText(state.number, 435, 210);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.flipY = false;
