@@ -113,13 +113,19 @@ export function initShop3D(state) {
     let rightHandBone = null;
     let leftForeArmBone = null;
     let rightForeArmBone = null;
-    let leftMidBone = null;
-    let rightMidBone = null;
     const gloveMaterials = [];
 
     function mountGloveModel(gloveScene) {
         gloveScene.updateMatrixWorld(true);
-        const rawBox = new THREE.Box3().setFromObject(gloveScene);
+        const rawBox = new THREE.Box3();
+        gloveScene.traverse((n) => {
+            if (n.isMesh) {
+                n.geometry.computeBoundingBox();
+                const b = n.geometry.boundingBox.clone().applyMatrix4(n.matrixWorld);
+                rawBox.union(b);
+            }
+        });
+
         const size = new THREE.Vector3();
         const center = new THREE.Vector3();
         rawBox.getSize(size);
@@ -150,35 +156,39 @@ export function initShop3D(state) {
             -rawBox.min.y * normScale,
             -center.z * normScale
         );
-        rModel.rotation.y = -Math.PI / 2;
+        // Внутрішньою долонею до тіла (-X), великим пальцем вперед (+Z)
+        rModel.rotation.y = Math.PI / 2;
         rightUnit.add(rModel);
 
+        // Ліва рукавиця — дзеркальна, теж внутрішньою долонею до тіла
         const leftUnit = rightUnit.clone(true);
         leftUnit.scale.x = -1;
 
         rightGloveHolder.add(rightUnit);
         leftGloveHolder.add(leftUnit);
 
-        attachToSleeveEnd(rightGloveHolder, rightForeArmBone, rightHandBone, rightMidBone);
-        attachToSleeveEnd(leftGloveHolder, leftForeArmBone, leftHandBone, leftMidBone);
+        attachToSleeveEnd(rightGloveHolder, rightForeArmBone, rightHandBone);
+        attachToSleeveEnd(leftGloveHolder, leftForeArmBone, leftHandBone);
         updateAppearance();
     }
 
-    function attachToSleeveEnd(holder, foreArmBone, handBone, midBone) {
+    function attachToSleeveEnd(holder, foreArmBone, handBone) {
         const armBone = foreArmBone || (handBone && handBone.parent);
         if (!armBone) return;
 
         armBone.updateWorldMatrix(true, false);
+        const worldScale = new THREE.Vector3();
+        armBone.getWorldScale(worldScale);
+        const invScale = 1.0 / (worldScale.x || 1);
+
         const wristPos = handBone ? handBone.position.clone() : new THREE.Vector3(0, 24, 0);
         const dir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
-        const palmLen = (midBone && midBone.position.length() > 0.001)
-            ? midBone.position.length()
-            : wristPos.length() * 0.42;
 
         const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
         holder.quaternion.copy(q);
-        holder.scale.setScalar((palmLen || 8.5) * 2.5);
-        holder.position.copy(wristPos).addScaledVector(dir, -palmLen * 0.15);
+        // Реальний світовий розмір рукавиці: 0.21 м (21 см) у будь-якій ієрархії кісток
+        holder.scale.setScalar(0.21 * invScale);
+        holder.position.copy(wristPos).addScaledVector(dir, -0.02 * invScale);
         armBone.add(holder);
     }
     const backNumberMat = new THREE.MeshBasicMaterial({
@@ -344,12 +354,9 @@ export function initShop3D(state) {
                 if (n.includes('hand') && n.includes('left') && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
                     leftHandBone = child;
                 }
-                if (n.includes('hand') && n.includes('left') && n.includes('middle1')) leftMidBone = child;
-
                 if (n.includes('hand') && n.includes('right') && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
                     rightHandBone = child;
                 }
-                if (n.includes('hand') && n.includes('right') && n.includes('middle1')) rightMidBone = child;
 
                 if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) {
                     spineBone = child;
@@ -394,7 +401,6 @@ export function initShop3D(state) {
     function animate() {
         requestAnimationFrame(animate);
         if (mixer) mixer.update(clock.getDelta());
-        // Обрізаємо (стискаємо) голі кисті щокадру після анімації, не чіпаючи рукавиці на передпліччі
         if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
         if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
         ballMesh.rotation.y += 0.01;
