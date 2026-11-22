@@ -128,11 +128,11 @@ export function initShop3D(state) {
         } else if (jersey.pattern === 'hoops') {
             for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
         } else if (jersey.pattern === 'half') {
-            ctx.fillRect(115, 0, 145, 512);
-            ctx.fillRect(260, 0, 110, 512);
+            ctx.fillRect(105, 0, 60, 512);
+            ctx.fillRect(278, 0, 75, 512);
         } else if (jersey.pattern === 'centerBand') {
-            ctx.fillRect(90, 0, 65, 512);
-            ctx.fillRect(175, 0, 65, 512);
+            ctx.fillRect(85, 0, 45, 512);
+            ctx.fillRect(255, 0, 45, 512);
         } else if (jersey.pattern === 'chestBand') {
             ctx.fillRect(0, 160, 512, 130);
         } else if (jersey.pattern === 'sash') {
@@ -140,21 +140,21 @@ export function initShop3D(state) {
             ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
-            // Обидва рукави повністю від плеча до манжета
-            ctx.fillRect(0, 0, 62, 512);
-            ctx.fillRect(245, 0, 65, 512);
-            ctx.fillRect(460, 0, 52, 512);
+            // Точні зони правого (0..42) та лівого (165..220) рукавів
+            ctx.fillRect(0, 0, 42, 512);
+            ctx.fillRect(165, 0, 55, 512);
+            ctx.fillRect(465, 0, 47, 512);
         }
 
-        // Номер рівно по центру спини (x = 185, y = 215)
+        // Номер рівно по центру спини (x = 278, y = 215)
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 8;
         ctx.font = '900 92px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 185, 215);
-        ctx.fillText(state.number, 185, 215);
+        ctx.strokeText(state.number, 278, 215);
+        ctx.fillText(state.number, 278, 215);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.flipY = false;
