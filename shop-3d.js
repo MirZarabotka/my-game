@@ -90,20 +90,19 @@ export function initShop3D(state) {
             ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
-            // Рукави у розгортці моделі лежать по краях (0..130 та 382..512)
             ctx.fillRect(0, 0, 135, 512);
             ctx.fillRect(377, 0, 135, 512);
         }
 
-        // Номер на спині
+        // Номер рівно по центру спини
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 7;
         ctx.font = '900 96px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 256, 220);
-        ctx.fillText(state.number, 256, 220);
+        ctx.strokeText(state.number, 128, 220);
+        ctx.fillText(state.number, 128, 220);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.flipY = false;
@@ -152,7 +151,6 @@ export function initShop3D(state) {
             if (!child.isMesh || !child.material) return;
             const name = (child.name || '').toLowerCase();
 
-            // Визначаємо, яка саме це деталь 3D-моделі (обличчя, очі й ноги не чіпаємо!)
             if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
                 child.material = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.7 });
             } else if (name.includes('short') || name.includes('pant')) {
@@ -160,7 +158,6 @@ export function initShop3D(state) {
             } else if (name.includes('shoe') || name.includes('boot')) {
                 child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
             } else if (Array.isArray(child.material)) {
-                // Якщо меш має кілька матеріалів (наприклад: 0 - тіло, 1 - футболка, 2 - шорти, 3 - бутси)
                 child.material = child.material.map((m, idx) => {
                     const mName = (m.name || '').toLowerCase();
                     if (mName.includes('shirt') || mName.includes('top') || idx === 1) {
