@@ -5,18 +5,55 @@ import { OrbitControls } from './libs/OrbitControls.js';
 import { CATALOG } from './shop-catalog.js';
 
 export function initShop3D(state) {
+    // Видаляємо старий кешований shop.css, щоб кнопки праворуч не розтягувалися
+    document.querySelectorAll('link[rel="stylesheet"]').forEach(link => link.remove());
+
     const fixStyle = document.createElement('style');
     fixStyle.textContent = `
-        html, body { width: 100vw !important; max-width: 100vw !important; overflow-x: hidden !important; }
-        .preview-card { display: flex !important; width: 100% !important; gap: 8px !important; padding: 8px 10px !important; overflow: hidden !important; }
-        .viewport-box { width: 145px !important; min-width: 145px !important; max-width: 145px !important; flex-shrink: 0 !important; }
-        .right-controls { flex: 1 !important; min-width: 0 !important; max-width: calc(100vw - 173px) !important; overflow: hidden !important; }
-        .tabs-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 5px !important; width: 100% !important; }
-        .tab-btn { font-size: 0.72rem !important; padding: 4px 2px !important; min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
-        .action-btn { width: 100% !important; font-size: 0.8rem !important; padding: 8px 4px !important; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; }
+        body { width: 100vw; height: 100vh; background: #0b1120; color: #f8fafc; display: flex; flex-direction: column; overflow: hidden; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #0f172a; border-bottom: 1px solid rgba(255,255,255,0.08); height: 48px; width: 100%; }
+        .back-btn { text-decoration: none; background: #1e293b; color: #f8fafc; padding: 5px 12px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; border: 1px solid rgba(255,255,255,0.12); }
+        .header-stats { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; }
+        .coins-badge { background: rgba(234,179,8,0.15); color: #facc15; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(234,179,8,0.4); font-weight: 800; font-size: 0.88rem; }
+        .preview-card { display: flex; gap: 8px; padding: 8px 10px; background: #111827; border-bottom: 1px solid rgba(255,255,255,0.08); height: 225px; width: 100%; overflow: hidden; }
+        .viewport-box { position: relative; width: 145px; height: 100%; border-radius: 12px; overflow: hidden; background: radial-gradient(circle at 50% 35%, #1d4ed8 0%, #0f172a 75%); border: 1px solid rgba(56,189,248,0.25); flex-shrink: 0; }
+        #canvas-container { width: 100%; height: 100%; cursor: grab; touch-action: none; }
+        .swipe-hint { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); background: rgba(15,23,42,0.75); color: #cbd5e1; padding: 2px 6px; border-radius: 6px; font-size: 0.62rem; pointer-events: none; white-space: nowrap; }
+        .right-controls { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 5px; overflow: hidden; }
+        .tabs-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; flex: 1; }
+        .tab-btn { background: #1e293b; color: #cbd5e1; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer; padding: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tab-btn.active { background: #22c55e; color: #052e16; border-color: #4ade80; }
+        .selected-bar { display: flex; flex-direction: column; gap: 4px; }
+        .selected-name { font-size: 0.74rem; font-weight: 700; color: #94a3b8; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .action-btn { width: 100%; padding: 8px; border-radius: 8px; border: none; font-weight: 800; font-size: 0.8rem; cursor: pointer; }
+        .action-btn.equipped { background: #1e293b; color: #4ade80; border: 1px solid rgba(74,222,128,0.35); }
+        .action-btn.equip { background: #22c55e; color: #052e16; }
+        .action-btn.buy { background: #facc15; color: #422006; }
+        .action-btn.no-coins { background: #334155; color: #94a3b8; }
+        .items-scroll { flex: 1; width: 100%; overflow-y: auto; padding: 10px 12px 20px 12px; }
+        .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; }
+        .card { background: #131c31; border: 2px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; }
+        .card.equipped { border-color: #22c55e; background: rgba(34,197,94,0.08); }
+        .card.inspecting { border-color: #38bdf8; background: rgba(56,189,248,0.1); }
+        .card-icon { width: 44px; height: 44px; border-radius: 10px; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; border: 2px solid rgba(255,255,255,0.2); }
+        .card-title { font-size: 0.8rem; font-weight: 800; color: #f8fafc; margin-bottom: 3px; }
+        .card-desc { font-size: 0.66rem; color: #94a3b8; margin-bottom: 8px; min-height: 24px; }
+        .card-btn { width: 100%; padding: 6px; border-radius: 8px; border: none; font-size: 0.74rem; font-weight: 800; cursor: pointer; }
+        .card-btn.equipped-btn { background: #1e293b; color: #4ade80; }
+        .card-btn.owned-btn { background: #334155; color: #f8fafc; }
+        .card-btn.buy-btn { background: #facc15; color: #422006; }
+        .number-panel { background: #131c31; padding: 12px; border-radius: 12px; }
+        .number-panel h4 { font-size: 0.82rem; margin-bottom: 8px; color: #cbd5e1; }
+        .num-colors { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .num-color-dot { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; }
+        .num-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 6px; }
+        .num-cell { background: #1e293b; color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 8px 0; border-radius: 8px; font-weight: 800; cursor: pointer; }
+        .num-cell.selected { background: #22c55e; color: #052e16; }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: #ef4444; color: white; padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 0.82rem; transition: transform 0.3s; z-index: 100; white-space: nowrap; }
+        #toast.show { transform: translateX(-50%) translateY(0); }
     `;
     document.head.appendChild(fixStyle);
-
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
 
@@ -92,11 +129,11 @@ export function initShop3D(state) {
         } else if (jersey.pattern === 'hoops') {
             for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
         } else if (jersey.pattern === 'half') {
-            ctx.fillRect(110, 0, 130, 512);
-            ctx.fillRect(375, 0, 137, 512);
+            ctx.fillRect(115, 0, 145, 512);
+            ctx.fillRect(260, 0, 110, 512);
         } else if (jersey.pattern === 'centerBand') {
             ctx.fillRect(90, 0, 65, 512);
-            ctx.fillRect(345, 0, 65, 512);
+            ctx.fillRect(230, 0, 65, 512);
         } else if (jersey.pattern === 'chestBand') {
             ctx.fillRect(0, 160, 512, 130);
         } else if (jersey.pattern === 'sash') {
@@ -104,20 +141,20 @@ export function initShop3D(state) {
             ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
+            // Правий рукав (0..42) та лівий рукав (360..430)
             ctx.fillRect(0, 0, 42, 512);
-            ctx.fillRect(235, 0, 45, 512);
-            ctx.fillRect(470, 0, 42, 512);
+            ctx.fillRect(360, 0, 75, 512);
         }
 
-        // Номер рівно по центру спини
+        // Номер рівно по центру спини (x = 262, y = 215)
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 8;
         ctx.font = '900 92px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 375, 215);
-        ctx.fillText(state.number, 375, 215);
+        ctx.strokeText(state.number, 262, 215);
+        ctx.fillText(state.number, 262, 215);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.flipY = false;
