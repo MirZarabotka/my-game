@@ -228,9 +228,9 @@
             ctx.fillRect(0, 0, width, height);
             ctx.fillStyle = jersey.c2;
             if (jersey.pattern === 'stripes') {
-                for (let x = 0; x < width; x += 32) ctx.fillRect(x, 0, 16, height);
+                for (let x = 0; x < width; x += 28) ctx.fillRect(x, 0, 14, height);
             } else if (jersey.pattern === 'hoops') {
-                for (let y = 0; y < height; y += 36) ctx.fillRect(0, y, width, 18);
+                for (let y = 0; y < height; y += 34) ctx.fillRect(0, y, width, 17);
             } else if (jersey.pattern === 'half') {
                 ctx.fillRect(width * 0.25, 0, width * 0.25, height);
                 ctx.fillRect(width * 0.75, 0, width * 0.25, height);
@@ -238,7 +238,7 @@
                 ctx.fillRect(width * 0.16, 0, width * 0.18, height);
                 ctx.fillRect(width * 0.66, 0, width * 0.18, height);
             } else if (jersey.pattern === 'chestBand') {
-                ctx.fillRect(0, height * 0.32, width, height * 0.28);
+                ctx.fillRect(0, height * 0.3, width, height * 0.28);
             } else if (jersey.pattern === 'sash') {
                 ctx.beginPath();
                 ctx.moveTo(0, 0); ctx.lineTo(width * 0.15, 0);
@@ -255,7 +255,7 @@
             }
         }
 
-        function buildSavedKitTexture(origImg) {
+        function buildSavedKitTexture() {
             const jId = localStorage.getItem('eq_jerseys') || 'j1';
             const sId = localStorage.getItem('eq_shorts') || 's1';
             const num = localStorage.getItem('eq_number') || '10';
@@ -269,23 +269,17 @@
             canvas.height = 512;
             const ctx = canvas.getContext('2d');
 
-            drawJerseyPattern(ctx, jersey, 512, 310);
+            drawJerseyPattern(ctx, jersey, 512, 305);
 
             ctx.fillStyle = shortItem.c1;
-            ctx.fillRect(0, 310, 512, 202);
+            ctx.fillRect(0, 305, 512, 207);
             ctx.fillStyle = shortItem.c2;
             ctx.fillRect(0, 385, 512, 26);
 
-            if (origImg) {
-                ctx.globalCompositeOperation = 'multiply';
-                ctx.drawImage(origImg, 0, 0, 512, 512);
-                ctx.globalCompositeOperation = 'source-over';
-            }
-
             ctx.fillStyle = numCol;
             ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 5;
-            ctx.font = '900 70px "Segoe UI", sans-serif';
+            ctx.lineWidth = 6;
+            ctx.font = '900 72px "Segoe UI", sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.strokeText(num, 384, 145);
@@ -294,6 +288,7 @@
             const tex = new THREE.CanvasTexture(canvas);
             tex.flipY = false;
             tex.colorSpace = THREE.SRGBColorSpace;
+            tex.needsUpdate = true;
             return tex;
         }
 
@@ -308,17 +303,7 @@
             const playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
             if (!playerModel) return;
 
-            let origImg = null;
-            walkModel(playerModel, (child) => {
-                if (child.isMesh && child.material && child.material.map) {
-                    const name = (child.name || '').toLowerCase();
-                    if (!name.includes('body') && !name.includes('hair') && !name.includes('eye')) {
-                        origImg = child.material.map.image;
-                    }
-                }
-            });
-
-            const kitTex = buildSavedKitTexture(origImg);
+            const kitTex = buildSavedKitTexture();
             const bId = localStorage.getItem('eq_boots') || 'b1';
             const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
 
@@ -329,13 +314,15 @@
                     const name = (child.name || '').toLowerCase();
 
                     if (name.includes('shoe') || name.includes('boot')) {
-                        child.material = child.material.clone();
-                        child.material.color.set(bootItem.c1);
+                        child.material = new THREE.MeshStandardMaterial({
+                            color: bootItem.c1,
+                            roughness: 0.45
+                        });
                     } else if (!name.includes('body') && !name.includes('hair') && !name.includes('eye') && !name.includes('head')) {
-                        child.material = child.material.clone();
-                        child.material.map = kitTex;
-                        child.material.color.set('#ffffff');
-                        child.material.needsUpdate = true;
+                        child.material = new THREE.MeshStandardMaterial({
+                            map: kitTex,
+                            roughness: 0.75
+                        });
                     }
                 }
             });
