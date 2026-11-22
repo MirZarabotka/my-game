@@ -181,6 +181,8 @@ export function initShop3D(state) {
 
     loader.load('player.glb', (gltf) => {
         playerModel = gltf.scene;
+        let leftHandBone = null;
+        let rightHandBone = null;
 
         playerModel.traverse((child) => {
             if (child.isMesh) {
@@ -191,10 +193,14 @@ export function initShop3D(state) {
                 }
             }
             if (child.isBone) {
-                if (child.name.includes('LeftHand')) child.add(leftGlove);
-                if (child.name.includes('RightHand')) child.add(rightGlove);
+                if (child.name.includes('LeftHand')) leftHandBone = child;
+                if (child.name.includes('RightHand')) rightHandBone = child;
             }
         });
+
+        // Додаємо рукавиці вже ПІСЛЯ завершення traverse
+        if (leftHandBone) leftHandBone.add(leftGlove);
+        if (rightHandBone) rightHandBone.add(rightGlove);
 
         scene.add(playerModel);
         updateAppearance();
