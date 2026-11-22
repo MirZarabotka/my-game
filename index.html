@@ -85,7 +85,6 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.42);
             transition: transform 0.2s, border-color 0.2s, background 0.2s;
         }
-
         .nav-card::before {
             content: '';
             position: absolute;
@@ -139,7 +138,6 @@
             color: #94a3b8;
         }
 
-        /* Модальне вікно налаштувань */
         #settings-modal {
             position: fixed;
             inset: 0;
@@ -312,7 +310,6 @@
         }
         document.getElementById('home-coins').innerText = `💰 ${localStorage.getItem('player_coins')}`;
 
-        // --- АУДІО-СИНТЕЗАТОР СТАДІОНУ (Спів, кричалки та гул вболівальників) ---
         class StadiumChantAudio {
             constructor() {
                 this.ctx = null;
@@ -332,7 +329,6 @@
                 this.masterGain.gain.value = this.volume * 0.45;
                 this.masterGain.connect(this.ctx.destination);
 
-                // 1. Постійний гул 40 000 глядачів (фільтрований шум)
                 const bufferSize = this.ctx.sampleRate * 4;
                 const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
                 const output = noiseBuffer.getChannelData(0);
@@ -358,7 +354,6 @@
                 crowdFilter.connect(this.masterGain);
                 crowdNoise.start();
 
-                // 2. Ритмічний спів трибун ("Оле-Оле-Оле!")
                 const chantNotes = [261.63, 293.66, 329.63, 293.66, 329.63, 392.00];
                 let step = 0;
                 setInterval(() => {
@@ -412,13 +407,12 @@
         }
 
         const stadiumAudio = new StadiumChantAudio();
-        const unlockAudio = () => {
+        window.addEventListener('pointerdown', () => {
             stadiumAudio.init();
             if (stadiumAudio.ctx && stadiumAudio.ctx.state === 'suspended' && stadiumAudio.enabled) {
                 stadiumAudio.ctx.resume();
             }
-        };
-        window.addEventListener('pointerdown', unlockAudio, { once: true });
+        }, { once: true });
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x071326);
@@ -619,7 +613,7 @@
         adRight.position.set(24.2, 0.42, 0);
         stadiumGroup.add(adBack, adLeft, adRight);
 
-        const fanGeo = new THREE.CapsuleGeometry(0.22, 0.45, 4, 8);
+        const fanGeo = new THREE.CylinderGeometry(0.18, 0.22, 0.7, 6);
         const fanMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
         const fansInstanced = new THREE.InstancedMesh(fanGeo, fanMat, fanPositions.length);
         const dummy = new THREE.Object3D();
@@ -650,7 +644,13 @@
 
         const poleMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.6, roughness: 0.4 });
         const lampMat = new THREE.MeshBasicMaterial({ color: 0xf0f9ff });
-        [[-28, -36], [28, -36], [-28, 36],].forEach(([px, pz]) => {
+        const lightTowers = [
+            [-28, -36],
+            [28, -36],
+            [-28, 36],
+            [28, 36]
+        ];
+        lightTowers.forEach(([px, pz]) => {
             const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 19, 10), poleMat);
             pole.position.set(px, 9.5, pz);
             const panel = new THREE.Mesh(new THREE.BoxGeometry(3.8, 1.8, 0.4), lampMat);
@@ -658,6 +658,285 @@
             panel.lookAt(0, 0, 0);
             stadiumGroup.add(pole, panel);
         });
+        const ballMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(0.098, 24, 24),
+            new THREE.MeshStandardMaterial({ roughness: 0.4 })
+        );
+        ballMesh.position.set(0.34, 0.098, 0.24);
+        ballMesh.castShadow = true;
+        scene.add(ballMesh);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.enablePan = false;
+        controls.minDistance = 2.2;
+        controls.maxDistance = 5.2;
+        controls.maxPolarAngle = Math.PI / 2 - 0.02;
+        controls.target.set(-0.32, 0.95, 0);
+        controls.update();
+
+        function walkModel(obj, callback) {
+            if (!obj) return;
+            callback(obj);
+            if (Array.isArray(obj.children)) {
+                for (const child of [...obj.children]) walkModel(child, callback);
+            }
+        }
+
+        const leftGloveHolder = new THREE.Group();
+        const rightGloveHolder = new THREE.Group();
+        let leftHandBone = null;
+        let rightHandBone = null;
+        let leftForeArmBone = null;
+        let rightForeArmBone = null;
+        let glovesLoaded = false;
+        const gloveMaterials = [];
+
+        function makeBrightDetailTexture(sourceTex) {
+            if (!sourceTex || !sourceTex.image) return null;
+            try {
+                const img = sourceTex.image;
+                const w = img.width || 512;
+                const h = img.height || 512;
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+
+                const imgData = ctx.getImageData(0, 0, w, h);
+                const data = imgData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    const lum = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
+                    const boosted = Math.min(255, Math.round((0.55 + lum * 0.45) * 255));
+                    data[i] = boosted;
+                    data[i + 1] = boosted;
+                    data[i + 2] = boosted;
+                }
+                ctx.putImageData(imgData, 0, 0);
+
+                const cleanTex = new THREE.CanvasTexture(canvas);
+                cleanTex.flipY = sourceTex.flipY;
+                cleanTex.colorSpace = THREE.SRGBColorSpace;
+                cleanTex.needsUpdate = true;
+                return cleanTex;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function extractSingleGlove(gloveScene, pickLeft) {
+            gloveScene.updateMatrixWorld(true);
+            const fullBox = new THREE.Box3().setFromObject(gloveScene);
+            const midX = (fullBox.min.x + fullBox.max.x) * 0.5;
+            const isSingle = (fullBox.max.x - fullBox.min.x) < (fullBox.max.y - fullBox.min.y) * 1.1;
+
+            const meshGroup = new THREE.Group();
+
+            gloveScene.traverse((node) => {
+                if (!node.isMesh || !node.geometry) return;
+                const geo = node.geometry.clone();
+                geo.applyMatrix4(node.matrixWorld);
+
+                if (!isSingle && geo.index) {
+                    const pos = geo.attributes.position;
+                    const idx = geo.index.array;
+                    const filtered = [];
+                    for (let i = 0; i < idx.length; i += 3) {
+                        const cx = (pos.getX(idx[i]) + pos.getX(idx[i + 1]) + pos.getX(idx[i + 2])) / 3;
+                        if (pickLeft ? cx < midX : cx >= midX) {
+                            filtered.push(idx[i], idx[i + 1], idx[i + 2]);
+                        }
+                    }
+                    if (filtered.length === 0) return;
+                    geo.setIndex(filtered);
+                }
+
+                geo.computeBoundingBox();
+                const mats = Array.isArray(node.material) ? node.material : [node.material];
+                const clonedMats = mats.map((m) => {
+                    const detailMap = makeBrightDetailTexture(m.map);
+                    const c = new THREE.MeshStandardMaterial({
+                        map: detailMap,
+                        normalMap: m.normalMap || null,
+                        roughness: 0.55,
+                        metalness: 0.05,
+                        side: THREE.DoubleSide
+                    });
+                    gloveMaterials.push(c);
+                    return c;
+                });
+
+                const mesh = new THREE.Mesh(geo, clonedMats.length === 1 ? clonedMats.at(0) : clonedMats);
+                mesh.castShadow = true;
+                mesh.frustumCulled = false;
+                meshGroup.add(mesh);
+            });
+
+            const box = new THREE.Box3().setFromObject(meshGroup);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+
+            const cuffThresholdY = box.min.y + size.y * 0.15;
+            let minCuffX = Infinity, maxCuffX = -Infinity;
+            let minCuffZ = Infinity, maxCuffZ = -Infinity;
+            let foundCuff = false;
+
+            meshGroup.traverse((m) => {
+                if (!m.isMesh || !m.geometry) return;
+                const pos = m.geometry.attributes.position;
+                const idx = m.geometry.index;
+                if (idx) {
+                    for (let i = 0; i < idx.count; i++) {
+                        const vi = idx.getX(i);
+                        const y = pos.getY(vi);
+                        if (y <= cuffThresholdY) {
+                            const x = pos.getX(vi);
+                            const z = pos.getZ(vi);
+                            if (x < minCuffX) minCuffX = x;
+                            if (x > maxCuffX) maxCuffX = x;
+                            if (z < minCuffZ) minCuffZ = z;
+                            if (z > maxCuffZ) maxCuffZ = z;
+                            foundCuff = true;
+                        }
+                    }
+                }
+            });
+
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            const pivotX = foundCuff ? (minCuffX + maxCuffX) * 0.5 : center.x;
+            const pivotZ = foundCuff ? (minCuffZ + maxCuffZ) * 0.5 : center.z;
+
+            const maxDim = Math.max(size.x, size.y, size.z) || 1;
+            const norm = 1.0 / maxDim;
+
+            meshGroup.scale.setScalar(norm);
+            meshGroup.position.set(-pivotX * norm, -box.min.y * norm, -pivotZ * norm);
+
+            const unit = new THREE.Group();
+            unit.add(meshGroup);
+            unit.rotation.y = pickLeft ? Math.PI : 0;
+            return unit;
+        }
+        function attachToSleeveEnd(holder, foreArmBone, handBone) {
+            const armBone = foreArmBone || (handBone && handBone.parent);
+            if (!armBone) return;
+
+            const wristPos = handBone ? handBone.position.clone() : new THREE.Vector3(0, 24, 0);
+            const foreLen = wristPos.length() || 24;
+            const dir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
+
+            const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+            holder.quaternion.copy(q);
+
+            const gloveSize = foreLen * 2.2;
+            holder.scale.setScalar(gloveSize);
+            holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.25);
+            armBone.add(holder);
+        }
+
+        function mountGloveModel(gloveScene, gloveColorHex) {
+            gloveMaterials.length = 0;
+            const rightUnit = extractSingleGlove(gloveScene, false);
+            const leftUnit = extractSingleGlove(gloveScene, true);
+
+            rightGloveHolder.clear();
+            leftGloveHolder.clear();
+            rightGloveHolder.add(rightUnit);
+            leftGloveHolder.add(leftUnit);
+
+            attachToSleeveEnd(rightGloveHolder, rightForeArmBone, rightHandBone);
+            attachToSleeveEnd(leftGloveHolder, leftForeArmBone, leftHandBone);
+
+            const cleanColor = new THREE.Color(gloveColorHex);
+            gloveMaterials.forEach((m) => {
+                m.color.copy(cleanColor);
+                m.needsUpdate = true;
+            });
+
+            glovesLoaded = true;
+        }
+
+        function createJerseyTexture(jersey) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = jersey.c1;
+            ctx.fillRect(0, 0, 512, 512);
+
+            ctx.fillStyle = jersey.c2;
+            if (jersey.pattern === 'stripes') {
+                for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512);
+            } else if (jersey.pattern === 'hoops') {
+                for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
+            } else if (jersey.pattern === 'half') {
+                ctx.fillRect(105, 0, 60, 512);
+                ctx.fillRect(265, 0, 85, 512);
+            } else if (jersey.pattern === 'centerBand') {
+                ctx.fillRect(85, 0, 45, 512);
+                ctx.fillRect(245, 0, 45, 512);
+            } else if (jersey.pattern === 'chestBand') {
+                ctx.fillRect(0, 160, 512, 130);
+            } else if (jersey.pattern === 'sash') {
+                ctx.beginPath();
+                ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
+                ctx.closePath(); ctx.fill();
+            } else if (jersey.pattern === 'sleeves') {
+                ctx.fillRect(203, 0, 22, 512);
+                ctx.fillRect(398, 0, 114, 512);
+            }
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.flipY = false;
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.needsUpdate = true;
+            return tex;
+        }
+
+        function createBackNumberTexture(num, numCol) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 256, 256);
+
+            ctx.fillStyle = numCol;
+            ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
+            ctx.lineWidth = 10;
+            ctx.font = '900 165px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeText(num, 128, 128);
+            ctx.fillText(num, 128, 128);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.needsUpdate = true;
+            return tex;
+        }
+
+        function createBallTexture(c1, c2) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = c1;
+            ctx.fillRect(0, 0, 256, 128);
+            ctx.fillStyle = c2;
+            for (let x = 16; x < 256; x += 48) {
+                for (let y = 20; y < 128; y += 44) {
+                    ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.needsUpdate = true;
+            return tex;
+        }
+
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
@@ -665,9 +944,20 @@
 
         let mixer;
 
+        function hideLoader() {
+            const loaderScreen = document.getElementById('loader-screen');
+            if (loaderScreen && loaderScreen.style.display !== 'none') {
+                loaderScreen.style.opacity = '0';
+                setTimeout(() => { loaderScreen.style.display = 'none'; }, 400);
+            }
+        }
+        setTimeout(hideLoader, 2500);
         loader.load('player.glb', (gltf) => {
             const playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
-            if (!playerModel) return;
+            if (!playerModel) {
+                hideLoader();
+                return;
+            }
 
             const jId = localStorage.getItem('eq_jerseys') || 'j1';
             const sId = localStorage.getItem('eq_shorts') || 's1';
@@ -734,6 +1024,7 @@
                     });
                 }
             });
+
             const backNumberMat = new THREE.MeshBasicMaterial({
                 map: createBackNumberTexture(num, numCol),
                 transparent: true,
@@ -755,7 +1046,6 @@
             }
 
             scene.add(playerModel);
-
             loader.load(
                 './glove.glb?v=3',
                 (gloveGltf) => {
@@ -776,9 +1066,10 @@
                 mixer.clipAction(firstAnim).play();
             }
 
-            const loaderScreen = document.getElementById('loader-screen');
-            loaderScreen.style.opacity = '0';
-            setTimeout(() => loaderScreen.style.display = 'none', 400);
+            hideLoader();
+        }, undefined, (err) => {
+            console.error('Помилка завантаження player.glb:', err);
+            hideLoader();
         });
 
         document.getElementById('start-btn').addEventListener('click', () => {
@@ -808,6 +1099,7 @@
             volLabel.textContent = `${val}%`;
             stadiumAudio.setVolume(val / 100);
         });
+
         let highGraphics = true;
         toggleShadowsBtn.addEventListener('click', () => {
             highGraphics = !highGraphics;
