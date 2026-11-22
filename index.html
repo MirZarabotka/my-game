@@ -67,7 +67,6 @@
             pointer-events: auto;
             z-index: 10;
         }
-
         .nav-card {
             text-decoration: none;
             border: 1px solid rgba(255, 255, 255, 0.14);
@@ -85,6 +84,7 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.42);
             transition: transform 0.2s, border-color 0.2s, background 0.2s;
         }
+
         .nav-card::before {
             content: '';
             position: absolute;
@@ -234,6 +234,7 @@
     </style>
 </head>
 <body>
+
     <div id="loader-screen">
         <div class="spinner"></div>
         <div id="loader-text">Завантаження стадіону...</div>
@@ -542,15 +543,59 @@
         stadiumGroup.add(createGoal(29.8, Math.PI));
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85 });
         const roofMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.4 });
-        const adBoardMat = new THREE.MeshBasicMaterial({ color: 0x0284c7 });
+
+        function createBannerTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 2048;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+
+            const grad = ctx.createLinearGradient(0, 0, 2048, 0);
+            grad.addColorStop(0, '#0284c7');
+            grad.addColorStop(0.5, '#1d4ed8');
+            grad.addColorStop(1, '#0284c7');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 2048, 128);
+
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(0, 0, 2048, 10);
+            ctx.fillRect(0, 118, 2048, 10);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 54px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('⚽ PENALTY 3D ARENA   ★   CHAMPIONS CUP   ★   MAKE YOUR SHOT! 🔥', 1024, 66);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.ClampToEdgeWrapping;
+            tex.repeat.set(3, 1);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        const bannerTex = createBannerTexture();
+        const adBoardMat = new THREE.MeshBasicMaterial({ map: bannerTex });
+
+        const adBack = new THREE.Mesh(new THREE.BoxGeometry(50, 1.25, 0.25), adBoardMat);
+        adBack.position.set(0, 0.62, -31.8);
+        const adFront = new THREE.Mesh(new THREE.BoxGeometry(50, 1.25, 0.25), adBoardMat);
+        adFront.position.set(0, 0.62, 31.8);
+        const adLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 64), adBoardMat);
+        adLeft.position.set(-24.0, 0.62, 0);
+        const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 64), adBoardMat);
+        adRight.position.set(24.0, 0.62, 0);
+        stadiumGroup.add(adBack, adFront, adLeft, adRight);
 
         const fanPositions = [];
         const phonePositions = [];
-        const fanColors = [0xef4444, 0x3b82f6, 0xfacc15, 0x22c55e, 0xffffff, 0xf97316, 0x38bdf8];
+        const jerseyColors = [0xef4444, 0x3b82f6, 0xfacc15, 0x22c55e, 0xf8fafc, 0xf97316, 0x38bdf8, 0xa855f7];
+        const skinColors = [0xffdbac, 0xf1c27d, 0xe0ac69, 0xc68642, 0x8d5524];
 
         const numRows = 8;
         for (let r = 0; r < numRows; r++) {
-            const rowY = 0.9 + r * 0.72;
+            const rowY = 1.25 + r * 0.72;
             const rowDepth = 1.1;
 
             const zDist = 33.5 + r * 1.05;
@@ -563,13 +608,16 @@
             frontStep.position.set(0, rowY - 0.35, zDist);
             stadiumGroup.add(backStep, frontStep);
 
-            for (let x = -stepW * 0.46; x <= stepW * 0.46; x += 1.35) {
-                if (Math.random() > 0.12) {
-                    fanPositions.push({ x: x + (Math.random() - 0.5) * 0.3, y: rowY + 0.35, z: -zDist, phase: Math.random() * 6.28 });
-                    if (Math.random() > 0.72) phonePositions.push({ x, y: rowY + 0.62, z: -zDist + 0.25, phase: Math.random() * 10 });
+            for (let x = -stepW * 0.46; x <= stepW * 0.46; x += 1.05) {
+                if (Math.random() > 0.1) {
+                    const fx = x + (Math.random() - 0.5) * 0.25;
+                    const hasPhone = Math.random() > 0.74;
+                    fanPositions.push({ x: fx, y: rowY, z: -zDist, rotY: 0, phase: Math.random() * 6.28, hasPhone });
+                    if (hasPhone) phonePositions.push({ x: fx + 0.18, y: rowY + 0.78, z: -zDist + 0.28, phase: Math.random() * 10 });
                 }
-                if (Math.random() > 0.12) {
-                    fanPositions.push({ x: x + (Math.random() - 0.5) * 0.3, y: rowY + 0.35, z: zDist, phase: Math.random() * 6.28 });
+                if (Math.random() > 0.1) {
+                    const fx = x + (Math.random() - 0.5) * 0.25;
+                    fanPositions.push({ x: fx, y: rowY, z: zDist, rotY: Math.PI, phase: Math.random() * 6.28, hasPhone: false });
                 }
             }
 
@@ -583,54 +631,87 @@
             rightStep.position.set(xDist, rowY - 0.35, 0);
             stadiumGroup.add(leftStep, rightStep);
 
-            for (let z = -stepL * 0.46; z <= stepL * 0.46; z += 1.45) {
-                if (Math.random() > 0.15) {
-                    fanPositions.push({ x: -xDist, y: rowY + 0.35, z, phase: Math.random() * 6.28 });
-                    if (Math.random() > 0.78) phonePositions.push({ x: -xDist + 0.25, y: rowY + 0.62, z, phase: Math.random() * 10 });
+            for (let z = -stepL * 0.46; z <= stepL * 0.46; z += 1.1) {
+                if (Math.random() > 0.12) {
+                    const fz = z + (Math.random() - 0.5) * 0.25;
+                    const hasPhone = Math.random() > 0.76;
+                    fanPositions.push({ x: -xDist, y: rowY, z: fz, rotY: Math.PI / 2, phase: Math.random() * 6.28, hasPhone });
+                    if (hasPhone) phonePositions.push({ x: -xDist + 0.28, y: rowY + 0.78, z: fz, phase: Math.random() * 10 });
                 }
-                if (Math.random() > 0.15) {
-                    fanPositions.push({ x: xDist, y: rowY + 0.35, z, phase: Math.random() * 6.28 });
-                    if (Math.random() > 0.78) phonePositions.push({ x: xDist - 0.25, y: rowY + 0.62, z, phase: Math.random() * 10 });
+                if (Math.random() > 0.12) {
+                    const fz = z + (Math.random() - 0.5) * 0.25;
+                    const hasPhone = Math.random() > 0.76;
+                    fanPositions.push({ x: xDist, y: rowY, z: fz, rotY: -Math.PI / 2, phase: Math.random() * 6.28, hasPhone });
+                    if (hasPhone) phonePositions.push({ x: xDist - 0.28, y: rowY + 0.78, z: fz, phase: Math.random() * 10 });
                 }
             }
         }
-
         const backRoof = new THREE.Mesh(new THREE.BoxGeometry(68, 0.4, 11), roofMat);
-        backRoof.position.set(0, 8.6, -37.5);
+        backRoof.position.set(0, 9.0, -37.5);
         const frontRoof = new THREE.Mesh(new THREE.BoxGeometry(68, 0.4, 11), roofMat);
-        frontRoof.position.set(0, 8.6, 37.5);
+        frontRoof.position.set(0, 9.0, 37.5);
         const leftRoof = new THREE.Mesh(new THREE.BoxGeometry(11, 0.4, 82), roofMat);
-        leftRoof.position.set(-29.5, 8.6, 0);
+        leftRoof.position.set(-29.5, 9.0, 0);
         const rightRoof = new THREE.Mesh(new THREE.BoxGeometry(11, 0.4, 82), roofMat);
-        rightRoof.position.set(29.5, 8.6, 0);
+        rightRoof.position.set(29.5, 9.0, 0);
         stadiumGroup.add(backRoof, frontRoof, leftRoof, rightRoof);
 
-        const adBack = new THREE.Mesh(new THREE.BoxGeometry(50, 0.85, 0.2), adBoardMat);
-        adBack.position.set(0, 0.42, -32.2);
-        const adLeft = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.85, 64), adBoardMat);
-        adLeft.position.set(-24.2, 0.42, 0);
-        const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.85, 64), adBoardMat);
-        adRight.position.set(24.2, 0.42, 0);
-        stadiumGroup.add(adBack, adLeft, adRight);
+        const count = fanPositions.length;
+        const torsoGeo = new THREE.BoxGeometry(0.46, 0.56, 0.24);
+        const headGeo = new THREE.SphereGeometry(0.145, 10, 10);
+        const armGeo = new THREE.BoxGeometry(0.11, 0.46, 0.11);
 
-        const fanGeo = new THREE.CylinderGeometry(0.18, 0.22, 0.7, 6);
-        const fanMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
-        const fansInstanced = new THREE.InstancedMesh(fanGeo, fanMat, fanPositions.length);
+        const bodyMat = new THREE.MeshStandardMaterial({ roughness: 0.65 });
+        const skinMat = new THREE.MeshStandardMaterial({ roughness: 0.55 });
+
+        const torsosInstanced = new THREE.InstancedMesh(torsoGeo, bodyMat, count);
+        const headsInstanced = new THREE.InstancedMesh(headGeo, skinMat, count);
+        const leftArmsInstanced = new THREE.InstancedMesh(armGeo, skinMat, count);
+        const rightArmsInstanced = new THREE.InstancedMesh(armGeo, skinMat, count);
+
         const dummy = new THREE.Object3D();
         const tmpColor = new THREE.Color();
 
         fanPositions.forEach((f, idx) => {
-            dummy.position.set(f.x, f.y, f.z);
-            dummy.updateMatrix();
-            fansInstanced.setMatrixAt(idx, dummy.matrix);
-            tmpColor.setHex(fanColors[idx % fanColors.length]);
-            fansInstanced.setColorAt(idx, tmpColor);
-        });
-        fansInstanced.instanceMatrix.needsUpdate = true;
-        if (fansInstanced.instanceColor) fansInstanced.instanceColor.needsUpdate = true;
-        stadiumGroup.add(fansInstanced);
+            const jColor = jerseyColors[idx % jerseyColors.length];
+            const sColor = skinColors[idx % skinColors.length];
 
-        const phoneGeo = new THREE.BoxGeometry(0.14, 0.22, 0.04);
+            dummy.position.set(f.x, f.y + 0.28, f.z);
+            dummy.rotation.set(0, f.rotY, 0);
+            dummy.scale.set(1, 1, 1);
+            dummy.updateMatrix();
+            torsosInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpColor.setHex(jColor);
+            torsosInstanced.setColorAt(idx, tmpColor);
+
+            dummy.position.set(f.x, f.y + 0.72, f.z);
+            dummy.updateMatrix();
+            headsInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpColor.setHex(sColor);
+            headsInstanced.setColorAt(idx, tmpColor);
+
+            const cosR = Math.cos(f.rotY);
+            const sinR = Math.sin(f.rotY);
+            dummy.position.set(f.x - 0.29 * cosR, f.y + 0.32, f.z + 0.29 * sinR);
+            dummy.rotation.set(0, f.rotY, 0.12);
+            dummy.updateMatrix();
+            leftArmsInstanced.setMatrixAt(idx, dummy.matrix);
+            leftArmsInstanced.setColorAt(idx, tmpColor);
+
+            dummy.position.set(f.x + 0.29 * cosR, f.y + 0.32, f.z - 0.29 * sinR);
+            dummy.rotation.set(0, f.rotY, -0.12);
+            dummy.updateMatrix();
+            rightArmsInstanced.setMatrixAt(idx, dummy.matrix);
+            rightArmsInstanced.setColorAt(idx, tmpColor);
+        });
+
+        [torsosInstanced, headsInstanced, leftArmsInstanced, rightArmsInstanced].forEach((mesh) => {
+            mesh.instanceMatrix.needsUpdate = true;
+            if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+            stadiumGroup.add(mesh);
+        });
+
+        const phoneGeo = new THREE.BoxGeometry(0.11, 0.19, 0.03);
         const phoneMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe });
         const phonesInstanced = new THREE.InstancedMesh(phoneGeo, phoneMat, phonePositions.length);
         phonePositions.forEach((p, idx) => {
@@ -648,7 +729,7 @@
             [-28, -36],
             [28, -36],
             [-28, 36],
-            [28, 36]
+           
         ];
         lightTowers.forEach(([px, pz]) => {
             const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 19, 10), poleMat);
@@ -658,11 +739,12 @@
             panel.lookAt(0, 0, 0);
             stadiumGroup.add(pole, panel);
         });
+        // М'яч збільшено на 5% (0.098 * 1.05 = 0.103)
         const ballMesh = new THREE.Mesh(
-            new THREE.SphereGeometry(0.098, 24, 24),
+            new THREE.SphereGeometry(0.103, 24, 24),
             new THREE.MeshStandardMaterial({ roughness: 0.4 })
         );
-        ballMesh.position.set(0.34, 0.098, 0.24);
+        ballMesh.position.set(0.34, 0.103, 0.24);
         ballMesh.castShadow = true;
         scene.add(ballMesh);
 
@@ -1046,6 +1128,7 @@
             }
 
             scene.add(playerModel);
+
             loader.load(
                 './glove.glb?v=3',
                 (gloveGltf) => {
@@ -1071,7 +1154,6 @@
             console.error('Помилка завантаження player.glb:', err);
             hideLoader();
         });
-
         document.getElementById('start-btn').addEventListener('click', () => {
             window.location.href = 'game.html';
         });
@@ -1104,8 +1186,9 @@
         toggleShadowsBtn.addEventListener('click', () => {
             highGraphics = !highGraphics;
             renderer.shadowMap.enabled = highGraphics;
-            fansInstanced.visible = highGraphics;
-            phonesInstanced.visible = highGraphics;
+            [torsosInstanced, headsInstanced, leftArmsInstanced, rightArmsInstanced, phonesInstanced].forEach(m => {
+                m.visible = highGraphics;
+            });
             toggleShadowsBtn.textContent = highGraphics ? '✨ Тіні та деталізація: ВИСОКА' : '⚡ Тіні та деталізація: НИЗЬКА';
             toggleShadowsBtn.classList.toggle('active', highGraphics);
         });
@@ -1135,22 +1218,49 @@
                 if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
             }
 
-            if (fansInstanced.visible) {
-                for (let i = 0; i < fanPositions.length; i += 3) {
+            bannerTex.offset.x += dt * 0.08;
+
+            if (torsosInstanced.visible) {
+                for (let i = 0; i < fanPositions.length; i += 2) {
                     const f = fanPositions[i];
-                    const bounce = Math.max(0, Math.sin(t * 4.5 + f.phase)) * 0.14;
-                    dummy.position.set(f.x, f.y + bounce, f.z);
-                    dummy.rotation.set(0, 0, 0);
+                    const wave = Math.sin(t * 4.2 + f.phase);
+                    const bounce = Math.max(0, wave) * 0.13;
+                    const cosR = Math.cos(f.rotY);
+                    const sinR = Math.sin(f.rotY);
+
+                    dummy.rotation.set(0, f.rotY, 0);
+                    dummy.scale.set(1, 1, 1);
+
+                    dummy.position.set(f.x, f.y + 0.28 + bounce, f.z);
                     dummy.updateMatrix();
-                    fansInstanced.setMatrixAt(i, dummy.matrix);
+                    torsosInstanced.setMatrixAt(i, dummy.matrix);
+
+                    dummy.position.set(f.x, f.y + 0.72 + bounce, f.z);
+                    dummy.updateMatrix();
+                    headsInstanced.setMatrixAt(i, dummy.matrix);
+
+                    const armRaise = wave > 0.3 ? 0.32 : 0;
+                    dummy.position.set(f.x - 0.29 * cosR, f.y + 0.32 + bounce + armRaise, f.z + 0.29 * sinR);
+                    dummy.rotation.set(wave > 0.3 ? -2.6 : 0, f.rotY, 0.15);
+                    dummy.updateMatrix();
+                    leftArmsInstanced.setMatrixAt(i, dummy.matrix);
+
+                    const rightRaise = f.hasPhone ? 0.38 : armRaise;
+                    dummy.position.set(f.x + 0.29 * cosR, f.y + 0.32 + bounce + rightRaise, f.z - 0.29 * sinR);
+                    dummy.rotation.set((f.hasPhone || wave > 0.3) ? -2.4 : 0, f.rotY, -0.15);
+                    dummy.updateMatrix();
+                    rightArmsInstanced.setMatrixAt(i, dummy.matrix);
                 }
-                fansInstanced.instanceMatrix.needsUpdate = true;
+                torsosInstanced.instanceMatrix.needsUpdate = true;
+                headsInstanced.instanceMatrix.needsUpdate = true;
+                leftArmsInstanced.instanceMatrix.needsUpdate = true;
+                rightArmsInstanced.instanceMatrix.needsUpdate = true;
             }
 
             if (phonesInstanced.visible) {
                 for (let i = 0; i < phonePositions.length; i++) {
                     const p = phonePositions[i];
-                    const flash = Math.sin(t * 9 + p.phase) > 0.92 ? 1.8 : 0.9;
+                    const flash = Math.sin(t * 10 + p.phase) > 0.9 ? 1.9 : 1.0;
                     dummy.position.set(p.x, p.y, p.z);
                     dummy.lookAt(0, 1.2, 0);
                     dummy.scale.setScalar(flash);
