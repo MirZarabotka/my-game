@@ -3,197 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Penalty Master 3D — Примірочна</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; }
-        body {
-            overflow: hidden;
-            background: radial-gradient(circle at 50% 35%, #1e3a8a 0%, #0f172a 70%, #020617 100%);
-            color: #ffffff;
-        }
-        #canvas-container { width: 100vw; height: 100vh; display: block; cursor: grab; }
-        #canvas-container:active { cursor: grabbing; }
-
-        .ui-layer {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 24px;
-        }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .back-btn {
-            pointer-events: auto;
-            text-decoration: none;
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(10px);
-            color: #ffffff;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            border: 1px solid rgba(255,255,255,0.2);
-            transition: all 0.2s;
-        }
-        .back-btn:hover { background: #2563eb; border-color: #38bdf8; }
-
-        .camera-views {
-            pointer-events: auto;
-            display: flex;
-            gap: 6px;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
-            padding: 6px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.12);
-        }
-        .cam-btn {
-            background: transparent;
-            color: #cbd5e1;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .cam-btn.active, .cam-btn:hover { background: #2563eb; color: #ffffff; }
-
-        .wardrobe {
-            pointer-events: auto;
-            background: rgba(15, 23, 42, 0.82);
-            backdrop-filter: blur(12px);
-            padding: 20px;
-            border-radius: 18px;
-            border: 1px solid rgba(255,255,255,0.15);
-            width: 280px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.45);
-        }
-        .wardrobe h3 { font-size: 1.1rem; margin-bottom: 16px; color: #f8fafc; }
-        .section { margin-bottom: 18px; }
-        .section:last-child { margin-bottom: 0; }
-        .section label {
-            display: block;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #94a3b8;
-            margin-bottom: 10px;
-        }
-        .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
-        .swatch {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            border: 2px solid rgba(255,255,255,0.85);
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .swatch:hover { transform: scale(1.15); box-shadow: 0 0 12px rgba(255,255,255,0.6); }
-
-        .bottom-bar { display: flex; justify-content: center; pointer-events: auto; }
-        .save-btn {
-            background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
-            color: white;
-            text-decoration: none;
-            padding: 15px 44px;
-            font-size: 1.1rem;
-            font-weight: 800;
-            border-radius: 50px;
-            box-shadow: 0 10px 25px rgba(34, 197, 94, 0.45);
-            transition: transform 0.2s;
-        }
-        .save-btn:hover { transform: translateY(-2px); }
-
-        #loader-screen {
-            position: absolute;
-            inset: 0;
-            background: #0f172a;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-            transition: opacity 0.4s;
-        }
-        .spinner {
-            width: 44px; height: 44px;
-            border: 4px solid rgba(56, 189, 248, 0.2);
-            border-top-color: #38bdf8;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 12px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 640px) {
-            .ui-layer { padding: 16px; }
-            .wardrobe { width: 100%; padding: 14px; }
-            .save-btn { width: 100%; text-align: center; }
-        }
-    </style>
+    <title>Penalty Master 3D — Гардероб</title>
+    <link rel="stylesheet" href="shop.css">
 </head>
 <body>
 
-    <div id="loader-screen">
-        <div class="spinner"></div>
-        <div id="loader-text">Завантаження роздягальні...</div>
-    </div>
-
-    <div id="canvas-container"></div>
-
-    <div class="ui-layer">
-        <div class="top-bar">
-            <a href="index.html" class="back-btn">← На головну</a>
-
-            <div class="camera-views">
-                <button class="cam-btn active" data-view="full">Весь зріст</button>
-                <button class="cam-btn" data-view="kit">Форма</button>
-                <button class="cam-btn" data-view="boots">Бутси</button>
-            </div>
-        </div>
-
-        <div class="wardrobe">
-            <h3>👕 Примірочна</h3>
-            
-            <div class="section">
-                <label>Колір форми</label>
-                <div class="swatches" id="kit-swatches">
-                    <button class="swatch" style="background: #ffffff;" data-color="#ffffff"></button>
-                    <button class="swatch" style="background: #ef4444;" data-color="#ef4444"></button>
-                    <button class="swatch" style="background: #2563eb;" data-color="#2563eb"></button>
-                    <button class="swatch" style="background: #facc15;" data-color="#facc15"></button>
-                    <button class="swatch" style="background: #10b981;" data-color="#10b981"></button>
-                    <button class="swatch" style="background: #334155;" data-color="#334155"></button>
-                </div>
-            </div>
-
-            <div class="section">
-                <label>Колір бутс</label>
-                <div class="swatches" id="boots-swatches">
-                    <button class="swatch" style="background: #111111;" data-color="#111111"></button>
-                    <button class="swatch" style="background: #f97316;" data-color="#f97316"></button>
-                    <button class="swatch" style="background: #ec4899;" data-color="#ec4899"></button>
-                    <button class="swatch" style="background: #06b6d4;" data-color="#06b6d4"></button>
-                    <button class="swatch" style="background: #a3e635;" data-color="#a3e635"></button>
-                </div>
-            </div>
-        </div>
-
-        <div class="bottom-bar">
-            <a href="index.html" class="save-btn">ЗБЕРЕГТИ ТА ВИЙТИ ✓</a>
+    <div class="top-nav">
+        <a href="index.html" class="back-btn">← На головну</a>
+        <div class="header-stats">
+            <span>👕 Гардероб</span>
+            <span class="coins-badge" id="coins-display">💰 500</span>
         </div>
     </div>
+
+    <div class="preview-card">
+        <div class="viewport-box">
+            <div id="canvas-container"></div>
+            <button class="rotate-btn" id="flip-btn">🔄 Спина / Перед</button>
+        </div>
+        <div class="item-details">
+            <div>
+                <span class="status-tag" id="preview-status">✅ ОДЯГНЕНО НА ГРАВЦЯ</span>
+                <h2 id="preview-title">Блауграна (Барса)</h2>
+                <p id="preview-desc">Синьо-гранатові вертикальні смуги</p>
+            </div>
+            <button class="action-btn equipped" id="preview-action-btn">Одягнено ✓</button>
+        </div>
+    </div>
+
+    <div class="tabs-bar" id="tabs-bar">
+        <button class="tab-btn active" data-tab="jerseys">👕 Футболки (20)</button>
+        <button class="tab-btn" data-tab="shorts">🩳 Шорти (20)</button>
+        <button class="tab-btn" data-tab="boots">👟 Бутси (20)</button>
+        <button class="tab-btn" data-tab="gloves">🧤 Рукавиці (20)</button>
+        <button class="tab-btn" data-tab="balls">⚽ М'ячі (20)</button>
+        <button class="tab-btn" data-tab="number">#️⃣ Номер</button>
+    </div>
+
+    <div class="items-scroll" id="items-scroll"></div>
+    <div id="toast">Недостатньо монет! Зіграй матч, щоб заробити ⚽</div>
 
     <script type="importmap">
         {
