@@ -121,7 +121,7 @@ export function initShop3D(state) {
         const midX = (fullBox.min.x + fullBox.max.x) * 0.5;
         const isSingle = (fullBox.max.x - fullBox.min.x) < (fullBox.max.y - fullBox.min.y) * 1.1;
 
-        const containerGroup = new THREE.Group();
+        const meshGroup = new THREE.Group();
 
         gloveScene.traverse((node) => {
             if (!node.isMesh || !node.geometry) return;
@@ -153,10 +153,10 @@ export function initShop3D(state) {
 
             const mesh = new THREE.Mesh(geo, clonedMats.length === 1 ? clonedMats.at(0) : clonedMats);
             mesh.frustumCulled = false;
-            containerGroup.add(mesh);
+            meshGroup.add(mesh);
         });
 
-        const box = new THREE.Box3().setFromObject(containerGroup);
+        const box = new THREE.Box3().setFromObject(meshGroup);
         const size = new THREE.Vector3();
         const center = new THREE.Vector3();
         box.getSize(size);
@@ -165,12 +165,14 @@ export function initShop3D(state) {
         const maxDim = Math.max(size.x, size.y, size.z) || 1;
         const norm = 1.0 / maxDim;
 
-        const unit = new THREE.Group();
-        containerGroup.scale.setScalar(norm);
-        containerGroup.position.set(-center.x * norm, -box.min.y * norm, -center.z * norm);
-        containerGroup.rotation.y = pickLeft ? -Math.PI / 2 : Math.PI / 2;
-        unit.add(containerGroup);
-        return unit;
+        meshGroup.scale.setScalar(norm);
+        meshGroup.position.set(-center.x * norm, -box.min.y * norm, -center.z * norm);
+
+        const rotateGroup = new THREE.Group();
+        rotateGroup.add(meshGroup);
+        rotateGroup.rotation.y = pickLeft ? Math.PI / 2 : -Math.PI / 2;
+
+        return rotateGroup;
     }
 
     function mountGloveModel(gloveScene) {
@@ -182,13 +184,13 @@ export function initShop3D(state) {
         rightGloveHolder.add(rightUnit);
         leftGloveHolder.add(leftUnit);
 
-        attachToSleeveEnd(rightGloveHolder, rightForeArmBone, rightHandBone);
-        attachToSleeveEnd(leftGloveHolder, leftForeArmBone, leftHandBone);
+        attachToSleeveEnd(rightGloveHolder, rightForeArmBone, rightHandBone, false);
+        attachToSleeveEnd(leftGloveHolder, leftForeArmBone, leftHandBone, true);
         glovesLoaded = true;
         updateAppearance();
     }
 
-    function attachToSleeveEnd(holder, foreArmBone, handBone) {
+    function attachToSleeveEnd(holder, foreArmBone, handBone, isLeft) {
         const armBone = foreArmBone || (handBone && handBone.parent);
         if (!armBone) return;
 
@@ -201,7 +203,11 @@ export function initShop3D(state) {
 
         const gloveSize = foreLen * 0.92;
         holder.scale.setScalar(gloveSize);
-        holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.32);
+
+        holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.28);
+        const sideOffset = isLeft ? -gloveSize * 0.06 : gloveSize * 0.06;
+        holder.position.x += sideOffset;
+
         armBone.add(holder);
     }
 
