@@ -71,6 +71,7 @@ export function initShop3D(state) {
 
     let playerModel = null;
     let mixer = null;
+    let baseTextureImg = null;
 
     function drawJerseyPattern(ctx, jersey, width, height) {
         ctx.fillStyle = jersey.c1;
@@ -104,32 +105,82 @@ export function initShop3D(state) {
             ctx.fillRect(width * 0.88, 0, width * 0.12, height);
         }
     }
-    function createKitTexture() {
+    function createSmartKitTexture() {
         const jersey = CATALOG.jerseys.find(x => x.id === state.preview.jerseys) || CATALOG.jerseys.at(0);
         const shortItem = CATALOG.shorts.find(x => x.id === state.preview.shorts) || CATALOG.shorts.at(0);
+        const bootItem = CATALOG.boots.find(x => x.id === state.preview.boots) || CATALOG.boots.at(0);
 
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
+        const size = 512;
+        const patternCanvas = document.createElement('canvas');
+        patternCanvas.width = size;
+        patternCanvas.height = size;
+        const pCtx = patternCanvas.getContext('2d');
 
-        drawJerseyPattern(ctx, jersey, 512, 305);
+        // Малюємо нову форму та шорти на допоміжному полотні
+        drawJerseyPattern(pCtx, jersey, size, 305);
+        pCtx.fillStyle = shortItem.c1;
+        pCtx.fillRect(0, 305, size, 207);
+        pCtx.fillStyle = shortItem.c2;
+        pCtx.fillRect(0, 385, size, 26);
 
-        ctx.fillStyle = shortItem.c1;
-        ctx.fillRect(0, 305, 512, 207);
-        ctx.fillStyle = shortItem.c2;
-        ctx.fillRect(0, 385, 512, 26);
+        // Номер на спині
+        pCtx.fillStyle = state.numColor;
+        pCtx.strokeStyle = '#000000';
+        pCtx.lineWidth = 6;
+        pCtx.font = '900 72px "Segoe UI", sans-serif';
+        pCtx.textAlign = 'center';
+        pCtx.textBaseline = 'middle';
+        pCtx.strokeText(state.number, 384, 145);
+        pCtx.fillText(state.number, 384, 145);
 
-        ctx.fillStyle = state.numColor;
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 6;
-        ctx.font = '900 72px "Segoe UI", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 384, 145);
-        ctx.fillText(state.number, 384, 145);
+        // Якщо є оригінальна текстура моделі — зберігаємо пікселі шкіри (обличчя, руки, ноги), а форму замінюємо!
+        if (baseTextureImg) {
+            const outCanvas = document.createElement('canvas');
+            outCanvas.width = size;
+            outCanvas.height = size;
+            const oCtx = outCanvas.getContext('2d');
+            oCtx.drawImage(baseTextureImg, 0, 0, size, size);
 
-        const tex = new THREE.CanvasTexture(canvas);
+            const origData = oCtx.getImageData(0, 0, size, size);
+            const patData = pCtx.getImageData(0, 0, size, size);
+            const bootCol = new THREE.Color(bootItem.c1);
+            const bR = Math.round(bootCol.r * 255);
+            const bG = Math.round(bootCol.g * 255);
+            const bB = Math.round(bootCol.b * 255);
+
+            for (let i = 0; i < origData.data.length; i += 4) {
+                const r = origData.data[i];
+                const g = origData.data[i + 1];
+                const b = origData.data[i + 2];
+
+                // Визначаємо пікселі природної шкіри (теплий персиковий тон)
+                const isSkin = (r > 125 && g > 75 && b > 50 && r > g + 15 && g > b + 8 && (r - b) > 35);
+                // Визначаємо пікселі взуття (дуже темні пікселі внизу текстури)
+                const py = Math.floor((i / 4) / size);
+                const isShoe = (py > 410 && r < 70 && g < 70 && b < 70);
+
+                if (isShoe) {
+                    origData.data[i] = bR;
+                    origData.data[i + 1] = bG;
+                    origData.data[i + 2] = bB;
+                } else if (!isSkin) {
+                    // Усе інше (футболка, рукави, спина, шорти) отримує новий дизайн зі збереженням тіней складок
+                    const shade = Math.min(1.25, Math.max(0.55, (r + g + b) / 380));
+                    origData.data[i] = Math.min(255, patData.data[i] * shade);
+                    origData.data[i + 1] = Math.min(255, patData.data[i + 1] * shade);
+                    origData.data[i + 2] = Math.min(255, patData.data[i + 2] * shade);
+                }
+            }
+            oCtx.putImageData(origData, 0, 0);
+
+            const tex = new THREE.CanvasTexture(outCanvas);
+            tex.flipY = false;
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.needsUpdate = true;
+            return tex;
+        }
+
+        const tex = new THREE.CanvasTexture(patternCanvas);
         tex.flipY = false;
         tex.colorSpace = THREE.SRGBColorSpace;
         tex.needsUpdate = true;
@@ -157,32 +208,6 @@ export function initShop3D(state) {
         return tex;
     }
 
-    function applyMaterialChange(mat, meshName, kitTexture, bootColor) {
-        if (!mat) return mat;
-        const mName = (mat.name || '').toLowerCase();
-        const combined = `${meshName} ${mName}`;
-
-        if (combined.includes('shoe') || combined.includes('boot')) {
-            const newMat = mat.clone();
-            newMat.map = null;
-            newMat.color.set(bootColor);
-            newMat.needsUpdate = true;
-            return newMat;
-        }
-        if (combined.includes('hair') || combined.includes('eye') || combined.includes('lash')) {
-            return mat;
-        }
-        // Якщо це окремий матеріал форми (наприклад, Ch38_Shirt або другий слот матеріалу)
-        if (mName.includes('shirt') || mName.includes('cloth') || meshName.includes('shirt')) {
-            const newMat = mat.clone();
-            newMat.map = kitTexture;
-            newMat.color.set('#ffffff');
-            newMat.needsUpdate = true;
-            return newMat;
-        }
-        return mat;
-    }
-
     function updateAppearance() {
         const bootItem = CATALOG.boots.find(x => x.id === state.preview.boots) || CATALOG.boots.at(0);
         const gloveItem = CATALOG.gloves.find(x => x.id === state.preview.gloves) || CATALOG.gloves.at(0);
@@ -197,25 +222,17 @@ export function initShop3D(state) {
 
         if (!playerModel) return;
 
-        const kitTexture = createKitTexture();
+        const kitTexture = createSmartKitTexture();
 
         walkModel(playerModel, (child) => {
             if (child.isMesh && child.material) {
-                const meshName = (child.name || '').toLowerCase();
-                if (Array.isArray(child.material)) {
-                    child.material = child.material.map((m, idx) => {
-                        // У моделях Mixamo з мультиматеріалом слот 1 (або з назвою Shirt) — це одяг
-                        if (idx === 1 || (m.name || '').toLowerCase().includes('shirt')) {
-                            const cloned = m.clone();
-                            cloned.map = kitTexture;
-                            cloned.color.set('#ffffff');
-                            cloned.needsUpdate = true;
-                            return cloned;
-                        }
-                        return applyMaterialChange(m, meshName, kitTexture, bootItem.c1);
-                    });
+                const name = (child.name || '').toLowerCase();
+                if (name.includes('hair') || name.includes('eye') || name.includes('lash')) return;
+
+                if (name.includes('shoe') || name.includes('boot')) {
+                    child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.45 });
                 } else {
-                    child.material = applyMaterialChange(child.material, meshName, kitTexture, bootItem.c1);
+                    child.material = new THREE.MeshStandardMaterial({ map: kitTexture, roughness: 0.75 });
                 }
             }
         });
@@ -237,6 +254,13 @@ export function initShop3D(state) {
             if (child.isMesh) {
                 child.castShadow = true;
                 child.receiveShadow = true;
+                const name = (child.name || '').toLowerCase();
+                if (!name.includes('hair') && !name.includes('eye') && child.material) {
+                    const mat = Array.isArray(child.material) ? child.material.at(0) : child.material;
+                    if (mat && mat.map && mat.map.image) {
+                        baseTextureImg = mat.map.image;
+                    }
+                }
             }
             if (child.isBone && child.name) {
                 if (child.name.includes('LeftHand')) leftHandBone = child;
