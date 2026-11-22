@@ -116,7 +116,7 @@
 
     <div id="loader-screen">
         <div class="spinner"></div>
-        <div id="loader-text">Завантаження гравця... 0%</div>
+        <div id="loader-text">Завантаження гравця...</div>
     </div>
 
     <div id="canvas-container"></div>
@@ -135,17 +135,16 @@
     <script type="importmap">
         {
             "imports": {
-                "three": "https://jsdelivr.net",
-                "three/addons/": "https://jsdelivr.net"
+                "three": "./libs/three.module.js"
             }
         }
     </script>
 
     <script type="module">
         import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from './libs/GLTFLoader.js';
+        import { DRACOLoader } from './libs/DRACOLoader.js';
+        import { OrbitControls } from './libs/OrbitControls.js';
 
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
@@ -190,7 +189,7 @@
         controls.update();
 
         const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('https://gstatic.com');
+        dracoLoader.setDecoderPath('./libs/');
 
         const loader = new GLTFLoader();
         loader.setDRACOLoader(dracoLoader);
@@ -230,12 +229,7 @@
                 loaderScreen.style.opacity = '0';
                 setTimeout(() => loaderScreen.style.display = 'none', 400);
             },
-            (xhr) => {
-                if (xhr.total > 0) {
-                    const percent = Math.round((xhr.loaded / xhr.total) * 100);
-                    document.getElementById('loader-text').innerText = `Завантаження гравця... ${percent}%`;
-                }
-            },
+            undefined,
             (error) => {
                 document.getElementById('loader-text').innerText = 'Помилка завантаження player.glb!';
                 console.error(error);
