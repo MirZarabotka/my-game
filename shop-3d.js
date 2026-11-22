@@ -62,11 +62,13 @@ export function initShop3D(state) {
     leftGlove.visible = false;
     rightGlove.visible = false;
 
-    const backNumberMat = new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide });
-    const backNumberMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.22), backNumberMat);
-    backNumberMesh.position.set(0.035, 1.26, -0.095);
-    backNumberMesh.rotation.y = Math.PI;
-    scene.add(backNumberMesh);
+    const backNumberMat = new THREE.MeshBasicMaterial({
+        transparent: true,
+        side: THREE.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -4
+    });
+    const backNumberMesh = new THREE.Mesh(new THREE.PlaneGeometry(24, 24), backNumberMat);
 
     let playerModel = null;
     let mixer = null;
@@ -208,15 +210,32 @@ export function initShop3D(state) {
 
         let leftHand = null;
         let rightHand = null;
+        let spineBone = null;
+
         walkModel(playerModel, (child) => {
             if (child.isBone && child.name) {
                 if (child.name.includes('LeftHand')) leftHand = child;
                 if (child.name.includes('RightHand')) rightHand = child;
+                if (child.name.includes('Spine2') || (!spineBone && child.name.includes('Spine1'))) {
+                    spineBone = child;
+                }
             }
         });
 
         if (leftHand) leftHand.add(leftGlove);
         if (rightHand) rightHand.add(rightGlove);
+
+        if (spineBone) {
+            // Прикріплюємо номер безпосередньо до кістки спини футболіста
+            backNumberMesh.position.set(0, 6, -13.5);
+            backNumberMesh.rotation.set(0, Math.PI, 0);
+            spineBone.add(backNumberMesh);
+        } else {
+            backNumberMesh.scale.set(0.01, 0.01, 0.01);
+            backNumberMesh.position.set(0, 1.26, -0.135);
+            backNumberMesh.rotation.y = Math.PI;
+            playerModel.add(backNumberMesh);
+        }
 
         scene.add(playerModel);
         updateAppearance();
