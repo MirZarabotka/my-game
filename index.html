@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Penalty Master 3D — Головна</title>
+    <title>Penalty 3D — Головна</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; }
         body {
             overflow: hidden;
-            background: radial-gradient(circle at 50% 35%, #1e40af 0%, #0f172a 70%, #020617 100%);
+            background: #060b16;
             color: #ffffff;
         }
         #canvas-container { width: 100vw; height: 100vh; display: block; cursor: grab; }
@@ -18,16 +18,14 @@
             position: absolute;
             inset: 0;
             pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 28px 24px;
         }
 
         .top-hud {
+            position: absolute;
+            top: 20px;
+            right: 20px;
             display: flex;
             justify-content: flex-end;
-            width: 100%;
         }
         .coins-pill {
             background: rgba(15, 23, 42, 0.85);
@@ -38,66 +36,58 @@
             border: 1px solid rgba(250, 204, 21, 0.4);
             font-weight: 800;
             font-size: 1.05rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-        }
-
-        .header { text-align: center; margin-top: 8px; }
-        .header h1 {
-            font-size: clamp(2rem, 4vw, 3rem);
-            font-weight: 900;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            background: linear-gradient(to right, #ffffff, #38bdf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+            box-shadow: 0 8px 20px rgba(0,0,0,0.45);
         }
 
         .menu-actions {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
             display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 14px;
             pointer-events: auto;
-            padding-bottom: 12px;
+            z-index: 10;
         }
 
         .btn {
             text-decoration: none;
             border: none;
-            padding: 16px 40px;
-            font-size: 1.15rem;
+            width: 156px;
+            padding: 14px 18px;
+            font-size: 1rem;
             font-weight: 800;
-            letter-spacing: 1px;
-            border-radius: 50px;
+            letter-spacing: 0.8px;
+            border-radius: 14px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            gap: 8px;
+            transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
         }
 
         .btn-play {
-            background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
-            color: white;
-            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.45);
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.45);
         }
         .btn-play:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 35px rgba(34, 197, 94, 0.65);
+            transform: translateX(4px);
+            box-shadow: 0 12px 28px rgba(34, 197, 94, 0.65);
         }
 
         .btn-shop {
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(10px);
             color: #f8fafc;
-            border: 2px solid rgba(56, 189, 248, 0.5);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
         }
         .btn-shop:hover {
-            transform: translateY(-3px);
+            transform: translateX(4px);
             border-color: #38bdf8;
             background: rgba(30, 41, 59, 0.95);
         }
@@ -122,34 +112,24 @@
             margin-bottom: 15px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 540px) {
-            .menu-actions { flex-direction: column; width: 100%; }
-            .btn { width: 100%; }
-        }
     </style>
 </head>
 <body>
     <div id="loader-screen">
         <div class="spinner"></div>
-        <div id="loader-text">Завантаження гравця...</div>
+        <div id="loader-text">Вихід на поле...</div>
     </div>
 
     <div id="canvas-container"></div>
 
     <div class="ui-layer">
-        <div>
-            <div class="top-hud">
-                <div class="coins-pill" id="home-coins">💰 500</div>
-            </div>
-            <div class="header">
-                <h1>PENALTY MASTER 3D</h1>
-            </div>
+        <div class="top-hud">
+            <div class="coins-pill" id="home-coins">💰 500</div>
         </div>
 
         <div class="menu-actions">
-            <a href="shop.html" class="btn btn-shop">👕 ГАРДЕРОБ</a>
             <button class="btn btn-play" id="start-btn">ГРАТИ ⚽</button>
+            <a href="shop.html" class="btn btn-shop">👕 ГАРДЕРОБ</a>
         </div>
     </div>
 
@@ -174,36 +154,108 @@
 
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0b162c);
+        scene.fog = new THREE.FogExp2(0x0b162c, 0.045);
 
-        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(0, 1.25, 3.2);
+        const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+        // Зміщуємо ціль камери трохи вліво, щоб гравець опинився правіше центру і не перекривав кнопки
+        camera.position.set(-0.35, 1.35, 3.4);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.1;
+        renderer.toneMappingExposure = 1.15;
         container.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 1.25));
-        const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
-        keyLight.position.set(3, 6, 4);
-        keyLight.castShadow = true;
-        scene.add(keyLight);
+        // Освітлення стадіону та тунелю
+        scene.add(new THREE.AmbientLight(0xdbeafe, 0.9));
 
-        const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.4);
-        rimLight.position.set(-3, 4, -4);
-        scene.add(rimLight);
+        const stadiumSun = new THREE.DirectionalLight(0xffffff, 2.4);
+        stadiumSun.position.set(4, 9, 6);
+        stadiumSun.castShadow = true;
+        scene.add(stadiumSun);
 
-        const turf = new THREE.Mesh(
-            new THREE.CylinderGeometry(1.15, 1.25, 0.12, 48),
-            new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.85 })
+        const tunnelRim = new THREE.PointLight(0x38bdf8, 3.5, 8);
+        tunnelRim.position.set(0, 2.6, -1.8);
+        scene.add(tunnelRim);
+
+        // 3D-оточення: вихід із підтрибунного тунелю на футбольне поле
+        const envGroup = new THREE.Group();
+        scene.add(envGroup);
+
+        // Підлога тунелю (темне гумове покриття)
+        const tunnelFloor = new THREE.Mesh(
+            new THREE.PlaneGeometry(4.2, 6),
+            new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.75 })
         );
-        turf.position.y = -0.06;
-        turf.receiveShadow = true;
-        scene.add(turf);
+        tunnelFloor.rotation.x = -Math.PI / 2;
+        tunnelFloor.position.set(0, 0, -2.5);
+        tunnelFloor.receiveShadow = true;
+        envGroup.add(tunnelFloor);
 
+        // Стіни та стеля тунелю позаду гравця
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85 });
+        const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.2, 5.5), wallMat);
+        leftWall.position.set(-2.1, 1.6, -3.1);
+        envGroup.add(leftWall);
+
+        const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.2, 5.5), wallMat);
+        rightWall.position.set(2.1, 1.6, -3.1);
+        envGroup.add(rightWall);
+
+        const tunnelRoof = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.3, 5.5), wallMat);
+        tunnelRoof.position.set(0, 3.2, -3.1);
+        envGroup.add(tunnelRoof);
+
+        // Неонові LED-смуги на арці виходу з тунелю
+        const ledMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+        const leftLed = new THREE.Mesh(new THREE.BoxGeometry(0.06, 3.0, 0.06), ledMat);
+        leftLed.position.set(-1.92, 1.5, -0.4);
+        envGroup.add(leftLed);
+
+        const rightLed = new THREE.Mesh(new THREE.BoxGeometry(0.06, 3.0, 0.06), ledMat);
+        rightLed.position.set(1.92, 1.5, -0.4);
+        envGroup.add(rightLed);
+
+        const topLed = new THREE.Mesh(new THREE.BoxGeometry(3.9, 0.06, 0.06), ledMat);
+        topLed.position.set(0, 3.0, -0.4);
+        envGroup.add(topLed);
+
+        // Газон футбольного поля попереду (від z = 0.5 і далі)
+        const pitch = new THREE.Mesh(
+            new THREE.PlaneGeometry(36, 30),
+            new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.85 })
+        );
+        pitch.rotation.x = -Math.PI / 2;
+        pitch.position.set(0, 0.002, 15.5);
+        pitch.receiveShadow = true;
+        envGroup.add(pitch);
+
+        // Біла бокова лінія (аут) на виході з тунелю
+        const touchLine = new THREE.Mesh(
+            new THREE.PlaneGeometry(36, 0.14),
+            new THREE.MeshBasicMaterial({ color: 0xffffff })
+        );
+        touchLine.rotation.x = -Math.PI / 2;
+        touchLine.position.set(0, 0.005, 1.4);
+        envGroup.add(touchLine);
+
+        // Трибуни та вогні стадіону вдалині
+        const stands = new THREE.Mesh(
+            new THREE.BoxGeometry(38, 6, 4),
+            new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.9 })
+        );
+        stands.position.set(0, 3, 24);
+        envGroup.add(stands);
+
+        const stadiumLightsBar = new THREE.Mesh(
+            new THREE.BoxGeometry(24, 0.35, 0.35),
+            new THREE.MeshBasicMaterial({ color: 0xe0f2fe })
+        );
+        stadiumLightsBar.position.set(0, 7.2, 22.5);
+        envGroup.add(stadiumLightsBar);
         const ballMesh = new THREE.Mesh(
             new THREE.SphereGeometry(0.14, 24, 24),
             new THREE.MeshStandardMaterial({ roughness: 0.4 })
@@ -215,10 +267,10 @@
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.enablePan = false;
-        controls.minDistance = 2.0;
-        controls.maxDistance = 4.5;
-        controls.maxPolarAngle = Math.PI / 2 + 0.05;
-        controls.target.set(0, 0.95, 0);
+        controls.minDistance = 2.2;
+        controls.maxDistance = 4.6;
+        controls.maxPolarAngle = Math.PI / 2 - 0.02;
+        controls.target.set(-0.28, 0.95, 0);
         controls.update();
 
         function walkModel(obj, callback) {
@@ -228,6 +280,7 @@
                 for (const child of [...obj.children]) walkModel(child, callback);
             }
         }
+
         const leftGloveHolder = new THREE.Group();
         const rightGloveHolder = new THREE.Group();
         let leftHandBone = null;
