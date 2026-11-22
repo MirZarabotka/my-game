@@ -1,846 +1,263 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>3D Champions Penalty — Головна</title>
-<script>const tgS=document.createElement('script');tgS.src=['https:/','/telegram.org','/js/telegram-web-app.js'].join('');document.head.appendChild(tgS);</script>
-<style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
-.box{background:#131b26;border:1px solid #243347;border-radius:12px;padding:7px 12px;margin-bottom:6px;flex-shrink:0}
-.row{display:flex;justify-content:space-between;align-items:center}
-.bar{width:100%;height:5px;background:#1e2b3c;border-radius:4px;overflow:hidden;margin:4px 0}
-.fill{height:100%;background:#1dd1a1;transition:width .3s}
-.arena{flex:1;min-height:0;position:relative;border-radius:14px;overflow:hidden;border:2px solid #243347;margin-bottom:8px;background:#070b14;touch-action:none}
-#cHero{width:100%;height:100%;display:block;cursor:grab}
-#cHero:active{cursor:grabbing}
-.top-btns{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;z-index:10;pointer-events:none}
-.pill{pointer-events:auto;background:rgba(13,22,38,.9);border:1px solid #2e4363;color:#fff;padding:6px 11px;border-radius:11px;font-weight:bold;font-size:12px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
-.pill:active{transform:scale(.95)}
-.pill.gold{border-color:#feca57;color:#feca57}
-.status-bar{position:absolute;top:46px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;z-index:9}
-.badge{background:rgba(7,11,20,.82);border:1px solid rgba(112,161,255,.4);padding:4px 12px;border-radius:14px;font-size:11px;font-weight:bold;color:#dce6f7;white-space:nowrap}
-.hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(7,11,20,.86);border:1px solid rgba(254,202,87,.45);padding:5px 13px;border-radius:14px;font-size:11px;color:#feca57;white-space:nowrap;pointer-events:none;z-index:9}
-.menu{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex-shrink:0}
-.mbtn{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:12px;border:1.5px solid #2c3e55;background:#131b26;color:#fff;text-decoration:none;cursor:pointer;text-align:left}
-.mbtn:active{transform:scale(.98)}
-.mbtn.play{grid-column:span 2;background:linear-gradient(135deg,#1dd1a1,#10ac84);border-color:#55efc4;color:#05140e}
-.mbtn.ucl{background:linear-gradient(135deg,#192f5d,#0f1d3d);border-color:#4b7bec}
-.mbtn .t{font-weight:900;font-size:13px;display:block}
-.mbtn .s{font-size:10px;opacity:.84;display:block;margin-top:1px}
-.modal{position:fixed;inset:0;background:rgba(4,7,14,.88);display:none;align-items:center;justify-content:center;padding:12px;z-index:50}
-.modal.open{display:flex}
-.card{background:#131b26;border:1.5px solid #2e4363;border-radius:16px;width:100%;max-width:420px;max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
-.card-h{padding:12px 14px;border-bottom:1px solid #243347;display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:15px}
-.card-b{padding:12px;overflow-y:auto;flex:1}
-.xbtn{background:#243347;border:none;color:#fff;width:28px;height:28px;border-radius:8px;font-weight:bold;cursor:pointer}
-.stabs{display:flex;gap:4px;margin-bottom:10px;overflow-x:auto}
-.stab{flex:1;padding:7px 6px;background:#182230;border:1px solid #2c3e55;color:#8395a7;border-radius:9px;font-size:11px;font-weight:bold;cursor:pointer;white-space:nowrap}
-.stab.act{background:#223552;color:#feca57;border-color:#feca57}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
-.itm{background:#182230;border:1.5px solid #2c3e55;border-radius:11px;padding:8px 4px;text-align:center;cursor:pointer;font-size:11px}
-.itm.own{border-color:#3867d6}.itm.eq{border-color:#1dd1a1;background:#132a27}
-.sw{width:28px;height:28px;border-radius:50%;margin:0 auto 4px;border:2px solid rgba(255,255,255,.35)}
-.srow{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#182230;border-radius:10px;margin-bottom:7px;font-size:13px;font-weight:bold}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Penalty Master 3D — Головна</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; }
+        body {
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 35%, #1e40af 0%, #0f172a 70%, #020617 100%);
+            color: #ffffff;
+        }
+        #canvas-container { width: 100vw; height: 100vh; display: block; cursor: grab; }
+        #canvas-container:active { cursor: grabbing; }
+
+        .ui-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 32px 24px;
+        }
+
+        .header { text-align: center; }
+        .header h1 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #ffffff, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+        }
+
+        /* Кнопки дій внизу */
+        .menu-actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            pointer-events: auto;
+            padding-bottom: 12px;
+        }
+
+        .btn {
+            text-decoration: none;
+            border: none;
+            padding: 16px 40px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(34, 197, 94, 0.45);
+        }
+        .btn-play:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(34, 197, 94, 0.65);
+        }
+
+        .btn-shop {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            color: #f8fafc;
+            border: 2px solid rgba(56, 189, 248, 0.5);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+        .btn-shop:hover {
+            transform: translateY(-3px);
+            border-color: #38bdf8;
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        #loader-screen {
+            position: absolute;
+            inset: 0;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            transition: opacity 0.4s;
+        }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 4px solid rgba(56, 189, 248, 0.2);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 540px) {
+            .menu-actions { flex-direction: column; width: 100%; }
+            .btn { width: 100%; }
+        }
+    </style>
 </head>
 <body>
-<div class="box">
-  <div class="row"><b style="color:#feca57">Рівень <span id="lv">1</span> • 🏆 Рейтинг: <span id="cp">0</span></b><b style="color:#feca57">💰 <span id="cn">20</span></b></div>
-  <div class="bar"><div class="fill" id="xb"></div></div>
-  <div class="row" style="font-size:11px;color:#8395a7"><span>Досвід XP: <span id="pt">0</span>/<span id="nx">100</span></span><span style="color:#70a1ff;font-weight:bold">🇺🇦 <span id="clubTitle">Твій Клуб</span></span></div>
-</div>
 
-<div class="arena" id="ar">
-  <div class="top-btns">
-    <div style="display:flex;gap:6px">
-      <a href="statustuca.html" class="pill">📊 Рейтинг</a>
-      <button class="pill" onclick="openModal('mSet')">⚙</button>
+    <div id="loader-screen">
+        <div class="spinner"></div>
+        <div id="loader-text">Завантаження гравця... 0%</div>
     </div>
-    <button class="pill gold" id="bonusBtn" onclick="openModal('mBonus')">🎁 Бонус</button>
-  </div>
-  <div class="status-bar">
-    <div class="badge" id="stTxt">⚽ Готовий до матчу</div>
-    <div class="badge" style="color:#feca57">🔥 Серія: <span id="jugCnt">0</span> (10 = +1 🏆)</div>
-  </div>
-  <canvas id="cHero"></canvas>
-  <div class="hint">👆 1 тап — ноги • 2 тапи — голова • Свайп — 360°</div>
-</div>
 
-<div class="menu">
-  <a href="game.html" class="mbtn play" onclick="localStorage.removeItem('pc_play_ucl')">
-    <div><span class="t">⚽ ШВИДКИЙ МАТЧ (АРЕНА)</span><span class="s">Тренування та заробіток монет</span></div>
-    <b style="font-size:18px">▶</b>
-  </a>
-  <a href="turnir.html" class="mbtn ucl">
-    <div><span class="t">🏆 ЛІГА ЧЕМПІОНІВ</span><span class="s">Групи + Плей-оф</span></div>
-    <b style="font-size:16px;color:#70a1ff">🏆</b>
-  </a>
-  <button class="mbtn" onclick="openShop()">
-    <div><span class="t">🛍 ГАРДЕРОБ</span><span class="s">Форма, бутси, номер</span></div>
-    <b style="font-size:16px;color:#feca57">👕</b>
-  </button>
-</div>
+    <div id="canvas-container"></div>
 
-<div class="modal" id="mBonus" onclick="if(event.target===this)closeModal('mBonus')">
-  <div class="card">
-    <div class="card-h"><span>🎁 Щоденний бонус</span><button class="xbtn" onclick="closeModal('mBonus')">✖</button></div>
-    <div class="card-b" style="text-align:center">
-      <p style="color:#8395a7;font-size:13px;margin:4px 0 14px">Забирай нагороду за вхід у гру!</p>
-      <button id="claimBtn" style="width:100%;padding:13px;border-radius:12px;border:none;background:#1dd1a1;color:#05140e;font-weight:900;font-size:15px;cursor:pointer" onclick="claimBonus()">Забрати +50 💰</button>
+    <div class="ui-layer">
+        <div class="header">
+            <h1>PENALTY MASTER 3D</h1>
+        </div>
+
+        <div class="menu-actions">
+            <a href="shop.html" class="btn btn-shop">👕 ПРИМІРОЧНА</a>
+            <button class="btn btn-play" onclick="startGame()">ГРАТИ ⚽</button>
+        </div>
     </div>
-  </div>
-</div>
 
-<div class="modal" id="mSet" onclick="if(event.target===this)closeModal('mSet')">
-  <div class="card">
-    <div class="card-h"><span>⚙ Налаштування гри</span><button class="xbtn" onclick="closeModal('mSet')">✖</button></div>
-    <div class="card-b">
-      <div class="srow"><span>👤 Нікнейм у рейтингу</span><input id="nickInp" maxlength="16" style="background:#0d1520;border:1px solid #3c4f66;color:#fff;padding:6px 8px;border-radius:8px;width:130px;font-weight:bold" onchange="setNick(this.value)"></div>
-      <div class="srow" onclick="toggleOpt('snd')" style="cursor:pointer"><span>🔊 Звукові ефекти та голос</span><span id="optSnd" style="color:#1dd1a1">УВІМК</span></div>
-      <div class="srow" onclick="toggleOpt('vib')" style="cursor:pointer"><span>📳 Вібрація (Telegram)</span><span id="optVib" style="color:#1dd1a1">УВІМК</span></div>
-      <div class="srow" onclick="toggleOpt('fx')" style="cursor:pointer"><span>✨ Іскри та ефекти</span><span id="optFx" style="color:#1dd1a1">УВІМК</span></div>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="mShop" onclick="if(event.target===this)closeModal('mShop')">
-  <div class="card">
-    <div class="card-h"><span>🛍 Гардероб (💰 <span id="shopCn">20</span>)</span><button class="xbtn" onclick="closeModal('mShop')">✖</button></div>
-    <div class="card-b">
-      <div class="stabs" id="shopTabs"></div>
-      <div id="shopBody"></div>
-    </div>
-  </div>
-</div>
-<script>
-try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand();}catch(e){}
-const BIN_ID='6b01a76bffd5d16053d39022',API_KEY='$2a$10$FfzYgApncFFRJpoFkrYgyOZHPwjviuwu1N64Suvm4DneHJP..xKna',API_URL=['https:/','/api.jsonbin.io','/v3/b/',BIN_ID].join('');
-
-const SHOP=[
-  {id:'j1',cat:'j',n:'Смарагд',pr:0,col:'#1dd1a1',dark:'#0d8a68',trim:'#ffffff'},{id:'j2',cat:'j',n:'Мадрид Білий',pr:40,col:'#f5f6fa',dark:'#cfd6de',trim:'#1e272e'},
-  {id:'j3',cat:'j',n:'Червоний',pr:60,col:'#eb4d4b',dark:'#96201f',trim:'#ffffff'},{id:'j4',cat:'j',n:'Королівський',pr:80,col:'#3867d6',dark:'#193275',trim:'#feca57'},
-  {id:'j5',cat:'j',n:'Чорний Неон',pr:100,col:'#1e272e',dark:'#0b0f14',trim:'#1dd1a1'},{id:'j6',cat:'j',n:'Золотий',pr:130,col:'#feca57',dark:'#b8860b',trim:'#1e272e'},
-  {id:'j7',cat:'j',n:'Сіті Блакить',pr:160,col:'#00d2ff',dark:'#007a99',trim:'#ffffff'},{id:'j8',cat:'j',n:'Фіолет',pr:190,col:'#8854d0',dark:'#4b2482',trim:'#feca57'},
-  {id:'j9',cat:'j',n:'Помаранч',pr:220,col:'#fa8231',dark:'#a84b0d',trim:'#1e272e'},{id:'j10',cat:'j',n:'Бірюза',pr:260,col:'#2bcbba',dark:'#0f7a6e',trim:'#ffffff'},
-  {id:'j11',cat:'j',n:'Бордо',pr:300,col:'#b33939',dark:'#6b1818',trim:'#feca57'},{id:'j12',cat:'j',n:'Фламінго',pr:350,col:'#ff6b81',dark:'#a82b3e',trim:'#1e272e'},
-  {id:'j13',cat:'j',n:'Срібло',pr:400,col:'#a5b1c2',dark:'#596275',trim:'#00d2ff'},{id:'j14',cat:'j',n:'Лайм',pr:460,col:'#a3cb38',dark:'#5c7814',trim:'#1e272e'},
-  {id:'j15',cat:'j',n:'Інтер Ніч',pr:520,col:'#2c2c54',dark:'#13132b',trim:'#feca57'},{id:'j16',cat:'j',n:'Ультра',pr:600,col:'#0652DD',dark:'#032a73',trim:'#ffffff'},
-  {id:'j17',cat:'j',n:'Пурпур',pr:700,col:'#B53471',dark:'#63183c',trim:'#feca57'},{id:'j18',cat:'j',n:'Ліс',pr:800,col:'#009432',dark:'#004d1a',trim:'#ffffff'},
-  {id:'j19',cat:'j',n:'Платина',pr:950,col:'#d1d8e0',dark:'#778ca3',trim:'#1e272e'},{id:'j20',cat:'j',n:'Чемпіон Рубін',pr:1200,col:'#EA2027',dark:'#7a0c10',trim:'#feca57'},
-
-  {id:'p1',cat:'p',n:'Білі',pr:0,col:'#ffffff',dark:'#cfd6de'},{id:'p2',cat:'p',n:'Чорні',pr:30,col:'#1e272e',dark:'#0b0f14'},
-  {id:'p3',cat:'p',n:'Темно-сині',pr:50,col:'#273c75',dark:'#111d42'},{id:'p4',cat:'p',n:'Червоні',pr:70,col:'#eb4d4b',dark:'#96201f'},
-  {id:'p5',cat:'p',n:'Блакитні',pr:90,col:'#00d2ff',dark:'#007a99'},{id:'p6',cat:'p',n:'Золоті',pr:120,col:'#feca57',dark:'#b8860b'},
-  {id:'p7',cat:'p',n:'Смарагд',pr:150,col:'#1dd1a1',dark:'#0d8a68'},{id:'p8',cat:'p',n:'Фіолет',pr:180,col:'#8854d0',dark:'#4b2482'},
-  {id:'p9',cat:'p',n:'Помаранч',pr:210,col:'#fa8231',dark:'#a84b0d'},{id:'p10',cat:'p',n:'Бірюза',pr:240,col:'#2bcbba',dark:'#0f7a6e'},
-  {id:'p11',cat:'p',n:'Бордо',pr:280,col:'#b33939',dark:'#6b1818'},{id:'p12',cat:'p',n:'Рожеві',pr:320,col:'#ff6b81',dark:'#a82b3e'},
-  {id:'p13',cat:'p',n:'Сірі',pr:370,col:'#a5b1c2',dark:'#596275'},{id:'p14',cat:'p',n:'Лайм',pr:420,col:'#a3cb38',dark:'#5c7814'},
-  {id:'p15',cat:'p',n:'Ніч',pr:480,col:'#2c2c54',dark:'#13132b'},{id:'p16',cat:'p',n:'Сині',pr:550,col:'#0652DD',dark:'#032a73'},
-  {id:'p17',cat:'p',n:'Пурпур',pr:620,col:'#B53471',dark:'#63183c'},{id:'p18',cat:'p',n:'Зелені',pr:700,col:'#009432',dark:'#004d1a'},
-  {id:'p19',cat:'p',n:'Платина',pr:800,col:'#d1d8e0',dark:'#778ca3'},{id:'p20',cat:'p',n:'Рубін',pr:950,col:'#EA2027',dark:'#7a0c10'},
-
-  {id:'s1',cat:'s',n:'Класика',pr:0,col:'#14181d',ac:'#1dd1a1'},{id:'s2',cat:'s',n:'Білі Про',pr:45,col:'#f5f6fa',ac:'#eb4d4b'},
-  {id:'s3',cat:'s',n:'Неон Блу',pr:75,col:'#00d2ff',ac:'#ffffff'},{id:'s4',cat:'s',n:'Золото',pr:110,col:'#feca57',ac:'#1e272e'},
-  {id:'s5',cat:'s',n:'Вогонь',pr:145,col:'#eb4d4b',ac:'#feca57'},{id:'s6',cat:'s',n:'М’ята',pr:180,col:'#1dd1a1',ac:'#14181d'},
-  {id:'s7',cat:'s',n:'Лайм',pr:220,col:'#a3cb38',ac:'#ffffff'},{id:'s8',cat:'s',n:'Космос',pr:260,col:'#8854d0',ac:'#00d2ff'},
-  {id:'s9',cat:'s',n:'Тигр',pr:310,col:'#fa8231',ac:'#ffffff'},{id:'s10',cat:'s',n:'Лід',pr:360,col:'#dff9fb',ac:'#00a8ff'},
-  {id:'s11',cat:'s',n:'Карбон',pr:420,col:'#2f3542',ac:'#ff4757'},{id:'s12',cat:'s',n:'Мадрид',pr:480,col:'#1e3799',ac:'#feca57'},
-  {id:'s13',cat:'s',n:'Фламінго',pr:540,col:'#ff6b81',ac:'#ffffff'},{id:'s14',cat:'s',n:'Титан',pr:610,col:'#ced6e0',ac:'#1e272e'},
-  {id:'s15',cat:'s',n:'Небо',pr:680,col:'#70a1ff',ac:'#feca57'},{id:'s16',cat:'s',n:'Сапфір',pr:760,col:'#0652DD',ac:'#00d2ff'},
-  {id:'s17',cat:'s',n:'Аметист',pr:840,col:'#B53471',ac:'#ffffff'},{id:'s18',cat:'s',n:'Смарагд',pr:920,col:'#009432',ac:'#feca57'},
-  {id:'s19',cat:'s',n:'Хром',pr:1050,col:'#d1d8e0',ac:'#ff4757'},{id:'s20',cat:'s',n:'Діамант',pr:1250,col:'#EA2027',ac:'#feca57'},
-  {id:'b1',cat:'b',n:'Стандарт',pr:0,bn:0,col:'#ffffff'},{id:'b2',cat:'b',n:'Червоний +5',pr:80,bn:5,col:'#ff5e57'},
-  {id:'b3',cat:'b',n:'Неон +10',pr:160,bn:10,col:'#00d2ff'},{id:'b4',cat:'b',n:'Смарагд +15',pr:250,bn:15,col:'#1dd1a1'},
-  {id:'b5',cat:'b',n:'Золото +22',pr:360,bn:22,col:'#feca57'},{id:'b6',cat:'b',n:'Містик +30',pr:490,bn:30,col:'#8854d0'},
-  {id:'b7',cat:'b',n:'Лайм +38',pr:640,bn:38,col:'#a3cb38'},{id:'b8',cat:'b',n:'Метеор +46',pr:800,bn:46,col:'#fa8231'},
-  {id:'b9',cat:'b',n:'Комета +55',pr:980,bn:55,col:'#70a1ff'},{id:'b10',cat:'b',n:'Лава +65',pr:1200,bn:65,col:'#eb4d4b'},
-  {id:'b11',cat:'b',n:'Фламінго +76',pr:1450,bn:76,col:'#ff6b81'},{id:'b12',cat:'b',n:'Срібло +88',pr:1750,bn:88,col:'#a5b1c2'},
-  {id:'b13',cat:'b',n:'Обсидіан +100',pr:2100,bn:100,col:'#2f3542'},{id:'b14',cat:'b',n:'Сонце +120',pr:2500,bn:120,col:'#ff9f43'},
-  {id:'b15',cat:'b',n:'Космос +145',pr:3000,bn:145,col:'#5352ed'},{id:'b16',cat:'b',n:'Сапфір +170',pr:3600,bn:170,col:'#0652DD'},
-  {id:'b17',cat:'b',n:'Рубін +195',pr:4300,bn:195,col:'#B53471'},{id:'b18',cat:'b',n:'Смарагд+225',pr:5100,bn:225,col:'#009432'},
-  {id:'b19',cat:'b',n:'Платина +260',pr:6000,bn:260,col:'#d1d8e0'},{id:'b20',cat:'b',n:'ЛЧ Кубок +300',pr:7500,bn:300,col:'#EA2027'},
-
-  {id:'k1',cat:'k',n:'Без рукавиць',pr:0,bn:0,col:'#1dd1a1'},{id:'k2',cat:'k',n:'Рожеві +10',pr:120,bn:10,col:'#ff9ff3'},
-  {id:'k3',cat:'k',n:'Золоті +18',pr:240,bn:18,col:'#feca57'},{id:'k4',cat:'k',n:'Червоні +25',pr:380,bn:25,col:'#ff5e57'},
-  {id:'k5',cat:'k',n:'Крига +33',pr:540,bn:33,col:'#00d2ff'},{id:'k6',cat:'k',n:'Титан +42',pr:720,bn:42,col:'#a5b1c2'},
-  {id:'k7',cat:'k',n:'Фіолет +52',pr:920,bn:52,col:'#8854d0'},{id:'k8',cat:'k',n:'Лайм +62',pr:1150,bn:62,col:'#a3cb38'},
-  {id:'k9',cat:'k',n:'Вогонь +74',pr:1400,bn:74,col:'#fa8231'},{id:'k10',cat:'k',n:'Ніч +86',pr:1700,bn:86,col:'#2f3542'},
-  {id:'k11',cat:'k',n:'Кров +100',pr:2050,bn:100,col:'#eb4d4b'},{id:'k12',cat:'k',n:'Білі +115',pr:2450,bn:115,col:'#f5f6fa'},
-  {id:'k13',cat:'k',n:'Нефрит +132',pr:2900,bn:132,col:'#20bf6b'},{id:'k14',cat:'k',n:'Небо +155',pr:3400,bn:155,col:'#70a1ff'},
-  {id:'k15',cat:'k',n:'Бурштин +180',pr:4000,bn:180,col:'#ff9f43'},{id:'k16',cat:'k',n:'Ультра +205',pr:4700,bn:205,col:'#0652DD'},
-  {id:'k17',cat:'k',n:'Пурпур +235',pr:5500,bn:235,col:'#B53471'},{id:'k18',cat:'k',n:'Ліс +265',pr:6400,bn:265,col:'#009432'},
-  {id:'k19',cat:'k',n:'Платина +300',pr:7400,bn:300,col:'#d1d8e0'},{id:'k20',cat:'k',n:'Бог Сейвів+350',pr:9000,bn:350,col:'#EA2027'}
-];
-let p={pt:0,lv:1,cp:0,cn:20,ow:['j1','p1','s1','b1','k1'],ej:'j1',ep:'p1',es:'s1',eb:'b1',ek:'k1',num:'10',numCol:'#ffffff',ucl:null,nick:'',uid:'',lastBonus:0,opt:{snd:true,vib:true,fx:true}};
-
-function loadWallet(){
-  try{
-    const old=JSON.parse(localStorage.getItem('pc_3d8')),v=JSON.parse(localStorage.getItem('pc_ucl1'));
-    if(v)p=Object.assign(p,v);else if(old){p=Object.assign(p,old);save();}
-  }catch(e){}
-  try{
-    const u=window.Telegram.WebApp.initDataUnsafe.user;
-    if(u&&u.id){p.uid=String(u.id);if(!p.nick)p.nick=u.first_name||u.username||'';}
-  }catch(e){}
-  if(!p.uid)p.uid='u'+Math.floor(100000+Math.random()*900000);
-  if(!p.opt)p.opt={snd:true,vib:true,fx:true};
-  if(!Array.isArray(p.ow))p.ow=['j1','p1','s1','b1','k1'];
-  if(!p.ej)p.ej='j1';if(!p.ep)p.ep='p1';if(!p.es)p.es='s1';if(!p.eb)p.eb='b1';if(!p.ek)p.ek='k1';
-  if(!p.num)p.num='10';if(!p.numCol)p.numCol='#ffffff';if(isNaN(Number(p.cn)))p.cn=20;
-  save();
-}
-function save(){try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}}
-loadWallet();
-
-async function pushScoreToCloud(){
-  if(!p||!p.uid)return;
-  try{
-    const r=await fetch(API_URL+'/latest',{headers:{'X-Master-Key':API_KEY}});if(!r.ok)return;
-    const j=await r.json(),list=Array.isArray(j.record)?j.record:[],map=new Map();
-    list.forEach(u=>{if(u&&u.uid&&u.uid!=='init')map.set(u.uid,u);});
-    map.set(p.uid,{uid:p.uid,n:p.nick||('Гравець #'+p.uid.slice(-4)),cn:Number(p.cn)||0,lv:Number(p.lv)||1,cp:Number(p.cp)||0});
-    const top=Array.from(map.values()).sort((a,b)=>(b.cn-a.cn)||(b.cp-a.cp)||(b.lv-a.lv)).slice(0,100);
-    await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':API_KEY},body:JSON.stringify(top)});
-  }catch(e){}
-}
-
-function getItem(id){return SHOP.find(x=>x.id===id)||SHOP[0];}
-
-function updUI(){
-  lv.textContent=p.lv;cp.textContent=p.cp;cn.textContent=p.cn;
-  const nxXp=p.lv*100;pt.textContent=p.pt;nx.textContent=nxXp;xb.style.width=Math.min(100,(p.pt/nxXp)*100)+'%';
-  clubTitle.textContent=p.nick||'Твій Клуб';
-  nickInp.value=p.nick||'';
-  optSnd.textContent=p.opt.snd?'УВІМК':'ВИМК';optSnd.style.color=p.opt.snd?'#1dd1a1':'#ff5e57';
-  optVib.textContent=p.opt.vib?'УВІМК':'ВИМК';optVib.style.color=p.opt.vib?'#1dd1a1':'#ff5e57';
-  optFx.textContent=p.opt.fx?'УВІМК':'ВИМК';optFx.style.color=p.opt.fx?'#1dd1a1':'#ff5e57';
-  updBonusBtn();
-}
-function updBonusBtn(){
-  const left=(p.lastBonus||0)+86400000-Date.now();
-  if(left<=0){
-    bonusBtn.textContent='🎁 Бонус';claimBtn.disabled=false;claimBtn.style.opacity='1';claimBtn.textContent='Забрати +50 💰';
-  }else{
-    const hrs=Math.max(1,Math.ceil(left/3600000));
-    bonusBtn.textContent=`⏳ ${hrs} год`;claimBtn.disabled=true;claimBtn.style.opacity='.5';claimBtn.textContent=`Доступно через ${hrs} год`;
-  }
-}
-
-function claimBonus(){
-  if((p.lastBonus||0)+86400000>Date.now())return;
-  p.cn+=50;p.pt+=20;p.lastBonus=Date.now();
-  if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
-  playKickSfx(true);vib(40);save();updUI();pushScoreToCloud();closeModal('mBonus');
-}
-
-function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-function toggleOpt(k){p.opt[k]=!p.opt[k];save();updUI();}
-function setNick(v){p.nick=v.trim().slice(0,16);save();updUI();pushScoreToCloud();}
-
-let curTab='j';
-function openShop(){openModal('mShop');renderShop();}
-function renderShop(){
-  shopCn.textContent=p.cn;
-  const tabs=[{k:'j',l:'👕 Форма'},{k:'p',l:'🩳 Шорти'},{k:'s',l:'👟 Бутси'},{k:'b',l:'⚽ М’ячі'},{k:'k',l:'🧤 Рукавиці'},{k:'num',l:'🔢 Номер'}];
-  shopTabs.innerHTML=tabs.map(t=>`<button class="stab ${curTab===t.k?'act':''}" onclick="curTab='${t.k}';renderShop()">${t.l}</button>`).join('');
-  if(curTab==='num'){
-    const cols=['#ffffff','#feca57','#1dd1a1','#00d2ff','#ff5e57','#1e272e'];
-    shopBody.innerHTML=`
-      <div class="srow"><span>Номер на спині (1–99)</span><input type="number" min="1" max="99" value="${p.num}" style="width:70px;padding:6px;border-radius:8px;border:1px solid #3c4f66;background:#0d1520;color:#fff;font-weight:bold;text-align:center" onchange="p.num=Math.max(1,Math.min(99,Number(this.value)||10));save()"></div>
-      <div style="font-size:12px;color:#8395a7;margin:8px 0 6px">Колір номера:</div>
-      <div style="display:flex;gap:8px">${cols.map(c=>`<div onclick="p.numCol='${c}';save();renderShop()" style="width:34px;height:34px;border-radius:50%;background:${c};border:3px solid ${p.numCol===c?'#feca57':'#2c3e55'};cursor:pointer"></div>`).join('')}</div>`;
-    return;
-  }
-  const eqKey='e'+curTab;
-  shopBody.innerHTML=`<div class="grid">${SHOP.filter(x=>x.cat===curTab).map(it=>{
-    const own=p.ow.includes(it.id),eq=p[eqKey]===it.id;
-    return `<div class="itm ${eq?'eq':(own?'own':'')}" onclick="buyOrEq('${it.id}','${eqKey}')">
-      <div class="sw" style="background:${it.col}"></div>
-      <div style="font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${it.n}</div>
-      <div style="color:${eq?'#1dd1a1':(own?'#70a1ff':'#feca57')};margin-top:2px;font-weight:bold">${eq?'Одягнено':(own?'Обрати':it.pr+' 💰')}</div>
-    </div>`;
-  }).join('')}</div>`;
-}
-
-function buyOrEq(id,eqKey){
-  const it=getItem(id);
-  if(p.ow.includes(id)){p[eqKey]=id;playKickSfx(false);vib(20);save();renderShop();return;}
-  if(p.cn<it.pr){playKickSfx(false);return;}
-  p.cn-=it.pr;p.ow.push(id);p[eqKey]=id;playKickSfx(true);vib(35);save();updUI();renderShop();pushScoreToCloud();
-}
-let ac=null;
-function playKickSfx(isHead){
-  if(!p.opt.snd)return;
-  try{
-    if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();
-    if(ac.state==='suspended')ac.resume();
-    const now=ac.currentTime;
-
-    // 1. Низький глухий басовий удар камери м'яча (145 Гц -> 42 Гц)
-    const osc=ac.createOscillator(),g=ac.createGain();
-    osc.type='triangle';
-    const baseF=isHead?175:145;
-    osc.frequency.setValueAtTime(baseF,now);
-    osc.frequency.exponentialRampToValueAtTime(42,now+0.13);
-    g.gain.setValueAtTime(0.45,now);
-    g.gain.exponentialRampToValueAtTime(0.001,now+0.14);
-    osc.connect(g);g.connect(ac.destination);
-    osc.start(now);osc.stop(now+0.15);
-
-    // 2. Короткий акустичний "шльопок" шкіри (відфільтрований білий шум)
-    const bufLen=Math.floor(ac.sampleRate*0.045);
-    const buf=ac.createBuffer(1,bufLen,ac.sampleRate);
-    const data=buf.getChannelData(0);
-    for(let i=0;i<bufLen;i++)data[i]=(Math.random()*2-1)*Math.exp(-i/(bufLen*0.35));
-    const noise=ac.createBufferSource();noise.buffer=buf;
-    const flt=ac.createBiquadFilter();flt.type='bandpass';flt.frequency.value=isHead?1100:850;flt.Q.value=1.2;
-    const ng=ac.createGain();ng.gain.setValueAtTime(0.32,now);ng.gain.exponentialRampToValueAtTime(0.01,now+0.045);
-    noise.connect(flt);flt.connect(ng);ng.connect(ac.destination);
-    noise.start(now);
-  }catch(e){}
-}
-function vib(ms){if(p.opt.vib){try{window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');}catch(e){if(navigator.vibrate)navigator.vibrate(ms);}}}
-
-const PHRASES=[
-  '⚽ Погнали на стадіон!','🔥 Дивись, як тримаю м’яч!','🏆 Кубок ЛЧ буде наш!','⚡ Чиста техніка!',
-  '🎯 Точно в дев’ятку!','💪 Я у суперформі!','🚀 Зараз покажу клас!','👏 Трибуни ревуть!',
-  '😎 Легко та красиво!','🌟 Рівень Ліги Чемпіонів!','🔥 Голова працює на 100%!','⚽ М’яч як приклеєний!',
-  '🏅 Плюс у рейтинг!','🎉 Оце так серія!','⚡ Ніхто не забере м’яч!','👑 Король пенальті!',
-  '💥 Удар гарматний!','🇺🇦 За перемогу!','🙌 Вболівальники в захваті!','🔥 Ще один рекорд!'
-];
-let speechTxt='',speechTimer=0;
-function sayPhrase(custom){
-  speechTxt=custom||PHRASES[Math.floor(Math.random()*PHRASES.length)];
-  speechTimer=130;
-}
-const cHero=document.getElementById('cHero'),ctx=cHero.getContext('2d');
-let W=300,H=300;
-function rsz(){const r=ar.getBoundingClientRect();if(r.width>0&&r.height>0){W=cHero.width=r.width;H=cHero.height=r.height;}}
-window.addEventListener('resize',rsz);
-
-let rotY=0,dragX=null,moved=false,autoSpin=null;
-let jugLeft=0,jugMode='foot',jugCount=0,jugPhase=0,activeFoot=-1,ballY=0,ballVy=0,ballX=-24,ballSpin=0,sparks=[],lastTapTs=0;
-
-function spawnSparks(x,y,col){
-  if(!p.opt.fx)return;
-  for(let i=0;i<16;i++){
-    const a=Math.random()*Math.PI*2,sp=1.6+Math.random()*4.0;
-    sparks.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.8,life:1,col:i%2===0?'#feca57':col});
-  }
-}
-
-ar.addEventListener('pointerdown',e=>{if(e.target.closest('.pill'))return;dragX=e.clientX;moved=false;});
-window.addEventListener('pointermove',e=>{
-  if(dragX===null)return;
-  const dx=e.clientX-dragX;
-  if(Math.abs(dx)>5){moved=true;autoSpin=null;rotY+=dx*0.015;dragX=e.clientX;}
-});
-window.addEventListener('pointerup',e=>{
-  if(dragX===null)return;
-  if(moved){
-    const dir=(e.clientX-dragX)>=0?1:-1;
-    const norm=((rotY%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
-    const target=dir>0?(Math.PI*2):0;
-    autoSpin={start:performance.now(),dur:3000,from:norm,to:target};
-    sayPhrase('🔄 Оціни форму з усіх боків!');
-  }else{
-    const now=Date.now();
-    if(now-lastTapTs<340)startJuggle('head');
-    else startJuggle('foot');
-    lastTapTs=now;
-  }
-  dragX=null;
-});
-
-function startJuggle(mode){
-  if(jugLeft>0&&jugMode===mode)return;
-  jugMode=mode;jugLeft=5;
-  if(mode==='head'){
-    stTxt.textContent='🤯 Набиває головою!';
-    sayPhrase('🔥 Дивись, гра головою!');
-    ballVy=-14.2;ballX=0;
-  }else{
-    stTxt.textContent='⚡ Набиває ногами...';
-    sayPhrase();
-    kickBallUp();
-  }
-}
-
-function kickBallUp(){
-  if(jugLeft<=0){stTxt.textContent='⚽ Готовий до матчу';return;}
-  jugLeft--;jugCount++;jugCnt.textContent=jugCount;
-  jugPhase=1;
-
-  if(jugMode==='head'){
-    ballVy=-8.2;ballX=0;
-    playKickSfx(true);vib(25);
-  }else{
-    activeFoot*=-1;ballVy=-10.2;ballX=activeFoot*24;
-    playKickSfx(false);vib(20);
-  }
-
-  if(jugCount%10===0){
-    p.cp=(Number(p.cp)||0)+1;p.cn+=5;p.pt+=15;
-    if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
-    save();updUI();pushScoreToCloud();
-    sayPhrase('🏆 +1 бал рейтингу та +5 💰!');
-    spawnSparks(W*0.5,H*0.48,'#feca57');
-  }else if(jugCount%5===0){
-    p.cn+=2;p.pt+=5;
-    if(p.pt>=p.lv*100){p.pt-=p.lv*100;p.lv++;}
-    save();updUI();sayPhrase();
-    spawnSparks(W*0.5,H*0.56,'#1dd1a1');
-  }else{
-    spawnSparks(W*0.5+ballX,jugMode==='head'?H*0.36:H*0.76,'#70a1ff');
-  }
-}
-let tAnim=0;
-function drawStadiumBg(){
-  const horY=H*0.64;
-  const sky=ctx.createLinearGradient(0,0,0,horY);
-  sky.addColorStop(0,'#060b16');sky.addColorStop(0.6,'#0d1c36');sky.addColorStop(1,'#1b355e');
-  ctx.fillStyle=sky;ctx.fillRect(0,0,W,horY);
-
-  ctx.fillStyle='#0a1222';ctx.beginPath();
-  ctx.moveTo(0,horY*0.42);ctx.quadraticCurveTo(W*0.5,horY*0.30,W,horY*0.42);
-  ctx.lineTo(W,horY);ctx.lineTo(0,horY);ctx.closePath();ctx.fill();
-
-  for(let r=0;r<6;r++){
-    const ry=horY*0.50+r*(horY*0.068);
-    ctx.fillStyle=r%2===0?'rgba(255,255,255,0.07)':'rgba(112,161,255,0.11)';
-    for(let x=12;x<W-12;x+=11){
-      const jump=Math.sin(tAnim*1.4+x*0.05+r)*1.4;
-      ctx.beginPath();ctx.arc(x,ry+jump,2.2,0,Math.PI*2);ctx.fill();
-    }
-  }
-
-  [W*0.14,W*0.86].forEach((lx,idx)=>{
-    const ly=horY*0.34;
-    const beam=ctx.createLinearGradient(lx,ly,W*0.5,H*0.85);
-    beam.addColorStop(0,'rgba(190,225,255,0.22)');beam.addColorStop(1,'rgba(190,225,255,0)');
-    ctx.fillStyle=beam;ctx.beginPath();
-    ctx.moveTo(lx-8,ly);ctx.lineTo(lx+8,ly);
-    ctx.lineTo(W*(idx===0?0.68:0.95),H);ctx.lineTo(W*(idx===0?0.05:0.32),H);ctx.closePath();ctx.fill();
-    ctx.fillStyle='#dce6f7';ctx.fillRect(lx-10,ly-5,20,7);
-    ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(lx,ly,5,0,Math.PI*2);ctx.fill();
-  });
-
-  const adH=14,adY=horY-adH;
-  ctx.fillStyle='#0c2461';ctx.fillRect(0,adY,W,adH);
-  ctx.strokeStyle='#3867d6';ctx.lineWidth=1;ctx.strokeRect(0,adY,W,adH);
-  ctx.fillStyle='#ffffff';ctx.font='bold 9px sans-serif';ctx.textAlign='center';
-  ctx.fillText('★ UEFA CHAMPIONS LEAGUE ★ OFFICIAL ARENA ★',W*0.5,adY+10);
-
-  const grass=ctx.createLinearGradient(0,horY,0,H);
-  grass.addColorStop(0,'#1e5c24');grass.addColorStop(0.5,'#26732d');grass.addColorStop(1,'#194d1e');
-  ctx.fillStyle=grass;ctx.fillRect(0,horY,W,H-horY);
-
-  for(let i=0;i<7;i++){
-    const y1=horY+(H-horY)*(i/7),y2=horY+(H-horY)*((i+1)/7);
-    if(i%2===0){ctx.fillStyle='rgba(255,255,255,0.04)';ctx.fillRect(0,y1,W,y2-y1);}
-  }
-
-  const cy=horY+(H-horY)*0.55;
-  ctx.strokeStyle='rgba(255,255,255,0.72)';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
-  ctx.beginPath();ctx.ellipse(W*0.5,cy,Math.min(W*0.38,155),Math.min((H-horY)*0.32,44),0,0,Math.PI*2);ctx.stroke();
-}
-const INK='#14181e';
-
-// Бутса, що дивиться вперед у перспективі (носок на глядача) та розвертається при обертанні на 360°
-function drawFrontBoot(x,y,sc,side,cosA,sinA,bCol,bAc){
-  ctx.save();ctx.translate(x,y);
-  const absSin=Math.abs(sinA);
-
-  if(absSin>0.55){
-    // Профільний вигляд при повороті вбік
-    if(sinA<0)ctx.scale(-1,1);
-    ctx.fillStyle='#191e26';ctx.strokeStyle=INK;ctx.lineWidth=2*sc;
-    ctx.beginPath();ctx.roundRect(-9*sc,4*sc,27*sc,6*sc,3*sc);ctx.fill();ctx.stroke();
-
-    ctx.fillStyle=bCol;ctx.beginPath();
-    ctx.moveTo(-9*sc,-7*sc);ctx.lineTo(4*sc,-7*sc);
-    ctx.quadraticCurveTo(18*sc,-3*sc,17*sc,5*sc);ctx.lineTo(-9*sc,5*sc);ctx.closePath();ctx.fill();ctx.stroke();
-
-    ctx.fillStyle=bAc;ctx.beginPath();
-    ctx.moveTo(-4*sc,4*sc);ctx.quadraticCurveTo(4*sc,-2*sc,14*sc,3*sc);ctx.lineTo(8*sc,5*sc);ctx.closePath();ctx.fill();
-  }else{
-    // Фронтальний 3/4 вигляд — носок бутси дивиться вперед на гравця!
-    const toeShift=(side*2.2+sinA*6)*sc;
-    // Підошва та передні шипи
-    ctx.fillStyle='#191e26';ctx.strokeStyle=INK;ctx.lineWidth=2*sc;
-    ctx.beginPath();ctx.roundRect(-8.5*sc+toeShift*0.4,3*sc,17*sc,8*sc,4*sc);ctx.fill();ctx.stroke();
-
-    // Об'ємний носок бутси, направлений вперед
-    const bg=ctx.createLinearGradient(0,-7*sc,0,9*sc);
-    bg.addColorStop(0,'#ffffff');bg.addColorStop(0.25,bCol);bg.addColorStop(1,'#14181e');
-    ctx.fillStyle=bg;ctx.beginPath();
-    ctx.moveTo(-7.5*sc,-6*sc);ctx.lineTo(7.5*sc,-6*sc);
-    ctx.quadraticCurveTo(9.5*sc+toeShift,3*sc,8.5*sc+toeShift,8*sc);
-    ctx.quadraticCurveTo(toeShift,10.5*sc,-8.5*sc+toeShift,8*sc);
-    ctx.quadraticCurveTo(-9.5*sc+toeShift,3*sc,-7.5*sc,-6*sc);
-    ctx.closePath();ctx.fill();ctx.stroke();
-
-    // Фірмова V-смуга на підйомі та шнурівка спереду
-    ctx.strokeStyle=bAc;ctx.lineWidth=2.2*sc;
-    ctx.beginPath();ctx.moveTo(-5*sc,-1*sc);ctx.lineTo(toeShift,4.5*sc);ctx.lineTo(5*sc,-1*sc);ctx.stroke();
-    ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5*sc;
-    ctx.beginPath();ctx.moveTo(-2.5*sc,-3*sc);ctx.lineTo(2.5*sc,-3*sc);ctx.stroke();
-  }
-  ctx.restore();
-}
-
-// Справжня воротарська рукавиця з манжетою-липучкою, розширеною долонею та пальцями
-function drawKeeperGlove(x,y,sc,side,gCol){
-  ctx.save();ctx.translate(x,y);ctx.rotate(side*0.15);
-  ctx.strokeStyle=INK;ctx.lineWidth=1.9*sc;
-
-  // Манжет із застібкою
-  ctx.fillStyle='#191e26';
-  ctx.beginPath();ctx.roundRect(-5.5*sc,-3*sc,11*sc,4.5*sc,1.5*sc);ctx.fill();ctx.stroke();
-
-  // Основна долоня рукавиці
-  ctx.fillStyle=gCol;
-  ctx.beginPath();ctx.roundRect(-7*sc,1*sc,14*sc,10.5*sc,3.5*sc);ctx.fill();ctx.stroke();
-
-  // 4 пальці рукавиці
-  [-4.6,-1.5,1.5,4.6].forEach((fx,i)=>{
-    const fh=[5.2,6.2,5.8,4.6][i]*sc;
-    ctx.beginPath();ctx.roundRect((fx-1.4)*sc,10.5*sc,2.8*sc,fh,1.3*sc);ctx.fill();ctx.stroke();
-  });
-
-  // Великий палець всередину
-  ctx.beginPath();ctx.roundRect(-side*8.8*sc,3.5*sc,3.6*sc,5.5*sc,1.6*sc);ctx.fill();ctx.stroke();
-  ctx.restore();
-}
-function drawStylizedHero(cx,cy,sc){
-  const cosA=Math.cos(rotY),sinA=Math.sin(rotY);
-  const facingBack=cosA<0;
-  const bodyW=0.72+0.28*Math.abs(cosA);
-  const j=getItem(p.ej),sh=getItem(p.ep),bt=getItem(p.es),gl=getItem(p.ek);
-  const hasGloves=(p.ek&&p.ek!=='k1');
-  const skin='#f4be8e',skinSh='#d69663';
-
-  const headJump=(jugPhase>0&&jugMode==='head')?Math.sin(jugPhase*Math.PI)*20*sc:0;
-  const breath=Math.sin(tAnim*2.2)*2.0*sc-headJump;
-
-  // Контактна тінь на полі
-  const sg=ctx.createRadialGradient(cx,cy+5*sc,6*sc,cx,cy+5*sc,62*sc);
-  sg.addColorStop(0,'rgba(0,0,0,0.62)');sg.addColorStop(0.65,'rgba(0,0,0,0.22)');sg.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle=sg;ctx.beginPath();ctx.ellipse(cx,cy+5*sc,62*sc,14*sc,0,0,Math.PI*2);ctx.fill();
-
-  const kickSw=(jugPhase>0&&jugMode==='foot')?Math.sin(jugPhase*Math.PI):0;
-  const layers=[];
-
-  // 1. ГАРМОНІЙНІ НОГИ ТА ШТАНИНИ ШОРТІВ ІЗ Z-ГЛИБИНОЮ
-  [-1,1].forEach(side=>{
-    const kickNow=(jugPhase>0&&jugMode==='foot'&&side===activeFoot);
-    const liftY=kickNow?kickSw*26*sc:headJump*0.7;
-    const zDepth=side*sinA;
-
-    const hipX=side*12.5*cosA*sc,hipY=-78*sc+breath*0.3;
-    const kneeX=side*15.5*cosA*sc+sinA*5*sc,kneeY=-44*sc-liftY*0.75;
-    const ankX=side*16.5*cosA*sc+sinA*8*sc,ankY=-9*sc-liftY;
-
-    layers.push({z:zDepth,draw:()=>{
-      // Гомілка в гетрі
-      ctx.lineWidth=13*sc;ctx.strokeStyle=INK;
-      ctx.beginPath();ctx.moveTo(kneeX,kneeY);ctx.lineTo(ankX,ankY);ctx.stroke();
-      ctx.lineWidth=9*sc;ctx.strokeStyle=j.col;
-      ctx.beginPath();ctx.moveTo(kneeX,kneeY);ctx.lineTo(ankX,ankY);ctx.stroke();
-
-      // Манжет гетра
-      ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=1.9*sc;ctx.strokeStyle=INK;
-      ctx.beginPath();ctx.roundRect(kneeX-6*sc,kneeY+2*sc,12*sc,4.5*sc,2*sc);ctx.fill();ctx.stroke();
-
-      // Відкрите коліно атлета
-      ctx.fillStyle=skin;ctx.beginPath();ctx.arc(kneeX,kneeY,6*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
-
-      // Плавна анатомічна штанина шортів (ширина точно підходить до тазу)
-      ctx.fillStyle=sh.col;ctx.lineWidth=2.1*sc;
-      ctx.beginPath();
-      ctx.moveTo(hipX-10.5*bodyW*sc,hipY);
-      ctx.lineTo(hipX+10.5*bodyW*sc,hipY);
-      ctx.lineTo(kneeX+9.5*bodyW*sc,kneeY-4*sc);
-      ctx.lineTo(kneeX-9.5*bodyW*sc,kneeY-4*sc);
-      ctx.closePath();ctx.fill();ctx.stroke();
-
-      // Бутси, що дивляться вперед на глядача
-      drawFrontBoot(ankX,ankY,sc,side,cosA,sinA,bt.col,bt.ac||'#1dd1a1');
-    }});
-  });
-  // 2. ЄДИНИЙ ТАЗОВИЙ ПОЯС ШОРТІВ І ПРИТАЛЕНА ФУТБОЛКА (Z = 0)
-  layers.push({z:0,draw:()=>{
-    const shTopW=27.5*bodyW*sc,waistW=21.5*bodyW*sc,pelvisW=23.5*bodyW*sc;
-    const topY=-136*sc+breath,hemY=-78*sc+breath*0.3,pelvisY=-65*sc+breath*0.2;
-
-    // Тазовий пояс шортів (з'єднує дві штанини в один суцільний виріб без зазорів)
-    ctx.fillStyle=sh.col;ctx.lineWidth=2.1*sc;ctx.strokeStyle=INK;
-    ctx.beginPath();
-    ctx.moveTo(-waistW,hemY-2*sc);
-    ctx.lineTo(waistW,hemY-2*sc);
-    ctx.lineTo(pelvisW,pelvisY);
-    ctx.quadraticCurveTo(0,pelvisY+5*sc,-pelvisW,pelvisY);
-    ctx.closePath();ctx.fill();ctx.stroke();
-
-    // Центральний шов шортів
-    ctx.strokeStyle='rgba(20,24,30,0.35)';ctx.lineWidth=1.5*sc;
-    ctx.beginPath();ctx.moveTo(sinA*4*sc,hemY+2*sc);ctx.lineTo(sinA*3*sc,pelvisY+3*sc);ctx.stroke();
-
-    // Приталена спортивна футболка з природним напуском поверх пояса шортів
-    ctx.fillStyle=j.col;ctx.lineWidth=2.3*sc;ctx.strokeStyle=INK;
-    ctx.beginPath();
-    ctx.moveTo(-shTopW,topY);
-    ctx.quadraticCurveTo(0,topY-9*sc,shTopW,topY);
-    ctx.quadraticCurveTo(shTopW*0.92,(topY+hemY)*0.5,waistW*1.04,hemY);
-    ctx.quadraticCurveTo(0,hemY+5*sc,-waistW*1.04,hemY);
-    ctx.quadraticCurveTo(-shTopW*0.92,(topY+hemY)*0.5,-shTopW,topY);
-    ctx.closePath();ctx.fill();ctx.stroke();
-
-    // Об'ємна тінь збоку футболки
-    ctx.fillStyle='rgba(0,0,0,0.14)';
-    ctx.beginPath();
-    ctx.moveTo(0,topY-4*sc);ctx.quadraticCurveTo(shTopW*0.5,topY-2*sc,shTopW,topY);
-    ctx.quadraticCurveTo(shTopW*0.92,(topY+hemY)*0.5,waistW*1.04,hemY);
-    ctx.quadraticCurveTo(waistW*0.5,hemY+3*sc,0,hemY+2.5*sc);
-    ctx.closePath();ctx.fill();
-
-    // Бокові вставки футболки
-    if(Math.abs(cosA)>0.22){
-      ctx.fillStyle=j.trim||'#ffffff';
-      [-1,1].forEach(s=>{
-        ctx.beginPath();
-        ctx.moveTo(s*shTopW*0.86,topY+14*sc);
-        ctx.lineTo(s*waistW*0.98,hemY-3*sc);
-        ctx.lineTo(s*waistW*0.80,hemY-3*sc);
-        ctx.lineTo(s*shTopW*0.74,topY+22*sc);
-        ctx.closePath();ctx.fill();
-      });
-    }
-
-    // Комір і герб спереду або номер на спині
-    const turnX=sinA*11*sc;
-    if(!facingBack){
-      ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=1.9*sc;ctx.strokeStyle=INK;
-      ctx.beginPath();ctx.moveTo(-9.5*Math.abs(cosA)*sc+turnX,topY-2*sc);ctx.lineTo(turnX,topY+10*sc);ctx.lineTo(9.5*Math.abs(cosA)*sc+turnX,topY-2*sc);ctx.closePath();ctx.fill();ctx.stroke();
-
-      if(Math.abs(cosA)>0.25){
-        ctx.fillStyle='#feca57';ctx.beginPath();ctx.arc(turnX+10*Math.abs(cosA)*sc,topY+21*sc,4.6*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
-      }
-    }else{
-      ctx.fillStyle=j.trim||'#ffffff';ctx.lineWidth=1.9*sc;ctx.strokeStyle=INK;
-      ctx.beginPath();ctx.ellipse(turnX,topY-2*sc,9.5*Math.abs(cosA)*sc,3.2*sc,0,0,Math.PI);ctx.fill();ctx.stroke();
-
-      if(Math.abs(cosA)>0.22){
-        ctx.save();ctx.translate(turnX,topY+41*sc);ctx.scale(Math.abs(cosA),1);
-        ctx.fillStyle=p.numCol||'#ffffff';ctx.strokeStyle=INK;ctx.lineWidth=3.2*sc;
-        ctx.font=`900 ${30*sc}px sans-serif`;ctx.textAlign='center';
-        ctx.strokeText(String(p.num||'10'),0,0);ctx.fillText(String(p.num||'10'),0,0);
-        ctx.restore();
-      }
-    }
-  }});
-
-  // 3. РУКИ З ВОРОТАРСЬКИМИ РУКАВИЦЯМИ АБО КИСТЯМИ
-  [-1,1].forEach(side=>{
-    const bal=(jugPhase>0)?(side===activeFoot?-7*sc:9*sc):Math.sin(tAnim*2+side)*3*sc;
-    const zArm=side*sinA*1.5;
-    const shX=side*24*cosA*sc,shY=-128*sc+breath;
-    const elX=side*34*cosA*sc+sinA*9*sc,elY=-105*sc-bal*0.4;
-    const hdX=side*32*cosA*sc+sinA*16*sc,hdY=-84*sc-bal*0.8;
-
-    layers.push({z:zArm,draw:()=>{
-      ctx.lineWidth=11.5*sc;ctx.strokeStyle=INK;
-      ctx.beginPath();ctx.moveTo(elX,elY);ctx.lineTo(hdX,hdY);ctx.stroke();
-      ctx.lineWidth=8*sc;ctx.strokeStyle=skin;
-      ctx.beginPath();ctx.moveTo(elX,elY);ctx.lineTo(hdX,hdY);ctx.stroke();
-
-      ctx.lineWidth=12.5*sc;ctx.strokeStyle=INK;
-      ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(elX,elY);ctx.stroke();
-      ctx.lineWidth=9*sc;ctx.strokeStyle=skin;
-      ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(elX,elY);ctx.stroke();
-
-      const slvX=shX+(elX-shX)*0.55,slvY=shY+(elY-shY)*0.55;
-      ctx.lineWidth=15*sc;ctx.strokeStyle=INK;
-      ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(slvX,slvY);ctx.stroke();
-      ctx.lineWidth=11*sc;ctx.strokeStyle=j.col;
-      ctx.beginPath();ctx.moveTo(shX,shY);ctx.lineTo(slvX,slvY);ctx.stroke();
-
-      if(hasGloves){
-        drawKeeperGlove(hdX,hdY,sc,side,gl.col);
-      }else{
-        ctx.fillStyle=skin;ctx.lineWidth=2*sc;ctx.strokeStyle=INK;
-        ctx.beginPath();ctx.arc(hdX,hdY,5.5*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
-      }
-    }});
-  });
-  // 4. ГОЛОВА ТА ОБЛИЧЧЯ (Z = 0.2)
-  layers.push({z:0.2,draw:()=>{
-    const headY=-164*sc+breath;
-    const headW=0.78+0.22*Math.abs(cosA);
-
-    ctx.fillStyle=skinSh;ctx.lineWidth=2.1*sc;ctx.strokeStyle=INK;
-    ctx.beginPath();ctx.roundRect(-6.5*sc,-145*sc+breath,13*sc,14*sc,4*sc);ctx.fill();ctx.stroke();
-
-    ctx.fillStyle=skin;
-    [-1,1].forEach(s=>{
-      ctx.beginPath();ctx.arc(s*17.5*headW*sc-sinA*5*sc,headY+2*sc,4.3*sc,0,Math.PI*2);ctx.fill();ctx.stroke();
-    });
-
-    ctx.fillStyle=skin;
-    ctx.beginPath();ctx.roundRect(-17.5*headW*sc,headY-20*sc,35*headW*sc,38*sc,16*sc);ctx.fill();ctx.stroke();
-
-    if(!facingBack&&Math.abs(cosA)>0.18){
-      const fx=sinA*10*sc,eyeW=Math.max(0.45,Math.abs(cosA));
-      ctx.fillStyle='#231810';
-      ctx.beginPath();ctx.roundRect(fx-10.5*eyeW*sc,headY-7*sc,6.8*eyeW*sc,2.4*sc,1.2*sc);ctx.fill();
-      ctx.beginPath();ctx.roundRect(fx+3.7*eyeW*sc,headY-7*sc,6.8*eyeW*sc,2.4*sc,1.2*sc);ctx.fill();
-
-      ctx.beginPath();ctx.arc(fx-7.2*eyeW*sc,headY-1*sc,2.5*sc,0,Math.PI*2);ctx.arc(fx+7.2*eyeW*sc,headY-1*sc,2.5*sc,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#ffffff';
-      ctx.beginPath();ctx.arc(fx-8.0*eyeW*sc,headY-2*sc,1.0*sc,0,Math.PI*2);ctx.arc(fx+6.4*eyeW*sc,headY-2*sc,1.0*sc,0,Math.PI*2);ctx.fill();
-
-      ctx.strokeStyle=skinSh;ctx.lineWidth=2*sc;
-      ctx.beginPath();ctx.moveTo(fx,headY-1*sc);ctx.lineTo(fx+sinA*3*sc,headY+5*sc);ctx.stroke();
-
-      ctx.strokeStyle=INK;ctx.lineWidth=2*sc;
-      ctx.beginPath();ctx.arc(fx,headY+8*sc,5.2*eyeW*sc,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
-    }
-
-    ctx.fillStyle='#241911';ctx.strokeStyle=INK;ctx.lineWidth=2.2*sc;
-    if(facingBack){
-      ctx.beginPath();
-      ctx.moveTo(-18.5*headW*sc,headY+2*sc);
-      ctx.quadraticCurveTo(-20.5*headW*sc,headY-26*sc,0,headY-27*sc);
-      ctx.quadraticCurveTo(20.5*headW*sc,headY-26*sc,18.5*headW*sc,headY+2*sc);
-      ctx.lineTo(12.5*headW*sc,headY+12*sc);ctx.lineTo(-12.5*headW*sc,headY+12*sc);
-      ctx.closePath();ctx.fill();ctx.stroke();
-    }else{
-      ctx.beginPath();
-      ctx.moveTo(-18.5*headW*sc,headY-5*sc);
-      ctx.quadraticCurveTo(-20.5*headW*sc,headY-26*sc,-2*headW*sc,headY-27*sc);
-      ctx.quadraticCurveTo(10*headW*sc,headY-31*sc,17.5*headW*sc,headY-19*sc);
-      ctx.quadraticCurveTo(20.5*headW*sc,headY-12*sc,18.5*headW*sc,headY-5*sc);
-      ctx.quadraticCurveTo(8*headW*sc,headY-14*sc,-4*headW*sc,headY-12*sc);
-      ctx.quadraticCurveTo(-12*headW*sc,headY-14*sc,-18.5*headW*sc,headY-5*sc);
-      ctx.closePath();ctx.fill();ctx.stroke();
-    }
-  }});
-
-  ctx.save();ctx.translate(cx,cy);
-  ctx.strokeStyle=INK;ctx.lineCap='round';ctx.lineJoin='round';
-  layers.sort((a,b)=>a.z-b.z).forEach(l=>l.draw());
-  ctx.restore();
-
-  // Хмарка з розмовними фразами піднята значно вище голови, щоб не перекривати зачіску!
-  if(speechTimer>0&&speechTxt){
-    speechTimer--;
-    const alpha=Math.min(1,speechTimer/20);
-    ctx.save();ctx.globalAlpha=alpha;
-    ctx.font=`bold ${Math.max(11,Math.round(11.5*sc))}px sans-serif`;
-    const tw=ctx.measureText(speechTxt).width+22,th=25*sc;
-    const bx=cx,by=Math.max(96,cy-236*sc+breath);
-    ctx.fillStyle='rgba(13,22,38,0.95)';ctx.strokeStyle='#feca57';ctx.lineWidth=1.6;
-    ctx.beginPath();ctx.roundRect(bx-tw*0.5,by-th*0.5,tw,th,12);ctx.fill();ctx.stroke();
-
-    // Маленький хвостик хмарки вниз до гравця
-    ctx.fillStyle='#feca57';
-    ctx.beginPath();ctx.moveTo(bx-5,by+th*0.5);ctx.lineTo(bx+5,by+th*0.5);ctx.lineTo(bx,by+th*0.5+6);ctx.closePath();ctx.fill();
-
-    ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(speechTxt,bx,by);
-    ctx.restore();
-  }
-}
-function drawChampBall(bx,by,rad,spinAng){
-  const bCol=getItem(p.eb).col,shSc=Math.max(0.35,1-Math.abs(ballY)/180);
-  ctx.fillStyle=`rgba(0,0,0,${0.5*shSc})`;
-  ctx.beginPath();ctx.ellipse(bx,H*0.88+4,rad*1.15*shSc,rad*0.36*shSc,0,0,Math.PI*2);ctx.fill();
-
-  ctx.save();ctx.translate(bx,by);ctx.rotate(spinAng);
-  const g=ctx.createRadialGradient(-rad*0.3,-rad*0.3,rad*0.1,0,0,rad);
-  g.addColorStop(0,'#ffffff');g.addColorStop(0.65,bCol);g.addColorStop(1,'#8395a7');
-  ctx.fillStyle=g;ctx.strokeStyle=INK;ctx.lineWidth=2.2;
-  ctx.beginPath();ctx.arc(0,0,rad,0,Math.PI*2);ctx.fill();ctx.stroke();
-
-  ctx.fillStyle='#191e26';ctx.beginPath();
-  for(let i=0;i<5;i++){
-    const a=(i/5)*Math.PI*2-Math.PI/2;
-    const px=Math.cos(a)*rad*0.36,py=Math.sin(a)*rad*0.36;
-    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
-  }
-  ctx.closePath();ctx.fill();
-
-  ctx.strokeStyle=INK;ctx.lineWidth=1.5;
-  for(let i=0;i<5;i++){
-    const a=(i/5)*Math.PI*2-Math.PI/2;
-    ctx.beginPath();ctx.moveTo(Math.cos(a)*rad*0.36,Math.sin(a)*rad*0.36);
-    ctx.lineTo(Math.cos(a)*rad*0.88,Math.sin(a)*rad*0.88);ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function drawSparks(){
-  for(let i=sparks.length-1;i>=0;i--){
-    const s=sparks[i];
-    s.x+=s.vx;s.y+=s.vy;s.vy+=0.15;s.life-=0.032;
-    if(s.life<=0){sparks.splice(i,1);continue;}
-    ctx.globalAlpha=s.life;ctx.fillStyle=s.col;
-    ctx.beginPath();ctx.arc(s.x,s.y,3.0*s.life,0,Math.PI*2);ctx.fill();
-  }
-  ctx.globalAlpha=1;
-}
-function loop(){
-  tAnim+=0.05;
-  ctx.clearRect(0,0,W,H);
-
-  if(autoSpin){
-    const pr=Math.min(1,(performance.now()-autoSpin.start)/autoSpin.dur);
-    const ease=1-Math.pow(1-pr,3);
-    rotY=autoSpin.from+(autoSpin.to-autoSpin.from)*ease;
-    if(pr>=1){rotY=0;autoSpin=null;}
-  }
-
-  if(jugPhase>0)jugPhase=Math.max(0,jugPhase-0.085);
-
-  const heroScale=Math.min(W/300,H/295)*0.98;
-  const baseX=W*0.5,baseY=H*0.89;
-  const bRad=Math.max(12,15*heroScale);
-  const headHitY=-186*heroScale;
-
-  if(jugLeft>0||ballY<0||ballVy!==0){
-    ballY+=ballVy;
-    ballVy+=0.52;
-    ballSpin+=0.16*(jugMode==='head'?1:activeFoot);
-
-    if(jugMode==='head'&&ballVy>0&&ballY>=headHitY&&jugLeft>0){
-      ballY=headHitY;
-      kickBallUp();
-    }else if(ballY>=0){
-      ballY=0;
-      if(jugLeft>0){
-        if(jugMode==='head')jugMode='foot';
-        kickBallUp();
-      }else{
-        ballVy=0;ballX=-24;jugMode='foot';
-      }
-    }
-  }else{
-    ballX=-24;
-  }
-
-  drawStadiumBg();
-  drawStylizedHero(baseX,baseY,heroScale);
-  drawChampBall(baseX+ballX*heroScale,baseY-bRad+ballY,bRad,ballSpin);
-  drawSparks();
-
-  requestAnimationFrame(loop);
-}
-
-rsz();updUI();setInterval(updBonusBtn,30000);loop();
-</script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com",
+                "three/addons/": "https://unpkg.com"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 1.25, 3.2);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.1;
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 1.1));
+
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+        keyLight.position.set(3, 6, 4);
+        keyLight.castShadow = true;
+        scene.add(keyLight);
+
+        const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.3);
+        rimLight.position.set(-3, 4, -4);
+        scene.add(rimLight);
+
+        // П'єдестал-газон
+        const turf = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.15, 1.25, 0.12, 48),
+            new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.85 })
+        );
+        turf.position.y = -0.06;
+        turf.receiveShadow = true;
+        scene.add(turf);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.enablePan = false;
+        controls.minDistance = 2.0;
+        controls.maxDistance = 4.5;
+        controls.maxPolarAngle = Math.PI / 2 + 0.05;
+        controls.target.set(0, 0.95, 0);
+        controls.update();
+
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://gstatic.com');
+
+        const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+
+        let mixer;
+
+        loader.load(
+            'player.glb',
+            (gltf) => {
+                const playerModel = gltf.scene;
+                const savedKit = localStorage.getItem('kitColor');
+                const savedBoots = localStorage.getItem('bootsColor');
+
+                playerModel.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        const name = child.name.toLowerCase();
+
+                        // Застосовуємо збережений у примірочній одяг
+                        if (savedBoots && name.includes('shoe')) {
+                            child.material.color.set(savedBoots);
+                        } else if (savedKit && !name.includes('shoe') && !name.includes('hair') && !name.includes('eye')) {
+                            child.material.color.set(savedKit);
+                        }
+                    }
+                });
+
+                scene.add(playerModel);
+
+                if (gltf.animations && gltf.animations.length > 0) {
+                    mixer = new THREE.AnimationMixer(playerModel);
+                    mixer.clipAction(gltf.animations[0]).play();
+                }
+
+                const loaderScreen = document.getElementById('loader-screen');
+                loaderScreen.style.opacity = '0';
+                setTimeout(() => loaderScreen.style.display = 'none', 400);
+            },
+            (xhr) => {
+                if (xhr.total > 0) {
+                    const percent = Math.round((xhr.loaded / xhr.total) * 100);
+                    document.getElementById('loader-text').innerText = `Завантаження гравця... ${percent}%`;
+                }
+            }
+        );
+
+        window.startGame = () => {
+            alert('Перехід у матч! Далі створимо сцену зі стадіоном і ударом пенальті ⚽');
+        };
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            if (mixer) mixer.update(clock.getDelta());
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
 </body>
 </html>
