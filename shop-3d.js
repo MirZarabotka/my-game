@@ -5,6 +5,19 @@ import { OrbitControls } from './libs/OrbitControls.js';
 import { CATALOG } from './shop-catalog.js';
 
 export function initShop3D(state) {
+    // Примусово фіксуємо ширину правого блоку кнопок, щоб нічого не обрізалося
+    const fixStyle = document.createElement('style');
+    fixStyle.textContent = `
+        html, body { width: 100vw !important; max-width: 100vw !important; overflow-x: hidden !important; }
+        .preview-card { display: flex !important; width: 100% !important; gap: 8px !important; padding: 8px 10px !important; overflow: hidden !important; }
+        .viewport-box { width: 145px !important; min-width: 145px !important; max-width: 145px !important; flex-shrink: 0 !important; }
+        .right-controls { flex: 1 !important; min-width: 0 !important; max-width: calc(100vw - 173px) !important; overflow: hidden !important; }
+        .tabs-grid { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 5px !important; width: 100% !important; }
+        .tab-btn { font-size: 0.72rem !important; padding: 4px 2px !important; min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+        .action-btn { width: 100% !important; font-size: 0.8rem !important; padding: 8px 4px !important; }
+    `;
+    document.head.appendChild(fixStyle);
+
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
 
@@ -80,9 +93,11 @@ export function initShop3D(state) {
         } else if (jersey.pattern === 'hoops') {
             for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
         } else if (jersey.pattern === 'half') {
-            ctx.fillRect(256, 0, 256, 512);
+            ctx.fillRect(128, 0, 128, 512);
+            ctx.fillRect(345, 0, 167, 512);
         } else if (jersey.pattern === 'centerBand') {
-            ctx.fillRect(180, 0, 152, 512);
+            ctx.fillRect(95, 0, 66, 512);
+            ctx.fillRect(312, 0, 66, 512);
         } else if (jersey.pattern === 'chestBand') {
             ctx.fillRect(0, 160, 512, 130);
         } else if (jersey.pattern === 'sash') {
@@ -90,19 +105,21 @@ export function initShop3D(state) {
             ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
-            ctx.fillRect(0, 0, 135, 512);
-            ctx.fillRect(377, 0, 135, 512);
+            // Рукави у цій моделі знаходяться в зонах 0..65, 195..285 та 415..512
+            ctx.fillRect(0, 0, 65, 512);
+            ctx.fillRect(195, 0, 90, 512);
+            ctx.fillRect(415, 0, 97, 512);
         }
 
-        // Номер рівно по центру спини
+        // Номер рівно по центру спини (x = 345, y = 205)
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 7;
-        ctx.font = '900 90px "Segoe UI", sans-serif';
+        ctx.font = '900 86px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 435, 210);
-        ctx.fillText(state.number, 435, 210);
+        ctx.strokeText(state.number, 345, 205);
+        ctx.fillText(state.number, 345, 205);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.flipY = false;
