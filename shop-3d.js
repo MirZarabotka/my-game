@@ -118,7 +118,7 @@ export function initShop3D(state) {
     const gloveMaterials = [];
 
     function mountGloveModel(gloveScene) {
-        // Вимірюємо габарити glove.glb, ставимо манжету в (0,0,0) і нормалізуємо довжину до 1.0
+        gloveScene.updateMatrixWorld(true);
         const rawBox = new THREE.Box3().setFromObject(gloveScene);
         const size = new THREE.Vector3();
         const center = new THREE.Vector3();
@@ -131,7 +131,6 @@ export function initShop3D(state) {
         const rightUnit = new THREE.Group();
         const rModel = gloveScene.clone(true);
 
-        // Збираємо матеріали для перефарбування під обраний скін
         rModel.traverse((node) => {
             if (node.isMesh && node.material) {
                 const mats = Array.isArray(node.material) ? node.material : [node.material];
@@ -146,17 +145,14 @@ export function initShop3D(state) {
         });
 
         rModel.scale.setScalar(normScale);
-        // Центруємо по X/Z, а низ манжети (min.y) ставимо на 0
         rModel.position.set(
             -center.x * normScale,
             -rawBox.min.y * normScale,
             -center.z * normScale
         );
-        // Поворот навколо Y, щоб долоня дивилася до тіла, а великий палець — вперед
-        rModel.rotation.y = Math.PI / 2;
+        rModel.rotation.y = -Math.PI / 2;
         rightUnit.add(rModel);
 
-        // Ліва рукавиця — точне дзеркало правої
         const leftUnit = rightUnit.clone(true);
         leftUnit.scale.x = -1;
 
@@ -175,13 +171,13 @@ export function initShop3D(state) {
 
         const wristPos = handBone.position.clone();
         const foreDir = wristPos.clone().normalize();
-        const palmLen = midBone ? midBone.position.length() : wristPos.length() * 0.35;
-        const gloveLen = palmLen * 2.35;
+        const palmLen = midBone ? midBone.position.length() : wristPos.length() * 0.4;
+        const gloveLen = palmLen * 2.8;
 
         const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), foreDir);
         holder.quaternion.copy(q);
         holder.scale.setScalar(gloveLen);
-        holder.position.copy(wristPos).addScaledVector(foreDir, -palmLen * 0.25);
+        holder.position.copy(wristPos).addScaledVector(foreDir, -palmLen * 0.1);
         foreArmBone.add(holder);
     }
     const backNumberMat = new THREE.MeshBasicMaterial({
@@ -287,14 +283,12 @@ export function initShop3D(state) {
         leftGloveHolder.visible = showGloves;
         rightGloveHolder.visible = showGloves;
 
-        // Перефарбовуємо 3D-модель рукавиці у колір обраного скіна зі збереженням рельєфу текстури
         const tintColor = new THREE.Color(gloveItem.c1).lerp(new THREE.Color('#ffffff'), 0.25);
         gloveMaterials.forEach((m) => {
             m.color.copy(tintColor);
             m.needsUpdate = true;
         });
 
-        // Ховаємо голі кисті моделі, коли надіті 3D-рукавиці
         const handScale = showGloves ? 0.001 : 1;
         if (leftHandBone) leftHandBone.scale.setScalar(handScale);
         if (rightHandBone) rightHandBone.scale.setScalar(handScale);
@@ -374,7 +368,6 @@ export function initShop3D(state) {
 
         scene.add(playerModel);
 
-        // Завантажуємо згенеровану 3D-модель рукавиці glove.glb
         loader.load('glove.glb', (gloveGltf) => {
             const gScene = gloveGltf.scene || (gloveGltf.scenes && gloveGltf.scenes.at(0));
             if (gScene) mountGloveModel(gScene);
