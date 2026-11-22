@@ -172,7 +172,7 @@ export function initShop3D(state) {
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
             ctx.fillRect(0, 0, 38, 512);
-            ctx.fillRect(145, 0, 90, 512);
+            ctx.fillRect(156, 0, 74, 512);
             ctx.fillRect(395, 0, 117, 512);
         }
 
