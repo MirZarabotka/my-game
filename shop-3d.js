@@ -115,6 +115,42 @@ export function initShop3D(state) {
     let glovesLoaded = false;
     const gloveMaterials = [];
 
+    // Перетворює кольорову текстуру рукавиць у світлий рельєфний шаблон, 
+    // щоб будь-який колір із каталогу лягав яскраво і чисто, зберігаючи шви та деталі
+    function makeBrightDetailTexture(sourceTex) {
+        if (!sourceTex || !sourceTex.image) return null;
+        try {
+            const img = sourceTex.image;
+            const w = img.width || 512;
+            const h = img.height || 512;
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                // Вираховуємо яскравість пікселя і підтягуємо її в діапазон 0.55..1.0
+                const lum = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
+                const boosted = Math.min(255, Math.round((0.55 + lum * 0.45) * 255));
+                data[i] = boosted;
+                data[i + 1] = boosted;
+                data[i + 2] = boosted;
+            }
+            ctx.putImageData(imgData, 0, 0);
+
+            const cleanTex = new THREE.CanvasTexture(canvas);
+            cleanTex.flipY = sourceTex.flipY;
+            cleanTex.colorSpace = THREE.SRGBColorSpace;
+            cleanTex.needsUpdate = true;
+            return cleanTex;
+        } catch (e) {
+            return null;
+        }
+    }
+
     function extractSingleGlove(gloveScene, pickLeft) {
         gloveScene.updateMatrixWorld(true);
         const fullBox = new THREE.Box3().setFromObject(gloveScene);
@@ -145,8 +181,14 @@ export function initShop3D(state) {
             geo.computeBoundingBox();
             const mats = Array.isArray(node.material) ? node.material : [node.material];
             const clonedMats = mats.map((m) => {
-                const c = m.clone();
-                c.side = THREE.DoubleSide;
+                const detailMap = makeBrightDetailTexture(m.map);
+                const c = new THREE.MeshStandardMaterial({
+                    map: detailMap,
+                    normalMap: m.normalMap || null,
+                    roughness: 0.55,
+                    metalness: 0.05,
+                    side: THREE.DoubleSide
+                });
                 gloveMaterials.push(c);
                 return c;
             });
@@ -204,6 +246,7 @@ export function initShop3D(state) {
     }
 
     function mountGloveModel(gloveScene) {
+        gloveMaterials.length = 0;
         const rightUnit = extractSingleGlove(gloveScene, false);
         const leftUnit = extractSingleGlove(gloveScene, true);
 
@@ -338,9 +381,10 @@ export function initShop3D(state) {
         leftGloveHolder.visible = glovesLoaded;
         rightGloveHolder.visible = glovesLoaded;
 
-        const tintColor = new THREE.Color(gloveItem.c1).lerp(new THREE.Color('#ffffff'), 0.35);
+        // Чистий насичений колір без розбавлення білим
+        const cleanColor = new THREE.Color(gloveItem.c1);
         gloveMaterials.forEach((m) => {
-            m.color.copy(tintColor);
+            m.color.copy(cleanColor);
             m.needsUpdate = true;
         });
         ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
