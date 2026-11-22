@@ -62,10 +62,9 @@ export function initShop3D(state) {
     leftGlove.visible = false;
     rightGlove.visible = false;
 
-    // 3D-бейдж номера прямо на спині гравця (100% видно завжди)
     const backNumberMat = new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide });
     const backNumberMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.24), backNumberMat);
-    backNumberMesh.position.set(0, 1.26, -0.14);
+    backNumberMesh.position.set(0.035, 1.26, -0.14);
     backNumberMesh.rotation.y = Math.PI;
     scene.add(backNumberMesh);
 
@@ -121,8 +120,8 @@ export function initShop3D(state) {
             ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
-            ctx.fillRect(0, 0, 45, 512);
-            ctx.fillRect(205, 0, 37, 512);
+            ctx.fillRect(200, 0, 26, 512);
+            ctx.fillRect(435, 0, 77, 512);
         }
 
         const tex = new THREE.CanvasTexture(canvas);
