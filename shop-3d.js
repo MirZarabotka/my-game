@@ -104,82 +104,134 @@ export function initShop3D(state) {
         }
     }
 
-    const gloveBackMat = new THREE.MeshStandardMaterial({ roughness: 0.42 });
-    const glovePalmMat = new THREE.MeshStandardMaterial({ roughness: 0.65 });
+    const gloveBackMat = new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.08 });
+    const glovePalmMat = new THREE.MeshStandardMaterial({ roughness: 0.75 });
+    const gloveTrimMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 });
 
-    // Нормалізована 3D-рукавиця довжиною 1.0 одиниця (вісь +Y = від зап'ястя до кінчиків пальців)
-    function buildNormalizedGlove(isLeft) {
+    // Плавна анатомічна 3D-рукавиця (Negative Cut) з фасками, ремінцем і сегментованими пальцями
+    function buildProGlove(isLeft) {
         const group = new THREE.Group();
         const dir = isLeft ? -1 : 1;
 
-        // Манжета-липучка (0.0 -> 0.18)
-        const cuff = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.26, 0.18, 20), gloveBackMat);
-        cuff.scale.set(0.85, 1.0, 1.15);
-        cuff.position.set(0, 0.09, 0);
-        group.add(cuff);
+        // 1. Еластичний бандаж зап'ястя + подвійна застібка-липучка
+        const wrist = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.21, 0.18, 24), gloveTrimMat);
+        wrist.scale.set(0.72, 1.0, 1.15);
+        wrist.position.set(0, 0.09, 0);
+        group.add(wrist);
 
-        const strap = new THREE.Mesh(new THREE.CylinderGeometry(0.255, 0.255, 0.07, 20), glovePalmMat);
-        strap.scale.set(0.88, 1.0, 1.18);
+        const strap = new THREE.Mesh(new THREE.CylinderGeometry(0.205, 0.205, 0.075, 24), glovePalmMat);
+        strap.scale.set(0.75, 1.0, 1.18);
         strap.position.set(0, 0.10, 0);
         group.add(strap);
 
-        // Тильна сторона долоні (назовні від тіла: +dir * X)
-        const backHand = new THREE.Mesh(new THREE.CapsuleGeometry(0.24, 0.30, 8, 16), gloveBackMat);
-        backHand.scale.set(0.65, 1.0, 1.15);
-        backHand.position.set(dir * 0.06, 0.38, 0);
-        group.add(backHand);
+        // 2. Плавний контур долоні (ExtrudeGeometry з округлим bevel)
+        const palmShape = new THREE.Shape();
+        palmShape.moveTo(-0.18, 0.16);
+        palmShape.quadraticCurveTo(-0.24, 0.36, -0.22, 0.56);
+        palmShape.quadraticCurveTo(0, 0.61, 0.22, 0.56);
+        palmShape.quadraticCurveTo(0.24, 0.36, 0.18, 0.16);
+        palmShape.closePath();
 
-        // Латексна долоня (всередину до тіла: -dir * X)
-        const palm = new THREE.Mesh(new THREE.CapsuleGeometry(0.22, 0.28, 8, 16), glovePalmMat);
-        palm.scale.set(0.45, 0.98, 1.12);
-        palm.position.set(-dir * 0.08, 0.38, 0);
-        group.add(palm);
+        const backGeo = new THREE.ExtrudeGeometry(palmShape, {
+            depth: 0.065,
+            bevelEnabled: true,
+            bevelThickness: 0.025,
+            bevelSize: 0.022,
+            bevelSegments: 5
+        });
+        backGeo.rotateY(Math.PI / 2);
+        const backMesh = new THREE.Mesh(backGeo, gloveBackMat);
+        backMesh.position.set(dir > 0 ? 0.005 : -0.07, 0, 0);
+        group.add(backMesh);
 
-        // 4 пальці (0.58 -> 0.96)
+        // Внутрішня латексна долоня (дивиться всередину до стегна: -dir * X)
+        const palmGeo = new THREE.ExtrudeGeometry(palmShape, {
+            depth: 0.035,
+            bevelEnabled: true,
+            bevelThickness: 0.015,
+            bevelSize: 0.015,
+            bevelSegments: 4
+        });
+        palmGeo.rotateY(Math.PI / 2);
+        const palmMesh = new THREE.Mesh(palmGeo, glovePalmMat);
+        palmMesh.position.set(dir > 0 ? -0.045 : 0.01, 0, 0);
+        group.add(palmMesh);
+
+        // 3. Рельєфна зона вибивання кулаком (Punch Zone) на кісточках
+        const punchPad = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.09, 0.36), gloveTrimMat);
+        punchPad.position.set(dir * 0.085, 0.49, 0);
+        group.add(punchPad);
+
+        // 4. Чотири плавних пальці з легким природним згином у бік долоні
         const fingers = [
-            { z: 0.18, len: 0.24, r: 0.062 },
-            { z: 0.06, len: 0.29, r: 0.066 },
-            { z: -0.06, len: 0.26, r: 0.062 },
-            { z: -0.18, len: 0.20, r: 0.055 }
+            { z: 0.165, len: 0.25, r: 0.046 },
+            { z: 0.055, len: 0.30, r: 0.049 },
+            { z: -0.055, len: 0.27, r: 0.046 },
+            { z: -0.165, len: 0.21, r: 0.041 }
         ];
 
         fingers.forEach((f) => {
-            const fBack = new THREE.Mesh(new THREE.CapsuleGeometry(f.r, f.len, 8, 14), gloveBackMat);
-            fBack.position.set(dir * 0.02, 0.62 + f.len * 0.5, f.z);
-            group.add(fBack);
+            const fingerGroup = new THREE.Group();
+            fingerGroup.position.set(0, 0.56, f.z);
+            // Легкий природний загин пальців до долоні
+            fingerGroup.rotation.z = dir * 0.14;
 
-            const fPalm = new THREE.Mesh(new THREE.CapsuleGeometry(f.r * 0.88, f.len * 0.92, 8, 14), glovePalmMat);
-            fPalm.position.set(-dir * 0.03, 0.62 + f.len * 0.5, f.z);
-            group.add(fPalm);
+            const fBack = new THREE.Mesh(new THREE.CapsuleGeometry(f.r, f.len, 8, 16), gloveBackMat);
+            fBack.scale.set(0.75, 1.0, 1.05);
+            fBack.position.set(dir * 0.018, f.len * 0.5, 0);
+            fingerGroup.add(fBack);
+
+            const fPalm = new THREE.Mesh(new THREE.CapsuleGeometry(f.r * 0.9, f.len * 0.94, 8, 16), glovePalmMat);
+            fPalm.scale.set(0.55, 1.0, 1.0);
+            fPalm.position.set(-dir * 0.022, f.len * 0.5, 0);
+            fingerGroup.add(fPalm);
+
+            group.add(fingerGroup);
         });
 
-        // Великий палець (спереду +Z)
-        const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(0.072, 0.20, 8, 14), glovePalmMat);
-        thumb.position.set(-dir * 0.07, 0.35, 0.26);
-        thumb.rotation.x = 0.45;
-        thumb.rotation.z = dir * 0.18;
-        group.add(thumb);
+        // 5. Великий палець (спереду +Z, трохи відведений для хвату м'яча)
+        const thumbGroup = new THREE.Group();
+        thumbGroup.position.set(-dir * 0.03, 0.30, 0.20);
+        thumbGroup.rotation.x = 0.48;
+        thumbGroup.rotation.z = dir * 0.24;
+
+        const tBack = new THREE.Mesh(new THREE.CapsuleGeometry(0.052, 0.20, 8, 16), gloveBackMat);
+        tBack.position.set(dir * 0.015, 0.10, 0);
+        thumbGroup.add(tBack);
+
+        const tPalm = new THREE.Mesh(new THREE.CapsuleGeometry(0.046, 0.18, 8, 16), glovePalmMat);
+        tPalm.position.set(-dir * 0.018, 0.10, 0);
+        thumbGroup.add(tPalm);
+
+        group.add(thumbGroup);
 
         group.visible = false;
         return group;
     }
 
-    const leftGlove = buildNormalizedGlove(true);
-    const rightGlove = buildNormalizedGlove(false);
-    // Авто-надівання рукавиці вздовж вектора від зап'ястя (handBone) до середнього пальця (midBone)
-    function attachGloveToHand(glove, handBone, midBone) {
+    const leftGlove = buildProGlove(true);
+    const rightGlove = buildProGlove(false);
+    let leftHandBone = null;
+    let rightHandBone = null;
+    let leftGloveScale = 18;
+    let rightGloveScale = 18;
+
+    function fitGloveOnWrist(glove, foreArmBone, handBone, midBone) {
+        foreArmBone.updateWorldMatrix(true, false);
         handBone.updateWorldMatrix(true, false);
         midBone.updateWorldMatrix(true, false);
 
-        const dirLocal = midBone.position.clone().normalize();
+        const wristPos = handBone.position.clone();
+        const foreDir = wristPos.clone().normalize();
         const palmLen = midBone.position.length();
-        const totalGloveLen = palmLen * 2.15;
+        const gloveLen = palmLen * 2.15;
 
-        const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirLocal);
+        const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), foreDir);
         glove.quaternion.copy(q);
-        glove.scale.setScalar(totalGloveLen);
-        glove.position.copy(dirLocal).multiplyScalar(-palmLen * 0.12);
-        handBone.add(glove);
+        glove.scale.setScalar(gloveLen);
+        glove.position.copy(wristPos).addScaledVector(foreDir, -palmLen * 0.15);
+        foreArmBone.add(glove);
+        return gloveLen;
     }
 
     const backNumberMat = new THREE.MeshBasicMaterial({
@@ -281,10 +333,16 @@ export function initShop3D(state) {
 
         updateBackNumber();
 
+        const showGloves = (state.activeTab === 'gloves');
         gloveBackMat.color.set(gloveItem.c1);
         glovePalmMat.color.set(gloveItem.c2);
-        leftGlove.visible = (state.activeTab === 'gloves');
-        rightGlove.visible = (state.activeTab === 'gloves');
+        leftGlove.visible = showGloves;
+        rightGlove.visible = showGloves;
+
+        // Ховаємо голі кисті моделі, коли надіті воротарські рукавиці
+        const handScale = showGloves ? 0.001 : 1;
+        if (leftHandBone) leftHandBone.scale.setScalar(handScale);
+        if (rightHandBone) rightHandBone.scale.setScalar(handScale);
 
         ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
         ballMesh.material.needsUpdate = true;
@@ -330,27 +388,39 @@ export function initShop3D(state) {
         playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
         if (!playerModel) return;
 
-        let leftHand = null, leftMid = null;
-        let rightHand = null, rightMid = null;
+        let leftForeArm = null, leftMid = null;
+        let rightForeArm = null, rightMid = null;
         let spineBone = null;
 
         walkModel(playerModel, (child) => {
             if (child.isBone && child.name) {
-                if (child.name.endsWith('LeftHand')) leftHand = child;
+                if (child.name.includes('LeftForeArm')) leftForeArm = child;
+                if (child.name.endsWith('LeftHand')) leftHandBone = child;
                 if (child.name.includes('LeftHandMiddle1')) leftMid = child;
-                if (child.name.endsWith('RightHand')) rightHand = child;
+
+                if (child.name.includes('RightForeArm')) rightForeArm = child;
+                if (child.name.endsWith('RightHand')) rightHandBone = child;
                 if (child.name.includes('RightHandMiddle1')) rightMid = child;
+
                 if (child.name.includes('Spine2') || (!spineBone && child.name.includes('Spine1'))) {
                     spineBone = child;
                 }
             }
         });
 
-        if (leftHand && leftMid) attachGloveToHand(leftGlove, leftHand, leftMid);
-        else if (leftHand) { leftGlove.scale.setScalar(18); leftHand.add(leftGlove); }
+        if (leftForeArm && leftHandBone && leftMid) {
+            leftGloveScale = fitGloveOnWrist(leftGlove, leftForeArm, leftHandBone, leftMid);
+        } else if (leftHandBone) {
+            leftGlove.scale.setScalar(18);
+            leftHandBone.add(leftGlove);
+        }
 
-        if (rightHand && rightMid) attachGloveToHand(rightGlove, rightHand, rightMid);
-        else if (rightHand) { rightGlove.scale.setScalar(18); rightHand.add(rightGlove); }
+        if (rightForeArm && rightHandBone && rightMid) {
+            rightGloveScale = fitGloveOnWrist(rightGlove, rightForeArm, rightHandBone, rightMid);
+        } else if (rightHandBone) {
+            rightGlove.scale.setScalar(18);
+            rightHandBone.add(rightGlove);
+        }
 
         if (spineBone) {
             backNumberMesh.position.set(0, 1.5, -11.3);
