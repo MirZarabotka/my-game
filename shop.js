@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from './libs/GLTFLoader.js';
+import { DRACOLoader } from './libs/DRACOLoader.js';
+import { OrbitControls } from './libs/OrbitControls.js';
 
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
@@ -19,7 +19,6 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.1;
 container.appendChild(renderer.domElement);
 
-// Студійне світло
 scene.add(new THREE.AmbientLight(0xffffff, 1.1));
 
 const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
@@ -31,7 +30,6 @@ const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.3);
 rimLight.position.set(-3, 4, -4);
 scene.add(rimLight);
 
-// П'єдестал
 const turf = new THREE.Mesh(
     new THREE.CylinderGeometry(1.15, 1.25, 0.12, 48),
     new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.85 })
@@ -40,7 +38,6 @@ turf.position.y = -0.06;
 turf.receiveShadow = true;
 scene.add(turf);
 
-// Керування камерою мишкою/пальцем
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.enablePan = false;
@@ -49,9 +46,8 @@ controls.maxDistance = 4.8;
 controls.maxPolarAngle = Math.PI / 2 + 0.05;
 controls.target.copy(targetLook);
 
-// Завантажувач моделі
 const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('https://gstatic.com');
+dracoLoader.setDecoderPath('./libs/');
 
 const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
@@ -90,29 +86,23 @@ loader.load(
 
         scene.add(playerModel);
 
-        // Запуск першої анімації зі списку
-        if (gltf.animations && gltf.animations.length > 0) {
+        const firstAnim = gltf.animations.at(0);
+        if (firstAnim) {
             mixer = new THREE.AnimationMixer(playerModel);
-            mixer.clipAction(gltf.animations[0]).play();
+            mixer.clipAction(firstAnim).play();
         }
 
         const loaderScreen = document.getElementById('loader-screen');
         loaderScreen.style.opacity = '0';
         setTimeout(() => loaderScreen.style.display = 'none', 400);
     },
-    (xhr) => {
-        if (xhr.total > 0) {
-            const percent = Math.round((xhr.loaded / xhr.total) * 100);
-            document.getElementById('loader-text').innerText = `Завантаження роздягальні... ${percent}%`;
-        }
-    },
+    undefined,
     (error) => {
         document.getElementById('loader-text').innerText = 'Помилка завантаження player.glb!';
         console.error(error);
     }
 );
 
-// Обробка кліків по кольорах форми
 document.querySelectorAll('#kit-swatches .swatch').forEach((btn) => {
     btn.addEventListener('click', () => {
         const hex = btn.dataset.color;
@@ -121,7 +111,6 @@ document.querySelectorAll('#kit-swatches .swatch').forEach((btn) => {
     });
 });
 
-// Обробка кліків по кольорах бутс
 document.querySelectorAll('#boots-swatches .swatch').forEach((btn) => {
     btn.addEventListener('click', () => {
         const hex = btn.dataset.color;
@@ -130,7 +119,6 @@ document.querySelectorAll('#boots-swatches .swatch').forEach((btn) => {
     });
 });
 
-// Обробка перемикання ракурсів камери
 document.querySelectorAll('.cam-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('active'));
