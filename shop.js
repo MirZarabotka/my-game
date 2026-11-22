@@ -154,7 +154,7 @@ function renderTab(tabName) {
 
     const list = CATALOG[tabName];
     const previewId = state.preview[tabName];
-    const activeItem = list.find(x => x.id === previewId) || list[0];
+    const activeItem = list.find(x => x.id === previewId) || list.at(0);
     updateTopPreviewPanel(tabName, activeItem);
 
     const icons = { jerseys: '👕', shorts: '🩳', boots: '👟', gloves: '🧤', balls: '⚽' };
