@@ -160,7 +160,6 @@ export function initShop3D(state) {
         const size = new THREE.Vector3();
         box.getSize(size);
 
-        // Знаходимо центр саме нижнього отвору манжета (нижні 15% висоти), а не всієї долоні з великим пальцем
         const cuffThresholdY = box.min.y + size.y * 0.15;
         let minCuffX = Infinity, maxCuffX = -Infinity;
         let minCuffZ = Infinity, maxCuffZ = -Infinity;
@@ -200,7 +199,6 @@ export function initShop3D(state) {
 
         const unit = new THREE.Group();
         unit.add(meshGroup);
-        // У glove.glb долоні вже дивляться одна на одну (до тіла), тому rotation.y = 0
         unit.rotation.y = 0;
         return unit;
     }
@@ -231,9 +229,9 @@ export function initShop3D(state) {
         const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
         holder.quaternion.copy(q);
 
-        const gloveSize = foreLen * 0.88;
+        const gloveSize = foreLen * 1.22;
         holder.scale.setScalar(gloveSize);
-        holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.22);
+        holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.25);
         armBone.add(holder);
     }
 
