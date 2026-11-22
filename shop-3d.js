@@ -129,10 +129,10 @@ export function initShop3D(state) {
             for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
         } else if (jersey.pattern === 'half') {
             ctx.fillRect(105, 0, 60, 512);
-            ctx.fillRect(340, 0, 85, 512);
+            ctx.fillRect(240, 0, 85, 512);
         } else if (jersey.pattern === 'centerBand') {
             ctx.fillRect(85, 0, 45, 512);
-            ctx.fillRect(318, 0, 45, 512);
+            ctx.fillRect(218, 0, 45, 512);
         } else if (jersey.pattern === 'chestBand') {
             ctx.fillRect(0, 160, 512, 130);
         } else if (jersey.pattern === 'sash') {
@@ -144,14 +144,15 @@ export function initShop3D(state) {
             ctx.fillRect(425, 0, 60, 512);
         }
 
+        // Номер рівно по центру спини (x = 240, y = 215)
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = state.numColor === '#000000' ? '#ffffff' : '#000000';
         ctx.lineWidth = 8;
         ctx.font = '900 92px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 340, 215);
-        ctx.fillText(state.number, 340, 215);
+        ctx.strokeText(state.number, 240, 215);
+        ctx.fillText(state.number, 240, 215);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.flipY = false;
