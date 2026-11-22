@@ -106,8 +106,8 @@ export function initShop3D(state) {
 
     const leftGloveHolder = new THREE.Group();
     const rightGloveHolder = new THREE.Group();
-    leftGloveHolder.visible = false;
-    rightGloveHolder.visible = false;
+    leftGloveHolder.visible = true;
+    rightGloveHolder.visible = true;
 
     let leftHandBone = null;
     let rightHandBone = null;
@@ -165,20 +165,24 @@ export function initShop3D(state) {
     }
 
     function attachToWrist(holder, foreArmBone, handBone, midBone) {
-        if (!foreArmBone || !handBone) return;
-        foreArmBone.updateWorldMatrix(true, false);
+        const parentBone = foreArmBone || (handBone && handBone.parent);
+        if (!parentBone || !handBone) return;
+
+        parentBone.updateWorldMatrix(true, false);
         handBone.updateWorldMatrix(true, false);
 
         const wristPos = handBone.position.clone();
-        const foreDir = wristPos.clone().normalize();
-        const palmLen = midBone ? midBone.position.length() : wristPos.length() * 0.4;
-        const gloveLen = palmLen * 2.8;
+        const foreDir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
+        const palmLen = (midBone && midBone.position.length() > 0.001)
+            ? midBone.position.length()
+            : wristPos.length() * 0.42;
+        const gloveLen = (palmLen || 0.08) * 2.7;
 
         const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), foreDir);
         holder.quaternion.copy(q);
         holder.scale.setScalar(gloveLen);
-        holder.position.copy(wristPos).addScaledVector(foreDir, -palmLen * 0.1);
-        foreArmBone.add(holder);
+        holder.position.copy(wristPos).addScaledVector(foreDir, -palmLen * 0.15);
+        parentBone.add(holder);
     }
     const backNumberMat = new THREE.MeshBasicMaterial({
         transparent: true,
@@ -279,9 +283,8 @@ export function initShop3D(state) {
 
         updateBackNumber();
 
-        const showGloves = (state.activeTab === 'gloves');
-        leftGloveHolder.visible = showGloves;
-        rightGloveHolder.visible = showGloves;
+        leftGloveHolder.visible = true;
+        rightGloveHolder.visible = true;
 
         const tintColor = new THREE.Color(gloveItem.c1).lerp(new THREE.Color('#ffffff'), 0.25);
         gloveMaterials.forEach((m) => {
@@ -289,9 +292,8 @@ export function initShop3D(state) {
             m.needsUpdate = true;
         });
 
-        const handScale = showGloves ? 0.001 : 1;
-        if (leftHandBone) leftHandBone.scale.setScalar(handScale);
-        if (rightHandBone) rightHandBone.scale.setScalar(handScale);
+        if (leftHandBone) leftHandBone.scale.setScalar(0.001);
+        if (rightHandBone) rightHandBone.scale.setScalar(0.001);
 
         ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
         ballMesh.material.needsUpdate = true;
@@ -341,15 +343,20 @@ export function initShop3D(state) {
 
         walkModel(playerModel, (child) => {
             if (child.isBone && child.name) {
-                if (child.name.includes('LeftForeArm')) leftForeArmBone = child;
-                if (child.name.endsWith('LeftHand')) leftHandBone = child;
-                if (child.name.includes('LeftHandMiddle1')) leftMidBone = child;
+                const n = child.name.toLowerCase();
+                if (n.includes('leftforearm') || n.includes('l_forearm')) leftForeArmBone = child;
+                if ((n.includes('lefthand') || n.includes('l_hand')) && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
+                    leftHandBone = child;
+                }
+                if (n.includes('lefthandmiddle1') || n.includes('l_middle1')) leftMidBone = child;
 
-                if (child.name.includes('RightForeArm')) rightForeArmBone = child;
-                if (child.name.endsWith('RightHand')) rightHandBone = child;
-                if (child.name.includes('RightHandMiddle1')) rightMidBone = child;
+                if (n.includes('rightforearm') || n.includes('r_forearm')) rightForeArmBone = child;
+                if ((n.includes('righthand') || n.includes('r_hand')) && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
+                    rightHandBone = child;
+                }
+                if (n.includes('righthandmiddle1') || n.includes('r_middle1')) rightMidBone = child;
 
-                if (child.name.includes('Spine2') || (!spineBone && child.name.includes('Spine1'))) {
+                if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) {
                     spineBone = child;
                 }
             }
