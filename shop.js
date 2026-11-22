@@ -88,7 +88,6 @@ function updateTopPreviewPanel(tabName, item) {
         };
     }
 }
-
 function renderTab(tabName) {
     state.activeTab = tabName;
     const scrollContainer = document.getElementById('items-scroll');
@@ -204,3 +203,41 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 renderTab('jerseys');
+
+// Примусове вирівнювання кнопок праворуч без очікування кешу CSS
+(function fixLayout() {
+    document.body.style.width = '100vw';
+    document.body.style.overflowX = 'hidden';
+    const card = document.querySelector('.preview-card');
+    if (card) {
+        card.style.display = 'flex';
+        card.style.width = '100%';
+        card.style.gap = '8px';
+        card.style.padding = '8px 10px';
+        card.style.overflow = 'hidden';
+    }
+    const vBox = document.querySelector('.viewport-box');
+    if (vBox) {
+        vBox.style.width = '145px';
+        vBox.style.flexShrink = '0';
+    }
+    const rCtrl = document.querySelector('.right-controls');
+    if (rCtrl) {
+        rCtrl.style.flex = '1';
+        rCtrl.style.minWidth = '0';
+        rCtrl.style.overflow = 'hidden';
+    }
+    const tGrid = document.querySelector('.tabs-grid');
+    if (tGrid) {
+        tGrid.style.display = 'grid';
+        tGrid.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+        tGrid.style.gap = '5px';
+    }
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.style.fontSize = '0.72rem';
+        btn.style.padding = '4px 2px';
+        btn.style.minWidth = '0';
+        btn.style.overflow = 'hidden';
+        btn.style.textOverflow = 'ellipsis';
+    });
+})();
