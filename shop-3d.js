@@ -18,11 +18,15 @@ export function initShop3D(state) {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     container.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+    scene.add(new THREE.AmbientLight(0xffffff, 1.25));
     const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
     dirLight.position.set(2, 5, 4);
     dirLight.castShadow = true;
     scene.add(dirLight);
+
+    const backLight = new THREE.DirectionalLight(0x93c5fd, 1.1);
+    backLight.position.set(-2, 4, -4);
+    scene.add(backLight);
 
     const turf = new THREE.Mesh(
         new THREE.CylinderGeometry(1.1, 1.15, 0.1, 36),
@@ -48,18 +52,14 @@ export function initShop3D(state) {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
     controls.enablePan = false;
     controls.minDistance = 1.6;
     controls.maxDistance = 4.2;
+    controls.maxPolarAngle = Math.PI / 2 + 0.05;
     controls.target.set(0, 0.95, 0);
     controls.update();
 
-    let targetRotationY = 0;
-    document.getElementById('flip-btn').addEventListener('click', () => {
-        targetRotationY = targetRotationY === 0 ? Math.PI : 0;
-    });
-
-    // Безпечний обхід усіх частин 3D-моделі без системного traverse
     function walkModel(obj, callback) {
         if (!obj) return;
         callback(obj);
@@ -75,6 +75,45 @@ export function initShop3D(state) {
     let playerModel = null;
     let mixer = null;
 
+    function drawJerseyPattern(ctx, jersey, offsetX, width, height) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(offsetX, 0, width, height);
+        ctx.clip();
+
+        ctx.fillStyle = jersey.c1;
+        ctx.fillRect(offsetX, 0, width, height);
+
+        ctx.fillStyle = jersey.c2;
+        if (jersey.pattern === 'stripes') {
+            for (let x = offsetX; x < offsetX + width; x += 32) {
+                ctx.fillRect(x, 0, 16, height);
+            }
+        } else if (jersey.pattern === 'hoops') {
+            for (let y = 0; y < height; y += 36) {
+                ctx.fillRect(offsetX, y, width, 18);
+            }
+        } else if (jersey.pattern === 'half') {
+            ctx.fillRect(offsetX + width / 2, 0, width / 2, height);
+        } else if (jersey.pattern === 'centerBand') {
+            ctx.fillRect(offsetX + width * 0.32, 0, width * 0.36, height);
+        } else if (jersey.pattern === 'chestBand') {
+            ctx.fillRect(offsetX, height * 0.32, width, height * 0.28);
+        } else if (jersey.pattern === 'sash') {
+            ctx.beginPath();
+            ctx.moveTo(offsetX, 0);
+            ctx.lineTo(offsetX + width * 0.25, 0);
+            ctx.lineTo(offsetX + width, height);
+            ctx.lineTo(offsetX + width * 0.75, height);
+            ctx.closePath();
+            ctx.fill();
+        } else if (jersey.pattern === 'sleeves') {
+            ctx.fillRect(offsetX, 0, width * 0.22, height);
+            ctx.fillRect(offsetX + width * 0.78, 0, width * 0.22, height);
+        }
+
+        ctx.restore();
+    }
     function createKitTexture() {
         const jersey = CATALOG.jerseys.find(x => x.id === state.preview.jerseys) || CATALOG.jerseys.at(0);
         const shortItem = CATALOG.shorts.find(x => x.id === state.preview.shorts) || CATALOG.shorts.at(0);
@@ -84,34 +123,13 @@ export function initShop3D(state) {
         canvas.height = 512;
         const ctx = canvas.getContext('2d');
 
-        ctx.fillStyle = jersey.c1;
-        ctx.fillRect(0, 0, 512, 310);
-
-        ctx.fillStyle = jersey.c2;
-        if (jersey.pattern === 'stripes') {
-            for (let x = 0; x < 512; x += 48) ctx.fillRect(x, 0, 24, 310);
-        } else if (jersey.pattern === 'hoops') {
-            for (let y = 0; y < 310; y += 44) ctx.fillRect(0, y, 512, 22);
-        } else if (jersey.pattern === 'half') {
-            ctx.fillRect(256, 0, 256, 310);
-        } else if (jersey.pattern === 'centerBand') {
-            ctx.fillRect(170, 0, 172, 310);
-        } else if (jersey.pattern === 'chestBand') {
-            ctx.fillRect(0, 100, 512, 85);
-        } else if (jersey.pattern === 'sash') {
-            ctx.beginPath();
-            ctx.moveTo(0, 0); ctx.lineTo(120, 0);
-            ctx.lineTo(512, 310); ctx.lineTo(392, 310);
-            ctx.closePath(); ctx.fill();
-        } else if (jersey.pattern === 'sleeves') {
-            ctx.fillRect(0, 0, 110, 310);
-            ctx.fillRect(402, 0, 110, 310);
-        }
-
         ctx.fillStyle = shortItem.c1;
-        ctx.fillRect(0, 310, 512, 202);
+        ctx.fillRect(0, 0, 512, 512);
         ctx.fillStyle = shortItem.c2;
-        ctx.fillRect(0, 385, 512, 24);
+        ctx.fillRect(0, 385, 512, 26);
+
+        drawJerseyPattern(ctx, jersey, 0, 256, 305);
+        drawJerseyPattern(ctx, jersey, 256, 256, 305);
 
         if (originalShirtImage) {
             ctx.globalCompositeOperation = 'multiply';
@@ -122,11 +140,11 @@ export function initShop3D(state) {
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 5;
-        ctx.font = '900 72px "Segoe UI", sans-serif';
+        ctx.font = '900 70px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 382, 145);
-        ctx.fillText(state.number, 382, 145);
+        ctx.strokeText(state.number, 384, 145);
+        ctx.fillText(state.number, 384, 145);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.flipY = false;
@@ -236,9 +254,6 @@ export function initShop3D(state) {
     function animate() {
         requestAnimationFrame(animate);
         if (mixer) mixer.update(clock.getDelta());
-        if (playerModel) {
-            playerModel.rotation.y += (targetRotationY - playerModel.rotation.y) * 0.12;
-        }
         ballMesh.rotation.y += 0.01;
         controls.update();
         renderer.render(scene, camera);
@@ -247,6 +262,9 @@ export function initShop3D(state) {
 
     return {
         updateAppearance,
-        faceBack: () => { targetRotationY = Math.PI; }
+        faceBack: () => {
+            camera.position.set(0, 1.25, -3.1);
+            controls.update();
+        }
     };
 }
