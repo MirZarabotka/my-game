@@ -159,30 +159,27 @@ export function initShop3D(state) {
         rightGloveHolder.add(rightUnit);
         leftGloveHolder.add(leftUnit);
 
-        attachToWrist(rightGloveHolder, rightForeArmBone, rightHandBone, rightMidBone);
-        attachToWrist(leftGloveHolder, leftForeArmBone, leftHandBone, leftMidBone);
+        attachToSleeveEnd(rightGloveHolder, rightForeArmBone, rightHandBone, rightMidBone);
+        attachToSleeveEnd(leftGloveHolder, leftForeArmBone, leftHandBone, leftMidBone);
         updateAppearance();
     }
 
-    function attachToWrist(holder, foreArmBone, handBone, midBone) {
-        const parentBone = foreArmBone || (handBone && handBone.parent);
-        if (!parentBone || !handBone) return;
+    function attachToSleeveEnd(holder, foreArmBone, handBone, midBone) {
+        const armBone = foreArmBone || (handBone && handBone.parent);
+        if (!armBone) return;
 
-        parentBone.updateWorldMatrix(true, false);
-        handBone.updateWorldMatrix(true, false);
-
-        const wristPos = handBone.position.clone();
-        const foreDir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
+        armBone.updateWorldMatrix(true, false);
+        const wristPos = handBone ? handBone.position.clone() : new THREE.Vector3(0, 24, 0);
+        const dir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
         const palmLen = (midBone && midBone.position.length() > 0.001)
             ? midBone.position.length()
             : wristPos.length() * 0.42;
-        const gloveLen = (palmLen || 0.08) * 2.7;
 
-        const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), foreDir);
+        const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
         holder.quaternion.copy(q);
-        holder.scale.setScalar(gloveLen);
-        holder.position.copy(wristPos).addScaledVector(foreDir, -palmLen * 0.15);
-        parentBone.add(holder);
+        holder.scale.setScalar((palmLen || 8.5) * 2.5);
+        holder.position.copy(wristPos).addScaledVector(dir, -palmLen * 0.15);
+        armBone.add(holder);
     }
     const backNumberMat = new THREE.MeshBasicMaterial({
         transparent: true,
@@ -292,9 +289,6 @@ export function initShop3D(state) {
             m.needsUpdate = true;
         });
 
-        if (leftHandBone) leftHandBone.scale.setScalar(0.001);
-        if (rightHandBone) rightHandBone.scale.setScalar(0.001);
-
         ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
         ballMesh.material.needsUpdate = true;
 
@@ -344,17 +338,18 @@ export function initShop3D(state) {
         walkModel(playerModel, (child) => {
             if (child.isBone && child.name) {
                 const n = child.name.toLowerCase();
-                if (n.includes('leftforearm') || n.includes('l_forearm')) leftForeArmBone = child;
-                if ((n.includes('lefthand') || n.includes('l_hand')) && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
+                if (n.includes('forearm') && n.includes('left')) leftForeArmBone = child;
+                if (n.includes('forearm') && n.includes('right')) rightForeArmBone = child;
+
+                if (n.includes('hand') && n.includes('left') && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
                     leftHandBone = child;
                 }
-                if (n.includes('lefthandmiddle1') || n.includes('l_middle1')) leftMidBone = child;
+                if (n.includes('hand') && n.includes('left') && n.includes('middle1')) leftMidBone = child;
 
-                if (n.includes('rightforearm') || n.includes('r_forearm')) rightForeArmBone = child;
-                if ((n.includes('righthand') || n.includes('r_hand')) && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
+                if (n.includes('hand') && n.includes('right') && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
                     rightHandBone = child;
                 }
-                if (n.includes('righthandmiddle1') || n.includes('r_middle1')) rightMidBone = child;
+                if (n.includes('hand') && n.includes('right') && n.includes('middle1')) rightMidBone = child;
 
                 if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) {
                     spineBone = child;
@@ -399,6 +394,9 @@ export function initShop3D(state) {
     function animate() {
         requestAnimationFrame(animate);
         if (mixer) mixer.update(clock.getDelta());
+        // Обрізаємо (стискаємо) голі кисті щокадру після анімації, не чіпаючи рукавиці на передпліччі
+        if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
+        if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
         ballMesh.rotation.y += 0.01;
         controls.update();
         renderer.render(scene, camera);
