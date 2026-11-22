@@ -116,19 +116,19 @@ export function initShop3D(state) {
         wrist.position.set(0, 0, 0);
         group.add(wrist);
 
-        const palmBack = new THREE.Mesh(new THREE.BoxGeometry(6.2, 9.0, 9.4), gloveBackMat);
+        const palmBack = new THREE.Mesh(new THREE.BoxGeometry(6.6, 9.0, 9.8), gloveBackMat);
         palmBack.position.set(-dir * 0.6, 5.2, 0);
         group.add(palmBack);
 
-        const palmFront = new THREE.Mesh(new THREE.BoxGeometry(2.4, 8.8, 9.2), glovePalmMat);
+        const palmFront = new THREE.Mesh(new THREE.BoxGeometry(2.6, 8.8, 9.6), glovePalmMat);
         palmFront.position.set(dir * 2.2, 5.2, 0);
         group.add(palmFront);
 
         const fingerSpecs = [
-            { z: 3.3, len: 5.5, r: 1.3 },
-            { z: 1.1, len: 6.4, r: 1.35 },
-            { z: -1.1, len: 5.8, r: 1.3 },
-            { z: -3.3, len: 4.6, r: 1.15 }
+            { z: 3.4, len: 5.5, r: 1.35 },
+            { z: 1.1, len: 6.4, r: 1.4 },
+            { z: -1.1, len: 5.8, r: 1.35 },
+            { z: -3.4, len: 4.6, r: 1.2 }
         ];
 
         fingerSpecs.forEach((f) => {
@@ -141,13 +141,13 @@ export function initShop3D(state) {
             group.add(fingerPalm);
         });
 
-        const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(1.45, 4.4, 6, 12), glovePalmMat);
+        const thumb = new THREE.Mesh(new THREE.CapsuleGeometry(1.5, 4.4, 6, 12), glovePalmMat);
         thumb.position.set(dir * 1.8, 4.2, 5.2);
         thumb.rotation.x = 0.52;
         thumb.rotation.z = -dir * 0.2;
         group.add(thumb);
 
-        group.position.set(0, 1.0, 0);
+        group.position.set(0, 3.2, -2.2);
         group.visible = false;
         return group;
     }
