@@ -129,10 +129,10 @@ export function initShop3D(state) {
             for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
         } else if (jersey.pattern === 'half') {
             ctx.fillRect(105, 0, 60, 512);
-            ctx.fillRect(278, 0, 75, 512);
+            ctx.fillRect(340, 0, 85, 512);
         } else if (jersey.pattern === 'centerBand') {
             ctx.fillRect(85, 0, 45, 512);
-            ctx.fillRect(255, 0, 45, 512);
+            ctx.fillRect(318, 0, 45, 512);
         } else if (jersey.pattern === 'chestBand') {
             ctx.fillRect(0, 160, 512, 130);
         } else if (jersey.pattern === 'sash') {
@@ -141,18 +141,17 @@ export function initShop3D(state) {
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
             ctx.fillRect(0, 0, 52, 512);
-            ctx.fillRect(188, 0, 50, 512);
+            ctx.fillRect(425, 0, 60, 512);
         }
 
-        // Номер рівно по центру спини
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = state.numColor === '#000000' ? '#ffffff' : '#000000';
         ctx.lineWidth = 8;
         ctx.font = '900 92px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 278, 215);
-        ctx.fillText(state.number, 278, 215);
+        ctx.strokeText(state.number, 340, 215);
+        ctx.fillText(state.number, 340, 215);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.flipY = false;
