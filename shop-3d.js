@@ -5,7 +5,6 @@ import { OrbitControls } from './libs/OrbitControls.js';
 import { CATALOG } from './shop-catalog.js';
 
 export function initShop3D(state) {
-    // Видаляємо старий кешований shop.css, щоб кнопки праворуч не розтягувалися
     document.querySelectorAll('link[rel="stylesheet"]').forEach(link => link.remove());
 
     const fixStyle = document.createElement('style');
@@ -133,7 +132,7 @@ export function initShop3D(state) {
             ctx.fillRect(260, 0, 110, 512);
         } else if (jersey.pattern === 'centerBand') {
             ctx.fillRect(90, 0, 65, 512);
-            ctx.fillRect(230, 0, 65, 512);
+            ctx.fillRect(175, 0, 65, 512);
         } else if (jersey.pattern === 'chestBand') {
             ctx.fillRect(0, 160, 512, 130);
         } else if (jersey.pattern === 'sash') {
@@ -141,20 +140,21 @@ export function initShop3D(state) {
             ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
             ctx.closePath(); ctx.fill();
         } else if (jersey.pattern === 'sleeves') {
-            // Правий рукав (0..42) та лівий рукав (360..430)
-            ctx.fillRect(0, 0, 42, 512);
-            ctx.fillRect(360, 0, 75, 512);
+            // Обидва рукави повністю від плеча до манжета
+            ctx.fillRect(0, 0, 62, 512);
+            ctx.fillRect(245, 0, 65, 512);
+            ctx.fillRect(460, 0, 52, 512);
         }
 
-        // Номер рівно по центру спини (x = 262, y = 215)
+        // Номер рівно по центру спини (x = 185, y = 215)
         ctx.fillStyle = state.numColor;
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 8;
         ctx.font = '900 92px "Segoe UI", sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.strokeText(state.number, 262, 215);
-        ctx.fillText(state.number, 262, 215);
+        ctx.strokeText(state.number, 185, 215);
+        ctx.fillText(state.number, 185, 215);
 
         const tex = new THREE.CanvasTexture(canvas);
         tex.flipY = false;
