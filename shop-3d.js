@@ -116,24 +116,24 @@ export function initShop3D(state) {
         patternCanvas.height = size;
         const pCtx = patternCanvas.getContext('2d');
 
-        drawJerseyPattern(pCtx, jersey, size, 340);
+        // 1. Вся верхня частина текстури (0..330) по всій ширині — симетричний візерунок футболки
+        drawJerseyPattern(pCtx, jersey, size, 330);
 
+        // 2. Вся нижня частина текстури (330..512) по всій ширині — симетричні шорти
         pCtx.fillStyle = shortItem.c1;
-        pCtx.fillRect(0, 340, 260, 172);
+        pCtx.fillRect(0, 330, size, 182);
         pCtx.fillStyle = shortItem.c2;
-        pCtx.fillRect(0, 410, 260, 24);
+        pCtx.fillRect(0, 405, size, 24);
 
-        pCtx.fillStyle = jersey.pattern === 'sleeves' ? jersey.c2 : jersey.c1;
-        pCtx.fillRect(260, 340, 252, 172);
-
+        // Номер на спині
         pCtx.fillStyle = state.numColor;
         pCtx.strokeStyle = '#000000';
         pCtx.lineWidth = 6;
         pCtx.font = '900 72px "Segoe UI", sans-serif';
         pCtx.textAlign = 'center';
         pCtx.textBaseline = 'middle';
-        pCtx.strokeText(state.number, 384, 145);
-        pCtx.fillText(state.number, 384, 145);
+        pCtx.strokeText(state.number, 256, 150);
+        pCtx.fillText(state.number, 256, 150);
 
         if (baseTextureImg) {
             const outCanvas = document.createElement('canvas');
@@ -189,7 +189,6 @@ export function initShop3D(state) {
         tex.needsUpdate = true;
         return tex;
     }
-
     function createBallTexture(c1, c2) {
         const canvas = document.createElement('canvas');
         canvas.width = 256;
