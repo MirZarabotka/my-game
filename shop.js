@@ -43,27 +43,20 @@ function showToast(text, isSuccess = false) {
 }
 
 function updateTopPreviewPanel(tabName, item) {
-    const statusEl = document.getElementById('preview-status');
     const titleEl = document.getElementById('preview-title');
-    const descEl = document.getElementById('preview-desc');
     const actionBtn = document.getElementById('preview-action-btn');
 
     titleEl.innerText = item.name;
-    descEl.innerText = item.desc;
 
     const isEquipped = state[tabName] === item.id;
     const isOwned = ownedItems.includes(item.id);
 
     if (isEquipped) {
-        statusEl.innerText = '✅ ОДЯГНЕНО НА ГРАВЦЯ';
-        statusEl.className = 'status-tag';
         actionBtn.innerText = 'Одягнено ✓';
         actionBtn.className = 'action-btn equipped';
         actionBtn.onclick = null;
     } else if (isOwned) {
-        statusEl.innerText = '👕 Є В ГАРДЕРОБІ (ПРИМІРКА)';
-        statusEl.className = 'status-tag preview-mode';
-        actionBtn.innerText = 'Одягнути';
+        actionBtn.innerText = 'Одягнути 👕';
         actionBtn.className = 'action-btn equip';
         actionBtn.onclick = () => {
             state[tabName] = item.id;
@@ -72,8 +65,6 @@ function updateTopPreviewPanel(tabName, item) {
             renderTab(tabName);
         };
     } else {
-        statusEl.innerText = '👀 ПОПЕРЕДНІЙ ПЕРЕГЛЯД';
-        statusEl.className = 'status-tag preview-mode';
         const canAfford = state.coins >= item.price;
         actionBtn.innerText = `Купити за 💰 ${item.price}`;
         actionBtn.className = `action-btn ${canAfford ? 'buy' : 'no-coins'}`;
@@ -108,10 +99,7 @@ function renderTab(tabName) {
 
     if (tabName === 'number') {
         shop3D.faceBack();
-        document.getElementById('preview-status').innerText = '✅ ІГРОВИЙ НОМЕР (БЕЗКОШТОВНО)';
-        document.getElementById('preview-status').className = 'status-tag';
-        document.getElementById('preview-title').innerText = `Номер #${state.number}`;
-        document.getElementById('preview-desc').innerText = 'Обери будь-який номер на спині та його колір';
+        document.getElementById('preview-title').innerText = `Номер на спині: #${state.number}`;
         const actionBtn = document.getElementById('preview-action-btn');
         actionBtn.innerText = 'Збережено ✓';
         actionBtn.className = 'action-btn equipped';
