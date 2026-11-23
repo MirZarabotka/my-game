@@ -1314,6 +1314,7 @@
         const worldAxisZ = new THREE.Vector3(0, 0, 1);
         const startBouncePos = new THREE.Vector3(0.34, 0.103, 0.24);
         const targetBouncePos = new THREE.Vector3();
+        const fixedTrickTarget = new THREE.Vector3();
         let lastStepIndex = -1;
 
         // Стан фінта "Навколо світу" (Around The World)
@@ -1385,12 +1386,17 @@
 
             if (jugBlend > 0.005) {
                 const isTrickActive = trickMode !== 'none';
-                // Під час подвійного фінта даємо трохи більше часу на 2 оберти
-                const phaseSpeed = isTrickActive ? (trickMode === 'double' ? 2.45 : 2.85) : 3.4;
+                const phaseSpeed = isTrickActive ? (trickMode === 'double' ? 2.15 : 2.55) : 3.4;
                 jugPhase += dt * phaseSpeed;
 
                 const stepIndex = Math.floor(jugPhase / Math.PI);
                 const localT = (jugPhase % Math.PI) / Math.PI;
+
+                // Визначаємо, яка нога працює на цьому кроці
+                let isRightTarget = stepIndex % 2 === 0;
+                if (trickMode === 'single' || trickMode === 'double') {
+                    isRightTarget = (stepIndex - 1) % 2 === 0;
+                }
 
                 if (stepIndex !== lastStepIndex) {
                     if (lastStepIndex === -1) {
@@ -1401,7 +1407,6 @@
                         startBouncePos.copy(targetBouncePos);
                     }
 
-                    // Керування запуском та завершенням фінта "Навколо світу"
                     if (trickMode !== 'none') {
                         trickStepCount++;
                         const maxTrickSteps = trickMode === 'both' ? 2 : 1;
@@ -1416,13 +1421,18 @@
                         trickStepCount = 1;
                     }
 
-                    lastStepIndex = stepIndex;
-                }
+                    // Перераховуємо цільову ногу після можливого старту трюку
+                    isRightTarget = stepIndex % 2 === 0;
+                    if (trickMode === 'single' || trickMode === 'double') {
+                        isRightTarget = (stepIndex - 1) % 2 === 0;
+                    }
 
-                // Під час "single" або "double" трюк робить та сама нога, яка щойно підбила м'яч
-                let isRightTarget = stepIndex % 2 === 0;
-                if (trickMode === 'single' || trickMode === 'double') {
-                    isRightTarget = (stepIndex - 1) % 2 === 0;
+                    // Фіксуємо нерухому точку прийому м'яча на рівні паха (щоб м'яч не їздив убік за ногою)
+                    if (trickMode !== 'none') {
+                        fixedTrickTarget.set(isRightTarget ? -0.14 : 0.14, 0.56, 0.44);
+                    }
+
+                    lastStepIndex = stepIndex;
                 }
 
                 const dropProgress = Math.min(1, localT / 0.45);
@@ -1433,65 +1443,81 @@
 
                 const prevLegLift = stepIndex === 0 ? 0 : dropCurve;
 
-                let rLift = isRightTarget ? riseCurve : prevLegLift;
-                let lLift = !isRightTarget ? riseCurve : prevLegLift;
+                let rHipFlex = isRightTarget ? riseCurve * 0.78 : prevLegLift * 0.78;
+                let lHipFlex = !isRightTarget ? riseCurve * 0.78 : prevLegLift * 0.78;
+                let rKneeBend = isRightTarget ? riseCurve * 0.98 : prevLegLift * 0.98;
+                let lKneeBend = !isRightTarget ? riseCurve * 0.98 : prevLegLift * 0.98;
                 let rAbduct = 0;
                 let lAbduct = 0;
 
-                // Розрахунок кругового обведення ноги навколо м'яча ("Around The World")
+                // Високий обліт ноги навколо м'яча на рівні паха ("Around The World")
                 if (trickMode !== 'none') {
                     const loops = trickMode === 'double' ? 2 : 1;
                     const orbitAngle = localT * Math.PI * 2 * loops;
-                    const orbitEnv = Math.sin(localT * Math.PI); // Плавний вхід і вихід з кола
+                    const orbitEnv = Math.sin(localT * Math.PI);
 
-                    // Вертикальна складова кола (перенесення ноги над м'ячем)
-                    const verticalSweep = (1 - Math.cos(orbitAngle)) * 0.5 * orbitEnv;
-                    // Бокова складова кола (відведення ноги вбік навколо м'яча)
-                    const sideSweep = Math.sin(orbitAngle) * 0.58 * orbitEnv;
+                    // Верхня півсфера кола: нога високо заноситься над м'ячем до рівня пояса/паха
+                    const overBallLift = (1 - Math.cos(orbitAngle)) * 0.5 * orbitEnv;
+                    // Широке відведення стегна вбік (вправо або вліво навколо м'яча)
+                    const sideCircle = Math.sin(orbitAngle) * 0.72 * orbitEnv;
 
                     if (isRightTarget) {
-                        rLift = Math.max(riseCurve, 0.35 * orbitEnv + verticalSweep * 0.85);
-                        rAbduct = -sideSweep; // Відведення правої ноги вправо
+                        rHipFlex = Math.max(riseCurve * 0.95, 0.65 * orbitEnv + overBallLift * 0.85);
+                        rKneeBend = Math.max(riseCurve * 0.85, 0.45 * orbitEnv + overBallLift * 0.45);
+                        rAbduct = -sideCircle;
+                        lHipFlex = prevLegLift * 0.5;
+                        lKneeBend = prevLegLift * 0.6;
                     } else {
-                        lLift = Math.max(riseCurve, 0.35 * orbitEnv + verticalSweep * 0.85);
-                        lAbduct = sideSweep;  // Відведення лівої ноги вліво
+                        lHipFlex = Math.max(riseCurve * 0.95, 0.65 * orbitEnv + overBallLift * 0.85);
+                        lKneeBend = Math.max(riseCurve * 0.85, 0.45 * orbitEnv + overBallLift * 0.45);
+                        lAbduct = sideCircle;
+                        rHipFlex = prevLegLift * 0.5;
+                        rKneeBend = prevLegLift * 0.6;
                     }
                 }
 
                 if (rUpLeg) {
-                    rotateBoneWorldAxis(rUpLeg, worldAxisX, -rLift * 0.78 * jugBlend);
+                    rotateBoneWorldAxis(rUpLeg, worldAxisX, -rHipFlex * jugBlend);
                     if (Math.abs(rAbduct) > 0.001) rotateBoneWorldAxis(rUpLeg, worldAxisZ, rAbduct * jugBlend);
                 }
-                if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rLift * 0.98 * jugBlend);
-                if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, -rLift * 0.22 * jugBlend);
+                if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rKneeBend * jugBlend);
+                if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, -rHipFlex * 0.25 * jugBlend);
 
                 if (lUpLeg) {
-                    rotateBoneWorldAxis(lUpLeg, worldAxisX, -lLift * 0.78 * jugBlend);
+                    rotateBoneWorldAxis(lUpLeg, worldAxisX, -lHipFlex * jugBlend);
                     if (Math.abs(lAbduct) > 0.001) rotateBoneWorldAxis(lUpLeg, worldAxisZ, lAbduct * jugBlend);
                 }
-                if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lLift * 0.98 * jugBlend);
-                if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, -lLift * 0.22 * jugBlend);
+                if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lKneeBend * jugBlend);
+                if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, -lHipFlex * 0.25 * jugBlend);
 
-                const balanceWave = (isRightTarget ? -rLift : lLift) + (rAbduct + lAbduct) * 0.4;
+                const balanceWave = (isRightTarget ? -rHipFlex : lHipFlex) * 0.7 + (rAbduct + lAbduct) * 0.45;
                 if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + balanceWave * 0.06 * jugBlend;
-                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - (0.16 + Math.abs(rAbduct) * 0.35) * jugBlend;
-                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + (0.16 + Math.abs(lAbduct) * 0.35) * jugBlend;
+                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - (0.16 + Math.abs(rAbduct) * 0.4) * jugBlend;
+                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + (0.16 + Math.abs(lAbduct) * 0.4) * jugBlend;
 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 14 з 14 ====================
                 playerModelUpdateMatrix(rFoot, lFoot);
 
-                const currentTargetPos = isRightTarget
-                    ? getFootStrikePos(rToe, rFoot, true)
-                    : getFootStrikePos(lToe, lFoot, false);
+                // Під час трюку беремо фіксовану точку на рівні паха, а в кінці руху (localT > 0.85) плавно стикуємо з бутсою
+                if (trickMode !== 'none') {
+                    const liveFootPos = isRightTarget
+                        ? getFootStrikePos(rToe, rFoot, true)
+                        : getFootStrikePos(lToe, lFoot, false);
+                    const catchBlend = Math.max(0, (localT - 0.82) / 0.18);
+                    targetBouncePos.lerpVectors(fixedTrickTarget, liveFootPos, catchBlend);
+                } else {
+                    const currentTargetPos = isRightTarget
+                        ? getFootStrikePos(rToe, rFoot, true)
+                        : getFootStrikePos(lToe, lFoot, false);
+                    targetBouncePos.copy(currentTargetPos);
+                }
 
-                targetBouncePos.copy(currentTargetPos);
-
-                // Під час фінта м'яч підлітає трохи вище (0.76 м), щоб нога чисто пройшла навколо
-                const peakHeight = trickMode !== 'none' ? 0.76 : 0.66;
+                // Під час фінта м'яч високо підлітає і повільно опускається до рівня паха, не зміщуючись убік за махом ноги
+                const peakHeight = trickMode !== 'none' ? 0.58 : 0.66;
                 const arcWave = Math.sin(localT * Math.PI);
                 const jugPos = new THREE.Vector3().lerpVectors(startBouncePos, targetBouncePos, localT);
                 jugPos.y += arcWave * peakHeight;
-                jugPos.z = Math.max(jugPos.z, 0.38) + arcWave * 0.14;
+                jugPos.z = Math.max(jugPos.z, 0.40) + arcWave * 0.10;
 
                 const restPos = new THREE.Vector3(0.34, 0.103, 0.24);
                 ballMesh.position.lerpVectors(restPos, jugPos, jugBlend);
