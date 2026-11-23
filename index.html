@@ -1311,8 +1311,8 @@
 // ==================== ПОЧАТОК ЧАСТИНИ 13 з 13 ====================
         let lastTime = performance.now();
         const worldAxisX = new THREE.Vector3(1, 0, 0);
-        const footWorldPos = new THREE.Vector3();
-        const prevFootWorldPos = new THREE.Vector3(0.14, 0.25, 0.42);
+        const startBouncePos = new THREE.Vector3(0.34, 0.103, 0.24);
+        const targetBouncePos = new THREE.Vector3();
         let lastStepIndex = -1;
 
         function rotateBoneWorldX(bone, angleRad) {
@@ -1331,6 +1331,19 @@
             if (lFoot && lFoot.parent && lFoot.parent.parent) {
                 lFoot.parent.parent.updateMatrixWorld(true);
             }
+        }
+
+        function getFootStrikePos(toeBone, footBone, isRight) {
+            const pos = new THREE.Vector3();
+            const bone = toeBone || footBone;
+            if (bone) {
+                bone.getWorldPosition(pos);
+                pos.y += 0.105;
+                pos.z += toeBone ? 0.03 : 0.14;
+            } else {
+                pos.set(isRight ? -0.14 : 0.14, 0.38, 0.42);
+            }
+            return pos;
         }
 
         function animate(now) {
@@ -1368,11 +1381,11 @@
                 jugPhase += dt * 4.2;
                 const stepIndex = Math.floor(jugPhase / Math.PI);
                 const localT = (jugPhase % Math.PI) / Math.PI;
-                const isRightFoot = stepIndex % 2 === 0;
+                const isRightTarget = stepIndex % 2 === 0;
 
                 const contactWave = Math.pow(Math.cos(localT * Math.PI), 2);
-                const rLift = isRightFoot ? contactWave : 0;
-                const lLift = !isRightFoot ? contactWave : 0;
+                const rLift = isRightTarget ? contactWave : 0;
+                const lLift = !isRightTarget ? contactWave : 0;
 
                 if (rUpLeg) rotateBoneWorldX(rUpLeg, -rLift * 0.78 * jugBlend);
                 if (rLeg) rotateBoneWorldX(rLeg, rLift * 0.98 * jugBlend);
@@ -1382,28 +1395,28 @@
                 if (lLeg) rotateBoneWorldX(lLeg, lLift * 0.98 * jugBlend);
                 if (lFoot) rotateBoneWorldX(lFoot, -lLift * 0.22 * jugBlend);
 
-                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + (isRightFoot ? -1 : 1) * contactWave * 0.05 * jugBlend;
+                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + (isRightTarget ? -1 : 1) * contactWave * 0.05 * jugBlend;
                 if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.16 * jugBlend;
                 if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.16 * jugBlend;
 
                 playerModelUpdateMatrix(rFoot, lFoot);
 
-                const activeToe = isRightFoot ? (rToe || rFoot) : (lToe || lFoot);
-                if (activeToe) {
-                    activeToe.getWorldPosition(footWorldPos);
-                    footWorldPos.y += 0.105;
-                    footWorldPos.z += rToe ? 0.03 : 0.14;
-                } else {
-                    footWorldPos.set(isRightFoot ? -0.14 : 0.14, 0.38, 0.42);
-                }
+                const currentTargetPos = isRightTarget
+                    ? getFootStrikePos(rToe, rFoot, true)
+                    : getFootStrikePos(lToe, lFoot, false);
 
                 if (stepIndex !== lastStepIndex) {
-                    prevFootWorldPos.copy(footWorldPos);
+                    if (lastStepIndex === -1) {
+                        startBouncePos.copy(ballMesh.position);
+                    } else {
+                        startBouncePos.copy(targetBouncePos);
+                    }
                     lastStepIndex = stepIndex;
                 }
+                targetBouncePos.copy(currentTargetPos);
 
                 const arcWave = Math.sin(localT * Math.PI);
-                const jugPos = new THREE.Vector3().lerpVectors(prevFootWorldPos, footWorldPos, localT);
+                const jugPos = new THREE.Vector3().lerpVectors(startBouncePos, targetBouncePos, localT);
                 jugPos.y += arcWave * 0.44;
                 jugPos.z = Math.max(jugPos.z, 0.38) + arcWave * 0.12;
 
@@ -1411,9 +1424,10 @@
                 ballMesh.position.lerpVectors(restPos, jugPos, jugBlend);
 
                 ballMesh.rotation.x -= dt * 4.2 * jugBlend;
-                ballMesh.rotation.z += (isRightFoot ? -1 : 1) * dt * 1.5 * jugBlend;
+                ballMesh.rotation.z += (isRightTarget ? -1 : 1) * dt * 1.5 * jugBlend;
             } else {
                 lastStepIndex = -1;
+                jugPhase = 0;
                 ballMesh.position.lerp(new THREE.Vector3(0.34, 0.103, 0.24), Math.min(1, dt * 4));
                 ballMesh.rotation.y += 0.01;
             }
@@ -1503,3 +1517,4 @@
 </body>
 </html>
 <!-- ==================== КІНЕЦЬ ЧАСТИНИ 13 з 13 ==================== -->
+
