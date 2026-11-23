@@ -613,7 +613,7 @@
                 holder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
                 const sz = len * 2.25;
                 holder.scale.setScalar(sz);
-                holder.position.copy(wristPos).addScaledVector(dir, -sz * 0.25);
+                holder.position.copy(wristPos).addScaledVector(dir, -sz * 0.04);
                 arm.add(holder);
             }
 
@@ -626,7 +626,6 @@
             const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
             if (!model) return;
 
-            // Вмикаємо вбудовану стійку (idle) з player.glb, щоб прибрати Т-позу
             const anim = gltf.animations && gltf.animations.at(0);
             if (anim) {
                 const mixer = new THREE.AnimationMixer(model);
@@ -667,7 +666,6 @@
                     }
                 });
 
-                // Виносимо плашку номера трохи далі назовні (-13.2 замість -11.3), щоб футболка не різала цифри
                 const numMesh = new THREE.Mesh(
                     new THREE.PlaneGeometry(30, 30),
                     new THREE.MeshBasicMaterial({ map: createBackNumberTexture(num, numCol), transparent: true, side: THREE.DoubleSide, depthWrite: false })
@@ -724,6 +722,7 @@
             }, undefined, () => hideLoader());
         }, undefined, () => hideLoader());
 // ==================== КІНЕЦЬ ЧАСТИНИ 4B з 6 ====================
+
 // ==================== ПОЧАТОК ЧАСТИНИ 5 з 6 ====================
         let shotState = 'ready';
         let stateTimer = 0;
@@ -1007,9 +1006,9 @@
                 const kickSwing = p > 0.72 ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
 
                 if (rUpLeg) rUpLeg.rotation.x += stride * 0.55 - kickSwing * 1.15;
-                if (rLeg) rLeg.rotation.x += Math.max(0, -stride * 0.65) + (p > 0.72 ? (1 - kickSwing) * 0.85 : 0);
+                if (rLeg) rLeg.rotation.x -= Math.max(0, -stride * 0.65) + (p > 0.72 ? (1 - kickSwing) * 0.85 : 0);
                 if (lUpLeg) lUpLeg.rotation.x += -stride * 0.55 + kickSwing * 0.25;
-                if (lLeg) lLeg.rotation.x += Math.max(0, stride * 0.65);
+                if (lLeg) lLeg.rotation.x -= Math.max(0, stride * 0.65);
                 if (spine) spine.rotation.z += -kickSwing * 0.16;
                 if (rArm) rArm.rotation.z -= kickSwing * 0.35;
                 if (lArm) lArm.rotation.z += kickSwing * 0.45;
@@ -1036,12 +1035,11 @@
             let despairAmt = 0;
 
             if (gkState.mode === 'ready') {
-                // Воротар стоїть чітко по центру воріт (x = 0) у зібраній воротарській стійці
                 gkState.readyTime += dt;
                 gkState.x = THREE.MathUtils.lerp(gkState.x, 0, Math.min(1, dt * 8));
-                gkState.y = Math.abs(Math.sin(gkState.readyTime * 3.6)) * 0.015;
+                gkState.y = 0;
                 gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 10));
-                crouchAmt = 0.26 + Math.abs(Math.sin(gkState.readyTime * 3.6)) * 0.04;
+                crouchAmt = 0.18 + Math.abs(Math.sin(gkState.readyTime * 3.2)) * 0.04;
             } else if (gkState.mode === 'dive') {
                 const p = Math.min(1, gkState.modeTime / Math.max(0.38, shotDuration));
                 const easeX = 1 - Math.pow(1 - p, 1.8);
@@ -1065,7 +1063,7 @@
                 gkState.diveAngle = THREE.MathUtils.lerp(-gkState.diveDir * 1.54, 0, ease);
                 gkState.y = Math.sin(p * Math.PI) * 0.08;
                 diveAmt = (1 - ease) * 0.75;
-                crouchAmt = Math.sin(p * Math.PI) * 0.45;
+                crouchAmt = Math.sin(p * Math.PI) * 0.35;
                 if (p >= 1) {
                     gkState.mode = 'react';
                     gkState.modeTime = 0;
@@ -1081,8 +1079,10 @@
                 }
             }
 
+            // Компенсуємо присідання по висоті, щоб ступні залишалися на газоні
+            const crouchSink = crouchAmt * 0.14;
             const lieLift = (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
-            gkContainer.position.set(gkState.x, gkState.y + lieLift, GOAL_Z + 0.25);
+            gkContainer.position.set(gkState.x, Math.max(0, gkState.y + lieLift - crouchSink), GOAL_Z + 0.25);
             gkContainer.rotation.z = gkState.diveAngle;
             gkContainer.rotation.x = diveAmt * 0.12;
 
@@ -1094,6 +1094,8 @@
             const lUpLeg = getBone(gkBones, 'leftupleg');
             const rLeg = getBone(gkBones, 'rightleg');
             const lLeg = getBone(gkBones, 'leftleg');
+            const rFoot = getBone(gkBones, 'rightfoot');
+            const lFoot = getBone(gkBones, 'leftfoot');
             const spine = getBone(gkBones, 'spine');
             const head = getBone(gkBones, 'head');
 
@@ -1114,11 +1116,16 @@
                 lForeArm.rotation.z += -despairAmt * 1.65;
             }
 
+            // Стегна піднімаються вперед (-), а коліна згинаються НАЗАД (-) для природного присідання
             const trailBend = diveAmt * 0.42;
-            if (rUpLeg) rUpLeg.rotation.x += -crouchAmt - (gkState.diveDir < 0 ? trailBend : 0) - despairAmt * 0.18;
-            if (lUpLeg) lUpLeg.rotation.x += -crouchAmt - (gkState.diveDir > 0 ? trailBend : 0) - despairAmt * 0.18;
-            if (rLeg) rLeg.rotation.x += crouchAmt * 1.85 + (gkState.diveDir < 0 ? trailBend * 1.4 : 0) + despairAmt * 0.32;
-            if (lLeg) lLeg.rotation.x += crouchAmt * 1.85 + (gkState.diveDir > 0 ? trailBend * 1.4 : 0) + despairAmt * 0.32;
+            const totalBend = crouchAmt + despairAmt * 0.22;
+            if (rUpLeg) rUpLeg.rotation.x += -totalBend - (gkState.diveDir < 0 ? trailBend : 0);
+            if (lUpLeg) lUpLeg.rotation.x += -totalBend - (gkState.diveDir > 0 ? trailBend : 0);
+            if (rLeg) rLeg.rotation.x += -totalBend * 1.9 - (gkState.diveDir < 0 ? trailBend * 1.4 : 0);
+            if (lLeg) lLeg.rotation.x += -totalBend * 1.9 - (gkState.diveDir > 0 ? trailBend * 1.4 : 0);
+            if (rFoot) rFoot.rotation.x += totalBend * 0.9;
+            if (lFoot) lFoot.rotation.x += totalBend * 0.9;
+
             if (spine) {
                 spine.rotation.x += crouchAmt * 0.55 + despairAmt * 0.42 - celebrateAmt * 0.12;
             }
