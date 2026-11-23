@@ -1311,13 +1311,13 @@
 // ==================== ПОЧАТОК ЧАСТИНИ 13 з 14 ====================
         let lastTime = performance.now();
         const worldAxisX = new THREE.Vector3(1, 0, 0);
+        const worldAxisY = new THREE.Vector3(0, 1, 0);
         const worldAxisZ = new THREE.Vector3(0, 0, 1);
         const startBouncePos = new THREE.Vector3(0.34, 0.103, 0.24);
         const targetBouncePos = new THREE.Vector3();
         const fixedTrickTarget = new THREE.Vector3();
         let lastStepIndex = -1;
 
-        // Стан одинарного фінта "Навколо світу" (правою або лівою ногою)
         let nextTrickStep = 4 + Math.floor(Math.random() * 4);
         let isTrickStep = false;
 
@@ -1384,7 +1384,7 @@
             const lArm = getBone('leftarm');
 
             if (jugBlend > 0.005) {
-                const phaseSpeed = isTrickStep ? 2.4 : 3.4;
+                const phaseSpeed = isTrickStep ? 2.25 : 3.4;
                 jugPhase += dt * phaseSpeed;
 
                 const stepIndex = Math.floor(jugPhase / Math.PI);
@@ -1406,11 +1406,9 @@
                         isTrickStep = true;
                     }
 
-                    // Трюк робить та сама нога, яка щойно підбила м'яч (раз правою, раз лівою)
                     const activeRight = isTrickStep ? ((stepIndex - 1) % 2 === 0) : (stepIndex % 2 === 0);
                     if (isTrickStep) {
-                        // Низька точка прийому м'яча (нижче коліна), щоб нога легко пройшла зверху на рівні паха
-                        fixedTrickTarget.set(activeRight ? -0.14 : 0.14, 0.32, 0.44);
+                        fixedTrickTarget.set(activeRight ? -0.14 : 0.14, 0.30, 0.44);
                     }
 
                     lastStepIndex = stepIndex;
@@ -1432,26 +1430,30 @@
                 let lKneeBend = !isRightTarget ? riseCurve * 0.98 : prevLegLift * 0.98;
                 let rAbduct = 0;
                 let lAbduct = 0;
+                let hipTwist = 0;
 
-                // Одинарний "Навколо світу": нога високо заноситься на рівень паху (localT = 0.5), перелітає над м'ячем і опускається під нього
+                // Справжній круговий обліт Around The World:
+                // theta = 0 (внизу) -> PI/2 (широко вбік) -> PI (високо над м'ячем) -> 3PI/2 (в інший бік) -> 2PI (знову під м'ячем)
                 if (isTrickStep) {
-                    const overArc = Math.sin(localT * Math.PI); // Пік висоти саме в середині трюку (localT = 0.5)
-                    const sideArc = Math.sin(localT * Math.PI * 2) * 0.78 * overArc; // Коло вбік -> вгору -> всередину -> вниз
+                    const theta = localT * Math.PI * 2;
+                    const circleY = (1 - Math.cos(theta)) * 0.5; // 0 -> 1 -> 0
+                    const circleX = Math.sin(theta);              // 0 -> +1 -> 0 -> -1 -> 0
 
-                    // Стегно піднімається до рівня пояса/паха (1.58 рад), а коліно випрямляється (0.35 рад), щоб стопа була високо
-                    const trickHip = 0.78 + overArc * 0.85;
-                    const trickKnee = 0.95 - overArc * 0.62;
+                    const trickHip = 0.65 + circleY * 0.92;       // Висота ноги від рівня удару до паха
+                    const trickKnee = 0.95 - circleY * 0.55;      // Випрямлення ноги у верхній точці
+                    const sideSwing = circleX * 0.78;             // Широкий обліт ліворуч/праворуч навколо м'яча
+                    hipTwist = circleX * 0.35;
 
                     if (isRightTarget) {
                         rHipFlex = trickHip;
                         rKneeBend = trickKnee;
-                        rAbduct = -sideArc;
+                        rAbduct = -sideSwing; // Спочатку вправо (-), потім над м'ячем, потім вліво (+), потім вниз
                         lHipFlex = 0;
                         lKneeBend = 0;
                     } else {
                         lHipFlex = trickHip;
                         lKneeBend = trickKnee;
-                        lAbduct = sideArc;
+                        lAbduct = sideSwing;  // Спочатку вліво (+), потім над м'ячем, потім вправо (-), потім вниз
                         rHipFlex = 0;
                         rKneeBend = 0;
                     }
@@ -1459,23 +1461,30 @@
 
                 if (rUpLeg) {
                     rotateBoneWorldAxis(rUpLeg, worldAxisX, -rHipFlex * jugBlend);
-                    if (Math.abs(rAbduct) > 0.001) rotateBoneWorldAxis(rUpLeg, worldAxisZ, rAbduct * jugBlend);
+                    if (Math.abs(rAbduct) > 0.001) {
+                        rotateBoneWorldAxis(rUpLeg, worldAxisZ, rAbduct * jugBlend);
+                        rotateBoneWorldAxis(rUpLeg, worldAxisY, -hipTwist * jugBlend);
+                    }
                 }
                 if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rKneeBend * jugBlend);
                 if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, -rHipFlex * 0.25 * jugBlend);
 
                 if (lUpLeg) {
                     rotateBoneWorldAxis(lUpLeg, worldAxisX, -lHipFlex * jugBlend);
-                    if (Math.abs(lAbduct) > 0.001) rotateBoneWorldAxis(lUpLeg, worldAxisZ, lAbduct * jugBlend);
+                    if (Math.abs(lAbduct) > 0.001) {
+                        rotateBoneWorldAxis(lUpLeg, worldAxisZ, lAbduct * jugBlend);
+                        rotateBoneWorldAxis(lUpLeg, worldAxisY, hipTwist * jugBlend);
+                    }
                 }
                 if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lKneeBend * jugBlend);
                 if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, -lHipFlex * 0.25 * jugBlend);
 
-                const balanceWave = (isRightTarget ? -rHipFlex : lHipFlex) * 0.6 + (rAbduct + lAbduct) * 0.45;
-                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + balanceWave * 0.06 * jugBlend;
-                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - (0.16 + Math.abs(rAbduct) * 0.45) * jugBlend;
-                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + (0.16 + Math.abs(lAbduct) * 0.45) * jugBlend;
+                const balanceWave = (isRightTarget ? -rHipFlex : lHipFlex) * 0.5 + (rAbduct + lAbduct) * 0.5;
+                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + balanceWave * 0.08 * jugBlend;
+                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - (0.16 + Math.abs(rAbduct) * 0.5) * jugBlend;
+                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + (0.16 + Math.abs(lAbduct) * 0.5) * jugBlend;
 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
+
 // ==================== ПОЧАТОК ЧАСТИНИ 14 з 14 ====================
                 playerModelUpdateMatrix(rFoot, lFoot);
 
