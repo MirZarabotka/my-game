@@ -1311,6 +1311,7 @@
 // ==================== ПОЧАТОК ЧАСТИНИ 13 з 14 ====================
         let lastTime = performance.now();
         const worldAxisX = new THREE.Vector3(1, 0, 0);
+        const worldAxisY = new THREE.Vector3(0, 1, 0);
         const worldAxisZ = new THREE.Vector3(0, 0, 1);
         const startBouncePos = new THREE.Vector3(0.34, 0.103, 0.24);
         const targetBouncePos = new THREE.Vector3();
@@ -1360,7 +1361,6 @@
 
             if (mixer) mixer.update(dt);
 
-            // Якщо користувач торкнувся екрана чи покрутив камеру — скидаємо в режим очікування
             if (idleTimer < 0.05 && playerAction !== 'idle') {
                 playerAction = 'idle';
                 actionTimer = 0;
@@ -1376,14 +1376,12 @@
                 }
             } else if (playerAction === 'juggling') {
                 actionTimer += dt;
-                // Набиває м'яч 6 секунд (потім переходить до привітання глядачів)
                 if (actionTimer >= 6.0) {
                     playerAction = 'waving';
                     actionTimer = 0;
                 }
             } else if (playerAction === 'waving') {
                 actionTimer += dt;
-                // Махає правою рукою 2.8 секунди і знову чекає 10 секунд бездіяльності
                 if (actionTimer >= 2.8) {
                     playerAction = 'idle';
                     actionTimer = 0;
@@ -1481,17 +1479,19 @@
                 ballMesh.rotation.y += 0.01;
             }
 
-            // 2. Анімація привітання: піднімає праву руку вгору і махає глядачам
+            // 2. Анімація привітання: піднімає праву руку вгору і розвертає долоню до нас
             if (waveBlend > 0.005) {
                 const waveSwing = Math.sin(actionTimer * 8.5) * 0.32;
                 if (rArm) {
-                    // Піднімаємо праве плече високо вгору і вбік
                     rotateBoneWorldAxis(rArm, worldAxisZ, -(2.35 + waveSwing * 0.45) * waveBlend);
                     rotateBoneWorldAxis(rArm, worldAxisX, -0.25 * waveBlend);
+                    // Легкий зовнішній розворот плеча вперед
+                    rotateBoneWorldAxis(rArm, worldAxisY, -0.35 * waveBlend);
                 }
                 if (rForeArm) {
-                    // Згинаємо передпліччя для маху кистю
                     rotateBoneWorldAxis(rForeArm, worldAxisZ, -(0.35 + waveSwing * 0.75) * waveBlend);
+                    // Супінація передпліччя, щоб долоня дивилася прямо на камеру
+                    rotateBoneWorldAxis(rForeArm, worldAxisY, -1.05 * waveBlend);
                 }
                 if (spine) {
                     rotateBoneWorldAxis(spine, worldAxisZ, 0.07 * waveBlend);
@@ -1500,7 +1500,13 @@
                     rotateBoneWorldAxis(head, worldAxisX, -0.08 * waveBlend);
                 }
             }
+
+            // Додатковий плавний доворот самої рукавиці долонею до глядача
+            if (rightGloveHolder.children.length > 0) {
+                rightGloveHolder.children[0].rotation.y = -0.35 * waveBlend;
+            }
 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
+
 // ==================== ПОЧАТОК ЧАСТИНИ 14 з 14 ====================
             if (glovesLoaded) {
                 if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
