@@ -1479,31 +1479,33 @@
                 ballMesh.rotation.y += 0.01;
             }
 
-            // 2. Анімація привітання (5 сек): пряма рука піднята вгору, махає саме зап'ястя долонею до нас
+            // 2. Анімація привітання (5 сек): пряма рука піднімається спереду знизу вгору, пальці та долоня на нас
             if (waveBlend > 0.005) {
                 const wristWave = Math.sin(actionTimer * 8.0);
                 if (rArm) {
-                    rotateBoneWorldAxis(rArm, worldAxisZ, -2.55 * waveBlend);
-                    rotateBoneWorldAxis(rArm, worldAxisX, -0.15 * waveBlend);
+                    // Піднімаємо пряму руку спереду знизу вгору (-2.65 рад по осі X) і мінімально відводимо від голови (-0.18 по Z)
+                    rotateBoneWorldAxis(rArm, worldAxisX, -2.65 * waveBlend);
+                    rotateBoneWorldAxis(rArm, worldAxisZ, -0.18 * waveBlend);
                 }
                 if (rForeArm) {
-                    rotateBoneWorldAxis(rForeArm, worldAxisY, -1.65 * waveBlend);
+                    // Залишаємо лікоть рівним і розвертаємо передпліччя долонею вперед до глядачів
+                    rotateBoneWorldAxis(rForeArm, worldAxisY, -1.55 * waveBlend);
                 }
                 if (rightHandBone) {
+                    // Махаємо зап'ястям вліво-вправо
                     rotateBoneWorldAxis(rightHandBone, worldAxisZ, wristWave * 0.48 * waveBlend);
                 }
                 if (spine) {
-                    rotateBoneWorldAxis(spine, worldAxisZ, 0.05 * waveBlend);
+                    rotateBoneWorldAxis(spine, worldAxisZ, 0.04 * waveBlend);
                 }
                 if (head) {
                     rotateBoneWorldAxis(head, worldAxisX, -0.06 * waveBlend);
-                    rotateBoneWorldAxis(head, worldAxisY, -0.06 * waveBlend);
                 }
             }
 
-            // Повертаємо 3D-рукавицю долонею рівно на камеру під час привітання
+            // Доворот 3D-рукавиці долонею та пальцями рівно на нас під час привітання
             if (rightGloveHolder.children.length > 0) {
-                rightGloveHolder.children.at(0).rotation.y = 0.75 * waveBlend;
+                rightGloveHolder.children.at(0).rotation.y = 1.55 * waveBlend;
             }
 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
 
