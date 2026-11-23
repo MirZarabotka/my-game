@@ -1382,7 +1382,6 @@
                 }
             } else if (playerAction === 'waving') {
                 actionTimer += dt;
-                // Махає правою рукою 5 секунд і знову чекає 10 секунд бездіяльності
                 if (actionTimer >= 5.0) {
                     playerAction = 'idle';
                     actionTimer = 0;
@@ -1480,18 +1479,19 @@
                 ballMesh.rotation.y += 0.01;
             }
 
-            // 2. Анімація привітання (5 сек): долоня розвернута на 180° до глядача, мах від голови в сторону
+            // 2. Анімація привітання (5 сек): пряма піднята рука вбік від голови, долоня відкрита на нас
             if (waveBlend > 0.005) {
-                // Зміщуємо фазу так, щоб мах ішов від голови в сторону (0 -> +0.42 рад назовні)
-                const outwardSwing = (1 - Math.cos(actionTimer * 7.5)) * 0.5;
+                const outwardSwing = (1 - Math.cos(actionTimer * 7.5)) * 0.5; // 0 (біля голови) -> 1 (у сторону)
                 if (rArm) {
-                    rotateBoneWorldAxis(rArm, worldAxisZ, -(2.15 - outwardSwing * 0.22) * waveBlend);
-                    rotateBoneWorldAxis(rArm, worldAxisX, -0.22 * waveBlend);
+                    // Піднімаємо плече вгору і вбік (-1.92 рад), щоб рука не торкалася голови
+                    rotateBoneWorldAxis(rArm, worldAxisZ, -(1.92 - outwardSwing * 0.18) * waveBlend);
+                    rotateBoneWorldAxis(rArm, worldAxisX, -0.18 * waveBlend);
                 }
                 if (rForeArm) {
-                    // Відводимо передпліччя від голови (0.15) назовні вбік (-0.42)
-                    rotateBoneWorldAxis(rForeArm, worldAxisZ, (0.18 - outwardSwing * 0.58) * waveBlend);
-                    rotateBoneWorldAxis(rForeArm, worldAxisY, Math.PI * waveBlend);
+                    // Мах строго назовні від голови вправо (-0.10 -> -0.62 рад), без загину всередину!
+                    rotateBoneWorldAxis(rForeArm, worldAxisZ, -(0.10 + outwardSwing * 0.52) * waveBlend);
+                    // Поворот передпліччя долонею вперед до глядача
+                    rotateBoneWorldAxis(rForeArm, worldAxisY, -1.55 * waveBlend);
                 }
                 if (spine) {
                     rotateBoneWorldAxis(spine, worldAxisZ, 0.06 * waveBlend);
@@ -1501,9 +1501,9 @@
                 }
             }
 
-            // Плавний розворот правої рукавиці на 180 градусів (Math.PI) долонею до нас
+            // Доворот самої рукавиці рівно долонею до камери
             if (rightGloveHolder.children.length > 0) {
-                rightGloveHolder.children[0].rotation.y = Math.PI * waveBlend;
+                rightGloveHolder.children[0].rotation.y = 0.65 * waveBlend;
             }
 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
 
