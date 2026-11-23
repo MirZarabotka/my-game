@@ -134,7 +134,6 @@
             bannerEl.className = 'status-banner' + (type ? ' ' + type : '');
         }
 
-        // Звуковий синтезатор удару, свистка та реву трибун
         class ArenaAudio {
             constructor() {
                 this.ctx = null;
@@ -194,14 +193,12 @@
         }
         const arenaAudio = new ArenaAudio();
 
-        // Сцена, камера (позиція за 11-метровою позначкою обличчям до воріт)
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x071326);
         scene.fog = new THREE.FogExp2(0x071326, 0.011);
 
         const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 180);
-        // М'яч на Z = -18.8, ворота на Z = -29.8 (відстань рівно 11 метрів!)
         const SPOT_Z = -18.8;
         const GOAL_Z = -29.8;
         camera.position.set(0, 1.85, SPOT_Z + 4.3);
@@ -224,7 +221,7 @@
         const stadiumLight = new THREE.DirectionalLight(0x93c5fd, 1.1);
         stadiumLight.position.set(-12, 14, -36);
         scene.add(stadiumLight);
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 2 з 6 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 2 з 6 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 3 з 6 ====================
         function createPitchTexture() {
             const canvas = document.createElement('canvas');
@@ -253,7 +250,6 @@
             ctx.arc(512, 512, 95, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Штрафний майданчик біля воріт (Z = -29.8)
             ctx.strokeRect(236, 48, 552, 210);
             ctx.strokeRect(374, 48, 276, 78);
             ctx.beginPath();
@@ -288,7 +284,6 @@
         track.position.y = -0.02;
         stadiumGroup.add(track);
 
-        // Рекламні щити за воротами та з боків
         function createBannerTexture() {
             const c = document.createElement('canvas');
             c.width = 2048; c.height = 128;
@@ -315,7 +310,6 @@
         adRight.position.set(24.2, 0.65, 0);
         stadiumGroup.add(adBack, adLeft, adRight);
 
-        // Трибуни та вболівальники позаду воріт і по боках
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
         const fanGeo = new THREE.CapsuleGeometry(0.22, 0.42, 4, 8);
         const fanMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
@@ -351,7 +345,6 @@
         if (fansInstanced.instanceColor) fansInstanced.instanceColor.needsUpdate = true;
         stadiumGroup.add(fansInstanced);
 
-        // ВЕЛИКІ ВОРОТА (стандарт 7.32м ширина x 2.44м висота) з сіткою, що реагує на удар
         const GOAL_W = 7.32;
         const GOAL_H = 2.44;
         const GOAL_D = 1.9;
@@ -377,7 +370,6 @@
         crossbar.position.set(0, GOAL_H, 0);
         crossbar.castShadow = true;
 
-        // Сітка воріт з деформованою геометрією при влучанні м'яча
         const netGeo = new THREE.BoxGeometry(GOAL_W, GOAL_H, GOAL_D, 24, 10, 6);
         const netBasePos = netGeo.attributes.position.array.slice();
         const netMat = new THREE.MeshBasicMaterial({
@@ -420,7 +412,6 @@
         ballMesh.castShadow = true;
         scene.add(ballMesh);
 
-        // Завантаження 3D-воротаря (player.glb + glove.glb)
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
@@ -464,8 +455,8 @@
                         const idx = geo.index.array;
                         const filtered = [];
                         for (let i = 0; i < idx.length; i += 3) {
-                            const cx = (pos.getX(idx[i]) + pos.getX(idx[i + 1]) + pos.getX(idx[i + 2])) / 3;
-                            if (pickLeft ? cx < midX : cx >= midX) filtered.push(idx[i], idx[i + 1], idx[i + 2]);
+                            const cx = (pos.getX(idx.at(i)) + pos.getX(idx.at(i + 1)) + pos.getX(idx.at(i + 2))) / 3;
+                            if (pickLeft ? cx < midX : cx >= midX) filtered.push(idx.at(i), idx.at(i + 1), idx.at(i + 2));
                         }
                         if (!filtered.length) return;
                         geo.setIndex(filtered);
@@ -551,8 +542,7 @@
         }, undefined, () => hideLoader());
 // ==================== КІНЕЦЬ ЧАСТИНИ 4 з 6 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 5 з 6 ====================
-        // Фізика удару, траєкторії та воротаря
-        let shotState = 'ready'; // 'ready' | 'flying' | 'resetting'
+        let shotState = 'ready';
         let shotProgress = 0;
         let shotDuration = 0.56;
 
@@ -562,7 +552,6 @@
         let shotArcY = 0.45;
         let reboundVel = new THREE.Vector3();
 
-        // Стан воротаря
         const gkState = {
             x: 0,
             y: 0,
@@ -573,7 +562,6 @@
             readyTime: 0
         };
 
-        // Хвиля на сітці воріт
         const netImpact = { active: false, x: 0, y: 1.2, amp: 0, phase: 0 };
 
         function deformGoalNet(dt) {
@@ -587,7 +575,6 @@
                 const by = netBasePos[i * 3 + 1];
                 const bz = netBasePos[i * 3 + 2];
 
-                // Деформуємо лише задню та бічні частини сітки (не передній край на штангах)
                 if (bz < GOAL_D * 0.42) {
                     const dist = Math.hypot(bx - netImpact.x, (by + GOAL_H / 2) - netImpact.y);
                     const bulge = Math.exp(-(dist * dist) / 2.2) * Math.sin(netImpact.phase) * netImpact.amp;
@@ -603,7 +590,6 @@
             }
         }
 
-        // Прицілювання свайпом або кліком
         const aimCanvas = document.getElementById('aim-canvas');
         const aimCtx = aimCanvas.getContext('2d');
         function rszAim() {
@@ -632,7 +618,6 @@
             shotsCount++;
             shotsEl.textContent = shotsCount;
 
-            // ШІ воротаря обирає напрямок стрибка
             const guessSameSide = Math.random() < 0.42;
             const diveDir = guessSameSide
                 ? Math.sign(targetX || (Math.random() - 0.5))
@@ -663,7 +648,7 @@
         window.addEventListener('pointerup', (e) => {
             if (!swipeStart) return;
             const dx = e.clientX - swipeStart.x;
-            const dy = swipeStart.y - e.clientY; // вгору = додатне
+            const dy = swipeStart.y - e.clientY;
             const swipeDist = Math.hypot(dx, dy);
 
             swipeStart = null;
@@ -673,7 +658,6 @@
             if (shotState !== 'ready') return;
 
             if (swipeDist > 35 && dy > 15) {
-                // Удар по свайпу
                 const normX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.34), -1.18, 1.18);
                 const normY = THREE.MathUtils.clamp((dy - 15) / (window.innerHeight * 0.42), 0.05, 1.15);
                 const tx = normX * (GOAL_W * 0.5);
@@ -682,7 +666,6 @@
                 const power = THREE.MathUtils.clamp(swipeDist / 260, 0.5, 1.2);
                 launchShot(tx, ty, curve, power);
             } else {
-                // Прямий клік / тап у точку воріт через Raycaster
                 const ndc = new THREE.Vector2(
                     (e.clientX / window.innerWidth) * 2 - 1,
                     -(e.clientY / window.innerHeight) * 2 + 1
@@ -705,7 +688,6 @@
             const hitCrossbar = Math.abs(shotTarget.y - GOAL_H) < 0.16 && Math.abs(shotTarget.x) <= halfW + 0.12;
             const isOut = Math.abs(shotTarget.x) > halfW - 0.05 || shotTarget.y > GOAL_H - 0.05;
 
-            // Перевірка сейву воротаря (відстань між м'ячем та центром корпусу/рук воротаря)
             const gkCenterY = gkState.y + 0.95;
             const dx = Math.abs(shotTarget.x - gkState.x);
             const dy = Math.abs(shotTarget.y - gkCenterY);
@@ -726,7 +708,6 @@
                 arenaAudio.playCrowd(false);
                 shotState = 'resetting';
             } else {
-                // ЧИСТИЙ ГОЛ!
                 goalsCount++;
                 goalsEl.textContent = goalsCount;
                 coins += 25;
@@ -794,7 +775,6 @@
             requestAnimationFrame(animate);
             const dt = Math.min(0.05, (now - lastTime) * 0.001);
             lastTime = now;
-            const t = now * 0.001;
 
             if (gkMixer) gkMixer.update(dt);
             if (gkGlovesLoaded) {
@@ -802,7 +782,6 @@
                 if (gkRightHand) gkRightHand.scale.setScalar(0.0001);
             }
 
-            // Плавне переступання воротаря на лінії до моменту удару
             if (shotState === 'ready') {
                 gkState.readyTime += dt;
                 gkState.targetX = Math.sin(gkState.readyTime * 2.6) * 0.65;
@@ -818,14 +797,12 @@
             gkContainer.position.set(gkState.x, gkState.y, GOAL_Z + 0.25);
             gkContainer.rotation.z = gkState.diveAngle;
 
-            // Піднімаємо руки воротаря в стрибку
             const rArm = gkBones['mixamorigrightarm'] || Object.values(gkBones).find(b => b.name.toLowerCase().includes('rightarm'));
             const lArm = gkBones['mixamorigleftarm'] || Object.values(gkBones).find(b => b.name.toLowerCase().includes('leftarm'));
             const diveAmt = Math.min(1, Math.abs(gkState.diveAngle) / 1.2);
             if (rArm) rArm.rotation.z = -1.2 * diveAmt;
             if (lArm) lArm.rotation.z = 1.2 * diveAmt;
 
-            // Політ м'яча
             if (shotState === 'flying') {
                 shotProgress = Math.min(1, shotProgress + dt / shotDuration);
                 const ease = 1 - Math.pow(1 - shotProgress, 1.65);
