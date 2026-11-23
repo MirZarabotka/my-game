@@ -40,11 +40,11 @@
         }
 
         .status-banner {
-            position: absolute; top: 68px; left: 50%; transform: translateX(-50%);
+            position: absolute; top: 66px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(10px);
-            padding: 9px 22px; border-radius: 20px;
+            padding: 8px 20px; border-radius: 20px;
             border: 1.5px solid #38bdf8;
-            font-weight: 800; font-size: 1rem; text-align: center;
+            font-weight: 800; font-size: 0.95rem; text-align: center;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             transition: transform 0.2s, border-color 0.2s, color 0.2s;
             white-space: nowrap;
@@ -53,11 +53,11 @@
         .status-banner.save { border-color: #ef4444; color: #f87171; }
 
         .bottom-hint {
-            position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(8px);
-            padding: 8px 18px; border-radius: 16px;
+            padding: 7px 16px; border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.14);
-            font-size: 0.8rem; font-weight: 600; color: #cbd5e1;
+            font-size: 0.78rem; font-weight: 600; color: #cbd5e1;
             text-align: center; white-space: nowrap;
         }
 
@@ -80,7 +80,7 @@
 
     <div id="loader-screen">
         <div class="spinner"></div>
-        <div>Вихід на 11-метрову позначку...</div>
+        <div>Підготовка гравців до пенальті...</div>
     </div>
 
     <div id="canvas-container"></div>
@@ -97,8 +97,8 @@
             <div class="coins-pill" id="arena-coins">💰 500</div>
         </div>
 
-        <div class="status-banner" id="status-banner">🎯 Проведи пальцем або натисни у ворота!</div>
-        <div class="bottom-hint" id="bottom-hint">👆 Свайп від м'яча або клік у кут воріт для удару</div>
+        <div class="status-banner" id="status-banner">🎯 Проведи свайп або натисни у кут воріт!</div>
+        <div class="bottom-hint" id="bottom-hint">👆 Свайп від м'яча або клік у ворота — гравець розбіжиться і проб'є</div>
     </div>
 
     <script type="importmap">
@@ -114,6 +114,7 @@
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
         import { DRACOLoader } from './libs/DRACOLoader.js';
+        import { SkeletonUtils } from './libs/SkeletonUtils.js';
         import { CATALOG } from './shop-catalog.js';
 
         if (localStorage.getItem('player_coins') === null) {
@@ -153,9 +154,9 @@
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(135, now);
-                osc.frequency.exponentialRampToValueAtTime(36, now + 0.16);
-                gain.gain.setValueAtTime(0.65, now);
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.exponentialRampToValueAtTime(34, now + 0.16);
+                gain.gain.setValueAtTime(0.7, now);
                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
@@ -168,7 +169,7 @@
                 if (!this.ctx) return;
                 if (this.ctx.state === 'suspended') this.ctx.resume();
                 const now = this.ctx.currentTime;
-                const dur = isGoal ? 2.0 : 1.1;
+                const dur = isGoal ? 2.1 : 1.1;
                 const len = Math.floor(this.ctx.sampleRate * dur);
                 const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
                 const ch = buf.getChannelData(0);
@@ -182,8 +183,8 @@
                 const gn = this.ctx.createGain();
                 src.buffer = buf;
                 flt.type = 'lowpass';
-                flt.frequency.setValueAtTime(isGoal ? 620 : 240, now);
-                gn.gain.setValueAtTime(isGoal ? 0.5 : 0.28, now);
+                flt.frequency.setValueAtTime(isGoal ? 640 : 240, now);
+                gn.gain.setValueAtTime(isGoal ? 0.52 : 0.28, now);
                 gn.gain.exponentialRampToValueAtTime(0.001, now + dur);
                 src.connect(flt);
                 flt.connect(gn);
@@ -198,16 +199,23 @@
         scene.background = new THREE.Color(0x071326);
         scene.fog = new THREE.FogExp2(0x071326, 0.011);
 
-        const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 180);
         const SPOT_Z = -18.8;
         const GOAL_Z = -29.8;
-        camera.position.set(0, 1.85, SPOT_Z + 4.3);
-        camera.lookAt(0, 1.35, GOAL_Z);
+        const GOAL_W = 7.32;
+        const GOAL_H = 2.44;
+        const GOAL_D = 1.9;
+
+        const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 180);
+        const camBasePos = new THREE.Vector3(-0.65, 1.62, SPOT_Z + 4.35);
+        const camLookTarget = new THREE.Vector3(0, 1.18, GOAL_Z);
+        camera.position.copy(camBasePos);
+        camera.lookAt(camLookTarget);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.15;
         container.appendChild(renderer.domElement);
@@ -216,13 +224,14 @@
         const sunLight = new THREE.DirectionalLight(0xffffff, 2.3);
         sunLight.position.set(10, 18, -8);
         sunLight.castShadow = true;
+        sunLight.shadow.mapSize.set(2048, 2048);
         scene.add(sunLight);
 
-        const stadiumLight = new THREE.DirectionalLight(0x93c5fd, 1.1);
-        stadiumLight.position.set(-12, 14, -36);
-        scene.add(stadiumLight);
+        const rimLight = new THREE.DirectionalLight(0x93c5fd, 1.15);
+        rimLight.position.set(-12, 14, -36);
+        scene.add(rimLight);
 // ==================== КІНЕЦЬ ЧАСТИНИ 2 з 6 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 3 з 6 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 3A з 6 ====================
         function createPitchTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
@@ -302,52 +311,103 @@
         const bannerTex = createBannerTexture();
         const adMat = new THREE.MeshBasicMaterial({ map: bannerTex });
 
-        const adBack = new THREE.Mesh(new THREE.BoxGeometry(52, 1.3, 0.25), adMat);
-        adBack.position.set(0, 0.65, -32.4);
-        const adLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.3, 66), adMat);
-        adLeft.position.set(-24.2, 0.65, 0);
-        const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.3, 66), adMat);
-        adRight.position.set(24.2, 0.65, 0);
+        const adBack = new THREE.Mesh(new THREE.BoxGeometry(52, 1.25, 0.25), adMat);
+        adBack.position.set(0, 0.62, -32.4);
+        const adLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 66), adMat);
+        adLeft.position.set(-24.2, 0.62, 0);
+        const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 66), adMat);
+        adRight.position.set(24.2, 0.62, 0);
         stadiumGroup.add(adBack, adLeft, adRight);
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 3A з 6 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 3B з 6 ====================
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
-        const fanGeo = new THREE.CapsuleGeometry(0.22, 0.42, 4, 8);
-        const fanMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
-        const fanList = [];
-        const jerseyPalette = [0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0xea580c, 0x38bdf8];
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
+        const fanPositions = [];
+        const seatPositions = [];
+        const jerseyColors = [0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0xea580c, 0x0284c7, 0x9333ea];
+        const skinColors = [0xffdbac, 0xf1c27d, 0xe0ac69, 0xc68642];
+        const hairColors = [0x1c1917, 0x451a03, 0x78350f, 0xd97706];
 
         for (let r = 0; r < 8; r++) {
-            const rowY = 1.4 + r * 0.72;
-            const zDist = 33.8 + r * 1.05;
+            const rowY = 1.35 + r * 0.68;
+            const zDist = 33.6 + r * 1.02;
             const stepW = 54 + r * 2;
-            const step = new THREE.Mesh(new THREE.BoxGeometry(stepW, 0.72, 1.08), tierMat);
-            step.position.set(0, rowY - 0.36, -zDist);
+            const step = new THREE.Mesh(new THREE.BoxGeometry(stepW, 0.68, 1.05), tierMat);
+            step.position.set(0, rowY - 0.34, -zDist);
             stadiumGroup.add(step);
 
-            for (let x = -stepW * 0.46; x <= stepW * 0.46; x += 0.95) {
-                if (Math.random() > 0.2) {
-                    fanList.push({ x, y: rowY + 0.42, z: -zDist + 0.1, phase: Math.random() * 6.28 });
+            for (let x = -stepW * 0.46; x <= stepW * 0.46; x += 0.88) {
+                if (Math.abs((Math.abs(x) % 11) - 5.5) < 0.75) continue;
+                seatPositions.push({ x, y: rowY + 0.12, z: -zDist });
+                if (Math.random() > 0.18) {
+                    fanPositions.push({ x: x + (Math.random() - 0.5) * 0.12, y: rowY, z: -zDist + 0.08, phase: Math.random() * 6.28 });
                 }
             }
         }
 
-        const fansInstanced = new THREE.InstancedMesh(fanGeo, fanMat, fanList.length);
-        const dummy = new THREE.Object3D();
-        const tmpCol = new THREE.Color();
-        fanList.forEach((f, idx) => {
-            dummy.position.set(f.x, f.y, f.z);
-            dummy.updateMatrix();
-            fansInstanced.setMatrixAt(idx, dummy.matrix);
-            tmpCol.setHex(jerseyPalette.at(idx % jerseyPalette.length));
-            fansInstanced.setColorAt(idx, tmpCol);
-        });
-        fansInstanced.instanceMatrix.needsUpdate = true;
-        if (fansInstanced.instanceColor) fansInstanced.instanceColor.needsUpdate = true;
-        stadiumGroup.add(fansInstanced);
+        const backRoof = new THREE.Mesh(new THREE.BoxGeometry(70, 0.45, 12), roofMat);
+        backRoof.position.set(0, 8.8, -38.0);
+        stadiumGroup.add(backRoof);
 
-        const GOAL_W = 7.32;
-        const GOAL_H = 2.44;
-        const GOAL_D = 1.9;
+        const dummy = new THREE.Object3D();
+        const tmpColor = new THREE.Color();
+
+        const seatsInst = new THREE.InstancedMesh(new THREE.BoxGeometry(0.48, 0.34, 0.38), new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.45 }), seatPositions.length);
+        seatPositions.forEach((s, i) => {
+            dummy.position.set(s.x, s.y, s.z);
+            dummy.updateMatrix();
+            seatsInst.setMatrixAt(i, dummy.matrix);
+        });
+        seatsInst.instanceMatrix.needsUpdate = true;
+        stadiumGroup.add(seatsInst);
+
+        const fCnt = fanPositions.length;
+        const torsosInst = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.21, 0.34, 6, 10), new THREE.MeshStandardMaterial({ roughness: 0.72 }), fCnt);
+        const headsInst = new THREE.InstancedMesh(new THREE.SphereGeometry(0.135, 10, 10), new THREE.MeshStandardMaterial({ roughness: 0.55 }), fCnt);
+        const hairsInst = new THREE.InstancedMesh(new THREE.SphereGeometry(0.142, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.58), new THREE.MeshStandardMaterial({ roughness: 0.85 }), fCnt);
+        const armsInst = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.05, 0.34, 4, 8), new THREE.MeshStandardMaterial({ roughness: 0.55 }), fCnt * 2);
+
+        fanPositions.forEach((f, i) => {
+            dummy.position.set(f.x, f.y + 0.34, f.z);
+            dummy.scale.set(1.15, 1.0, 0.68);
+            dummy.updateMatrix();
+            torsosInst.setMatrixAt(i, dummy.matrix);
+            tmpColor.setHex(jerseyColors.at(i % jerseyColors.length));
+            torsosInst.setColorAt(i, tmpColor);
+
+            dummy.position.set(f.x, f.y + 0.76, f.z);
+            dummy.scale.set(0.95, 1.08, 0.98);
+            dummy.updateMatrix();
+            headsInst.setMatrixAt(i, dummy.matrix);
+            tmpColor.setHex(skinColors.at(i % skinColors.length));
+            headsInst.setColorAt(i, tmpColor);
+
+            dummy.position.set(f.x, f.y + 0.775, f.z);
+            dummy.scale.set(0.98, 1.05, 1.02);
+            dummy.updateMatrix();
+            hairsInst.setMatrixAt(i, dummy.matrix);
+            tmpColor.setHex(hairColors.at(i % hairColors.length));
+            hairsInst.setColorAt(i, tmpColor);
+
+            dummy.scale.set(1, 1, 1);
+            dummy.position.set(f.x - 0.27, f.y + 0.36, f.z);
+            dummy.rotation.set(0, 0, 0.14);
+            dummy.updateMatrix();
+            armsInst.setMatrixAt(i * 2, dummy.matrix);
+            armsInst.setColorAt(i * 2, tmpColor.setHex(skinColors.at(i % skinColors.length)));
+
+            dummy.position.set(f.x + 0.27, f.y + 0.36, f.z);
+            dummy.rotation.set(0, 0, -0.14);
+            dummy.updateMatrix();
+            armsInst.setMatrixAt(i * 2 + 1, dummy.matrix);
+            armsInst.setColorAt(i * 2 + 1, tmpColor);
+            dummy.rotation.set(0, 0, 0);
+        });
+        [torsosInst, headsInst, hairsInst, armsInst].forEach(m => {
+            m.instanceMatrix.needsUpdate = true;
+            if (m.instanceColor) m.instanceColor.needsUpdate = true;
+            stadiumGroup.add(m);
+        });
 
         const goalGroup = new THREE.Group();
         goalGroup.position.set(0, 0, GOAL_Z);
@@ -370,20 +430,40 @@
         crossbar.position.set(0, GOAL_H, 0);
         crossbar.castShadow = true;
 
-        const netGeo = new THREE.BoxGeometry(GOAL_W, GOAL_H, GOAL_D, 24, 10, 6);
-        const netBasePos = netGeo.attributes.position.array.slice();
-        const netMat = new THREE.MeshBasicMaterial({
-            color: 0xf1f5f9,
-            wireframe: true,
-            transparent: true,
-            opacity: 0.42
-        });
-        const netMesh = new THREE.Mesh(netGeo, netMat);
-        netMesh.position.set(0, GOAL_H / 2, -GOAL_D / 2);
+        const netTexCanvas = document.createElement('canvas');
+        netTexCanvas.width = 64; netTexCanvas.height = 64;
+        const nctx = netTexCanvas.getContext('2d');
+        nctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        nctx.lineWidth = 3;
+        nctx.strokeRect(0, 0, 64, 64);
+        const netTex = new THREE.CanvasTexture(netTexCanvas);
+        netTex.wrapS = THREE.RepeatWrapping;
+        netTex.wrapT = THREE.RepeatWrapping;
+        netTex.repeat.set(36, 12);
 
-        goalGroup.add(leftPost, rightPost, crossbar, netMesh);
-// ==================== КІНЕЦЬ ЧАСТИНИ 3 з 6 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 4 з 6 ====================
+        const netPlaneMat = new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false });
+        const backNetGeo = new THREE.PlaneGeometry(GOAL_W, GOAL_H, 24, 10);
+        const backNetBase = backNetGeo.attributes.position.array.slice();
+        const backNet = new THREE.Mesh(backNetGeo, netPlaneMat);
+        backNet.position.set(0, GOAL_H / 2, -GOAL_D);
+
+        const topNet = new THREE.Mesh(new THREE.PlaneGeometry(GOAL_W, GOAL_D), netPlaneMat);
+        topNet.rotation.x = Math.PI / 2;
+        topNet.position.set(0, GOAL_H, -GOAL_D / 2);
+
+        const sideNetMat = new THREE.MeshBasicMaterial({ map: netTex.clone(), transparent: true, side: THREE.DoubleSide, depthWrite: false });
+        sideNetMat.map.repeat.set(10, 12);
+        const leftNet = new THREE.Mesh(new THREE.PlaneGeometry(GOAL_D, GOAL_H), sideNetMat);
+        leftNet.rotation.y = Math.PI / 2;
+        leftNet.position.set(-GOAL_W / 2, GOAL_H / 2, -GOAL_D / 2);
+
+        const rightNet = new THREE.Mesh(new THREE.PlaneGeometry(GOAL_D, GOAL_H), sideNetMat);
+        rightNet.rotation.y = -Math.PI / 2;
+        rightNet.position.set(GOAL_W / 2, GOAL_H / 2, -GOAL_D / 2);
+
+        goalGroup.add(leftPost, rightPost, crossbar, backNet, topNet, leftNet, rightNet);
+// ==================== КІНЕЦЬ ЧАСТИНИ 3B з 6 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 4A з 6 ====================
         function createBallTexture(c1, c2) {
             const c = document.createElement('canvas');
             c.width = 256; c.height = 128;
@@ -395,6 +475,40 @@
                     ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fill();
                 }
             }
+            const tex = new THREE.CanvasTexture(c);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        function createJerseyTexture(jersey) {
+            const c = document.createElement('canvas');
+            c.width = 512; c.height = 512;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = jersey.c1; ctx.fillRect(0, 0, 512, 512);
+            ctx.fillStyle = jersey.c2;
+            if (jersey.pattern === 'stripes') { for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512); }
+            else if (jersey.pattern === 'hoops') { for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22); }
+            else if (jersey.pattern === 'half') { ctx.fillRect(105, 0, 60, 512); ctx.fillRect(265, 0, 85, 512); }
+            else if (jersey.pattern === 'centerBand') { ctx.fillRect(85, 0, 45, 512); ctx.fillRect(245, 0, 45, 512); }
+            else if (jersey.pattern === 'chestBand') { ctx.fillRect(0, 160, 512, 130); }
+            else if (jersey.pattern === 'sash') { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512); ctx.closePath(); ctx.fill(); }
+            else if (jersey.pattern === 'sleeves') { ctx.fillRect(203, 0, 22, 512); ctx.fillRect(398, 0, 114, 512); }
+            const tex = new THREE.CanvasTexture(c);
+            tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        function createBackNumberTexture(num, numCol) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 256;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = numCol;
+            ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
+            ctx.lineWidth = 10;
+            ctx.font = '900 165px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.strokeText(num, 128, 128);
+            ctx.fillText(num, 128, 128);
             const tex = new THREE.CanvasTexture(c);
             tex.colorSpace = THREE.SRGBColorSpace;
             return tex;
@@ -412,21 +526,27 @@
         ballMesh.castShadow = true;
         scene.add(ballMesh);
 
-        const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('./libs/');
-        const loader = new GLTFLoader();
-        loader.setDRACOLoader(dracoLoader);
+        const ballShadow = new THREE.Mesh(
+            new THREE.CircleGeometry(0.18, 16),
+            new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.42 })
+        );
+        ballShadow.rotation.x = -Math.PI / 2;
+        ballShadow.position.set(0, 0.01, SPOT_Z);
+        scene.add(ballShadow);
+
+        const strikerContainer = new THREE.Group();
+        const STRIKER_START = new THREE.Vector3(-0.75, 0, SPOT_Z + 2.35);
+        strikerContainer.position.copy(STRIKER_START);
+        strikerContainer.rotation.y = Math.PI - 0.25;
+        scene.add(strikerContainer);
 
         const gkContainer = new THREE.Group();
-        gkContainer.position.set(0, 0, GOAL_Z + 0.25);
+        gkContainer.position.set(0, 0, GOAL_Z + 0.22);
         scene.add(gkContainer);
 
-        let gkMixer = null;
+        const strikerBones = {};
         const gkBones = {};
-        let gkLeftHand = null;
-        let gkRightHand = null;
-        let gkLeftForeArm = null;
-        let gkRightForeArm = null;
+        let gkLeftHand = null, gkRightHand = null, gkLeftForeArm = null, gkRightForeArm = null;
         let gkGlovesLoaded = false;
 
         function hideLoader() {
@@ -437,7 +557,8 @@
             }
         }
         setTimeout(hideLoader, 2500);
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 4A з 6 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 4B з 6 ====================
         function mountGKGloves(gloveScene, gloveColorHex) {
             gloveScene.updateMatrixWorld(true);
             const fullBox = new THREE.Box3().setFromObject(gloveScene);
@@ -498,14 +619,61 @@
             gkGlovesLoaded = true;
         }
 
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('./libs/');
+        const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+
         loader.load('player.glb', (gltf) => {
-            const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
-            if (!model) { hideLoader(); return; }
+            const baseScene = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
+            if (!baseScene) { hideLoader(); return; }
 
+            const strikerModel = SkeletonUtils.clone(baseScene);
+            const jId = localStorage.getItem('eq_jerseys') || 'j1';
+            const sId = localStorage.getItem('eq_shorts') || 's1';
+            const bId = localStorage.getItem('eq_boots') || 'b1';
             const gId = localStorage.getItem('eq_gloves') || 'g1';
-            const gloveItem = CATALOG.gloves.find(x => x.id === gId) || CATALOG.gloves.at(0);
+            const num = localStorage.getItem('eq_number') || '10';
+            const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
 
-            model.traverse((child) => {
+            const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
+            const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
+            const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
+            const gloveItem = CATALOG.gloves.find(x => x.id === gId) || CATALOG.gloves.at(0);
+            const jerseyTex = createJerseyTexture(jersey);
+
+            let spineBone = null;
+            strikerModel.traverse((child) => {
+                if (child.isBone && child.name) {
+                    const n = child.name.toLowerCase();
+                    strikerBones[n] = child;
+                    if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) spineBone = child;
+                }
+                if (!child.isMesh || !child.material) return;
+                child.castShadow = true;
+                const name = (child.name || '').toLowerCase();
+                if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
+                    child.material = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.7 });
+                } else if (name.includes('short') || name.includes('pant')) {
+                    child.material = new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.75 });
+                } else if (name.includes('shoe') || name.includes('boot')) {
+                    child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
+                }
+            });
+
+            const numMesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(34, 34),
+                new THREE.MeshBasicMaterial({ map: createBackNumberTexture(num, numCol), transparent: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4 })
+            );
+            if (spineBone) {
+                numMesh.position.set(0, 1.5, -11.3);
+                numMesh.rotation.set(0, Math.PI, 0);
+                spineBone.add(numMesh);
+            }
+            strikerContainer.add(strikerModel);
+
+            const gkModel = SkeletonUtils.clone(baseScene);
+            gkModel.traverse((child) => {
                 if (child.isBone && child.name) {
                     const n = child.name.toLowerCase();
                     gkBones[n] = child;
@@ -525,24 +693,19 @@
                     child.material = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4 });
                 }
             });
-
-            gkContainer.add(model);
+            gkContainer.add(gkModel);
 
             loader.load('./glove.glb?v=3', (gGltf) => {
                 const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
                 if (gs) mountGKGloves(gs, gloveItem.c1);
             });
 
-            const anim = gltf.animations && gltf.animations.at(0);
-            if (anim) {
-                gkMixer = new THREE.AnimationMixer(model);
-                gkMixer.clipAction(anim).play();
-            }
             hideLoader();
         }, undefined, () => hideLoader());
-// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 6 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 4B з 6 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 5 з 6 ====================
         let shotState = 'ready';
+        let stateTimer = 0;
         let shotProgress = 0;
         let shotDuration = 0.56;
 
@@ -550,16 +713,20 @@
         const shotTarget = new THREE.Vector3(0, 1.2, GOAL_Z);
         let shotCurveX = 0;
         let shotArcY = 0.45;
+        let shotPower = 1.0;
         let reboundVel = new THREE.Vector3();
 
         const gkState = {
             x: 0,
             y: 0,
             diveAngle: 0,
+            diveDir: 0,
+            isHigh: false,
             targetX: 0,
             targetY: 0,
             targetDive: 0,
-            readyTime: 0
+            readyTime: 0,
+            fallen: false
         };
 
         const netImpact = { active: false, x: 0, y: 1.2, amp: 0, phase: 0 };
@@ -569,23 +736,19 @@
             netImpact.phase += dt * 16;
             netImpact.amp *= Math.pow(0.18, dt);
 
-            const pos = netGeo.attributes.position;
+            const pos = backNetGeo.attributes.position;
             for (let i = 0; i < pos.count; i++) {
-                const bx = netBasePos[i * 3];
-                const by = netBasePos[i * 3 + 1];
-                const bz = netBasePos[i * 3 + 2];
-
-                if (bz < GOAL_D * 0.42) {
-                    const dist = Math.hypot(bx - netImpact.x, (by + GOAL_H / 2) - netImpact.y);
-                    const bulge = Math.exp(-(dist * dist) / 2.2) * Math.sin(netImpact.phase) * netImpact.amp;
-                    pos.setZ(i, bz - Math.abs(bulge) * 0.75);
-                }
+                const bx = backNetBase[i * 3];
+                const by = backNetBase[i * 3 + 1];
+                const dist = Math.hypot(bx - netImpact.x, (by + GOAL_H / 2) - netImpact.y);
+                const bulge = Math.exp(-(dist * dist) / 2.2) * Math.sin(netImpact.phase) * netImpact.amp;
+                pos.setZ(i, -Math.abs(bulge) * 0.85);
             }
             pos.needsUpdate = true;
 
             if (netImpact.amp < 0.01) {
                 netImpact.active = false;
-                pos.array.set(netBasePos);
+                pos.array.set(backNetBase);
                 pos.needsUpdate = true;
             }
         }
@@ -603,34 +766,43 @@
         const raycaster = new THREE.Raycaster();
         const goalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -GOAL_Z);
 
-        function launchShot(targetX, targetY, curveX = 0, power = 1.0) {
+        function startPenaltyRunup(targetX, targetY, curveX = 0, power = 1.0) {
             if (shotState !== 'ready') return;
-            arenaAudio.playKick();
-
-            shotState = 'flying';
-            shotProgress = 0;
-            shotDuration = THREE.MathUtils.clamp(0.66 - power * 0.14, 0.44, 0.68);
-            shotStart.set(0, BALL_R, SPOT_Z);
+            shotState = 'runup';
+            stateTimer = 0;
             shotTarget.set(targetX, Math.max(BALL_R, targetY), GOAL_Z - 0.35);
             shotCurveX = curveX;
-            shotArcY = 0.25 + (1 - Math.min(1, targetY / GOAL_H)) * 0.35;
+            shotPower = power;
+            setBanner('🏃 Розбіг...');
+        }
+
+        function executeKick() {
+            arenaAudio.playKick();
+            shotState = 'flying';
+            shotProgress = 0;
+            shotDuration = THREE.MathUtils.clamp(0.64 - shotPower * 0.14, 0.44, 0.66);
+            shotStart.set(0, BALL_R, SPOT_Z);
+            shotArcY = 0.25 + (1 - Math.min(1, shotTarget.y / GOAL_H)) * 0.35;
 
             shotsCount++;
             shotsEl.textContent = shotsCount;
 
             const guessSameSide = Math.random() < 0.42;
-            const diveDir = guessSameSide
-                ? Math.sign(targetX || (Math.random() - 0.5))
+            const dir = guessSameSide
+                ? Math.sign(shotTarget.x || (Math.random() - 0.5))
                 : (Math.random() < 0.5 ? -1 : 1);
 
-            const maxReachX = GOAL_W * 0.44;
-            gkState.targetX = guessSameSide
-                ? THREE.MathUtils.clamp(targetX * 0.88, -maxReachX, maxReachX)
-                : diveDir * (1.6 + Math.random() * 1.5);
+            gkState.diveDir = dir;
+            gkState.isHigh = shotTarget.y > 1.25;
+            gkState.fallen = false;
 
-            const isHighShot = targetY > 1.35;
-            gkState.targetY = isHighShot ? 0.62 : 0.12;
-            gkState.targetDive = -diveDir * (isHighShot ? 1.28 : 1.42);
+            const maxReachX = GOAL_W * 0.43;
+            gkState.targetX = guessSameSide
+                ? THREE.MathUtils.clamp(shotTarget.x * 0.88, -maxReachX, maxReachX)
+                : dir * (1.7 + Math.random() * 1.4);
+
+            gkState.targetY = gkState.isHigh ? 0.55 : 0.08;
+            gkState.targetDive = -dir * (gkState.isHigh ? 1.32 : 1.48);
         }
 
         container.addEventListener('pointerdown', (e) => {
@@ -664,7 +836,7 @@
                 const ty = BALL_R + normY * (GOAL_H - BALL_R);
                 const curve = -normX * 0.55;
                 const power = THREE.MathUtils.clamp(swipeDist / 260, 0.5, 1.2);
-                launchShot(tx, ty, curve, power);
+                startPenaltyRunup(tx, ty, curve, power);
             } else {
                 const ndc = new THREE.Vector2(
                     (e.clientX / window.innerWidth) * 2 - 1,
@@ -675,12 +847,12 @@
                 if (raycaster.ray.intersectPlane(goalPlane, hit)) {
                     const tx = THREE.MathUtils.clamp(hit.x, -GOAL_W * 0.56, GOAL_W * 0.56);
                     const ty = THREE.MathUtils.clamp(hit.y, BALL_R, GOAL_H * 1.12);
-                    launchShot(tx, ty, -tx * 0.12, 0.95);
+                    startPenaltyRunup(tx, ty, -tx * 0.12, 0.95);
                 }
             }
         });
 // ==================== КІНЕЦЬ ЧАСТИНИ 5 з 6 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 6 з 6 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 6A з 6 ====================
         function evaluateShotResult() {
             const halfW = GOAL_W / 2;
             const hitLeftPost = Math.abs(shotTarget.x + halfW) < 0.16 && shotTarget.y <= GOAL_H + 0.12;
@@ -688,10 +860,15 @@
             const hitCrossbar = Math.abs(shotTarget.y - GOAL_H) < 0.16 && Math.abs(shotTarget.x) <= halfW + 0.12;
             const isOut = Math.abs(shotTarget.x) > halfW - 0.05 || shotTarget.y > GOAL_H - 0.05;
 
-            const gkCenterY = gkState.y + 0.95;
-            const dx = Math.abs(shotTarget.x - gkState.x);
+            const gkReachX = gkState.x + gkState.diveDir * 0.45;
+            const gkCenterY = gkState.y + (gkState.isHigh ? 1.15 : 0.65);
+            const dx = Math.abs(shotTarget.x - gkReachX);
             const dy = Math.abs(shotTarget.y - gkCenterY);
-            const isSaved = !isOut && !hitLeftPost && !hitRightPost && !hitCrossbar && (dx < 0.88 && dy < 0.95);
+            const isSaved = !isOut && !hitLeftPost && !hitRightPost && !hitCrossbar && (dx < 0.92 && dy < 0.95);
+
+            gkState.fallen = true;
+            gkState.targetY = 0.05;
+            gkState.targetDive = -gkState.diveDir * 1.54;
 
             if (hitLeftPost || hitRightPost || hitCrossbar) {
                 setBanner('💥 ШТАНГА / ПЕРЕКЛАДИНА!', 'save');
@@ -726,18 +903,29 @@
                 shotState = 'in_net';
             }
 
-            setTimeout(resetPenalty, 1650);
+            setTimeout(resetPenalty, 1850);
         }
 
         function resetPenalty() {
             shotState = 'ready';
+            stateTimer = 0;
             shotProgress = 0;
+
             ballMesh.position.set(0, BALL_R, SPOT_Z);
             ballMesh.rotation.set(0, 0, 0);
+            ballShadow.position.set(0, 0.01, SPOT_Z);
 
+            strikerContainer.position.copy(STRIKER_START);
+            strikerContainer.rotation.y = Math.PI - 0.25;
+
+            gkState.fallen = false;
+            gkState.diveDir = 0;
             gkState.targetX = 0;
             gkState.targetY = 0;
             gkState.targetDive = 0;
+
+            camera.position.copy(camBasePos);
+            camera.lookAt(camLookTarget);
             setBanner('🎯 Твій удар! Проведи або натисни у ворота');
         }
 
@@ -762,6 +950,106 @@
             aimCtx.arc(swipeCurr.x, swipeCurr.y, 9, 0, Math.PI * 2);
             aimCtx.fill();
         }
+// ==================== КІНЕЦЬ ЧАСТИНИ 6A з 6 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 6B з 6 ====================
+        const getBone = (map, part) => {
+            const key = Object.keys(map).find(k => k.includes(part));
+            return key ? map[key] : null;
+        };
+
+        function updateStrikerAnim(dt) {
+            const rUpLeg = getBone(strikerBones, 'rightupleg');
+            const rLeg = getBone(strikerBones, 'rightleg');
+            const lUpLeg = getBone(strikerBones, 'leftupleg');
+            const lLeg = getBone(strikerBones, 'leftleg');
+            const spine = getBone(strikerBones, 'spine');
+            const rArm = getBone(strikerBones, 'rightarm');
+            const lArm = getBone(strikerBones, 'leftarm');
+
+            if (shotState === 'runup') {
+                stateTimer += dt;
+                const runDur = 0.52;
+                const p = Math.min(1, stateTimer / runDur);
+                const kickTarget = new THREE.Vector3(-0.22, 0, SPOT_Z + 0.32);
+                strikerContainer.position.lerpVectors(STRIKER_START, kickTarget, p);
+                strikerContainer.rotation.y = THREE.MathUtils.lerp(Math.PI - 0.25, Math.PI - 0.08, p);
+
+                const stride = Math.sin(p * Math.PI * 3.5);
+                const kickSwing = p > 0.72 ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
+
+                if (rUpLeg) rUpLeg.rotation.x = stride * 0.55 - kickSwing * 1.15;
+                if (rLeg) rLeg.rotation.x = Math.max(0, -stride * 0.65) + (p > 0.72 ? (1 - kickSwing) * 0.85 : 0);
+                if (lUpLeg) lUpLeg.rotation.x = -stride * 0.55 + kickSwing * 0.25;
+                if (lLeg) lLeg.rotation.x = Math.max(0, stride * 0.65);
+                if (spine) spine.rotation.z = -kickSwing * 0.16;
+                if (rArm) rArm.rotation.z = -0.35 - kickSwing * 0.45;
+                if (lArm) lArm.rotation.z = 0.35 + kickSwing * 0.55;
+
+                if (p >= 1) {
+                    executeKick();
+                }
+            } else {
+                [rUpLeg, rLeg, lUpLeg, lLeg].forEach(b => { if (b) b.rotation.x *= 0.85; });
+                if (spine) spine.rotation.z *= 0.85;
+                if (rArm) rArm.rotation.z = THREE.MathUtils.lerp(rArm.rotation.z, -0.14, 0.15);
+                if (lArm) lArm.rotation.z = THREE.MathUtils.lerp(lArm.rotation.z, 0.14, 0.15);
+            }
+        }
+
+        function updateGoalkeeperAnim(dt) {
+            if (gkGlovesLoaded) {
+                if (gkLeftHand) gkLeftHand.scale.setScalar(0.0001);
+                if (gkRightHand) gkRightHand.scale.setScalar(0.0001);
+            }
+
+            if (shotState === 'ready' || shotState === 'runup') {
+                gkState.readyTime += dt * (shotState === 'runup' ? 1.8 : 1.0);
+                gkState.targetX = Math.sin(gkState.readyTime * 2.8) * 0.55;
+                gkState.targetY = Math.abs(Math.sin(gkState.readyTime * 5.6)) * 0.04;
+                gkState.targetDive = Math.sin(gkState.readyTime * 2.8) * 0.06;
+            }
+
+            const speed = (shotState === 'ready' || shotState === 'runup') ? 6.0 : (gkState.fallen ? 5.5 : 10.5);
+            const lerpF = Math.min(1, dt * speed);
+            gkState.x += (gkState.targetX - gkState.x) * lerpF;
+            gkState.y += (gkState.targetY - gkState.y) * lerpF;
+            gkState.diveAngle += (gkState.targetDive - gkState.diveAngle) * lerpF;
+
+            const diveAmt = Math.min(1, Math.abs(gkState.diveAngle) / 1.35);
+            const pivotOffsetY = diveAmt * 0.62;
+            gkContainer.position.set(gkState.x, gkState.y + pivotOffsetY, GOAL_Z + 0.25);
+            gkContainer.rotation.z = gkState.diveAngle;
+            gkContainer.rotation.x = diveAmt * 0.12;
+
+            const rArm = getBone(gkBones, 'rightarm');
+            const lArm = getBone(gkBones, 'leftarm');
+            const rForeArm = getBone(gkBones, 'rightforearm');
+            const lForeArm = getBone(gkBones, 'leftforearm');
+            const rUpLeg = getBone(gkBones, 'rightupleg');
+            const lUpLeg = getBone(gkBones, 'leftupleg');
+            const rLeg = getBone(gkBones, 'rightleg');
+            const lLeg = getBone(gkBones, 'leftleg');
+            const spine = getBone(gkBones, 'spine');
+
+            if (rArm) {
+                rArm.rotation.z = -0.22 - diveAmt * 2.55;
+                rArm.rotation.x = -diveAmt * 0.25;
+            }
+            if (lArm) {
+                lArm.rotation.z = 0.22 + diveAmt * 2.55;
+                lArm.rotation.x = -diveAmt * 0.25;
+            }
+            if (rForeArm) rForeArm.rotation.z = 0.12 * (1 - diveAmt);
+            if (lForeArm) lForeArm.rotation.z = -0.12 * (1 - diveAmt);
+
+            const crouch = (1 - diveAmt) * 0.24;
+            const trailBend = diveAmt * (gkState.fallen ? 0.55 : 0.35);
+            if (rUpLeg) rUpLeg.rotation.x = -crouch - (gkState.diveDir < 0 ? trailBend : 0);
+            if (lUpLeg) lUpLeg.rotation.x = -crouch - (gkState.diveDir > 0 ? trailBend : 0);
+            if (rLeg) rLeg.rotation.x = crouch * 1.8 + (gkState.diveDir < 0 ? trailBend * 1.3 : 0);
+            if (lLeg) lLeg.rotation.x = crouch * 1.8 + (gkState.diveDir > 0 ? trailBend * 1.3 : 0);
+            if (spine) spine.rotation.x = crouch * 0.6;
+        }
 
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
@@ -776,44 +1064,23 @@
             const dt = Math.min(0.05, (now - lastTime) * 0.001);
             lastTime = now;
 
-            if (gkMixer) gkMixer.update(dt);
-            if (gkGlovesLoaded) {
-                if (gkLeftHand) gkLeftHand.scale.setScalar(0.0001);
-                if (gkRightHand) gkRightHand.scale.setScalar(0.0001);
-            }
-
-            if (shotState === 'ready') {
-                gkState.readyTime += dt;
-                gkState.targetX = Math.sin(gkState.readyTime * 2.6) * 0.65;
-                gkState.targetY = Math.abs(Math.sin(gkState.readyTime * 5.2)) * 0.05;
-                gkState.targetDive = Math.sin(gkState.readyTime * 2.6) * 0.08;
-            }
-
-            const moveLerp = Math.min(1, dt * (shotState === 'ready' ? 5 : 8.5));
-            gkState.x += (gkState.targetX - gkState.x) * moveLerp;
-            gkState.y += (gkState.targetY - gkState.y) * moveLerp;
-            gkState.diveAngle += (gkState.targetDive - gkState.diveAngle) * moveLerp;
-
-            gkContainer.position.set(gkState.x, gkState.y, GOAL_Z + 0.25);
-            gkContainer.rotation.z = gkState.diveAngle;
-
-            const rArm = gkBones['mixamorigrightarm'] || Object.values(gkBones).find(b => b.name.toLowerCase().includes('rightarm'));
-            const lArm = gkBones['mixamorigleftarm'] || Object.values(gkBones).find(b => b.name.toLowerCase().includes('leftarm'));
-            const diveAmt = Math.min(1, Math.abs(gkState.diveAngle) / 1.2);
-            if (rArm) rArm.rotation.z = -1.2 * diveAmt;
-            if (lArm) lArm.rotation.z = 1.2 * diveAmt;
+            updateStrikerAnim(dt);
+            updateGoalkeeperAnim(dt);
 
             if (shotState === 'flying') {
                 shotProgress = Math.min(1, shotProgress + dt / shotDuration);
-                const ease = 1 - Math.pow(1 - shotProgress, 1.65);
+                const ease = 1 - Math.pow(1 - shotProgress, 1.55);
 
                 const curX = THREE.MathUtils.lerp(shotStart.x, shotTarget.x, ease) + Math.sin(shotProgress * Math.PI) * shotCurveX;
                 const curY = THREE.MathUtils.lerp(shotStart.y, shotTarget.y, ease) + Math.sin(shotProgress * Math.PI) * shotArcY;
                 const curZ = THREE.MathUtils.lerp(shotStart.z, shotTarget.z, ease);
 
                 ballMesh.position.set(curX, curY, curZ);
-                ballMesh.rotation.x -= dt * 18;
-                ballMesh.rotation.y += shotCurveX * dt * 12;
+                ballMesh.rotation.x -= dt * 20;
+                ballMesh.rotation.y += shotCurveX * dt * 14;
+
+                camera.position.z = THREE.MathUtils.lerp(camera.position.z, SPOT_Z + 3.4, dt * 3);
+                camera.lookAt(curX * 0.25, 1.25, GOAL_Z);
 
                 if (shotProgress >= 1) {
                     evaluateShotResult();
@@ -834,6 +1101,10 @@
                 }
             }
 
+            ballShadow.position.set(ballMesh.position.x, 0.01, ballMesh.position.z);
+            const shScale = Math.max(0.35, 1 - (ballMesh.position.y - BALL_R) * 0.28);
+            ballShadow.scale.setScalar(shScale);
+
             deformGoalNet(dt);
             bannerTex.offset.x += dt * 0.08;
             drawSwipeGuide();
@@ -844,4 +1115,4 @@
     </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 6 з 6 ==================== -->
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 6B з 6 ==================== -->
