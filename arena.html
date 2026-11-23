@@ -1,0 +1,870 @@
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 6 ==================== -->
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Penalty 3D — Арена Пенальті</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { overflow: hidden; background: #071326; color: #ffffff; touch-action: none; }
+        #canvas-container { width: 100vw; height: 100vh; display: block; cursor: crosshair; }
+
+        .ui-layer { position: absolute; inset: 0; pointer-events: none; }
+
+        .top-bar {
+            position: absolute; top: 14px; left: 14px; right: 14px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        }
+        .home-btn {
+            pointer-events: auto; text-decoration: none;
+            background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(10px);
+            color: #f8fafc; padding: 9px 14px; border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-weight: 800; font-size: 0.85rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+        }
+        .score-pill {
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px);
+            padding: 8px 16px; border-radius: 24px;
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            font-weight: 800; font-size: 0.92rem; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+        }
+        .coins-pill {
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px);
+            color: #facc15; padding: 8px 15px; border-radius: 24px;
+            border: 1px solid rgba(250, 204, 21, 0.45);
+            font-weight: 800; font-size: 0.95rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+        }
+
+        .status-banner {
+            position: absolute; top: 68px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(10px);
+            padding: 9px 22px; border-radius: 20px;
+            border: 1.5px solid #38bdf8;
+            font-weight: 800; font-size: 1rem; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transition: transform 0.2s, border-color 0.2s, color 0.2s;
+            white-space: nowrap;
+        }
+        .status-banner.goal { border-color: #22c55e; color: #4ade80; transform: translateX(-50%) scale(1.08); }
+        .status-banner.save { border-color: #ef4444; color: #f87171; }
+
+        .bottom-hint {
+            position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(8px);
+            padding: 8px 18px; border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            font-size: 0.8rem; font-weight: 600; color: #cbd5e1;
+            text-align: center; white-space: nowrap;
+        }
+
+        #aim-canvas { position: absolute; inset: 0; pointer-events: none; }
+
+        #loader-screen {
+            position: absolute; inset: 0; background: #0f172a;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 50; transition: opacity 0.35s;
+        }
+        .spinner {
+            width: 46px; height: 46px;
+            border: 4px solid rgba(56, 189, 248, 0.2); border-top-color: #38bdf8;
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 14px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loader-screen">
+        <div class="spinner"></div>
+        <div>Вихід на 11-метрову позначку...</div>
+    </div>
+
+    <div id="canvas-container"></div>
+    <canvas id="aim-canvas"></canvas>
+
+    <div class="ui-layer">
+        <div class="top-bar">
+            <a href="index.html" class="home-btn">🏠 Меню</a>
+            <div class="score-pill">
+                <span style="color:#4ade80">⚽ Голи: <b id="goals-cnt">0</b></span>
+                <span style="color:#94a3b8">|</span>
+                <span>Удари: <b id="shots-cnt">0</b></span>
+            </div>
+            <div class="coins-pill" id="arena-coins">💰 500</div>
+        </div>
+
+        <div class="status-banner" id="status-banner">🎯 Проведи пальцем або натисни у ворота!</div>
+        <div class="bottom-hint" id="bottom-hint">👆 Свайп від м'яча або клік у кут воріт для удару</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./libs/three.module.js"
+            }
+        }
+    </script>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 6 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 6 ==================== -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from './libs/GLTFLoader.js';
+        import { DRACOLoader } from './libs/DRACOLoader.js';
+        import { CATALOG } from './shop-catalog.js';
+
+        if (localStorage.getItem('player_coins') === null) {
+            localStorage.setItem('player_coins', '500');
+        }
+        let coins = Number(localStorage.getItem('player_coins') || 500);
+        let goalsCount = 0;
+        let shotsCount = 0;
+
+        const coinsEl = document.getElementById('arena-coins');
+        const goalsEl = document.getElementById('goals-cnt');
+        const shotsEl = document.getElementById('shots-cnt');
+        const bannerEl = document.getElementById('status-banner');
+        coinsEl.textContent = `💰 ${coins}`;
+
+        function setBanner(text, type = '') {
+            bannerEl.textContent = text;
+            bannerEl.className = 'status-banner' + (type ? ' ' + type : '');
+        }
+
+        // Звуковий синтезатор удару, свистка та реву трибун
+        class ArenaAudio {
+            constructor() {
+                this.ctx = null;
+                this.enabled = localStorage.getItem('stadium_sound') !== 'off';
+            }
+            init() {
+                if (this.ctx || !this.enabled) return;
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) this.ctx = new AudioCtx();
+            }
+            playKick() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(135, now);
+                osc.frequency.exponentialRampToValueAtTime(36, now + 0.16);
+                gain.gain.setValueAtTime(0.65, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            }
+            playCrowd(isGoal) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const now = this.ctx.currentTime;
+                const dur = isGoal ? 2.0 : 1.1;
+                const len = Math.floor(this.ctx.sampleRate * dur);
+                const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+                const ch = buf.getChannelData(0);
+                let last = 0;
+                for (let i = 0; i < len; i++) {
+                    last = (last + 0.04 * (Math.random() * 2 - 1)) / 1.04;
+                    ch[i] = last * 3.8 * Math.sin(Math.PI * (i / len));
+                }
+                const src = this.ctx.createBufferSource();
+                const flt = this.ctx.createBiquadFilter();
+                const gn = this.ctx.createGain();
+                src.buffer = buf;
+                flt.type = 'lowpass';
+                flt.frequency.setValueAtTime(isGoal ? 620 : 240, now);
+                gn.gain.setValueAtTime(isGoal ? 0.5 : 0.28, now);
+                gn.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                src.connect(flt);
+                flt.connect(gn);
+                gn.connect(this.ctx.destination);
+                src.start(now);
+            }
+        }
+        const arenaAudio = new ArenaAudio();
+
+        // Сцена, камера (позиція за 11-метровою позначкою обличчям до воріт)
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x071326);
+        scene.fog = new THREE.FogExp2(0x071326, 0.011);
+
+        const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.1, 180);
+        // М'яч на Z = -18.8, ворота на Z = -29.8 (відстань рівно 11 метрів!)
+        const SPOT_Z = -18.8;
+        const GOAL_Z = -29.8;
+        camera.position.set(0, 1.85, SPOT_Z + 4.3);
+        camera.lookAt(0, 1.35, GOAL_Z);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xdbeafe, 1.1));
+        const sunLight = new THREE.DirectionalLight(0xffffff, 2.3);
+        sunLight.position.set(10, 18, -8);
+        sunLight.castShadow = true;
+        scene.add(sunLight);
+
+        const stadiumLight = new THREE.DirectionalLight(0x93c5fd, 1.1);
+        stadiumLight.position.set(-12, 14, -36);
+        scene.add(stadiumLight);
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 2 з 6 ==================== -->
+// ==================== ПОЧАТОК ЧАСТИНИ 3 з 6 ====================
+        function createPitchTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+
+            const stripeCount = 12;
+            const stripeH = 1024 / stripeCount;
+            for (let i = 0; i < stripeCount; i++) {
+                ctx.fillStyle = i % 2 === 0 ? '#15803d' : '#166534';
+                ctx.fillRect(0, i * stripeH, 1024, stripeH);
+            }
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.92)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+            ctx.lineWidth = 7;
+            ctx.strokeRect(48, 48, 928, 928);
+
+            ctx.beginPath();
+            ctx.moveTo(48, 512);
+            ctx.lineTo(976, 512);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(512, 512, 95, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Штрафний майданчик біля воріт (Z = -29.8)
+            ctx.strokeRect(236, 48, 552, 210);
+            ctx.strokeRect(374, 48, 276, 78);
+            ctx.beginPath();
+            ctx.arc(512, 204, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(512, 204, 88, 0.22 * Math.PI, 0.78 * Math.PI);
+            ctx.stroke();
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.anisotropy = 8;
+            return tex;
+        }
+
+        const stadiumGroup = new THREE.Group();
+        scene.add(stadiumGroup);
+
+        const pitch = new THREE.Mesh(
+            new THREE.PlaneGeometry(46, 66),
+            new THREE.MeshStandardMaterial({ map: createPitchTexture(), roughness: 0.85 })
+        );
+        pitch.rotation.x = -Math.PI / 2;
+        pitch.receiveShadow = true;
+        stadiumGroup.add(pitch);
+
+        const track = new THREE.Mesh(
+            new THREE.PlaneGeometry(66, 86),
+            new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 })
+        );
+        track.rotation.x = -Math.PI / 2;
+        track.position.y = -0.02;
+        stadiumGroup.add(track);
+
+        // Рекламні щити за воротами та з боків
+        function createBannerTexture() {
+            const c = document.createElement('canvas');
+            c.width = 2048; c.height = 128;
+            const ctx = c.getContext('2d');
+            const g = ctx.createLinearGradient(0, 0, 2048, 0);
+            g.addColorStop(0, '#0284c7'); g.addColorStop(0.5, '#1d4ed8'); g.addColorStop(1, '#0284c7');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, 2048, 128);
+            ctx.fillStyle = '#38bdf8'; ctx.fillRect(0, 0, 2048, 10); ctx.fillRect(0, 118, 2048, 10);
+            ctx.fillStyle = '#ffffff'; ctx.font = '900 54px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('⚽ PENALTY 3D ARENA   ★   CHAMPIONS CUP   ★   GOAL TIME! 🔥', 1024, 66);
+            const tex = new THREE.CanvasTexture(c);
+            tex.wrapS = THREE.RepeatWrapping; tex.repeat.set(3, 1); tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+        const bannerTex = createBannerTexture();
+        const adMat = new THREE.MeshBasicMaterial({ map: bannerTex });
+
+        const adBack = new THREE.Mesh(new THREE.BoxGeometry(52, 1.3, 0.25), adMat);
+        adBack.position.set(0, 0.65, -32.4);
+        const adLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.3, 66), adMat);
+        adLeft.position.set(-24.2, 0.65, 0);
+        const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.3, 66), adMat);
+        adRight.position.set(24.2, 0.65, 0);
+        stadiumGroup.add(adBack, adLeft, adRight);
+
+        // Трибуни та вболівальники позаду воріт і по боках
+        const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
+        const fanGeo = new THREE.CapsuleGeometry(0.22, 0.42, 4, 8);
+        const fanMat = new THREE.MeshStandardMaterial({ roughness: 0.7 });
+        const fanList = [];
+        const jerseyPalette = [0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0xea580c, 0x38bdf8];
+
+        for (let r = 0; r < 8; r++) {
+            const rowY = 1.4 + r * 0.72;
+            const zDist = 33.8 + r * 1.05;
+            const stepW = 54 + r * 2;
+            const step = new THREE.Mesh(new THREE.BoxGeometry(stepW, 0.72, 1.08), tierMat);
+            step.position.set(0, rowY - 0.36, -zDist);
+            stadiumGroup.add(step);
+
+            for (let x = -stepW * 0.46; x <= stepW * 0.46; x += 0.95) {
+                if (Math.random() > 0.2) {
+                    fanList.push({ x, y: rowY + 0.42, z: -zDist + 0.1, phase: Math.random() * 6.28 });
+                }
+            }
+        }
+
+        const fansInstanced = new THREE.InstancedMesh(fanGeo, fanMat, fanList.length);
+        const dummy = new THREE.Object3D();
+        const tmpCol = new THREE.Color();
+        fanList.forEach((f, idx) => {
+            dummy.position.set(f.x, f.y, f.z);
+            dummy.updateMatrix();
+            fansInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpCol.setHex(jerseyPalette.at(idx % jerseyPalette.length));
+            fansInstanced.setColorAt(idx, tmpCol);
+        });
+        fansInstanced.instanceMatrix.needsUpdate = true;
+        if (fansInstanced.instanceColor) fansInstanced.instanceColor.needsUpdate = true;
+        stadiumGroup.add(fansInstanced);
+
+        // ВЕЛИКІ ВОРОТА (стандарт 7.32м ширина x 2.44м висота) з сіткою, що реагує на удар
+        const GOAL_W = 7.32;
+        const GOAL_H = 2.44;
+        const GOAL_D = 1.9;
+
+        const goalGroup = new THREE.Group();
+        goalGroup.position.set(0, 0, GOAL_Z);
+        scene.add(goalGroup);
+
+        const postMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25, metalness: 0.15 });
+        const postGeo = new THREE.CylinderGeometry(0.085, 0.085, GOAL_H, 16);
+        const barGeo = new THREE.CylinderGeometry(0.085, 0.085, GOAL_W + 0.17, 16);
+
+        const leftPost = new THREE.Mesh(postGeo, postMat);
+        leftPost.position.set(-GOAL_W / 2, GOAL_H / 2, 0);
+        leftPost.castShadow = true;
+
+        const rightPost = new THREE.Mesh(postGeo, postMat);
+        rightPost.position.set(GOAL_W / 2, GOAL_H / 2, 0);
+        rightPost.castShadow = true;
+
+        const crossbar = new THREE.Mesh(barGeo, postMat);
+        crossbar.rotation.z = Math.PI / 2;
+        crossbar.position.set(0, GOAL_H, 0);
+        crossbar.castShadow = true;
+
+        // Сітка воріт з деформованою геометрією при влучанні м'яча
+        const netGeo = new THREE.BoxGeometry(GOAL_W, GOAL_H, GOAL_D, 24, 10, 6);
+        const netBasePos = netGeo.attributes.position.array.slice();
+        const netMat = new THREE.MeshBasicMaterial({
+            color: 0xf1f5f9,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.42
+        });
+        const netMesh = new THREE.Mesh(netGeo, netMat);
+        netMesh.position.set(0, GOAL_H / 2, -GOAL_D / 2);
+
+        goalGroup.add(leftPost, rightPost, crossbar, netMesh);
+// ==================== КІНЕЦЬ ЧАСТИНИ 3 з 6 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 4 з 6 ====================
+        function createBallTexture(c1, c2) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 128;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = c1; ctx.fillRect(0, 0, 256, 128);
+            ctx.fillStyle = c2;
+            for (let x = 16; x < 256; x += 48) {
+                for (let y = 20; y < 128; y += 44) {
+                    ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            const tex = new THREE.CanvasTexture(c);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        const ballId = localStorage.getItem('eq_balls') || 'ball1';
+        const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
+
+        const BALL_R = 0.115;
+        const ballMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(BALL_R, 28, 28),
+            new THREE.MeshStandardMaterial({ map: createBallTexture(ballItem.c1, ballItem.c2), roughness: 0.35 })
+        );
+        ballMesh.position.set(0, BALL_R, SPOT_Z);
+        ballMesh.castShadow = true;
+        scene.add(ballMesh);
+
+        // Завантаження 3D-воротаря (player.glb + glove.glb)
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('./libs/');
+        const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+
+        const gkContainer = new THREE.Group();
+        gkContainer.position.set(0, 0, GOAL_Z + 0.25);
+        scene.add(gkContainer);
+
+        let gkMixer = null;
+        const gkBones = {};
+        let gkLeftHand = null;
+        let gkRightHand = null;
+        let gkLeftForeArm = null;
+        let gkRightForeArm = null;
+        let gkGlovesLoaded = false;
+
+        function hideLoader() {
+            const el = document.getElementById('loader-screen');
+            if (el) {
+                el.style.opacity = '0';
+                setTimeout(() => { el.style.display = 'none'; }, 350);
+            }
+        }
+        setTimeout(hideLoader, 2500);
+
+        function mountGKGloves(gloveScene, gloveColorHex) {
+            gloveScene.updateMatrixWorld(true);
+            const fullBox = new THREE.Box3().setFromObject(gloveScene);
+            const midX = (fullBox.min.x + fullBox.max.x) * 0.5;
+            const isSingle = (fullBox.max.x - fullBox.min.x) < (fullBox.max.y - fullBox.min.y) * 1.1;
+
+            function buildHalf(pickLeft) {
+                const grp = new THREE.Group();
+                gloveScene.traverse((node) => {
+                    if (!node.isMesh || !node.geometry) return;
+                    const geo = node.geometry.clone();
+                    geo.applyMatrix4(node.matrixWorld);
+                    if (!isSingle && geo.index) {
+                        const pos = geo.attributes.position;
+                        const idx = geo.index.array;
+                        const filtered = [];
+                        for (let i = 0; i < idx.length; i += 3) {
+                            const cx = (pos.getX(idx[i]) + pos.getX(idx[i + 1]) + pos.getX(idx[i + 2])) / 3;
+                            if (pickLeft ? cx < midX : cx >= midX) filtered.push(idx[i], idx[i + 1], idx[i + 2]);
+                        }
+                        if (!filtered.length) return;
+                        geo.setIndex(filtered);
+                    }
+                    const mat = new THREE.MeshStandardMaterial({ color: gloveColorHex, roughness: 0.45, side: THREE.DoubleSide });
+                    const m = new THREE.Mesh(geo, mat);
+                    m.castShadow = true;
+                    grp.add(m);
+                });
+                const box = new THREE.Box3().setFromObject(grp);
+                const size = new THREE.Vector3(); box.getSize(size);
+                const center = new THREE.Vector3(); box.getCenter(center);
+                const norm = 1.0 / (Math.max(size.x, size.y, size.z) || 1);
+                grp.scale.setScalar(norm);
+                grp.position.set(-center.x * norm, -box.min.y * norm, -center.z * norm);
+                const u = new THREE.Group();
+                u.add(grp);
+                u.rotation.y = pickLeft ? Math.PI : 0;
+                return u;
+            }
+
+            function attachArm(unit, foreArm, hand) {
+                const arm = foreArm || (hand && hand.parent);
+                if (!arm) return;
+                const wristPos = hand ? hand.position.clone() : new THREE.Vector3(0, 24, 0);
+                const len = wristPos.length() || 24;
+                const dir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
+                const holder = new THREE.Group();
+                holder.add(unit);
+                holder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+                const sz = len * 2.25;
+                holder.scale.setScalar(sz);
+                holder.position.copy(wristPos).addScaledVector(dir, -sz * 0.25);
+                arm.add(holder);
+            }
+
+            attachArm(buildHalf(false), gkRightForeArm, gkRightHand);
+            attachArm(buildHalf(true), gkLeftForeArm, gkLeftHand);
+            gkGlovesLoaded = true;
+        }
+
+        loader.load('player.glb', (gltf) => {
+            const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
+            if (!model) { hideLoader(); return; }
+
+            const gId = localStorage.getItem('eq_gloves') || 'g1';
+            const gloveItem = CATALOG.gloves.find(x => x.id === gId) || CATALOG.gloves.at(0);
+
+            model.traverse((child) => {
+                if (child.isBone && child.name) {
+                    const n = child.name.toLowerCase();
+                    gkBones[n] = child;
+                    if (n.includes('forearm') && n.includes('left')) gkLeftForeArm = child;
+                    if (n.includes('forearm') && n.includes('right')) gkRightForeArm = child;
+                    if (n.includes('hand') && n.includes('left') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) gkLeftHand = child;
+                    if (n.includes('hand') && n.includes('right') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) gkRightHand = child;
+                }
+                if (!child.isMesh || !child.material) return;
+                child.castShadow = true;
+                const name = (child.name || '').toLowerCase();
+                if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
+                    child.material = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.65 });
+                } else if (name.includes('short') || name.includes('pant')) {
+                    child.material = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.75 });
+                } else if (name.includes('shoe') || name.includes('boot')) {
+                    child.material = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4 });
+                }
+            });
+
+            gkContainer.add(model);
+
+            loader.load('./glove.glb?v=3', (gGltf) => {
+                const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
+                if (gs) mountGKGloves(gs, gloveItem.c1);
+            });
+
+            const anim = gltf.animations && gltf.animations.at(0);
+            if (anim) {
+                gkMixer = new THREE.AnimationMixer(model);
+                gkMixer.clipAction(anim).play();
+            }
+            hideLoader();
+        }, undefined, () => hideLoader());
+// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 6 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 5 з 6 ====================
+        // Фізика удару, траєкторії та воротаря
+        let shotState = 'ready'; // 'ready' | 'flying' | 'resetting'
+        let shotProgress = 0;
+        let shotDuration = 0.56;
+
+        const shotStart = new THREE.Vector3(0, BALL_R, SPOT_Z);
+        const shotTarget = new THREE.Vector3(0, 1.2, GOAL_Z);
+        let shotCurveX = 0;
+        let shotArcY = 0.45;
+        let reboundVel = new THREE.Vector3();
+
+        // Стан воротаря
+        const gkState = {
+            x: 0,
+            y: 0,
+            diveAngle: 0,
+            targetX: 0,
+            targetY: 0,
+            targetDive: 0,
+            readyTime: 0
+        };
+
+        // Хвиля на сітці воріт
+        const netImpact = { active: false, x: 0, y: 1.2, amp: 0, phase: 0 };
+
+        function deformGoalNet(dt) {
+            if (!netImpact.active) return;
+            netImpact.phase += dt * 16;
+            netImpact.amp *= Math.pow(0.18, dt);
+
+            const pos = netGeo.attributes.position;
+            for (let i = 0; i < pos.count; i++) {
+                const bx = netBasePos[i * 3];
+                const by = netBasePos[i * 3 + 1];
+                const bz = netBasePos[i * 3 + 2];
+
+                // Деформуємо лише задню та бічні частини сітки (не передній край на штангах)
+                if (bz < GOAL_D * 0.42) {
+                    const dist = Math.hypot(bx - netImpact.x, (by + GOAL_H / 2) - netImpact.y);
+                    const bulge = Math.exp(-(dist * dist) / 2.2) * Math.sin(netImpact.phase) * netImpact.amp;
+                    pos.setZ(i, bz - Math.abs(bulge) * 0.75);
+                }
+            }
+            pos.needsUpdate = true;
+
+            if (netImpact.amp < 0.01) {
+                netImpact.active = false;
+                pos.array.set(netBasePos);
+                pos.needsUpdate = true;
+            }
+        }
+
+        // Прицілювання свайпом або кліком
+        const aimCanvas = document.getElementById('aim-canvas');
+        const aimCtx = aimCanvas.getContext('2d');
+        function rszAim() {
+            aimCanvas.width = window.innerWidth;
+            aimCanvas.height = window.innerHeight;
+        }
+        rszAim();
+
+        let swipeStart = null;
+        let swipeCurr = null;
+        const raycaster = new THREE.Raycaster();
+        const goalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -GOAL_Z);
+
+        function launchShot(targetX, targetY, curveX = 0, power = 1.0) {
+            if (shotState !== 'ready') return;
+            arenaAudio.playKick();
+
+            shotState = 'flying';
+            shotProgress = 0;
+            shotDuration = THREE.MathUtils.clamp(0.66 - power * 0.14, 0.44, 0.68);
+            shotStart.set(0, BALL_R, SPOT_Z);
+            shotTarget.set(targetX, Math.max(BALL_R, targetY), GOAL_Z - 0.35);
+            shotCurveX = curveX;
+            shotArcY = 0.25 + (1 - Math.min(1, targetY / GOAL_H)) * 0.35;
+
+            shotsCount++;
+            shotsEl.textContent = shotsCount;
+
+            // ШІ воротаря обирає напрямок стрибка
+            const guessSameSide = Math.random() < 0.42;
+            const diveDir = guessSameSide
+                ? Math.sign(targetX || (Math.random() - 0.5))
+                : (Math.random() < 0.5 ? -1 : 1);
+
+            const maxReachX = GOAL_W * 0.44;
+            gkState.targetX = guessSameSide
+                ? THREE.MathUtils.clamp(targetX * 0.88, -maxReachX, maxReachX)
+                : diveDir * (1.6 + Math.random() * 1.5);
+
+            const isHighShot = targetY > 1.35;
+            gkState.targetY = isHighShot ? 0.62 : 0.12;
+            gkState.targetDive = -diveDir * (isHighShot ? 1.28 : 1.42);
+        }
+
+        container.addEventListener('pointerdown', (e) => {
+            if (shotState !== 'ready') return;
+            arenaAudio.init();
+            swipeStart = { x: e.clientX, y: e.clientY };
+            swipeCurr = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!swipeStart) return;
+            swipeCurr = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('pointerup', (e) => {
+            if (!swipeStart) return;
+            const dx = e.clientX - swipeStart.x;
+            const dy = swipeStart.y - e.clientY; // вгору = додатне
+            const swipeDist = Math.hypot(dx, dy);
+
+            swipeStart = null;
+            swipeCurr = null;
+            aimCtx.clearRect(0, 0, aimCanvas.width, aimCanvas.height);
+
+            if (shotState !== 'ready') return;
+
+            if (swipeDist > 35 && dy > 15) {
+                // Удар по свайпу
+                const normX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.34), -1.18, 1.18);
+                const normY = THREE.MathUtils.clamp((dy - 15) / (window.innerHeight * 0.42), 0.05, 1.15);
+                const tx = normX * (GOAL_W * 0.5);
+                const ty = BALL_R + normY * (GOAL_H - BALL_R);
+                const curve = -normX * 0.55;
+                const power = THREE.MathUtils.clamp(swipeDist / 260, 0.5, 1.2);
+                launchShot(tx, ty, curve, power);
+            } else {
+                // Прямий клік / тап у точку воріт через Raycaster
+                const ndc = new THREE.Vector2(
+                    (e.clientX / window.innerWidth) * 2 - 1,
+                    -(e.clientY / window.innerHeight) * 2 + 1
+                );
+                raycaster.setFromCamera(ndc, camera);
+                const hit = new THREE.Vector3();
+                if (raycaster.ray.intersectPlane(goalPlane, hit)) {
+                    const tx = THREE.MathUtils.clamp(hit.x, -GOAL_W * 0.56, GOAL_W * 0.56);
+                    const ty = THREE.MathUtils.clamp(hit.y, BALL_R, GOAL_H * 1.12);
+                    launchShot(tx, ty, -tx * 0.12, 0.95);
+                }
+            }
+        });
+// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 6 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 6 з 6 ====================
+        function evaluateShotResult() {
+            const halfW = GOAL_W / 2;
+            const hitLeftPost = Math.abs(shotTarget.x + halfW) < 0.16 && shotTarget.y <= GOAL_H + 0.12;
+            const hitRightPost = Math.abs(shotTarget.x - halfW) < 0.16 && shotTarget.y <= GOAL_H + 0.12;
+            const hitCrossbar = Math.abs(shotTarget.y - GOAL_H) < 0.16 && Math.abs(shotTarget.x) <= halfW + 0.12;
+            const isOut = Math.abs(shotTarget.x) > halfW - 0.05 || shotTarget.y > GOAL_H - 0.05;
+
+            // Перевірка сейву воротаря (відстань між м'ячем та центром корпусу/рук воротаря)
+            const gkCenterY = gkState.y + 0.95;
+            const dx = Math.abs(shotTarget.x - gkState.x);
+            const dy = Math.abs(shotTarget.y - gkCenterY);
+            const isSaved = !isOut && !hitLeftPost && !hitRightPost && !hitCrossbar && (dx < 0.88 && dy < 0.95);
+
+            if (hitLeftPost || hitRightPost || hitCrossbar) {
+                setBanner('💥 ШТАНГА / ПЕРЕКЛАДИНА!', 'save');
+                arenaAudio.playCrowd(false);
+                reboundVel.set((Math.random() - 0.5) * 4, 2.5, 4.5);
+                shotState = 'rebound';
+            } else if (isSaved) {
+                setBanner('🧤 СЕЙВ ВОРОТАРЯ!', 'save');
+                arenaAudio.playCrowd(false);
+                reboundVel.set(Math.sign(shotTarget.x - gkState.x || 1) * 3.8, 2.2, 4.2);
+                shotState = 'rebound';
+            } else if (isOut) {
+                setBanner('❌ МИМО ВОРІТ!', 'save');
+                arenaAudio.playCrowd(false);
+                shotState = 'resetting';
+            } else {
+                // ЧИСТИЙ ГОЛ!
+                goalsCount++;
+                goalsEl.textContent = goalsCount;
+                coins += 25;
+                coinsEl.textContent = `💰 ${coins}`;
+                localStorage.setItem('player_coins', String(coins));
+
+                setBanner('⚽ ГОООЛ! +25 💰', 'goal');
+                arenaAudio.playCrowd(true);
+
+                netImpact.active = true;
+                netImpact.x = shotTarget.x;
+                netImpact.y = shotTarget.y;
+                netImpact.amp = 1.0;
+                netImpact.phase = 0;
+
+                shotState = 'in_net';
+            }
+
+            setTimeout(resetPenalty, 1650);
+        }
+
+        function resetPenalty() {
+            shotState = 'ready';
+            shotProgress = 0;
+            ballMesh.position.set(0, BALL_R, SPOT_Z);
+            ballMesh.rotation.set(0, 0, 0);
+
+            gkState.targetX = 0;
+            gkState.targetY = 0;
+            gkState.targetDive = 0;
+            setBanner('🎯 Твій удар! Проведи або натисни у ворота');
+        }
+
+        function drawSwipeGuide() {
+            if (!swipeStart || !swipeCurr) return;
+            aimCtx.clearRect(0, 0, aimCanvas.width, aimCanvas.height);
+
+            const grad = aimCtx.createLinearGradient(swipeStart.x, swipeStart.y, swipeCurr.x, swipeCurr.y);
+            grad.addColorStop(0, 'rgba(56, 189, 248, 0.25)');
+            grad.addColorStop(1, 'rgba(34, 197, 94, 0.95)');
+
+            aimCtx.strokeStyle = grad;
+            aimCtx.lineWidth = 6;
+            aimCtx.lineCap = 'round';
+            aimCtx.beginPath();
+            aimCtx.moveTo(swipeStart.x, swipeStart.y);
+            aimCtx.lineTo(swipeCurr.x, swipeCurr.y);
+            aimCtx.stroke();
+
+            aimCtx.fillStyle = '#4ade80';
+            aimCtx.beginPath();
+            aimCtx.arc(swipeCurr.x, swipeCurr.y, 9, 0, Math.PI * 2);
+            aimCtx.fill();
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            rszAim();
+        });
+
+        let lastTime = performance.now();
+        function animate(now) {
+            requestAnimationFrame(animate);
+            const dt = Math.min(0.05, (now - lastTime) * 0.001);
+            lastTime = now;
+            const t = now * 0.001;
+
+            if (gkMixer) gkMixer.update(dt);
+            if (gkGlovesLoaded) {
+                if (gkLeftHand) gkLeftHand.scale.setScalar(0.0001);
+                if (gkRightHand) gkRightHand.scale.setScalar(0.0001);
+            }
+
+            // Плавне переступання воротаря на лінії до моменту удару
+            if (shotState === 'ready') {
+                gkState.readyTime += dt;
+                gkState.targetX = Math.sin(gkState.readyTime * 2.6) * 0.65;
+                gkState.targetY = Math.abs(Math.sin(gkState.readyTime * 5.2)) * 0.05;
+                gkState.targetDive = Math.sin(gkState.readyTime * 2.6) * 0.08;
+            }
+
+            const moveLerp = Math.min(1, dt * (shotState === 'ready' ? 5 : 8.5));
+            gkState.x += (gkState.targetX - gkState.x) * moveLerp;
+            gkState.y += (gkState.targetY - gkState.y) * moveLerp;
+            gkState.diveAngle += (gkState.targetDive - gkState.diveAngle) * moveLerp;
+
+            gkContainer.position.set(gkState.x, gkState.y, GOAL_Z + 0.25);
+            gkContainer.rotation.z = gkState.diveAngle;
+
+            // Піднімаємо руки воротаря в стрибку
+            const rArm = gkBones['mixamorigrightarm'] || Object.values(gkBones).find(b => b.name.toLowerCase().includes('rightarm'));
+            const lArm = gkBones['mixamorigleftarm'] || Object.values(gkBones).find(b => b.name.toLowerCase().includes('leftarm'));
+            const diveAmt = Math.min(1, Math.abs(gkState.diveAngle) / 1.2);
+            if (rArm) rArm.rotation.z = -1.2 * diveAmt;
+            if (lArm) lArm.rotation.z = 1.2 * diveAmt;
+
+            // Політ м'яча
+            if (shotState === 'flying') {
+                shotProgress = Math.min(1, shotProgress + dt / shotDuration);
+                const ease = 1 - Math.pow(1 - shotProgress, 1.65);
+
+                const curX = THREE.MathUtils.lerp(shotStart.x, shotTarget.x, ease) + Math.sin(shotProgress * Math.PI) * shotCurveX;
+                const curY = THREE.MathUtils.lerp(shotStart.y, shotTarget.y, ease) + Math.sin(shotProgress * Math.PI) * shotArcY;
+                const curZ = THREE.MathUtils.lerp(shotStart.z, shotTarget.z, ease);
+
+                ballMesh.position.set(curX, curY, curZ);
+                ballMesh.rotation.x -= dt * 18;
+                ballMesh.rotation.y += shotCurveX * dt * 12;
+
+                if (shotProgress >= 1) {
+                    evaluateShotResult();
+                }
+            } else if (shotState === 'rebound') {
+                ballMesh.position.addScaledVector(reboundVel, dt);
+                reboundVel.y -= 9.8 * dt;
+                if (ballMesh.position.y < BALL_R) {
+                    ballMesh.position.y = BALL_R;
+                    reboundVel.y *= -0.45;
+                    reboundVel.x *= 0.8;
+                    reboundVel.z *= 0.8;
+                }
+                ballMesh.rotation.x += dt * 10;
+            } else if (shotState === 'in_net') {
+                if (ballMesh.position.y > BALL_R) {
+                    ballMesh.position.y = Math.max(BALL_R, ballMesh.position.y - 2.6 * dt);
+                }
+            }
+
+            deformGoalNet(dt);
+            bannerTex.offset.x += dt * 0.08;
+            drawSwipeGuide();
+            renderer.render(scene, camera);
+        }
+
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 6 з 6 ==================== -->
