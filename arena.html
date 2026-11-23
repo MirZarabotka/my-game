@@ -1,4 +1,4 @@
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 6 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 9 ==================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -108,8 +108,8 @@
             }
         }
     </script>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 6 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 6 ==================== -->
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 9 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 9 ==================== -->
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
@@ -198,15 +198,15 @@
         scene.background = new THREE.Color(0x071326);
         scene.fog = new THREE.FogExp2(0x071326, 0.011);
 
-        const SPOT_Z = -19.9;
+        const SPOT_Z = -19.86;
         const GOAL_Z = -29.8;
         const GOAL_W = 7.32;
         const GOAL_H = 2.44;
         const GOAL_D = 1.9;
 
         const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 180);
-        const camBasePos = new THREE.Vector3(-0.65, 1.62, SPOT_Z + 4.35);
-        const camLookTarget = new THREE.Vector3(0, 1.18, GOAL_Z);
+        const camBasePos = new THREE.Vector3(-0.75, 1.85, SPOT_Z + 4.55);
+        const camLookTarget = new THREE.Vector3(0, 1.15, GOAL_Z);
         camera.position.copy(camBasePos);
         camera.lookAt(camLookTarget);
 
@@ -229,9 +229,8 @@
         const rimLight = new THREE.DirectionalLight(0x93c5fd, 1.15);
         rimLight.position.set(-12, 14, -36);
         scene.add(rimLight);
-// ==================== КІНЕЦЬ ЧАСТИНИ 2 з 6 ====================
-
-// ==================== ПОЧАТОК ЧАСТИНИ 3A з 6 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 2 з 9 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 3 з 9 ====================
         function createPitchTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
@@ -318,8 +317,8 @@
         const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 66), adMat);
         adRight.position.set(24.2, 0.62, 0);
         stadiumGroup.add(adBack, adLeft, adRight);
-// ==================== КІНЕЦЬ ЧАСТИНИ 3A з 6 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 3B з 6 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 3 з 9 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 4 з 9 ====================
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
         const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
         const fanPositions = [];
@@ -462,8 +461,8 @@
         rightNet.position.set(GOAL_W / 2, GOAL_H / 2, -GOAL_D / 2);
 
         goalGroup.add(leftPost, rightPost, crossbar, backNet, topNet, leftNet, rightNet);
-// ==================== КІНЕЦЬ ЧАСТИНИ 3B з 6 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 4A з 6 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 9 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 5 з 9 ====================
         function createBallTexture(c1, c2) {
             const c = document.createElement('canvas');
             c.width = 256; c.height = 128;
@@ -557,8 +556,8 @@
             }
         }
         setTimeout(hideLoader, 3000);
-// ==================== КІНЕЦЬ ЧАСТИНИ 4A з 6 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 4B з 6 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 9 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 6 з 9 ====================
         let strikerMixer = null;
         let gkMixer = null;
 
@@ -721,9 +720,8 @@
                 hideLoader();
             }, undefined, () => hideLoader());
         }, undefined, () => hideLoader());
-// ==================== КІНЕЦЬ ЧАСТИНИ 4B з 6 ====================
-
-// ==================== ПОЧАТОК ЧАСТИНИ 5 з 6 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 6 з 9 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 7 з 9 ====================
         let shotState = 'ready';
         let stateTimer = 0;
         let shotProgress = 0;
@@ -736,11 +734,10 @@
         let shotPower = 1.0;
         let reboundVel = new THREE.Vector3();
 
-        // Стан воротаря: 'ready' | 'dive' | 'land' | 'getup' | 'react'
         const gkState = {
             mode: 'ready',
             modeTime: 0,
-            outcome: 'none', // 'save' | 'goal'
+            outcome: 'none',
             x: 0,
             y: 0,
             diveAngle: 0,
@@ -810,13 +807,12 @@
             shotsCount++;
             shotsEl.textContent = shotsCount;
 
-            // Воротар починає стрибок у межах воріт (не вилітає за штанги ±2.45м)
             const guessSameSide = Math.random() < 0.42;
             const dir = guessSameSide
                 ? Math.sign(shotTarget.x || (Math.random() - 0.5))
                 : (Math.random() < 0.5 ? -1 : 1);
 
-            const maxSafeX = GOAL_W * 0.33; // 2.41м — тіло разом із витягнутими руками залишається всередині воріт
+            const maxSafeX = 1.95;
             gkState.mode = 'dive';
             gkState.modeTime = 0;
             gkState.outcome = 'none';
@@ -824,9 +820,9 @@
             gkState.isHigh = shotTarget.y > 1.25;
             gkState.startX = gkState.x;
             gkState.targetX = guessSameSide
-                ? THREE.MathUtils.clamp(shotTarget.x * 0.82, -maxSafeX, maxSafeX)
-                : THREE.MathUtils.clamp(dir * (1.35 + Math.random() * 1.0), -maxSafeX, maxSafeX);
-            gkState.peakY = gkState.isHigh ? 0.55 : 0.16;
+                ? THREE.MathUtils.clamp(shotTarget.x * 0.72, -maxSafeX, maxSafeX)
+                : THREE.MathUtils.clamp(dir * (1.25 + Math.random() * 0.7), -maxSafeX, maxSafeX);
+            gkState.peakY = gkState.isHigh ? 0.48 : 0.12;
         }
 
         container.addEventListener('pointerdown', (e) => {
@@ -875,20 +871,81 @@
                 }
             }
         });
-// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 6 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 6A з 6 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 7 з 9 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 8 з 9 ====================
+        const saveFlashMesh = new THREE.Mesh(
+            new THREE.RingGeometry(0.08, 0.36, 24),
+            new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0, side: THREE.DoubleSide })
+        );
+        scene.add(saveFlashMesh);
+        let saveFlashAlpha = 0;
+
+        function triggerSaveFlash(pos) {
+            saveFlashMesh.position.copy(pos);
+            saveFlashMesh.position.z += 0.08;
+            saveFlashMesh.scale.setScalar(0.6);
+            saveFlashAlpha = 1.0;
+        }
+
+        const tmpHandPosL = new THREE.Vector3();
+        const tmpHandPosR = new THREE.Vector3();
+        const tmpChestPos = new THREE.Vector3();
+
+        function checkLiveGoalkeeperSave() {
+            if (shotState !== 'flying') return false;
+            if (ballMesh.position.z > GOAL_Z + 0.65 || ballMesh.position.z < GOAL_Z - 0.15) return false;
+
+            const halfW = GOAL_W / 2;
+            if (Math.abs(ballMesh.position.x) > halfW || ballMesh.position.y > GOAL_H) return false;
+
+            gkContainer.updateMatrixWorld(true);
+            let minDist = 99;
+
+            if (gkLeftHand) {
+                gkLeftHand.getWorldPosition(tmpHandPosL);
+                const dL = ballMesh.position.distanceTo(tmpHandPosL);
+                if (dL < minDist) minDist = dL;
+            }
+            if (gkRightHand) {
+                gkRightHand.getWorldPosition(tmpHandPosR);
+                const dR = ballMesh.position.distanceTo(tmpHandPosR);
+                if (dR < minDist) minDist = dR;
+            }
+
+            tmpChestPos.set(
+                gkState.x + gkState.diveDir * 0.35,
+                gkState.y + (gkState.isHigh ? 0.95 : 0.55),
+                GOAL_Z + 0.25
+            );
+            const dBody = ballMesh.position.distanceTo(tmpChestPos);
+            if (dBody < minDist) minDist = dBody;
+
+            if (minDist < 0.62) {
+                gkState.mode = 'land';
+                gkState.modeTime = 0;
+                gkState.outcome = 'save';
+
+                setBanner('🧤 СЕЙВ ВОРОТАРЯ!', 'save');
+                arenaAudio.playCrowd(false);
+                triggerSaveFlash(ballMesh.position);
+
+                const deflectX = (gkState.diveDir || (Math.random() < 0.5 ? -1 : 1)) * (2.6 + Math.random() * 1.4);
+                const deflectY = 1.8 + Math.random() * 1.2;
+                reboundVel.set(deflectX, deflectY, 3.8 + Math.random() * 1.4);
+                shotState = 'rebound';
+
+                setTimeout(resetPenalty, 2600);
+                return true;
+            }
+            return false;
+        }
+
         function evaluateShotResult() {
             const halfW = GOAL_W / 2;
             const hitLeftPost = Math.abs(shotTarget.x + halfW) < 0.16 && shotTarget.y <= GOAL_H + 0.12;
             const hitRightPost = Math.abs(shotTarget.x - halfW) < 0.16 && shotTarget.y <= GOAL_H + 0.12;
             const hitCrossbar = Math.abs(shotTarget.y - GOAL_H) < 0.16 && Math.abs(shotTarget.x) <= halfW + 0.12;
             const isOut = Math.abs(shotTarget.x) > halfW - 0.05 || shotTarget.y > GOAL_H - 0.05;
-
-            const gkReachX = gkState.x + gkState.diveDir * 0.55;
-            const gkCenterY = gkState.y + (gkState.isHigh ? 1.15 : 0.65);
-            const dx = Math.abs(shotTarget.x - gkReachX);
-            const dy = Math.abs(shotTarget.y - gkCenterY);
-            const isSaved = !isOut && !hitLeftPost && !hitRightPost && !hitCrossbar && (dx < 0.92 && dy < 0.95);
 
             gkState.mode = 'land';
             gkState.modeTime = 0;
@@ -897,13 +954,8 @@
                 gkState.outcome = 'save';
                 setBanner('💥 ШТАНГА / ПЕРЕКЛАДИНА!', 'save');
                 arenaAudio.playCrowd(false);
-                reboundVel.set((Math.random() - 0.5) * 4, 2.5, 4.5);
-                shotState = 'rebound';
-            } else if (isSaved) {
-                gkState.outcome = 'save';
-                setBanner('🧤 СЕЙВ ВОРОТАРЯ!', 'save');
-                arenaAudio.playCrowd(false);
-                reboundVel.set(Math.sign(shotTarget.x - gkState.x || 1) * 3.8, 2.2, 4.2);
+                triggerSaveFlash(ballMesh.position);
+                reboundVel.set((Math.random() - 0.5) * 4.2, 2.5, 4.5);
                 shotState = 'rebound';
             } else if (isOut) {
                 gkState.outcome = 'save';
@@ -976,8 +1028,8 @@
             aimCtx.arc(swipeCurr.x, swipeCurr.y, 9, 0, Math.PI * 2);
             aimCtx.fill();
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 6A з 6 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 6B з 6 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 8 з 9 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 9A з 9 ====================
         const getBone = (map, part) => {
             const key = Object.keys(map).find(k => k.includes(part));
             return key ? map[key] : null;
@@ -1078,8 +1130,8 @@
                     gkState.y = 0;
                 }
             }
-
-            // Компенсуємо присідання по висоті, щоб ступні залишалися на газоні
+// ==================== КІНЕЦЬ ЧАСТИНИ 9A з 9 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 9B з 9 ====================
             const crouchSink = crouchAmt * 0.14;
             const lieLift = (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
             gkContainer.position.set(gkState.x, Math.max(0, gkState.y + lieLift - crouchSink), GOAL_Z + 0.25);
@@ -1116,7 +1168,6 @@
                 lForeArm.rotation.z += -despairAmt * 1.65;
             }
 
-            // Стегна піднімаються вперед (-), а коліна згинаються НАЗАД (-) для природного присідання
             const trailBend = diveAmt * 0.42;
             const totalBend = crouchAmt + despairAmt * 0.22;
             if (rUpLeg) rUpLeg.rotation.x += -totalBend - (gkState.diveDir < 0 ? trailBend : 0);
@@ -1133,9 +1184,7 @@
                 head.rotation.x += despairAmt * 0.38 - celebrateAmt * 0.15;
             }
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 6B з 6 ====================
 
-// ==================== ПОЧАТОК ЧАСТИНИ 6C з 6 ====================
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -1167,7 +1216,7 @@
                 camera.position.z = THREE.MathUtils.lerp(camera.position.z, SPOT_Z + 3.4, dt * 3);
                 camera.lookAt(curX * 0.25, 1.25, GOAL_Z);
 
-                if (shotProgress >= 1) {
+                if (!checkLiveGoalkeeperSave() && shotProgress >= 1) {
                     evaluateShotResult();
                 }
             } else if (shotState === 'rebound') {
@@ -1179,11 +1228,18 @@
                     reboundVel.x *= 0.8;
                     reboundVel.z *= 0.8;
                 }
-                ballMesh.rotation.x += dt * 10;
+                ballMesh.rotation.x += dt * 12;
+                ballMesh.rotation.z -= reboundVel.x * dt * 4;
             } else if (shotState === 'in_net') {
                 if (ballMesh.position.y > BALL_R) {
                     ballMesh.position.y = Math.max(BALL_R, ballMesh.position.y - 2.6 * dt);
                 }
+            }
+
+            if (saveFlashAlpha > 0) {
+                saveFlashAlpha = Math.max(0, saveFlashAlpha - dt * 2.8);
+                saveFlashMesh.material.opacity = saveFlashAlpha;
+                saveFlashMesh.scale.addScalar(dt * 3.5);
             }
 
             ballShadow.position.set(ballMesh.position.x, 0.01, ballMesh.position.z);
@@ -1200,5 +1256,4 @@
     </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 6C з 6 ==================== -->
-
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 9B з 9 ==================== -->
