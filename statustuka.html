@@ -315,25 +315,27 @@
 
             try {
                 const payload = {
-                    id: currentPlayer.id,
-                    name: currentPlayer.name,
-                    avatar: currentPlayer.avatar,
-                    coins: currentPlayer.coins,
-                    wins: currentPlayer.wins,
-                    joinedAt: currentPlayer.joinedAt,
-                    kit: currentPlayer.kit,
-                    updatedAt: Date.now()
+                    [currentPlayer.id]: {
+                        id: currentPlayer.id,
+                        name: currentPlayer.name,
+                        avatar: currentPlayer.avatar,
+                        coins: currentPlayer.coins,
+                        wins: currentPlayer.wins,
+                        joinedAt: currentPlayer.joinedAt,
+                        kit: currentPlayer.kit,
+                        updatedAt: Date.now()
+                    }
                 };
 
-                const putUrl = `${FIREBASE_DB_URL}/players/${encodeURIComponent(currentPlayer.id)}.json`;
-                const putRes = await fetch(putUrl, {
-                    method: 'PUT',
+                // Використовуємо PATCH із text/plain — не викликає блокування CORS preflight у браузерах
+                const patchRes = await fetch(`${FIREBASE_DB_URL}/players.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
                     body: JSON.stringify(payload)
                 });
 
-                if (!putRes.ok) {
-                    const errText = await putRes.text();
-                    throw new Error(`HTTP ${putRes.status}: ${errText}`);
+                if (!patchRes.ok) {
+                    throw new Error(`HTTP ${patchRes.status}`);
                 }
 
                 const getRes = await fetch(`${FIREBASE_DB_URL}/players.json`);
@@ -358,7 +360,7 @@
             } catch (err) {
                 console.error('Firebase error:', err);
                 if (subTitleEl) {
-                    subTitleEl.textContent = `🔴 Помилка: ${err.message}`;
+                    subTitleEl.textContent = `🔴 Немає звʼязку з Firebase (${err.message}) — вимкни AdBlock/VPN`;
                     subTitleEl.style.color = '#f87171';
                 }
             }
@@ -426,7 +428,9 @@
                 }
 
                 row.addEventListener('click', () => {
-                    if (window.openPlayerProfile3D) window.openPlayerProfile3D(player, rank);
+                    if (window.openPlayerProfile3D) {
+                        window.openPlayerProfile3D(player, rank);
+                    }
                 });
                 listEl.appendChild(row);
             });
@@ -524,9 +528,7 @@
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
         loader.setDRACOLoader(dracoLoader);
-        
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 4 з 5 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 5 з 5 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 5 ====================
         function buildDressedPlayer(kit) {
             while (playerHolder.children.length) {
                 playerHolder.remove(playerHolder.children.at(0));
@@ -638,4 +640,5 @@
     </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 5 з 5 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 5 ====================
+
