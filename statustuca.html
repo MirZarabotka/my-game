@@ -1,201 +1,609 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>3D Champions Penalty — Рейтинг гравців</title>
-<script>
-const tgScript=document.createElement('script');
-tgScript.src=['https:/','/telegram.org','/js/telegram-web-app.js'].join('');
-document.head.appendChild(tgScript);
-</script>
-<style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:sans-serif;background:#070b14;color:#fff;margin:0;padding:8px;display:flex;flex-direction:column;height:100vh;user-select:none;overflow:hidden}
-.box{background:#131b26;border:1px solid #243347;border-radius:12px;padding:9px 12px;margin-bottom:6px;flex-shrink:0}
-.row{display:flex;justify-content:space-between;align-items:center;gap:6px}
-.inp{background:#09101c;border:1px solid #2f435e;color:#fff;padding:7px 10px;border-radius:8px;font-size:12px;flex:1;outline:none}
-.inp:focus{border-color:#1dd1a1}
-.btn{background:#1e3799;border:1px solid #4b7bec;color:#fff;padding:7px 11px;border-radius:8px;font-weight:bold;font-size:12px;cursor:pointer;white-space:nowrap}
-.btn:active{transform:scale(.96)}
-.btn.grn{background:#1dd1a1;border-color:#1dd1a1;color:#000}
-.board{flex:1;overflow-y:auto;background:linear-gradient(180deg,#0b1322,#101c30);border:1px solid #243347;border-radius:14px;padding:8px;margin-bottom:8px}
-.item{display:flex;align-items:center;justify-content:space-between;background:#131f33;border:1px solid #203454;border-radius:10px;padding:8px 10px;margin-bottom:6px;font-size:13px}
-.item.me{border:1.5px solid #1dd1a1;background:rgba(29,209,161,.14)}
-.item.top1{border-color:#feca57;background:rgba(254,202,87,.12)}
-.item.top2{border-color:#c8d6e5}
-.item.top3{border-color:#e17055}
-.rank{width:28px;font-weight:900;font-size:14px;text-align:center;flex-shrink:0}
-.info{flex:1;min-width:0;padding:0 8px}
-.name{font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sub{font-size:10px;color:#8395a7;margin-top:2px}
-.coins{font-weight:900;color:#feca57;font-size:14px;text-align:right;flex-shrink:0}
-.tabs{display:flex;gap:6px;flex-shrink:0}
-.tab{flex:1;padding:10px 6px;background:#131b26;border:1px solid #243347;color:#fff;border-radius:10px;font-weight:bold;font-size:12px;cursor:pointer;text-align:center;text-decoration:none}
-.tab.on{background:#152547;color:#70a1ff;border-color:#3867d6}
-.status{text-align:center;font-size:11px;color:#8395a7;padding:12px}
-.toast{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);background:#1dd1a1;color:#000;padding:7px 16px;border-radius:14px;font-weight:bold;font-size:12px;display:none;z-index:99;text-align:center;max-width:90%}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Penalty 3D — Рейтинг гравців</title>
+    <script src="https://telegram.org"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #0f294a 0%, #071326 65%, #040b17 100%);
+            color: #f8fafc;
+            padding: 14px 14px 28px;
+        }
+
+        .header {
+            max-width: 620px; margin: 0 auto 14px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        }
+        .back-btn {
+            text-decoration: none;
+            background: rgba(15, 23, 42, 0.85);
+            color: #f8fafc; padding: 9px 14px; border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            font-weight: 800; font-size: 0.85rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+        }
+        .title-box { text-align: center; }
+        .title-box h1 { font-size: 1.15rem; font-weight: 900; letter-spacing: 0.3px; color: #38bdf8; }
+        .title-box p { font-size: 0.74rem; color: #94a3b8; margin-top: 2px; }
+
+        .my-coins {
+            background: rgba(15, 23, 42, 0.88);
+            color: #facc15; padding: 8px 14px; border-radius: 20px;
+            border: 1px solid rgba(250, 204, 21, 0.45);
+            font-weight: 800; font-size: 0.9rem;
+        }
+
+        .leaderboard-list {
+            max-width: 620px; margin: 0 auto;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .player-row {
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 12px 14px;
+            display: flex; align-items: center; gap: 12px;
+            cursor: pointer;
+            transition: transform 0.16s, border-color 0.16s, background 0.16s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        }
+        .player-row:active { transform: scale(0.985); }
+        .player-row.is-me {
+            border: 1.5px solid #38bdf8;
+            background: linear-gradient(90deg, rgba(14, 116, 144, 0.32), rgba(15, 23, 42, 0.9));
+        }
+        .player-row.rank-1 { border-color: rgba(250, 204, 21, 0.65); }
+        .player-row.rank-2 { border-color: rgba(203, 213, 225, 0.55); }
+        .player-row.rank-3 { border-color: rgba(217, 119, 6, 0.55); }
+
+        .rank-badge {
+            width: 34px; height: 34px; border-radius: 12px;
+            background: rgba(30, 41, 59, 0.95);
+            display: flex; justify-content: center; align-items: center;
+            font-weight: 900; font-size: 0.95rem; flex-shrink: 0;
+        }
+        .rank-1 .rank-badge { background: rgba(250, 204, 21, 0.2); color: #facc15; font-size: 1.15rem; }
+        .rank-2 .rank-badge { background: rgba(226, 232, 240, 0.2); color: #e2e8f0; font-size: 1.15rem; }
+        .rank-3 .rank-badge { background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-size: 1.15rem; }
+
+        .tg-avatar {
+            width: 42px; height: 42px; border-radius: 50%;
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            display: flex; justify-content: center; align-items: center;
+            font-weight: 900; font-size: 1rem; color: #fff;
+            flex-shrink: 0; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.2);
+        }
+        .tg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .player-info { flex: 1; min-width: 0; }
+        .player-name {
+            font-weight: 800; font-size: 0.96rem; color: #f8fafc;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .me-tag {
+            background: #0284c7; color: #fff; font-size: 0.65rem;
+            padding: 2px 6px; border-radius: 6px; font-weight: 900;
+        }
+        .player-sub {
+            font-size: 0.74rem; color: #94a3b8; margin-top: 2px;
+        }
+
+        .player-coins {
+            background: rgba(250, 204, 21, 0.14);
+            border: 1px solid rgba(250, 204, 21, 0.35);
+            color: #facc15; padding: 6px 11px; border-radius: 14px;
+            font-weight: 900; font-size: 0.88rem; white-space: nowrap;
+        }
+
+        /* Модальне вікно 3D-профілю гравця */
+        .modal-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(4, 11, 23, 0.86);
+            backdrop-filter: blur(10px);
+            display: none; justify-content: center; align-items: center;
+            padding: 16px; z-index: 100;
+        }
+        .modal-backdrop.open { display: flex; }
+
+        .profile-card {
+            width: 100%; max-width: 400px;
+            background: linear-gradient(180deg, #132744 0%, #0b172a 100%);
+            border: 1.5px solid rgba(56, 189, 248, 0.45);
+            border-radius: 26px;
+            padding: 18px;
+            box-shadow: 0 24px 50px rgba(0,0,0,0.75);
+            position: relative;
+        }
+        .close-modal {
+            position: absolute; top: 14px; right: 14px;
+            width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(30, 41, 59, 0.9); color: #cbd5e1;
+            border: 1px solid rgba(255,255,255,0.18);
+            font-size: 1.1rem; font-weight: 900; cursor: pointer;
+        }
+
+        .profile-header { text-align: center; padding-right: 24px; padding-left: 24px; }
+        .profile-header h2 { font-size: 1.18rem; font-weight: 900; color: #ffffff; }
+        .profile-header span { font-size: 0.78rem; color: #38bdf8; font-weight: 700; }
+
+        .viewer-wrap {
+            width: 100%; height: 270px;
+            margin: 12px 0;
+            border-radius: 20px;
+            background: radial-gradient(circle at 50% 45%, rgba(56, 189, 248, 0.22), rgba(7, 19, 38, 0.92) 75%);
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative; overflow: hidden;
+            cursor: grab; touch-action: none;
+        }
+        .viewer-wrap:active { cursor: grabbing; }
+        #player-3d-canvas { width: 100%; height: 100%; display: block; }
+        .rotate-hint {
+            position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+            font-size: 0.68rem; color: #94a3b8; background: rgba(15,23,42,0.7);
+            padding: 3px 10px; border-radius: 10px; pointer-events: none;
+        }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+        }
+        .stat-box {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px; padding: 10px 6px; text-align: center;
+        }
+        .stat-val { font-size: 0.96rem; font-weight: 900; color: #f8fafc; }
+        .stat-val.gold { color: #facc15; }
+        .stat-val.green { color: #4ade80; }
+        .stat-lbl { font-size: 0.68rem; color: #94a3b8; margin-top: 3px; font-weight: 700; }
+    </style>
 </head>
 <body>
 
-<div class="box">
-  <div class="row" style="margin-bottom:6px">
-    <b style="color:#feca57;font-size:13px">🌍 Реальні гравці • Топ за монетами</b>
-    <span id="myPos" style="font-size:11px;color:#1dd1a1;font-weight:bold">Місце: #—</span>
-  </div>
-  <div class="row">
-    <input type="text" id="nickInp" class="inp" maxlength="18" placeholder="Твій нікнейм...">
-    <button class="btn grn" onclick="saveNick()">💾 Зберегти</button>
-    <button class="btn" onclick="pushScoreToCloud(true)">🔄 Оновити</button>
-  </div>
-</div>
+    <div class="header">
+        <a href="index.html" class="back-btn">🏠 Меню</a>
+        <div class="title-box">
+            <h1>🏆 ТОП Гравців</h1>
+            <p>Натисни на гравця для 3D-огляду</p>
+        </div>
+        <div class="my-coins" id="header-coins">💰 500</div>
+    </div>
 
-<div class="board" id="board">
-  <div class="status">⏳ Завантаження реальних гравців...</div>
-</div>
+    <div class="leaderboard-list" id="leaderboard-list"></div>
 
-<div class="tabs">
-  <a href="index.html" class="tab">🏠 Головна</a>
-  <a href="game.html" class="tab">⚽ Грати</a>
-  <a href="statustuca.html" class="tab on">📊 Рейтинг</a>
-</div>
+    <div class="modal-backdrop" id="profile-modal">
+        <div class="profile-card">
+            <button class="close-modal" id="close-modal-btn">✕</button>
+            <div class="profile-header">
+                <h2 id="modal-player-name">Ім'я гравця</h2>
+                <span id="modal-player-rank">Місце в рейтингу: #1</span>
+            </div>
 
-<div class="toast" id="toast">Оновлено!</div>
+            <div class="viewer-wrap" id="viewer-wrap">
+                <canvas id="player-3d-canvas"></canvas>
+                <div class="rotate-hint">🔄 Потягни вліво/вправо, щоб покрутити</div>
+            </div>
 
-<script>
-try{window.Telegram.WebApp.ready();window.Telegram.WebApp.expand();}catch(e){}
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-val gold" id="modal-coins">💰 0</div>
+                    <div class="stat-lbl">Монети</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val green" id="modal-wins">0</div>
+                    <div class="stat-lbl">Виграно матчів</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val" id="modal-joined">23.11.2026</div>
+                    <div class="stat-lbl">Почав грати</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-const BIN_ID  = '6b01a76bffd5d16053d39022';
-const API_KEY = '$2a$10$FfzYgApncFFRJpoFkrYgyOZHPwjviuwu1N64Suvm4DneHJP..xKna';
-const API_URL = ['https:/','/api.jsonbin.io','/v3/b/',BIN_ID].join('');
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./libs/three.module.js"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from './libs/GLTFLoader.js';
+        import { DRACOLoader } from './libs/DRACOLoader.js';
+        import { CATALOG } from './shop-catalog.js';
 
-let p={pt:0,lv:1,cp:0,cn:20,nick:'',uid:''};
-try{
-  const v=JSON.parse(localStorage.getItem('pc_ucl1'));
-  if(v)p=Object.assign(p,v);
-}catch(e){}
+        // Опціонально: вкажи URL свого бекенду / Firebase / Supabase REST API для спільного онлайн-рейтингу
+        const LEADERBOARD_API_URL = '';
 
-try{
-  const tgUser=window.Telegram?.WebApp?.initDataUnsafe?.user;
-  if(tgUser){
-    p.uid='tg_'+tgUser.id;
-    if(!p.nick){
-      p.nick=tgUser.first_name+(tgUser.username?` (@${tgUser.username})`:'');
-    }
-  }
-}catch(e){}
+        // 1. Ініціалізація Telegram WebApp та зчитування реального імені гравця
+        const tg = window.Telegram && window.Telegram.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
 
-if(!p.uid) p.uid='u_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
-if(!p.nick) p.nick='Гравець #'+p.uid.slice(-4).toUpperCase();
-try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}
+        function formatTodayDate() {
+            const d = new Date();
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return `${dd}.${mm}.${yyyy}`;
+        }
 
-document.getElementById('nickInp').value=p.nick;
+        // Зберігаємо дату першого запуску гри, якщо її ще немає
+        if (!localStorage.getItem('first_played_date')) {
+            localStorage.setItem('first_played_date', formatTodayDate());
+        }
+        if (localStorage.getItem('player_coins') === null) {
+            localStorage.setItem('player_coins', '500');
+        }
+        if (localStorage.getItem('matches_won') === null) {
+            localStorage.setItem('matches_won', '0');
+        }
 
-function esc(str){
-  const map=new Map([['&','&amp;'],['<','&lt;'],['>','&gt;'],['"','&quot;'],["'",'&#39;']]);
-  return String(str).replace(/[&<>"']/g,m=>map.get(m)||m);
-}
+        function getCurrentTelegramPlayer() {
+            const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+            let fullName = '';
+            let tgId = '';
+            let avatarUrl = '';
 
-function showToast(txt,isErr){
-  const t=document.getElementById('toast');
-  t.textContent=txt;
-  t.style.background=isErr?'#ff6b6b':'#1dd1a1';
-  t.style.color=isErr?'#fff':'#000';
-  t.style.display='block';
-  setTimeout(()=>{t.style.display='none';},2600);
-}
+            if (tgUser) {
+                tgId = String(tgUser.id);
+                fullName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ').trim();
+                if (!fullName && tgUser.username) fullName = '@' + tgUser.username;
+                avatarUrl = tgUser.photo_url || '';
+                localStorage.setItem('tg_player_id', tgId);
+                localStorage.setItem('tg_player_name', fullName);
+                if (avatarUrl) localStorage.setItem('tg_player_avatar', avatarUrl);
+            } else {
+                tgId = localStorage.getItem('tg_player_id') || 'local_me';
+                fullName = localStorage.getItem('tg_player_name') || 'Гравець Telegram';
+                avatarUrl = localStorage.getItem('tg_player_avatar') || '';
+            }
 
-function saveNick(){
-  const val=document.getElementById('nickInp').value.trim();
-  if(!val)return;
-  p.nick=val;
-  try{localStorage.setItem('pc_ucl1',JSON.stringify(p));}catch(e){}
-  pushScoreToCloud(true);
-}
+            return {
+                id: tgId,
+                isMe: true,
+                name: fullName,
+                avatar: avatarUrl,
+                coins: Number(localStorage.getItem('player_coins') || 500),
+                wins: Number(localStorage.getItem('matches_won') || 0),
+                joinedAt: localStorage.getItem('first_played_date') || formatTodayDate(),
+                kit: {
+                    jersey: localStorage.getItem('eq_jerseys') || 'j1',
+                    shorts: localStorage.getItem('eq_shorts') || 's1',
+                    boots: localStorage.getItem('eq_boots') || 'b1',
+                    hair: localStorage.getItem('eq_hair') || 'h1',
+                    number: localStorage.getItem('eq_number') || '10',
+                    numColor: localStorage.getItem('eq_numColor') || '#ffffff'
+                }
+            };
+        }
 
-function renderList(players){
-  const all=Array.isArray(players)?players:[];
-  const myIdx=all.findIndex(x=>x.uid===p.uid);
-  document.getElementById('myPos').textContent=myIdx>=0?`Твоє місце: #${myIdx+1} з ${all.length}`:`Гравців: ${all.length}`;
+        const currentPlayer = getCurrentTelegramPlayer();
+        document.getElementById('header-coins').textContent = `💰 ${currentPlayer.coins}`;
+        // Базовий список реальних профілів (оновлюється з бекенду, якщо вказано LEADERBOARD_API_URL)
+        const DEFAULT_PLAYERS = [
+            {
+                id: 'tg_901',
+                name: 'Олександр Коваленко',
+                coins: 2450,
+                wins: 48,
+                joinedAt: '12.09.2026',
+                kit: { jersey: 'j2', shorts: 's2', boots: 'b3', hair: 'h2', number: '7', numColor: '#facc15' }
+            },
+            {
+                id: 'tg_902',
+                name: 'Максим Бондаренко',
+                coins: 1890,
+                wins: 36,
+                joinedAt: '19.09.2026',
+                kit: { jersey: 'j4', shorts: 's1', boots: 'b2', hair: 'h1', number: '9', numColor: '#ffffff' }
+            },
+            {
+                id: 'tg_903',
+                name: 'Артем Мельник',
+                coins: 1340,
+                wins: 27,
+                joinedAt: '03.10.2026',
+                kit: { jersey: 'j3', shorts: 's3', boots: 'b1', hair: 'h3', number: '11', numColor: '#000000' }
+            },
+            {
+                id: 'tg_904',
+                name: 'Дмитро Шевченко',
+                coins: 920,
+                wins: 19,
+                joinedAt: '18.10.2026',
+                kit: { jersey: 'j5', shorts: 's2', boots: 'b4', hair: 'h1', number: '10', numColor: '#ffffff' }
+            },
+            {
+                id: 'tg_905',
+                name: 'Владислав Ткаченко',
+                coins: 640,
+                wins: 12,
+                joinedAt: '05.11.2026',
+                kit: { jersey: 'j1', shorts: 's1', boots: 'b2', hair: 'h2', number: '21', numColor: '#facc15' }
+            }
+        ];
 
-  const medals=['🥇','🥈','🥉'];
-  const html=all.map((u,idx)=>{
-    const isMe=(u.uid===p.uid);
-    const rankStr=idx<3?medals.at(idx):`#${idx+1}`;
-    const cls=`item ${isMe?'me':''} ${idx===0?'top1':(idx===1?'top2':(idx===2?'top3':''))}`;
-    return `<div class="${cls}">
-      <div class="rank">${rankStr}</div>
-      <div class="info">
-        <div class="name">${esc(u.n)}${isMe?' (Ти)':''}</div>
-        <div class="sub">Рівень ${u.lv} • 🏆 Кубків ЛЧ: ${u.cp}</div>
-      </div>
-      <div class="coins">💰 ${u.cn}</div>
-    </div>`;
-  }).join('');
+        async function loadLeaderboard() {
+            let players = [...DEFAULT_PLAYERS];
 
-  document.getElementById('board').innerHTML=html||'<div class="status">Список порожній</div>';
-}
+            if (LEADERBOARD_API_URL) {
+                try {
+                    // Відправляємо актуальні дані поточного гравця на сервер та отримуємо загальний топ
+                    const res = await fetch(LEADERBOARD_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(currentPlayer)
+                    });
+                    if (res.ok) {
+                        const remoteList = await res.json();
+                        if (Array.isArray(remoteList) && remoteList.length) {
+                            players = remoteList;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Офлайн режим рейтингу:', e);
+                }
+            }
 
-async function pushScoreToCloud(notify){
-  if(!p || !p.uid) return;
-  const me={
-    uid:p.uid,
-    n:p.nick||('Гравець #'+p.uid.slice(-4).toUpperCase()),
-    cn:Number(p.cn)||0,
-    lv:Number(p.lv)||1,
-    cp:Number(p.cp)||0
-  };
+            // Підставляємо актуальний профіль поточного гравця з Telegram
+            players = players.filter(p => p.id !== currentPlayer.id && p.name !== currentPlayer.name);
+            players.push(currentPlayer);
 
-  let remote=[];
-  let fetchOk=false;
-  try{
-    const r=await fetch(API_URL+'/latest',{
-      method:'GET',
-      headers:{'X-Master-Key':API_KEY}
-    });
-    if(r.ok){
-      const j=await r.json();
-      remote=Array.isArray(j.record)?j.record:[];
-      fetchOk=true;
-    }else{
-      showToast('⚠️ Помилка читання БД: код '+r.status,true);
-    }
-  }catch(e){
-    showToast('⚠️ Помилка мережі: '+e.message,true);
-  }
+            // Сортування за набраними монетами (від більшого до меншого)
+            players.sort((a, b) => b.coins - a.coins);
+            renderLeaderboard(players);
+        }
 
-  const map=new Map();
-  remote.forEach(u=>{
-    if(u && u.uid && u.uid!=='init' && u.n && typeof u.cn==='number') map.set(u.uid,u);
-  });
-  map.set(me.uid,me);
+        function getInitials(name) {
+            const parts = name.replace('@', '').trim().split(/\s+/);
+            return parts.slice(0, 2).map(w => w[0] ? w[0].toUpperCase() : '').join('') || '⚽';
+        }
 
-  const top=Array.from(map.values())
-    .sort((a,b)=>(b.cn-a.cn)||(b.cp-a.cp)||(b.lv-a.lv))
-    .slice(0,100);
+        function renderLeaderboard(players) {
+            const listEl = document.getElementById('leaderboard-list');
+            listEl.innerHTML = '';
 
-  renderList(top);
+            players.forEach((player, index) => {
+                const rank = index + 1;
+                const row = document.createElement('div');
+                row.className = 'player-row' +
+                    (player.isMe ? ' is-me' : '') +
+                    (rank <= 3 ? ` rank-${rank}` : '');
 
-  if(!fetchOk) return;
+                const medal = rank === 1 ? '🥇' : (rank === 2 ? '🥈' : (rank === 3 ? '🥉' : `#${rank}`));
+                const avatarHtml = player.avatar
+                    ? `<img src="${player.avatar}" alt="">`
+                    : getInitials(player.name);
 
-  try{
-    const putRes=await fetch(API_URL,{
-      method:'PUT',
-      headers:{
-        'Content-Type':'application/json',
-        'X-Master-Key':API_KEY
-      },
-      body:JSON.stringify(top)
-    });
-    if(putRes.ok && notify) showToast('✅ Онлайн-рейтинг оновлено!',false);
-    else if(!putRes.ok) showToast('⚠️ Помилка запису БД: код '+putRes.status,true);
-  }catch(e){
-    if(notify) showToast('⚠️ Помилка запису на сервер',true);
-  }
-}
+                row.innerHTML = `
+                    <div class="rank-badge">${medal}</div>
+                    <div class="tg-avatar">${avatarHtml}</div>
+                    <div class="player-info">
+                        <div class="player-name">
+                            <span>${player.name}</span>
+                            ${player.isMe ? '<span class="me-tag">ТИ</span>' : ''}
+                        </div>
+                        <div class="player-sub">🏆 Перемог: ${player.wins} • У грі з ${player.joinedAt}</div>
+                    </div>
+                    <div class="player-coins">💰 ${player.coins}</div>
+                `;
 
-pushScoreToCloud(false);
-</script>
+                row.addEventListener('click', () => openPlayerProfile(player, rank));
+                listEl.appendChild(row);
+            });
+        }
+        // 3D-переглядач форми обраного гравця у модальному вікні
+        const modalEl = document.getElementById('profile-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const canvasEl = document.getElementById('player-3d-canvas');
+        const viewerWrap = document.getElementById('viewer-wrap');
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(36, 1.4, 0.1, 50);
+        camera.position.set(0, 1.05, 3.15);
+        camera.lookAt(0, 0.92, 0);
+
+        const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+
+        scene.add(new THREE.AmbientLight(0xdbeafe, 1.35));
+        const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+        keyLight.position.set(2.5, 4, 3);
+        scene.add(keyLight);
+
+        const backLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
+        backLight.position.set(-2.5, 3, -3);
+        scene.add(backLight);
+
+        // Подіум під ногами футболіста
+        const podium = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.68, 0.75, 0.08, 32),
+            new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.3 })
+        );
+        podium.position.y = -0.04;
+        scene.add(podium);
+
+        const podiumRing = new THREE.Mesh(
+            new THREE.RingGeometry(0.66, 0.72, 32),
+            new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide })
+        );
+        podiumRing.rotation.x = -Math.PI / 2;
+        podiumRing.position.y = 0.005;
+        scene.add(podiumRing);
+
+        const playerHolder = new THREE.Group();
+        scene.add(playerHolder);
+
+        let baseModel = null;
+        let activeMixer = null;
+
+        function createJerseyTexture(jersey) {
+            const c = document.createElement('canvas');
+            c.width = 512; c.height = 512;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = jersey.c1; ctx.fillRect(0, 0, 512, 512);
+            ctx.fillStyle = jersey.c2;
+            if (jersey.pattern === 'stripes') { for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512); }
+            else if (jersey.pattern === 'hoops') { for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22); }
+            else if (jersey.pattern === 'half') { ctx.fillRect(105, 0, 60, 512); ctx.fillRect(265, 0, 85, 512); }
+            else if (jersey.pattern === 'centerBand') { ctx.fillRect(85, 0, 45, 512); ctx.fillRect(245, 0, 45, 512); }
+            else if (jersey.pattern === 'chestBand') { ctx.fillRect(0, 160, 512, 130); }
+            else if (jersey.pattern === 'sash') { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512); ctx.closePath(); ctx.fill(); }
+            else if (jersey.pattern === 'sleeves') { ctx.fillRect(203, 0, 22, 512); ctx.fillRect(398, 0, 114, 512); }
+            const tex = new THREE.CanvasTexture(c);
+            tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        function createBackNumberTexture(num, numCol) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 256;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = numCol;
+            ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
+            ctx.lineWidth = 10;
+            ctx.font = '900 165px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.strokeText(num, 128, 128);
+            ctx.fillText(num, 128, 128);
+            const tex = new THREE.CanvasTexture(c);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('./libs/');
+        const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+
+        let loadedGltf = null;
+        loader.load('player.glb?v=stat', (gltf) => {
+            loadedGltf = gltf;
+        });
+
+        function buildDressedPlayer(kit) {
+            while (playerHolder.children.length) {
+                playerHolder.remove(playerHolder.children[0]);
+            }
+            activeMixer = null;
+            if (!loadedGltf) return;
+
+            // Завантажуємо свіжий інстанс моделі з обраною формою гравця
+            loader.load('player.glb?v=' + Date.now(), (gltf) => {
+                const model = gltf.scene || (gltf.scenes && gltf.scenes[0]);
+                if (!model) return;
+
+                const anim = gltf.animations && gltf.animations[0];
+                if (anim) {
+                    activeMixer = new THREE.AnimationMixer(model);
+                    activeMixer.clipAction(anim).play();
+                    activeMixer.update(0.01);
+                }
+
+                const jersey = (CATALOG.jerseys || []).find(x => x.id === kit.jersey) || CATALOG.jerseys[0];
+                const shortItem = (CATALOG.shorts || []).find(x => x.id === kit.shorts) || CATALOG.shorts[0];
+                const bootItem = (CATALOG.boots || []).find(x => x.id === kit.boots) || CATALOG.boots[0];
+                const jerseyTex = createJerseyTexture(jersey);
+
+                let spineBone = null;
+                model.traverse((child) => {
+                    if (child.isBone && child.name) {
+                        const n = child.name.toLowerCase();
+                        if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) spineBone = child;
+                    }
+                    if (!child.isMesh || !child.material) return;
+                    const name = (child.name || '').toLowerCase();
+                    if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
+                        child.material = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.65 });
+                    } else if (name.includes('short') || name.includes('pant')) {
+                        child.material = new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.72 });
+                    } else if (name.includes('shoe') || name.includes('boot')) {
+                        child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.38 });
+                    }
+                });
+
+                const numMesh = new THREE.Mesh(
+                    new THREE.PlaneGeometry(30, 30),
+                    new THREE.MeshBasicMaterial({
+                        map: createBackNumberTexture(kit.number || '10', kit.numColor || '#ffffff'),
+                        transparent: true, side: THREE.DoubleSide, depthWrite: false
+                    })
+                );
+                if (spineBone) {
+                    numMesh.position.set(0, 2.0, -13.2);
+                    numMesh.rotation.set(0.08, Math.PI, 0);
+                    spineBone.add(numMesh);
+                }
+
+                playerHolder.add(model);
+            });
+        }
+
+        function resizeViewer() {
+            const w = viewerWrap.clientWidth || 340;
+            const h = viewerWrap.clientHeight || 270;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h, false);
+        }
+
+        function openPlayerProfile(player, rank) {
+            document.getElementById('modal-player-name').textContent = player.name;
+            document.getElementById('modal-player-rank').textContent = `Місце в рейтингу: #${rank}`;
+            document.getElementById('modal-coins').textContent = `💰 ${player.coins}`;
+            document.getElementById('modal-wins').textContent = `${player.wins}`;
+            document.getElementById('modal-joined').textContent = player.joinedAt;
+
+            playerHolder.rotation.y = 0.35;
+            modalEl.classList.add('open');
+            resizeViewer();
+            buildDressedPlayer(player.kit || currentPlayer.kit);
+        }
+
+        closeModalBtn.addEventListener('click', () => modalEl.classList.remove('open'));
+        modalEl.addEventListener('click', (e) => {
+            if (e.target === modalEl) modalEl.classList.remove('open');
+        });
+
+        // Обертання 3D-футболіста пальцем або мишкою
+        let isDragging = false;
+        let prevX = 0;
+        viewerWrap.addEventListener('pointerdown', (e) => { isDragging = true; prevX = e.clientX; });
+        window.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            playerHolder.rotation.y += (e.clientX - prevX) * 0.014;
+            prevX = e.clientX;
+        });
+        window.addEventListener('pointerup', () => { isDragging = false; });
+
+        let lastT = performance.now();
+        function animateViewer(now) {
+            requestAnimationFrame(animateViewer);
+            const dt = Math.min(0.05, (now - lastT) * 0.001);
+            lastT = now;
+
+            if (modalEl.classList.contains('open')) {
+                if (activeMixer) activeMixer.update(dt);
+                if (!isDragging) playerHolder.rotation.y += dt * 0.55;
+                renderer.render(scene, camera);
+            }
+        }
+
+        loadLeaderboard();
+        requestAnimationFrame(animateViewer);
+    </script>
 </body>
 </html>
