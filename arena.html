@@ -1,4 +1,4 @@
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 9 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 10 ==================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -52,7 +52,6 @@
         .status-banner.goal { border-color: #22c55e; color: #4ade80; transform: translateX(-50%) scale(1.08); }
         .status-banner.save { border-color: #ef4444; color: #f87171; }
 
-        /* Шкала сили удару */
         #power-box {
             position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%);
             width: min(340px, 86vw);
@@ -156,9 +155,8 @@
             }
         }
     </script>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 9 ==================== -->
-
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 9 ==================== -->
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 10 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 10 ==================== -->
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
@@ -278,9 +276,8 @@
         const rimLight = new THREE.DirectionalLight(0x93c5fd, 1.15);
         rimLight.position.set(-12, 14, -36);
         scene.add(rimLight);
-// ==================== КІНЕЦЬ ЧАСТИНИ 2 з 9 ====================
-
-// ==================== ПОЧАТОК ЧАСТИНИ 3 з 9 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 2 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 3 з 10 ====================
         function createPitchTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
@@ -367,8 +364,8 @@
         const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 66), adMat);
         adRight.position.set(24.2, 0.62, 0);
         stadiumGroup.add(adBack, adLeft, adRight);
-// ==================== КІНЕЦЬ ЧАСТИНИ 3 з 9 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 4 з 9 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 3 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 4 з 10 ====================
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
         const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
         const fanPositions = [];
@@ -511,8 +508,8 @@
         rightNet.position.set(GOAL_W / 2, GOAL_H / 2, -GOAL_D / 2);
 
         goalGroup.add(leftPost, rightPost, crossbar, backNet, topNet, leftNet, rightNet);
-// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 9 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 5 з 9 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 5 з 10 ====================
         function createBallTexture(c1, c2) {
             const c = document.createElement('canvas');
             c.width = 256; c.height = 128;
@@ -606,8 +603,8 @@
             }
         }
         setTimeout(hideLoader, 3000);
-// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 9 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 6 з 9 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 6 з 10 ====================
         let strikerMixer = null;
         let gkMixer = null;
 
@@ -770,9 +767,9 @@
                 hideLoader();
             }, undefined, () => hideLoader());
         }, undefined, () => hideLoader());
-// ==================== КІНЕЦЬ ЧАСТИНИ 6 з 9 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 7 з 9 ====================
-        let shotState = 'ready'; // 'ready' | 'power' | 'runup' | 'flying' | 'to_net' | 'rebound' | 'in_net' | 'caught' | 'resetting'
+// ==================== КІНЕЦЬ ЧАСТИНИ 6 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 7 з 10 ====================
+        let shotState = 'ready';
         let stateTimer = 0;
         let shotProgress = 0;
         let shotDuration = 0.56;
@@ -806,7 +803,7 @@
         scene.add(targetReticle);
 
         const gkState = {
-            mode: 'ready', // 'ready' | 'dive' | 'catch_center' | 'land' | 'getup' | 'react'
+            mode: 'ready',
             modeTime: 0,
             outcome: 'none',
             x: 0,
@@ -824,20 +821,20 @@
 
         function deformGoalNet(dt) {
             if (!netImpact.active) return;
-            netImpact.phase += dt * 18;
-            netImpact.amp *= Math.pow(0.22, dt);
+            netImpact.phase += dt * 11;
+            netImpact.amp *= Math.pow(0.32, dt);
 
             const pos = backNetGeo.attributes.position;
             for (let i = 0; i < pos.count; i++) {
                 const bx = backNetBase[i * 3];
                 const by = backNetBase[i * 3 + 1];
                 const dist = Math.hypot(bx - netImpact.x, (by + GOAL_H / 2) - netImpact.y);
-                const bulge = Math.exp(-(dist * dist) / 2.6) * Math.sin(netImpact.phase) * netImpact.amp;
-                pos.setZ(i, -Math.abs(bulge) * 0.95);
+                const wave = Math.exp(-(dist * dist) / 4.2) * (0.65 + 0.35 * Math.cos(netImpact.phase)) * netImpact.amp;
+                pos.setZ(i, -wave * 0.72);
             }
             pos.needsUpdate = true;
 
-            if (netImpact.amp < 0.01) {
+            if (netImpact.amp < 0.008) {
                 netImpact.active = false;
                 pos.array.set(backNetBase);
                 pos.needsUpdate = true;
@@ -920,10 +917,8 @@
             shotsCount++;
             shotsEl.textContent = shotsCount;
 
-            // Перевіряємо, чи удар іде по центру воріт (|x| < 0.75м)
             const isCenterShot = Math.abs(shotTarget.x) < 0.75 && shotTarget.y <= GOAL_H;
             if (isCenterShot && Math.random() < 0.68) {
-                // Воротар залишається по центру і готується зловити м'яч!
                 gkState.mode = 'catch_center';
                 gkState.modeTime = 0;
                 gkState.outcome = 'none';
@@ -1010,8 +1005,8 @@
                 }
             }
         });
-// ==================== КІНЕЦЬ ЧАСТИНИ 7 з 9 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 8 з 9 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 7 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 8 з 10 ====================
         const saveFlashMesh = new THREE.Mesh(
             new THREE.RingGeometry(0.08, 0.36, 24),
             new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0, side: THREE.DoubleSide })
@@ -1059,7 +1054,6 @@
             const dBody = ballMesh.position.distanceTo(tmpChestPos);
             if (dBody < minDist) minDist = dBody;
 
-            // Ловля м'яча по центру в руки воротаря
             if (gkState.mode === 'catch_center' && minDist < 0.75) {
                 gkState.mode = 'react';
                 gkState.modeTime = 0;
@@ -1094,12 +1088,33 @@
             return false;
         }
 
+        function registerGoal(customBanner = '⚽ ГОООЛ! +25 💰') {
+            gkState.outcome = 'goal';
+            goalsCount++;
+            goalsEl.textContent = goalsCount;
+            coins += 25;
+            coinsEl.textContent = `💰 ${coins}`;
+            localStorage.setItem('player_coins', String(coins));
+
+            setBanner(customBanner, 'goal');
+            arenaAudio.playCrowd(true);
+        }
+
+        const postRicochet = { active: false, targetPostX: 0 };
+
         function evaluateShotResult() {
             const halfW = GOAL_W / 2;
-            const hitLeftPost = Math.abs(shotTarget.x + halfW) < 0.16 && shotTarget.y <= GOAL_H + 0.12;
-            const hitRightPost = Math.abs(shotTarget.x - halfW) < 0.16 && shotTarget.y <= GOAL_H + 0.12;
-            const hitCrossbar = Math.abs(shotTarget.y - GOAL_H) < 0.16 && Math.abs(shotTarget.x) <= halfW + 0.12;
-            const isOut = Math.abs(shotTarget.x) > halfW - 0.05 || shotTarget.y > GOAL_H - 0.05;
+            const postR = 0.085;
+            const hitZone = postR + BALL_R;
+
+            const distLeft = Math.abs(shotTarget.x + halfW);
+            const distRight = Math.abs(shotTarget.x - halfW);
+            const distTop = Math.abs(shotTarget.y - GOAL_H);
+
+            const hitLeftPost = distLeft < hitZone && shotTarget.y <= GOAL_H + hitZone * 0.7;
+            const hitRightPost = distRight < hitZone && shotTarget.y <= GOAL_H + hitZone * 0.7;
+            const hitCrossbar = distTop < hitZone && Math.abs(shotTarget.x) <= halfW + hitZone * 0.7;
+            const isOut = Math.abs(shotTarget.x) > halfW - 0.03 || shotTarget.y > GOAL_H - 0.03;
 
             if (gkState.mode === 'catch_center') {
                 gkState.mode = 'react';
@@ -1109,14 +1124,54 @@
                 gkState.modeTime = 0;
             }
 
+            postRicochet.active = false;
+
             if (hitLeftPost || hitRightPost || hitCrossbar) {
-                gkState.outcome = 'save';
-                setBanner('💥 ШТАНГА / ПЕРЕКЛАДИНА!', 'save');
-                arenaAudio.playCrowd(false);
                 triggerSaveFlash(ballMesh.position);
-                reboundVel.set((Math.random() - 0.5) * 4.2, 2.5, 4.5);
-                shotState = 'rebound';
-                setTimeout(resetPenalty, 2600);
+
+                let overlapPct = 60;
+                let dirInward = 0;
+
+                if (hitLeftPost) {
+                    overlapPct = THREE.MathUtils.clamp(((-halfW + hitZone) - shotTarget.x) / (2 * hitZone) * 100, 0, 100);
+                    dirInward = 1;
+                } else if (hitRightPost) {
+                    overlapPct = THREE.MathUtils.clamp((shotTarget.x - (halfW - hitZone)) / (2 * hitZone) * 100, 0, 100);
+                    dirInward = -1;
+                } else if (hitCrossbar) {
+                    overlapPct = THREE.MathUtils.clamp((shotTarget.y - (GOAL_H - hitZone)) / (2 * hitZone) * 100, 0, 100);
+                    dirInward = 0;
+                }
+
+                if (overlapPct <= 41) {
+                    registerGoal('🔥 ГОООЛ ВІД ШТАНГИ! +25 💰');
+                    const inX = hitCrossbar ? (Math.random() - 0.5) * 1.2 : dirInward * 2.8;
+                    const inY = hitCrossbar ? -3.2 : 0.3;
+                    netBounceVel.set(inX, inY, -(8.5 + shotPower * 3.5));
+                    shotState = 'to_net';
+                } else if (overlapPct <= 48 && !hitCrossbar) {
+                    registerGoal('⚡ ВІД ДВОХ ШТАНГ У ВОРОТА! +25 💰');
+                    postRicochet.active = true;
+                    postRicochet.targetPostX = dirInward * (halfW - BALL_R * 0.9);
+                    netBounceVel.set(dirInward * 13.5, 0.35, -1.65);
+                    shotState = 'post_to_post';
+                } else if (overlapPct <= 55 && !hitCrossbar) {
+                    gkState.outcome = 'save';
+                    setBanner('😱 ПОПЕРЕК ВОРІТ ВІД ШТАНГИ!', 'save');
+                    arenaAudio.playCrowd(false);
+                    reboundVel.set(dirInward * 12.5, 0.8, 0.45);
+                    shotState = 'rebound';
+                } else {
+                    gkState.outcome = 'save';
+                    setBanner('💥 ШТАНГА / ПЕРЕКЛАДИНА!', 'save');
+                    arenaAudio.playCrowd(false);
+                    const outX = hitCrossbar ? (Math.random() - 0.5) * 3.0 : -dirInward * 2.6;
+                    const outY = hitCrossbar ? 3.4 : 2.1;
+                    reboundVel.set(outX, outY, 4.6 + shotPower * 1.5);
+                    shotState = 'rebound';
+                }
+
+                setTimeout(resetPenalty, 2800);
             } else if (isOut) {
                 gkState.outcome = 'save';
                 setBanner(shotTarget.y > GOAL_H ? '🚀 ВИЩЕ ВОРІТ!' : '❌ МИМО ВОРІТ!', 'save');
@@ -1124,20 +1179,9 @@
                 shotState = 'resetting';
                 setTimeout(resetPenalty, 2600);
             } else {
-                // ГОЛ ЗАРАХОВАНО! Але м'яч летить далі до самої задньої сітки воріт
-                gkState.outcome = 'goal';
-                goalsCount++;
-                goalsEl.textContent = goalsCount;
-                coins += 25;
-                coinsEl.textContent = `💰 ${coins}`;
-                localStorage.setItem('player_coins', String(coins));
-
-                setBanner('⚽ ГОООЛ! +25 💰', 'goal');
-                arenaAudio.playCrowd(true);
-
-                // Направляємо м'яч у полотно задньої сітки
-                const speedZ = 14 + shotPower * 6;
-                netBounceVel.set(shotCurveX * 0.4, (shotTarget.y - ballMesh.position.y) * 2.5, -speedZ);
+                registerGoal('⚽ ГОООЛ! +25 💰');
+                const speedZ = 12 + shotPower * 4.5;
+                netBounceVel.set(shotCurveX * 0.35, (shotTarget.y - ballMesh.position.y) * 2.0, -speedZ);
                 shotState = 'to_net';
                 setTimeout(resetPenalty, 2700);
             }
@@ -1147,6 +1191,7 @@
             shotState = 'ready';
             stateTimer = 0;
             shotProgress = 0;
+            postRicochet.active = false;
 
             powerBoxEl.classList.remove('active');
             targetReticle.visible = false;
@@ -1189,8 +1234,8 @@
             aimCtx.arc(swipeCurr.x, swipeCurr.y, 9, 0, Math.PI * 2);
             aimCtx.fill();
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 8 з 9 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 9A з 9 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 8 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 9 з 10 ====================
         const getBone = (map, part) => {
             const key = Object.keys(map).find(k => k.includes(part));
             return key ? map[key] : null;
@@ -1254,7 +1299,6 @@
                 gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 10));
                 crouchAmt = 0.18 + Math.abs(Math.sin(gkState.readyTime * 3.2)) * 0.04;
             } else if (gkState.mode === 'catch_center') {
-                // Воротар робить крок по центру і виставляє руки назустріч м'ячу
                 const p = Math.min(1, gkState.modeTime / Math.max(0.32, shotDuration));
                 gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, p);
                 gkState.y = Math.sin(p * Math.PI) * gkState.peakY;
@@ -1301,8 +1345,8 @@
                     gkState.y = 0;
                 }
             }
-// ==================== КІНЕЦЬ ЧАСТИНИ 9A з 9 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 9B з 9 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 9 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 10 з 10 ====================
             const crouchSink = crouchAmt * 0.14;
             const lieLift = (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
             gkContainer.position.set(gkState.x, Math.max(0, gkState.y + lieLift - crouchSink), GOAL_Z + 0.25);
@@ -1407,48 +1451,64 @@
                 if (!checkLiveGoalkeeperSave() && shotProgress >= 1) {
                     evaluateShotResult();
                 }
-            } else if (shotState === 'to_net') {
-                // М'яч летить углиб воріт до самої задньої сітки (GOAL_Z - GOAL_D)
+            } else if (shotState === 'post_to_post') {
                 ballMesh.position.addScaledVector(netBounceVel, dt);
-                ballMesh.rotation.x -= dt * 18;
+                ballMesh.rotation.z -= netBounceVel.x * dt * 5;
 
-                const backNetZ = GOAL_Z - GOAL_D + BALL_R;
-                if (ballMesh.position.z <= backNetZ) {
-                    ballMesh.position.z = backNetZ;
+                const reachedSecondPost = netBounceVel.x > 0
+                    ? ballMesh.position.x >= postRicochet.targetPostX
+                    : ballMesh.position.x <= postRicochet.targetPostX;
 
-                    // Запускаємо хвилю коливання полотна сітки в точці удару!
+                if (reachedSecondPost) {
+                    ballMesh.position.x = postRicochet.targetPostX;
+                    triggerSaveFlash(ballMesh.position);
+                    netBounceVel.set(-Math.sign(netBounceVel.x) * 2.4, -0.5, -8.5);
+                    shotState = 'to_net';
+                }
+            } else if (shotState === 'to_net') {
+                ballMesh.position.addScaledVector(netBounceVel, dt);
+                const maxInX = GOAL_W / 2 - BALL_R * 1.2;
+                if (Math.abs(ballMesh.position.x) > maxInX) {
+                    ballMesh.position.x = Math.sign(ballMesh.position.x) * maxInX;
+                    netBounceVel.x *= -0.3;
+                }
+                ballMesh.rotation.x -= dt * 15;
+
+                const softPocketZ = GOAL_Z - GOAL_D - 0.28;
+                if (ballMesh.position.z <= softPocketZ) {
+                    ballMesh.position.z = softPocketZ;
+
                     netImpact.active = true;
                     netImpact.x = THREE.MathUtils.clamp(ballMesh.position.x, -GOAL_W * 0.45, GOAL_W * 0.45);
                     netImpact.y = THREE.MathUtils.clamp(ballMesh.position.y, 0.2, GOAL_H - 0.1);
-                    netImpact.amp = 0.8 + shotPower * 0.55;
+                    netImpact.amp = 0.85 + shotPower * 0.45;
                     netImpact.phase = 0;
 
-                    if (shotPower >= 1.02) {
-                        // При сильному ударі м'яч відпружинює від сітки назад через лінію у поле!
+                    if (shotPower >= 1.08) {
                         reboundVel.set(
-                            (Math.random() - 0.5) * 1.6,
-                            1.2 + Math.random() * 0.8,
-                            3.6 + shotPower * 2.2
+                            (Math.random() - 0.5) * 0.9,
+                            0.35,
+                            2.15 + (shotPower - 1.0) * 1.8
                         );
                         shotState = 'rebound';
                     } else {
-                        shotState = 'in_net';
+                        reboundVel.set((Math.random() - 0.5) * 0.4, -0.4, 0.55);
+                        shotState = 'rebound';
                     }
                 }
             } else if (shotState === 'caught') {
-                // Воротар тримає зловлений м'яч у рукавицях перед грудьми
                 ballMesh.position.set(gkState.x, gkState.y + 1.05, GOAL_Z + 0.52);
             } else if (shotState === 'rebound') {
                 ballMesh.position.addScaledVector(reboundVel, dt);
                 reboundVel.y -= 9.8 * dt;
                 if (ballMesh.position.y < BALL_R) {
                     ballMesh.position.y = BALL_R;
-                    reboundVel.y *= -0.45;
-                    reboundVel.x *= 0.82;
-                    reboundVel.z *= 0.82;
+                    reboundVel.y *= -0.32;
+                    reboundVel.x *= 0.84;
+                    reboundVel.z *= 0.84;
                 }
-                ballMesh.rotation.x += dt * 12;
-                ballMesh.rotation.z -= reboundVel.x * dt * 4;
+                ballMesh.rotation.x += reboundVel.z * dt * 5;
+                ballMesh.rotation.z -= reboundVel.x * dt * 5;
             } else if (shotState === 'in_net') {
                 if (ballMesh.position.y > BALL_R) {
                     ballMesh.position.y = Math.max(BALL_R, ballMesh.position.y - 2.6 * dt);
@@ -1475,5 +1535,4 @@
     </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 9B з 9 ==================== -->
-
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 10 з 10 ==================== -->
