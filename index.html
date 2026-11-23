@@ -1383,9 +1383,11 @@
                 const localT = (jugPhase % Math.PI) / Math.PI;
                 const isRightTarget = stepIndex % 2 === 0;
 
-                const contactWave = Math.pow(Math.cos(localT * Math.PI), 2);
-                const rLift = isRightTarget ? contactWave : 0;
-                const lLift = !isRightTarget ? contactWave : 0;
+                const riseCurve = Math.sin(localT * Math.PI * 0.5);
+                const dropCurve = Math.cos(localT * Math.PI * 0.5);
+
+                const rLift = isRightTarget ? riseCurve : dropCurve;
+                const lLift = !isRightTarget ? riseCurve : dropCurve;
 
                 if (rUpLeg) rotateBoneWorldX(rUpLeg, -rLift * 0.78 * jugBlend);
                 if (rLeg) rotateBoneWorldX(rLeg, rLift * 0.98 * jugBlend);
@@ -1395,7 +1397,8 @@
                 if (lLeg) rotateBoneWorldX(lLeg, lLift * 0.98 * jugBlend);
                 if (lFoot) rotateBoneWorldX(lFoot, -lLift * 0.22 * jugBlend);
 
-                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + (isRightTarget ? -1 : 1) * contactWave * 0.05 * jugBlend;
+                const balanceWave = isRightTarget ? -riseCurve : riseCurve;
+                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + balanceWave * 0.05 * jugBlend;
                 if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.16 * jugBlend;
                 if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.16 * jugBlend;
 
@@ -1516,5 +1519,4 @@
     </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 13 з 13 ==================== -->
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 13 з 13 ====================
