@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Penalty 3D — Головна</title>
+    <script src="https://telegram.org"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; }
         body {
@@ -68,7 +69,8 @@
             pointer-events: auto;
             z-index: 10;
         }
-/* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 13 ==================== -->
+/* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 13 ==================== */
+
 /* ==================== ПОЧАТОК ЧАСТИНИ 2 з 13 ==================== */
         .nav-card {
             text-decoration: none;
@@ -247,7 +249,7 @@
 
     <div id="canvas-container"></div>
 
-      <div class="ui-layer">
+    <div class="ui-layer">
         <div class="top-hud">
             <button class="sound-btn" id="quick-sound-btn" title="Звук трибун">🔊</button>
             <div class="coins-pill" id="home-coins">💰 500</div>
@@ -261,16 +263,13 @@
                     <span class="nav-sub">Серія пенальті</span>
                 </div>
             </button>
-
-            <a href="statustuka.html" class="nav-card" style="text-decoration: none;">
+            <a href="statustuka.html" class="nav-card shop-card">
                 <div class="nav-icon">🏆</div>
                 <div class="nav-text">
                     <span class="nav-title">РЕЙТИНГ</span>
                     <span class="nav-sub">ТОП гравців</span>
                 </div>
             </a>
-
-            </button>
             <a href="shop.html" class="nav-card shop-card">
                 <div class="nav-icon">👕</div>
                 <div class="nav-text">
@@ -328,6 +327,62 @@
         }
         document.getElementById('home-coins').innerText = `💰 ${localStorage.getItem('player_coins')}`;
 
+        const FIREBASE_DB_URL = 'https://firebasedatabase.app';
+
+        function syncHomePlayerToFirebase() {
+            const tg = window.Telegram && window.Telegram.WebApp;
+            if (tg) {
+                tg.ready();
+                tg.expand();
+            }
+
+            if (!localStorage.getItem('first_played_date')) {
+                const d = new Date();
+                localStorage.setItem('first_played_date', `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`);
+            }
+
+            const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+            let tgId = localStorage.getItem('tg_player_id') || '';
+            let fullName = localStorage.getItem('tg_player_name') || '';
+            let avatarUrl = localStorage.getItem('tg_player_avatar') || '';
+
+            if (tgUser && tgUser.id) {
+                tgId = 'tg_' + String(tgUser.id);
+                fullName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ').trim() || (tgUser.username ? '@' + tgUser.username : '');
+                avatarUrl = tgUser.photo_url || '';
+                localStorage.setItem('tg_player_id', tgId);
+                if (fullName) localStorage.setItem('tg_player_name', fullName);
+                if (avatarUrl) localStorage.setItem('tg_player_avatar', avatarUrl);
+            }
+
+            if (!tgId) return;
+
+            const payload = {
+                id: tgId,
+                name: fullName || ('Гравець #' + tgId.slice(-4)),
+                avatar: avatarUrl,
+                coins: Number(localStorage.getItem('player_coins') || 500),
+                wins: Number(localStorage.getItem('matches_won') || 0),
+                joinedAt: localStorage.getItem('first_played_date'),
+                kit: {
+                    jersey: localStorage.getItem('eq_jerseys') || 'j1',
+                    shorts: localStorage.getItem('eq_shorts') || 's1',
+                    boots: localStorage.getItem('eq_boots') || 'b1',
+                    hair: localStorage.getItem('eq_hair') || 'h1',
+                    number: localStorage.getItem('eq_number') || '10',
+                    numColor: localStorage.getItem('eq_numColor') || '#ffffff'
+                },
+                updatedAt: Date.now()
+            };
+
+            fetch(`${FIREBASE_DB_URL}/players/${encodeURIComponent(tgId)}.json`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(() => {});
+        }
+        syncHomePlayerToFirebase();
+
         class StadiumChantAudio {
             constructor() {
                 this.ctx = null;
@@ -372,7 +427,7 @@
                 crowdFilter.connect(this.masterGain);
                 crowdNoise.start();
 
-                const chantNotes = [261.63, 293.66, 329.63, 293.66, 329.63, 392.00];
+                const chantNotes = new Array(261.63, 293.66, 329.63, 293.66, 329.63, 392.00);
                 let step = 0;
                 setInterval(() => {
                     if (!this.enabled || !this.ctx || this.ctx.state !== 'running') return;
@@ -380,7 +435,7 @@
                     const freq = chantNotes[step % chantNotes.length];
                     step++;
 
-                    [-4, 0, 5].forEach((detune) => {
+                    new Array(-4, 0, 5).forEach((detune) => {
                         const osc = this.ctx.createOscillator();
                         const gain = this.ctx.createGain();
                         const filter = this.ctx.createBiquadFilter();
@@ -432,6 +487,7 @@
             }
         }, { once: true });
 // ==================== КІНЕЦЬ ЧАСТИНИ 4 з 13 ====================
+
 // ==================== ПОЧАТОК ЧАСТИНИ 5 з 13 ====================
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
