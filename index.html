@@ -1308,7 +1308,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 // ==================== КІНЕЦЬ ЧАСТИНИ 12 з 13 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 13 з 13 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 13 з 14 ====================
         let lastTime = performance.now();
         const worldAxisX = new THREE.Vector3(1, 0, 0);
         const startBouncePos = new THREE.Vector3(0.34, 0.103, 0.24);
@@ -1378,16 +1378,21 @@
             const lArm = getBone('leftarm');
 
             if (jugBlend > 0.005) {
-                jugPhase += dt * 4.2;
+                jugPhase += dt * 3.4;
                 const stepIndex = Math.floor(jugPhase / Math.PI);
                 const localT = (jugPhase % Math.PI) / Math.PI;
                 const isRightTarget = stepIndex % 2 === 0;
 
-                const riseCurve = Math.sin(localT * Math.PI * 0.5);
-                const dropCurve = Math.cos(localT * Math.PI * 0.5);
+                const dropProgress = Math.min(1, localT / 0.45);
+                const dropCurve = Math.cos(dropProgress * Math.PI * 0.5);
 
-                const rLift = isRightTarget ? riseCurve : dropCurve;
-                const lLift = !isRightTarget ? riseCurve : dropCurve;
+                const riseProgress = Math.max(0, (localT - 0.55) / 0.45);
+                const riseCurve = Math.sin(riseProgress * Math.PI * 0.5);
+
+                const prevLegLift = stepIndex === 0 ? 0 : dropCurve;
+
+                const rLift = isRightTarget ? riseCurve : prevLegLift;
+                const lLift = !isRightTarget ? riseCurve : prevLegLift;
 
                 if (rUpLeg) rotateBoneWorldX(rUpLeg, -rLift * 0.78 * jugBlend);
                 if (rLeg) rotateBoneWorldX(rLeg, rLift * 0.98 * jugBlend);
@@ -1401,7 +1406,8 @@
                 if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + balanceWave * 0.05 * jugBlend;
                 if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.16 * jugBlend;
                 if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.16 * jugBlend;
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 14 з 14 ====================
                 playerModelUpdateMatrix(rFoot, lFoot);
 
                 const currentTargetPos = isRightTarget
@@ -1420,14 +1426,14 @@
 
                 const arcWave = Math.sin(localT * Math.PI);
                 const jugPos = new THREE.Vector3().lerpVectors(startBouncePos, targetBouncePos, localT);
-                jugPos.y += arcWave * 0.44;
-                jugPos.z = Math.max(jugPos.z, 0.38) + arcWave * 0.12;
+                jugPos.y += arcWave * 0.66;
+                jugPos.z = Math.max(jugPos.z, 0.38) + arcWave * 0.14;
 
                 const restPos = new THREE.Vector3(0.34, 0.103, 0.24);
                 ballMesh.position.lerpVectors(restPos, jugPos, jugBlend);
 
-                ballMesh.rotation.x -= dt * 4.2 * jugBlend;
-                ballMesh.rotation.z += (isRightTarget ? -1 : 1) * dt * 1.5 * jugBlend;
+                ballMesh.rotation.x -= dt * 3.8 * jugBlend;
+                ballMesh.rotation.z += (isRightTarget ? -1 : 1) * dt * 1.4 * jugBlend;
             } else {
                 lastStepIndex = -1;
                 jugPhase = 0;
@@ -1519,4 +1525,4 @@
     </script>
 </body>
 </html>
-// ==================== КІНЕЦЬ ЧАСТИНИ 13 з 13 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 14 з 14 ====================
