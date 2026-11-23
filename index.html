@@ -1479,18 +1479,15 @@
                 ballMesh.rotation.y += 0.01;
             }
 
-            // 2. Анімація привітання (5 сек): пряма рука піднімається спереду вгору, долоня повернута прямо на нас
+            // 2. Анімація привітання (5 сек): пряма рука піднімається спереду вгору, махає лише зап'ястя вліво-вправо
+            const wristWave = Math.sin(actionTimer * 8.0);
             if (waveBlend > 0.005) {
-                const wristWave = Math.sin(actionTimer * 8.0);
                 if (rArm) {
                     rotateBoneWorldAxis(rArm, worldAxisX, -2.65 * waveBlend);
-                    rotateBoneWorldAxis(rArm, worldAxisZ, -0.18 * waveBlend);
+                    rotateBoneWorldAxis(rArm, worldAxisZ, -0.22 * waveBlend);
                 }
                 if (rForeArm) {
                     rotateBoneWorldAxis(rForeArm, worldAxisY, 1.57 * waveBlend);
-                }
-                if (rightHandBone) {
-                    rotateBoneWorldAxis(rightHandBone, worldAxisZ, wristWave * 0.48 * waveBlend);
                 }
                 if (spine) {
                     rotateBoneWorldAxis(spine, worldAxisZ, 0.04 * waveBlend);
@@ -1500,9 +1497,11 @@
                 }
             }
 
-            // Перекручуємо 3D-рукавицю ще на 180 градусів (3.14 рад) долонею рівно в камеру
+            // Повертаємо 3D-рукавицю долонею в камеру і махаємо кистю строго вліво-вправо (по осі z)
             if (rightGloveHolder.children.length > 0) {
-                rightGloveHolder.children.at(0).rotation.y = 3.14 * waveBlend;
+                const gloveUnit = rightGloveHolder.children.at(0);
+                gloveUnit.rotation.y = 3.14 * waveBlend;
+                gloveUnit.rotation.z = wristWave * 0.38 * waveBlend;
             }
 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
 
