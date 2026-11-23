@@ -1384,7 +1384,8 @@
             const lArm = getBone('leftarm');
 
             if (jugBlend > 0.005) {
-                const phaseSpeed = isTrickStep ? 2.25 : 3.4;
+                // Природна швидкість польоту м'яча без сповільнення під час трюку
+                const phaseSpeed = isTrickStep ? 3.15 : 3.4;
                 jugPhase += dt * phaseSpeed;
 
                 const stepIndex = Math.floor(jugPhase / Math.PI);
@@ -1408,7 +1409,7 @@
 
                     const activeRight = isTrickStep ? ((stepIndex - 1) % 2 === 0) : (stepIndex % 2 === 0);
                     if (isTrickStep) {
-                        fixedTrickTarget.set(activeRight ? -0.14 : 0.14, 0.30, 0.44);
+                        fixedTrickTarget.set(activeRight ? -0.14 : 0.14, 0.34, 0.44);
                     }
 
                     lastStepIndex = stepIndex;
@@ -1432,28 +1433,26 @@
                 let lAbduct = 0;
                 let hipTwist = 0;
 
-                // Справжній круговий обліт Around The World:
-                // theta = 0 (внизу) -> PI/2 (широко вбік) -> PI (високо над м'ячем) -> 3PI/2 (в інший бік) -> 2PI (знову під м'ячем)
                 if (isTrickStep) {
                     const theta = localT * Math.PI * 2;
-                    const circleY = (1 - Math.cos(theta)) * 0.5; // 0 -> 1 -> 0
-                    const circleX = Math.sin(theta);              // 0 -> +1 -> 0 -> -1 -> 0
+                    const circleY = (1 - Math.cos(theta)) * 0.5;
+                    const circleX = Math.sin(theta);
 
-                    const trickHip = 0.65 + circleY * 0.92;       // Висота ноги від рівня удару до паха
-                    const trickKnee = 0.95 - circleY * 0.55;      // Випрямлення ноги у верхній точці
-                    const sideSwing = circleX * 0.78;             // Широкий обліт ліворуч/праворуч навколо м'яча
-                    hipTwist = circleX * 0.35;
+                    const trickHip = 0.72 + circleY * 0.95;
+                    const trickKnee = 0.95 - circleY * 0.55;
+                    const sideSwing = circleX * 0.82;
+                    hipTwist = circleX * 0.38;
 
                     if (isRightTarget) {
                         rHipFlex = trickHip;
                         rKneeBend = trickKnee;
-                        rAbduct = -sideSwing; // Спочатку вправо (-), потім над м'ячем, потім вліво (+), потім вниз
+                        rAbduct = -sideSwing;
                         lHipFlex = 0;
                         lKneeBend = 0;
                     } else {
                         lHipFlex = trickHip;
                         lKneeBend = trickKnee;
-                        lAbduct = sideSwing;  // Спочатку вліво (+), потім над м'ячем, потім вправо (-), потім вниз
+                        lAbduct = sideSwing;
                         rHipFlex = 0;
                         rKneeBend = 0;
                     }
@@ -1484,7 +1483,6 @@
                 if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - (0.16 + Math.abs(rAbduct) * 0.5) * jugBlend;
                 if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + (0.16 + Math.abs(lAbduct) * 0.5) * jugBlend;
 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
-
 // ==================== ПОЧАТОК ЧАСТИНИ 14 з 14 ====================
                 playerModelUpdateMatrix(rFoot, lFoot);
 
@@ -1501,8 +1499,8 @@
                     targetBouncePos.copy(currentTargetPos);
                 }
 
-                // Під час фінта м'яч висить низько (лише +0.18 м над точкою удару), щоб високо піднята до паха нога чисто пройшла над ним!
-                const peakHeight = isTrickStep ? 0.18 : 0.66;
+                // Природний підліт м'яча, як при звичайному набиванні (0.54 м при трюку, 0.66 м при набиванні)
+                const peakHeight = isTrickStep ? 0.54 : 0.66;
                 const arcWave = Math.sin(localT * Math.PI);
                 const jugPos = new THREE.Vector3().lerpVectors(startBouncePos, targetBouncePos, localT);
                 jugPos.y += arcWave * peakHeight;
