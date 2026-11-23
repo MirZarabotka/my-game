@@ -216,7 +216,6 @@
                 if (this.ctx.state === 'suspended') this.ctx.resume();
                 const now = this.ctx.currentTime;
 
-                // Глухий удар м'яча по трубі + двочастотний металевий дзвін штанги/перекладини
                 const freqs =;
                 freqs.forEach((f, idx) => {
                     const osc = this.ctx.createOscillator();
