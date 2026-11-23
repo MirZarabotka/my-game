@@ -209,6 +209,33 @@
                 osc.start(now);
                 osc.stop(now + 0.18);
             }
+            playPost() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const now = this.ctx.currentTime;
+
+                // Глухий удар м'яча по трубі + двочастотний металевий дзвін штанги/перекладини
+                const freqs =;
+                freqs.forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = idx === 0 ? 'triangle' : 'sine';
+                    osc.frequency.setValueAtTime(f, now);
+                    osc.frequency.exponentialRampToValueAtTime(f * 0.96, now + 0.45);
+
+                    const vol = idx === 0 ? 0.65 : (idx === 1 ? 0.35 : 0.18);
+                    const dur = idx === 0 ? 0.22 : 0.58;
+                    gain.gain.setValueAtTime(vol, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + dur + 0.02);
+                });
+            }
             playCrowd(isGoal) {
                 if (!this.enabled) return;
                 this.init();
@@ -277,6 +304,7 @@
         rimLight.position.set(-12, 14, -36);
         scene.add(rimLight);
 // ==================== КІНЕЦЬ ЧАСТИНИ 2 з 10 ====================
+
 // ==================== ПОЧАТОК ЧАСТИНИ 3 з 10 ====================
         function createPitchTexture() {
             const canvas = document.createElement('canvas');
@@ -1111,9 +1139,9 @@
             const distRight = Math.abs(shotTarget.x - halfW);
             const distTop = Math.abs(shotTarget.y - GOAL_H);
 
-            const hitLeftPost = distLeft < hitZone && shotTarget.y <= GOAL_H + hitZone * 0.7;
-            const hitRightPost = distRight < hitZone && shotTarget.y <= GOAL_H + hitZone * 0.7;
-            const hitCrossbar = distTop < hitZone && Math.abs(shotTarget.x) <= halfW + hitZone * 0.7;
+            const hitLeftPost = distLeft < hitZone && shotTarget.y <= GOAL_H + hitZone * 0.65;
+            const hitRightPost = distRight < hitZone && shotTarget.y <= GOAL_H + hitZone * 0.65;
+            const hitCrossbar = distTop < hitZone && Math.abs(shotTarget.x) <= halfW + hitZone * 0.65;
             const isOut = Math.abs(shotTarget.x) > halfW - 0.03 || shotTarget.y > GOAL_H - 0.03;
 
             if (gkState.mode === 'catch_center') {
@@ -1127,10 +1155,12 @@
             postRicochet.active = false;
 
             if (hitLeftPost || hitRightPost || hitCrossbar) {
+                arenaAudio.playPost();
                 triggerSaveFlash(ballMesh.position);
 
                 let overlapPct = 60;
                 let dirInward = 0;
+                const isBarOnly = hitCrossbar && !hitLeftPost && !hitRightPost;
 
                 if (hitLeftPost) {
                     overlapPct = THREE.MathUtils.clamp(((-halfW + hitZone) - shotTarget.x) / (2 * hitZone) * 100, 0, 100);
@@ -1143,31 +1173,31 @@
                     dirInward = 0;
                 }
 
-                if (overlapPct <= 41) {
-                    registerGoal('🔥 ГОООЛ ВІД ШТАНГИ! +25 💰');
-                    const inX = hitCrossbar ? (Math.random() - 0.5) * 1.2 : dirInward * 2.8;
-                    const inY = hitCrossbar ? -3.2 : 0.3;
+                if (overlapPct <= 26) {
+                    registerGoal(isBarOnly ? '🔥 ГОООЛ ВІД ПЕРЕКЛАДИНИ! +25 💰' : '🔥 ГОООЛ ВІД ШТАНГИ! +25 💰');
+                    const inX = isBarOnly ? (Math.random() - 0.5) * 1.2 : dirInward * 2.8;
+                    const inY = isBarOnly ? -3.4 : 0.3;
                     netBounceVel.set(inX, inY, -(8.5 + shotPower * 3.5));
                     shotState = 'to_net';
-                } else if (overlapPct <= 48 && !hitCrossbar) {
+                } else if (overlapPct <= 36 && !isBarOnly) {
                     registerGoal('⚡ ВІД ДВОХ ШТАНГ У ВОРОТА! +25 💰');
                     postRicochet.active = true;
                     postRicochet.targetPostX = dirInward * (halfW - BALL_R * 0.9);
                     netBounceVel.set(dirInward * 13.5, 0.35, -1.65);
                     shotState = 'post_to_post';
-                } else if (overlapPct <= 55 && !hitCrossbar) {
+                } else if (overlapPct <= 45 && !isBarOnly) {
                     gkState.outcome = 'save';
-                    setBanner('😱 ПОПЕРЕК ВОРІТ ВІД ШТАНГИ!', 'save');
+                    setBanner('😱 ВІД ШТАНГИ ПОПЕРЕК ВОРІТ!', 'save');
                     arenaAudio.playCrowd(false);
                     reboundVel.set(dirInward * 12.5, 0.8, 0.45);
                     shotState = 'rebound';
                 } else {
                     gkState.outcome = 'save';
-                    setBanner('💥 ШТАНГА / ПЕРЕКЛАДИНА!', 'save');
+                    setBanner(isBarOnly ? '💥 ПЕРЕКЛАДИНА!' : '💥 ШТАНГА!', 'save');
                     arenaAudio.playCrowd(false);
-                    const outX = hitCrossbar ? (Math.random() - 0.5) * 3.0 : -dirInward * 2.6;
-                    const outY = hitCrossbar ? 3.4 : 2.1;
-                    reboundVel.set(outX, outY, 4.6 + shotPower * 1.5);
+                    const outX = isBarOnly ? (Math.random() - 0.5) * 3.0 : -dirInward * 2.6;
+                    const outY = isBarOnly ? 3.5 : 2.1;
+                    reboundVel.set(outX, outY, 4.8 + shotPower * 1.5);
                     shotState = 'rebound';
                 }
 
@@ -1235,6 +1265,7 @@
             aimCtx.fill();
         }
 // ==================== КІНЕЦЬ ЧАСТИНИ 8 з 10 ====================
+
 // ==================== ПОЧАТОК ЧАСТИНИ 9 з 10 ====================
         const getBone = (map, part) => {
             const key = Object.keys(map).find(k => k.includes(part));
@@ -1461,6 +1492,7 @@
 
                 if (reachedSecondPost) {
                     ballMesh.position.x = postRicochet.targetPostX;
+                    arenaAudio.playPost();
                     triggerSaveFlash(ballMesh.position);
                     netBounceVel.set(-Math.sign(netBounceVel.x) * 2.4, -0.5, -8.5);
                     shotState = 'to_net';
@@ -1536,3 +1568,4 @@
 </body>
 </html>
 <!-- ==================== КІНЕЦЬ ЧАСТИНИ 10 з 10 ==================== -->
+
