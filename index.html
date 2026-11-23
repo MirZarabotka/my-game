@@ -1308,7 +1308,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 // ==================== КІНЕЦЬ ЧАСТИНИ 12 з 13 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 13 з 14 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 13A з 14 ====================
         let lastTime = performance.now();
         const worldAxisX = new THREE.Vector3(1, 0, 0);
         const worldAxisY = new THREE.Vector3(0, 1, 0);
@@ -1317,7 +1317,7 @@
         const targetBouncePos = new THREE.Vector3();
         let lastStepIndex = -1;
 
-        // Стан циклу: 'idle' (чекає 10с) -> 'juggling' (набиває 6с) -> 'waving' (махає рукою 5с)
+        // Стан циклу: 'idle' (чекає 10с) -> 'pickup' (підчіп м'яча 0.55с) -> 'juggling' (набиває 6с) -> 'waving' (махає рукою 5с)
         let playerAction = 'idle';
         let actionTimer = 0;
         let waveBlend = 0;
@@ -1369,10 +1369,19 @@
             if (playerAction === 'idle') {
                 idleTimer += dt;
                 if (idleTimer >= 10.0) {
+                    playerAction = 'pickup';
+                    actionTimer = 0;
+                    jugPhase = 0;
+                    lastStepIndex = -1;
+                }
+            } else if (playerAction === 'pickup') {
+                actionTimer += dt;
+                if (actionTimer >= 0.55) {
                     playerAction = 'juggling';
                     actionTimer = 0;
                     jugPhase = 0;
                     lastStepIndex = -1;
+                    jugBlend = 1.0;
                 }
             } else if (playerAction === 'juggling') {
                 actionTimer += dt;
@@ -1391,7 +1400,7 @@
 
             const targetJug = playerAction === 'juggling' ? 1.0 : 0.0;
             const targetWave = playerAction === 'waving' ? 1.0 : 0.0;
-            jugBlend += (targetJug - jugBlend) * Math.min(1, dt * 3.2);
+            jugBlend += (targetJug - jugBlend) * Math.min(1, dt * (playerAction === 'juggling' ? 12.0 : 3.2));
             waveBlend += (targetWave - waveBlend) * Math.min(1, dt * 3.8);
 
             const getBone = (part, exclude = '') => {
@@ -1415,8 +1424,42 @@
             const rForeArm = getBone('rightforearm');
             const lArm = getBone('leftarm');
 
-            // 1. Анімація плавного набивання м'яча
-            if (jugBlend > 0.005) {
+            // 0. Фаза підхоплення (підчіпу) м'яча лівою ногою з газону
+            if (playerAction === 'pickup') {
+                const pT = Math.min(1, actionTimer / 0.55);
+                const reach = Math.sin(Math.min(1, pT / 0.55) * Math.PI * 0.5);
+                const scoop = Math.max(0, (pT - 0.45) / 0.55);
+                const scoopEase = scoop * scoop * (3 - 2 * scoop);
+
+                if (lUpLeg) {
+                    rotateBoneWorldAxis(lUpLeg, worldAxisZ, 0.22 * reach * (1 - scoopEase * 0.6));
+                    rotateBoneWorldAxis(lUpLeg, worldAxisX, (-0.18 * reach - 0.62 * scoopEase));
+                }
+                if (lLeg) {
+                    rotateBoneWorldAxis(lLeg, worldAxisX, (0.28 * reach + 0.72 * scoopEase));
+                }
+                if (lFoot) {
+                    rotateBoneWorldAxis(lFoot, worldAxisX, (0.24 * reach - 0.48 * scoopEase));
+                }
+                if (spine) {
+                    rotateBoneWorldAxis(spine, worldAxisZ, -0.05 * reach);
+                }
+                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.14 * reach;
+                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.14 * reach;
+
+                playerModelUpdateMatrix(rFoot, lFoot);
+
+                ballMesh.position.set(
+                    0.34 - 0.10 * scoopEase,
+                    0.103 + 0.25 * scoopEase,
+                    0.24 + 0.12 * scoopEase
+                );
+                ballMesh.rotation.x -= dt * 5.5 * scoopEase;
+            }
+// ==================== КІНЕЦЬ ЧАСТИНИ 13A з 14 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 13B з 14 ====================
+            // 1. Анімація плавного набивання м'яча після підкидання
+            else if (jugBlend > 0.005) {
                 jugPhase += dt * 3.4;
                 const stepIndex = Math.floor(jugPhase / Math.PI);
                 const localT = (jugPhase % Math.PI) / Math.PI;
@@ -1428,7 +1471,7 @@
                 const riseProgress = Math.max(0, (localT - 0.55) / 0.45);
                 const riseCurve = Math.sin(riseProgress * Math.PI * 0.5);
 
-                const prevLegLift = stepIndex === 0 ? 0 : dropCurve;
+                const prevLegLift = dropCurve;
 
                 const rLift = isRightTarget ? riseCurve : prevLegLift;
                 const lLift = !isRightTarget ? riseCurve : prevLegLift;
@@ -1503,7 +1546,7 @@
                 gloveUnit.rotation.y = 3.14 * waveBlend;
                 gloveUnit.rotation.z = wristWave * 0.38 * waveBlend;
             }
-// ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 13B з 14 ====================
 
 // ==================== ПОЧАТОК ЧАСТИНИ 14 з 14 ====================
             if (glovesLoaded) {
