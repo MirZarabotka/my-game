@@ -797,7 +797,7 @@
             [-28, -36],
             [28, -36],
             [-28, 36],
-            [28, 36]
+           
         ];
         lightTowers.forEach(([px, pz]) => {
             const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 19, 10), poleMat);
@@ -807,7 +807,6 @@
             panel.lookAt(0, 0, 0);
             stadiumGroup.add(pole, panel);
         });
-        // М'яч збільшено на 5% (0.098 * 1.05 = 0.103)
         const ballMesh = new THREE.Mesh(
             new THREE.SphereGeometry(0.103, 24, 24),
             new THREE.MeshStandardMaterial({ roughness: 0.4 })
@@ -1093,6 +1092,16 @@
         loader.setDRACOLoader(dracoLoader);
 
         let mixer;
+        const skeletonBones = {};
+        const baseBoneRot = {};
+        let idleTimer = 0;
+        let jugBlend = 0;
+        let jugPhase = 0;
+
+        const resetIdle = () => { idleTimer = 0; };
+        window.addEventListener('pointerdown', resetIdle);
+        window.addEventListener('pointermove', resetIdle);
+        window.addEventListener('wheel', resetIdle);
 
         function hideLoader() {
             const loaderScreen = document.getElementById('loader-screen');
@@ -1132,6 +1141,9 @@
             walkModel(playerModel, (child) => {
                 if (child.isBone && child.name) {
                     const n = child.name.toLowerCase();
+                    skeletonBones[n] = child;
+                    baseBoneRot[n] = child.rotation.clone();
+
                     if (n.includes('forearm') && n.includes('left')) leftForeArmBone = child;
                     if (n.includes('forearm') && n.includes('right')) rightForeArmBone = child;
 
@@ -1272,7 +1284,6 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-
         let lastTime = performance.now();
         function animate(now) {
             requestAnimationFrame(animate);
@@ -1281,6 +1292,61 @@
             const t = now * 0.001;
 
             if (mixer) mixer.update(dt);
+
+            idleTimer += dt;
+            const targetBlend = idleTimer >= 10.0 ? 1.0 : 0.0;
+            jugBlend += (targetBlend - jugBlend) * Math.min(1, dt * 2.2);
+
+            const findBone = (part) => {
+                const key = Object.keys(skeletonBones).find(k => k.includes(part));
+                return key ? { bone: skeletonBones[key], base: baseBoneRot[key] } : null;
+            };
+
+            const rUpLeg = findBone('rightupleg');
+            const rLeg = findBone('rightleg');
+            const lUpLeg = findBone('leftupleg');
+            const lLeg = findBone('leftleg');
+            const spine = findBone('spine');
+            const rArm = findBone('rightarm');
+            const lArm = findBone('leftarm');
+
+            if (jugBlend > 0.005) {
+                jugPhase += dt * 4.6;
+                const stepIndex = Math.floor(jugPhase / Math.PI);
+                const localT = (jugPhase % Math.PI) / Math.PI;
+                const kickLift = Math.sin(localT * Math.PI);
+                const isRightFoot = stepIndex % 2 === 0;
+
+                const rLift = isRightFoot ? kickLift : 0;
+                const lLift = !isRightFoot ? kickLift : 0;
+
+                if (rUpLeg) rUpLeg.bone.rotation.x = rUpLeg.base.x - rLift * 0.72 * jugBlend;
+                if (rLeg) rLeg.bone.rotation.x = rLeg.base.x + rLift * 1.05 * jugBlend;
+
+                if (lUpLeg) lUpLeg.bone.rotation.x = lUpLeg.base.x - lLift * 0.72 * jugBlend;
+                if (lLeg) lLeg.bone.rotation.x = lLeg.base.x + lLift * 1.05 * jugBlend;
+
+                const sway = (isRightFoot ? -1 : 1) * kickLift * 0.07 * jugBlend;
+                if (spine) spine.bone.rotation.z = spine.base.z + sway;
+                if (rArm) rArm.bone.rotation.z = rArm.base.z - 0.18 * jugBlend - kickLift * 0.08 * jugBlend;
+                if (lArm) lArm.bone.rotation.z = lArm.base.z + 0.18 * jugBlend + kickLift * 0.08 * jugBlend;
+
+                const footX = isRightFoot ? -0.14 : 0.14;
+                const prevFootX = isRightFoot ? 0.14 : -0.14;
+                const targetBallX = THREE.MathUtils.lerp(prevFootX, footX, localT);
+                const bounceHeight = 0.26 + Math.sin(localT * Math.PI) * 0.42;
+
+                const restPos = new THREE.Vector3(0.34, 0.103, 0.24);
+                const jugPos = new THREE.Vector3(targetBallX, bounceHeight, 0.34);
+                ballMesh.position.lerpVectors(restPos, jugPos, jugBlend);
+
+                ballMesh.rotation.x -= dt * 3.8 * jugBlend;
+                ballMesh.rotation.z += (isRightFoot ? -1 : 1) * dt * 1.6 * jugBlend;
+            } else {
+                ballMesh.position.lerp(new THREE.Vector3(0.34, 0.103, 0.24), Math.min(1, dt * 4));
+                ballMesh.rotation.y += 0.01;
+            }
+
             if (glovesLoaded) {
                 if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
                 if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
@@ -1357,7 +1423,6 @@
                 phonesInstanced.instanceMatrix.needsUpdate = true;
             }
 
-            ballMesh.rotation.y += 0.01;
             controls.update();
             renderer.render(scene, camera);
         }
