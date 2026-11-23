@@ -724,7 +724,6 @@
             }, undefined, () => hideLoader());
         }, undefined, () => hideLoader());
 // ==================== КІНЕЦЬ ЧАСТИНИ 4B з 6 ====================
-
 // ==================== ПОЧАТОК ЧАСТИНИ 5 з 6 ====================
         let shotState = 'ready';
         let stateTimer = 0;
@@ -738,17 +737,20 @@
         let shotPower = 1.0;
         let reboundVel = new THREE.Vector3();
 
+        // Стан воротаря: 'ready' | 'dive' | 'land' | 'getup' | 'react'
         const gkState = {
+            mode: 'ready',
+            modeTime: 0,
+            outcome: 'none', // 'save' | 'goal'
             x: 0,
             y: 0,
             diveAngle: 0,
             diveDir: 0,
             isHigh: false,
+            startX: 0,
             targetX: 0,
-            targetY: 0,
-            targetDive: 0,
-            readyTime: 0,
-            fallen: false
+            peakY: 0,
+            readyTime: 0
         };
 
         const netImpact = { active: false, x: 0, y: 1.2, amp: 0, phase: 0 };
@@ -809,22 +811,23 @@
             shotsCount++;
             shotsEl.textContent = shotsCount;
 
+            // Воротар починає стрибок у межах воріт (не вилітає за штанги ±2.45м)
             const guessSameSide = Math.random() < 0.42;
             const dir = guessSameSide
                 ? Math.sign(shotTarget.x || (Math.random() - 0.5))
                 : (Math.random() < 0.5 ? -1 : 1);
 
+            const maxSafeX = GOAL_W * 0.33; // 2.41м — тіло разом із витягнутими руками залишається всередині воріт
+            gkState.mode = 'dive';
+            gkState.modeTime = 0;
+            gkState.outcome = 'none';
             gkState.diveDir = dir;
             gkState.isHigh = shotTarget.y > 1.25;
-            gkState.fallen = false;
-
-            const maxReachX = GOAL_W * 0.43;
+            gkState.startX = gkState.x;
             gkState.targetX = guessSameSide
-                ? THREE.MathUtils.clamp(shotTarget.x * 0.88, -maxReachX, maxReachX)
-                : dir * (1.7 + Math.random() * 1.4);
-
-            gkState.targetY = gkState.isHigh ? 0.55 : 0.08;
-            gkState.targetDive = -dir * (gkState.isHigh ? 1.32 : 1.48);
+                ? THREE.MathUtils.clamp(shotTarget.x * 0.82, -maxSafeX, maxSafeX)
+                : THREE.MathUtils.clamp(dir * (1.35 + Math.random() * 1.0), -maxSafeX, maxSafeX);
+            gkState.peakY = gkState.isHigh ? 0.55 : 0.16;
         }
 
         container.addEventListener('pointerdown', (e) => {
@@ -882,31 +885,34 @@
             const hitCrossbar = Math.abs(shotTarget.y - GOAL_H) < 0.16 && Math.abs(shotTarget.x) <= halfW + 0.12;
             const isOut = Math.abs(shotTarget.x) > halfW - 0.05 || shotTarget.y > GOAL_H - 0.05;
 
-            const gkReachX = gkState.x + gkState.diveDir * 0.45;
+            const gkReachX = gkState.x + gkState.diveDir * 0.55;
             const gkCenterY = gkState.y + (gkState.isHigh ? 1.15 : 0.65);
             const dx = Math.abs(shotTarget.x - gkReachX);
             const dy = Math.abs(shotTarget.y - gkCenterY);
             const isSaved = !isOut && !hitLeftPost && !hitRightPost && !hitCrossbar && (dx < 0.92 && dy < 0.95);
 
-            gkState.fallen = true;
-            gkState.targetY = 0.05;
-            gkState.targetDive = -gkState.diveDir * 1.54;
+            gkState.mode = 'land';
+            gkState.modeTime = 0;
 
             if (hitLeftPost || hitRightPost || hitCrossbar) {
+                gkState.outcome = 'save';
                 setBanner('💥 ШТАНГА / ПЕРЕКЛАДИНА!', 'save');
                 arenaAudio.playCrowd(false);
                 reboundVel.set((Math.random() - 0.5) * 4, 2.5, 4.5);
                 shotState = 'rebound';
             } else if (isSaved) {
+                gkState.outcome = 'save';
                 setBanner('🧤 СЕЙВ ВОРОТАРЯ!', 'save');
                 arenaAudio.playCrowd(false);
                 reboundVel.set(Math.sign(shotTarget.x - gkState.x || 1) * 3.8, 2.2, 4.2);
                 shotState = 'rebound';
             } else if (isOut) {
+                gkState.outcome = 'save';
                 setBanner('❌ МИМО ВОРІТ!', 'save');
                 arenaAudio.playCrowd(false);
                 shotState = 'resetting';
             } else {
+                gkState.outcome = 'goal';
                 goalsCount++;
                 goalsEl.textContent = goalsCount;
                 coins += 25;
@@ -925,7 +931,7 @@
                 shotState = 'in_net';
             }
 
-            setTimeout(resetPenalty, 1850);
+            setTimeout(resetPenalty, 2600);
         }
 
         function resetPenalty() {
@@ -940,11 +946,10 @@
             strikerContainer.position.copy(STRIKER_START);
             strikerContainer.rotation.y = Math.PI - 0.25;
 
-            gkState.fallen = false;
+            gkState.mode = 'ready';
+            gkState.modeTime = 0;
+            gkState.outcome = 'none';
             gkState.diveDir = 0;
-            gkState.targetX = 0;
-            gkState.targetY = 0;
-            gkState.targetDive = 0;
 
             camera.position.copy(camBasePos);
             camera.lookAt(camLookTarget);
@@ -1023,52 +1028,106 @@
                 if (gkRightHand) gkRightHand.scale.setScalar(0.0001);
             }
 
-            if (shotState === 'ready' || shotState === 'runup') {
+            gkState.modeTime += dt;
+
+            let diveAmt = 0;
+            let crouchAmt = 0;
+            let celebrateAmt = 0;
+            let despairAmt = 0;
+
+            if (gkState.mode === 'ready') {
                 gkState.readyTime += dt * (shotState === 'runup' ? 1.8 : 1.0);
-                gkState.targetX = Math.sin(gkState.readyTime * 2.8) * 0.55;
-                gkState.targetY = Math.abs(Math.sin(gkState.readyTime * 5.6)) * 0.04;
-                gkState.targetDive = Math.sin(gkState.readyTime * 2.8) * 0.06;
+                const targetX = Math.sin(gkState.readyTime * 2.6) * 0.48;
+                gkState.x = THREE.MathUtils.lerp(gkState.x, targetX, Math.min(1, dt * 6));
+                gkState.y = Math.abs(Math.sin(gkState.readyTime * 5.2)) * 0.035;
+                gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, Math.sin(gkState.readyTime * 2.6) * 0.06, Math.min(1, dt * 8));
+                crouchAmt = 0.28 + Math.abs(Math.sin(gkState.readyTime * 5.2)) * 0.08;
+            } else if (gkState.mode === 'dive') {
+                const p = Math.min(1, gkState.modeTime / Math.max(0.38, shotDuration));
+                const easeX = 1 - Math.pow(1 - p, 1.8);
+                gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, easeX);
+                gkState.y = Math.sin(p * Math.PI) * gkState.peakY;
+                const maxAngle = gkState.isHigh ? 1.32 : 1.48;
+                gkState.diveAngle = -gkState.diveDir * maxAngle * Math.min(1, p * 1.35);
+                diveAmt = Math.min(1, p * 1.4);
+            } else if (gkState.mode === 'land') {
+                const p = Math.min(1, gkState.modeTime / 0.55);
+                gkState.y = THREE.MathUtils.lerp(gkState.y, 0.02, Math.min(1, dt * 14));
+                gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, -gkState.diveDir * 1.54, Math.min(1, dt * 12));
+                diveAmt = 1.0 - p * 0.25;
+                if (p >= 1) {
+                    gkState.mode = 'getup';
+                    gkState.modeTime = 0;
+                }
+            } else if (gkState.mode === 'getup') {
+                const p = Math.min(1, gkState.modeTime / 0.65);
+                const ease = p * p * (3 - 2 * p);
+                gkState.diveAngle = THREE.MathUtils.lerp(-gkState.diveDir * 1.54, 0, ease);
+                gkState.y = Math.sin(p * Math.PI) * 0.08;
+                diveAmt = (1 - ease) * 0.75;
+                crouchAmt = Math.sin(p * Math.PI) * 0.45;
+                if (p >= 1) {
+                    gkState.mode = 'react';
+                    gkState.modeTime = 0;
+                }
+            } else if (gkState.mode === 'react') {
+                gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 10));
+                if (gkState.outcome === 'save') {
+                    celebrateAmt = Math.min(1, gkState.modeTime * 4);
+                    gkState.y = Math.abs(Math.sin(gkState.modeTime * 7.5)) * 0.14;
+                } else {
+                    despairAmt = Math.min(1, gkState.modeTime * 3.5);
+                    gkState.y = 0;
+                }
             }
 
-            const speed = (shotState === 'ready' || shotState === 'runup') ? 6.0 : (gkState.fallen ? 5.5 : 10.5);
-            const lerpF = Math.min(1, dt * speed);
-            gkState.x += (gkState.targetX - gkState.x) * lerpF;
-            gkState.y += (gkState.targetY - gkState.y) * lerpF;
-            gkState.diveAngle += (gkState.targetDive - gkState.diveAngle) * lerpF;
-
-            const diveAmt = Math.min(1, Math.abs(gkState.diveAngle) / 1.35);
-            const pivotOffsetY = diveAmt * 0.62;
-            gkContainer.position.set(gkState.x, gkState.y + pivotOffsetY, GOAL_Z + 0.25);
+            const lieLift = (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
+            gkContainer.position.set(gkState.x, gkState.y + lieLift, GOAL_Z + 0.25);
             gkContainer.rotation.z = gkState.diveAngle;
             gkContainer.rotation.x = diveAmt * 0.12;
 
             const rArm = getBone(gkBones, 'rightarm');
             const lArm = getBone(gkBones, 'leftarm');
+            const rForeArm = getBone(gkBones, 'rightforearm');
+            const lForeArm = getBone(gkBones, 'leftforearm');
             const rUpLeg = getBone(gkBones, 'rightupleg');
             const lUpLeg = getBone(gkBones, 'leftupleg');
             const rLeg = getBone(gkBones, 'rightleg');
             const lLeg = getBone(gkBones, 'leftleg');
             const spine = getBone(gkBones, 'spine');
+            const head = getBone(gkBones, 'head');
 
-            // Додаємо підйом рук воротаря над головою поверх базової стійки
             if (rArm) {
-                rArm.rotation.z -= diveAmt * 2.45;
-                rArm.rotation.x -= diveAmt * 0.25;
+                rArm.rotation.z += -crouchAmt * 0.45 - diveAmt * 2.55 - celebrateAmt * 2.5 + despairAmt * 0.35;
+                rArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25 - despairAmt * 1.45;
             }
             if (lArm) {
-                lArm.rotation.z += diveAmt * 2.45;
-                lArm.rotation.x -= diveAmt * 0.25;
+                lArm.rotation.z += crouchAmt * 0.45 + diveAmt * 2.55 + celebrateAmt * 2.5 - despairAmt * 0.35;
+                lArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25 - despairAmt * 1.45;
+            }
+            if (rForeArm) {
+                rForeArm.rotation.y += -crouchAmt * 0.85;
+                rForeArm.rotation.z += despairAmt * 1.65;
+            }
+            if (lForeArm) {
+                lForeArm.rotation.y += crouchAmt * 0.85;
+                lForeArm.rotation.z += -despairAmt * 1.65;
             }
 
-            const crouch = (1 - diveAmt) * 0.22;
-            const trailBend = diveAmt * (gkState.fallen ? 0.55 : 0.35);
-            if (rUpLeg) rUpLeg.rotation.x -= crouch + (gkState.diveDir < 0 ? trailBend : 0);
-            if (lUpLeg) lUpLeg.rotation.x -= crouch + (gkState.diveDir > 0 ? trailBend : 0);
-            if (rLeg) rLeg.rotation.x += crouch * 1.8 + (gkState.diveDir < 0 ? trailBend * 1.3 : 0);
-            if (lLeg) lLeg.rotation.x += crouch * 1.8 + (gkState.diveDir > 0 ? trailBend * 1.3 : 0);
-            if (spine) spine.rotation.x += crouch * 0.5;
+            const trailBend = diveAmt * 0.42;
+            if (rUpLeg) rUpLeg.rotation.x += -crouchAmt - (gkState.diveDir < 0 ? trailBend : 0) - despairAmt * 0.18;
+            if (lUpLeg) lUpLeg.rotation.x += -crouchAmt - (gkState.diveDir > 0 ? trailBend : 0) - despairAmt * 0.18;
+            if (rLeg) rLeg.rotation.x += crouchAmt * 1.85 + (gkState.diveDir < 0 ? trailBend * 1.4 : 0) + despairAmt * 0.32;
+            if (lLeg) lLeg.rotation.x += crouchAmt * 1.85 + (gkState.diveDir > 0 ? trailBend * 1.4 : 0) + despairAmt * 0.32;
+            if (spine) {
+                spine.rotation.x += crouchAmt * 0.55 + despairAmt * 0.42 - celebrateAmt * 0.12;
+            }
+            if (head) {
+                head.rotation.x += despairAmt * 0.38 - celebrateAmt * 0.15;
+            }
         }
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 6B з 6 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 6C з 6 ====================
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -1133,5 +1192,5 @@
     </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 6B з 6 ==================== -->
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 6C з 6 ==================== -->
 
