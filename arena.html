@@ -1036,12 +1036,12 @@
             let despairAmt = 0;
 
             if (gkState.mode === 'ready') {
-                gkState.readyTime += dt * (shotState === 'runup' ? 1.8 : 1.0);
-                const targetX = Math.sin(gkState.readyTime * 2.6) * 0.48;
-                gkState.x = THREE.MathUtils.lerp(gkState.x, targetX, Math.min(1, dt * 6));
-                gkState.y = Math.abs(Math.sin(gkState.readyTime * 5.2)) * 0.035;
-                gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, Math.sin(gkState.readyTime * 2.6) * 0.06, Math.min(1, dt * 8));
-                crouchAmt = 0.28 + Math.abs(Math.sin(gkState.readyTime * 5.2)) * 0.08;
+                // Воротар стоїть чітко по центру воріт (x = 0) у зібраній воротарській стійці
+                gkState.readyTime += dt;
+                gkState.x = THREE.MathUtils.lerp(gkState.x, 0, Math.min(1, dt * 8));
+                gkState.y = Math.abs(Math.sin(gkState.readyTime * 3.6)) * 0.015;
+                gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 10));
+                crouchAmt = 0.26 + Math.abs(Math.sin(gkState.readyTime * 3.6)) * 0.04;
             } else if (gkState.mode === 'dive') {
                 const p = Math.min(1, gkState.modeTime / Math.max(0.38, shotDuration));
                 const easeX = 1 - Math.pow(1 - p, 1.8);
@@ -1127,6 +1127,7 @@
             }
         }
 // ==================== КІНЕЦЬ ЧАСТИНИ 6B з 6 ====================
+
 // ==================== ПОЧАТОК ЧАСТИНИ 6C з 6 ====================
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
