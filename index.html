@@ -1,3 +1,4 @@
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 13 ==================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -67,6 +68,8 @@
             pointer-events: auto;
             z-index: 10;
         }
+/* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 13 ==================== -->
+/* ==================== ПОЧАТОК ЧАСТИНИ 2 з 13 ==================== */
         .nav-card {
             text-decoration: none;
             border: 1px solid rgba(255, 255, 255, 0.14);
@@ -160,6 +163,8 @@
             max-width: 340px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.65);
         }
+/* ==================== КІНЕЦЬ ЧАСТИНИ 2 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 3 з 13 ==================== */
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -299,6 +304,8 @@
             }
         }
     </script>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 3 з 13 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 4 з 13 ==================== -->
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
@@ -414,6 +421,8 @@
                 stadiumAudio.ctx.resume();
             }
         }, { once: true });
+// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 13 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 5 з 13 ====================
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x071326);
@@ -541,6 +550,8 @@
         }
         stadiumGroup.add(createGoal(-29.8, 0));
         stadiumGroup.add(createGoal(29.8, Math.PI));
+// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 13 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 6 з 13 ====================
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
         const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
         const railMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
@@ -638,6 +649,8 @@
                     fanPositions.push({ x: fx, y: rowY, z: zDist - 0.08, rotY: Math.PI, phase: Math.random() * 6.28, hasPhone: false, hasScarf: false });
                 }
             }
+// ==================== КІНЕЦЬ ЧАСТИНИ 6 з 13 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 7 з 13 ====================
             const xDist = 25.4 + r * 1.02;
             const stepL = 66 + r * 2;
             const stepGeoX = new THREE.BoxGeometry(rowDepth, 0.68, stepL);
@@ -697,6 +710,8 @@
         });
         seatsInstanced.instanceMatrix.needsUpdate = true;
         stadiumGroup.add(seatsInstanced);
+// ==================== КІНЕЦЬ ЧАСТИНИ 7 з 13 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 8 з 13 ====================
         const count = fanPositions.length;
         const torsoGeo = new THREE.CapsuleGeometry(0.21, 0.34, 6, 10);
         const headGeo = new THREE.SphereGeometry(0.135, 12, 12);
@@ -807,6 +822,8 @@
             panel.lookAt(0, 0, 0);
             stadiumGroup.add(pole, panel);
         });
+// ==================== КІНЕЦЬ ЧАСТИНИ 8 з 13 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 9 з 13 ====================
         const ballMesh = new THREE.Mesh(
             new THREE.SphereGeometry(0.103, 24, 24),
             new THREE.MeshStandardMaterial({ roughness: 0.4 })
@@ -968,6 +985,8 @@
             unit.rotation.y = pickLeft ? Math.PI : 0;
             return unit;
         }
+// ==================== КІНЕЦЬ ЧАСТИНИ 9 з 13 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 10 з 13 ====================
         function attachToSleeveEnd(holder, foreArmBone, handBone) {
             const armBone = foreArmBone || (handBone && handBone.parent);
             if (!armBone) return;
@@ -1111,6 +1130,8 @@
             }
         }
         setTimeout(hideLoader, 2500);
+// ==================== КІНЕЦЬ ЧАСТИНИ 10 з 13 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 11 з 13 ====================
         loader.load('player.glb', (gltf) => {
             const playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
             if (!playerModel) {
@@ -1208,6 +1229,8 @@
             }
 
             scene.add(playerModel);
+// ==================== КІНЕЦЬ ЧАСТИНИ 11 з 13 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 12 з 13 ====================
             loader.load(
                 './glove.glb?v=3',
                 (gloveGltf) => {
@@ -1284,10 +1307,12 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+// ==================== КІНЕЦЬ ЧАСТИНИ 12 з 13 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 13 з 13 ====================
         let lastTime = performance.now();
         const worldAxisX = new THREE.Vector3(1, 0, 0);
         const footWorldPos = new THREE.Vector3();
-        const prevFootWorldPos = new THREE.Vector3(0.14, 0.12, 0.24);
+        const prevFootWorldPos = new THREE.Vector3(0.14, 0.25, 0.42);
         let lastStepIndex = -1;
 
         function rotateBoneWorldX(bone, angleRad) {
@@ -1328,15 +1353,19 @@
             const rUpLeg = getBone('rightupleg');
             const rLeg = getBone('rightleg');
             const rFoot = getBone('rightfoot');
+            const rToe = getBone('righttoebase') || getBone('righttoe');
+
             const lUpLeg = getBone('leftupleg');
             const lLeg = getBone('leftleg');
             const lFoot = getBone('leftfoot');
+            const lToe = getBone('lefttoebase') || getBone('lefttoe');
+
             const spine = getBone('spine');
             const rArm = getBone('rightarm');
             const lArm = getBone('leftarm');
 
             if (jugBlend > 0.005) {
-                jugPhase += dt * 4.4;
+                jugPhase += dt * 4.2;
                 const stepIndex = Math.floor(jugPhase / Math.PI);
                 const localT = (jugPhase % Math.PI) / Math.PI;
                 const isRightFoot = stepIndex % 2 === 0;
@@ -1345,27 +1374,27 @@
                 const rLift = isRightFoot ? contactWave : 0;
                 const lLift = !isRightFoot ? contactWave : 0;
 
-                if (rUpLeg) rotateBoneWorldX(rUpLeg, -rLift * 0.65 * jugBlend);
-                if (rLeg) rotateBoneWorldX(rLeg, rLift * 0.95 * jugBlend);
-                if (rFoot) rotateBoneWorldX(rFoot, -rLift * 0.25 * jugBlend);
+                if (rUpLeg) rotateBoneWorldX(rUpLeg, -rLift * 0.78 * jugBlend);
+                if (rLeg) rotateBoneWorldX(rLeg, rLift * 0.98 * jugBlend);
+                if (rFoot) rotateBoneWorldX(rFoot, -rLift * 0.22 * jugBlend);
 
-                if (lUpLeg) rotateBoneWorldX(lUpLeg, -lLift * 0.65 * jugBlend);
-                if (lLeg) rotateBoneWorldX(lLeg, lLift * 0.95 * jugBlend);
-                if (lFoot) rotateBoneWorldX(lFoot, -lLift * 0.25 * jugBlend);
+                if (lUpLeg) rotateBoneWorldX(lUpLeg, -lLift * 0.78 * jugBlend);
+                if (lLeg) rotateBoneWorldX(lLeg, lLift * 0.98 * jugBlend);
+                if (lFoot) rotateBoneWorldX(lFoot, -lLift * 0.22 * jugBlend);
 
-                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + (isRightFoot ? -1 : 1) * contactWave * 0.06 * jugBlend;
+                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + (isRightFoot ? -1 : 1) * contactWave * 0.05 * jugBlend;
                 if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.16 * jugBlend;
                 if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.16 * jugBlend;
 
                 playerModelUpdateMatrix(rFoot, lFoot);
 
-                const activeFoot = isRightFoot ? rFoot : lFoot;
-                if (activeFoot) {
-                    activeFoot.getWorldPosition(footWorldPos);
-                    footWorldPos.y += 0.085;
-                    footWorldPos.z += 0.09;
+                const activeToe = isRightFoot ? (rToe || rFoot) : (lToe || lFoot);
+                if (activeToe) {
+                    activeToe.getWorldPosition(footWorldPos);
+                    footWorldPos.y += 0.105;
+                    footWorldPos.z += rToe ? 0.03 : 0.14;
                 } else {
-                    footWorldPos.set(isRightFoot ? -0.14 : 0.14, 0.35, 0.32);
+                    footWorldPos.set(isRightFoot ? -0.14 : 0.14, 0.38, 0.42);
                 }
 
                 if (stepIndex !== lastStepIndex) {
@@ -1373,9 +1402,10 @@
                     lastStepIndex = stepIndex;
                 }
 
-                const arcHeight = Math.sin(localT * Math.PI) * 0.45;
+                const arcWave = Math.sin(localT * Math.PI);
                 const jugPos = new THREE.Vector3().lerpVectors(prevFootWorldPos, footWorldPos, localT);
-                jugPos.y += arcHeight;
+                jugPos.y += arcWave * 0.44;
+                jugPos.z = Math.max(jugPos.z, 0.38) + arcWave * 0.12;
 
                 const restPos = new THREE.Vector3(0.34, 0.103, 0.24);
                 ballMesh.position.lerpVectors(restPos, jugPos, jugBlend);
@@ -1467,7 +1497,9 @@
             controls.update();
             renderer.render(scene, camera);
         }
+
         requestAnimationFrame(animate);
     </script>
 </body>
 </html>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 13 з 13 ==================== -->
