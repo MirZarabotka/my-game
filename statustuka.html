@@ -1,3 +1,4 @@
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 5 ==================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -114,6 +115,8 @@
             color: #facc15; padding: 6px 11px; border-radius: 14px;
             font-weight: 900; font-size: 0.88rem; white-space: nowrap;
         }
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 5 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 5 ==================== -->
         .modal-backdrop {
             position: fixed; inset: 0;
             background: rgba(4, 11, 23, 0.86);
@@ -228,12 +231,9 @@
             }
         }
     </script>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 2 з 5 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 3 з 5 ==================== -->
     <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from './libs/GLTFLoader.js';
-        import { DRACOLoader } from './libs/DRACOLoader.js';
-        import { CATALOG } from './shop-catalog.js';
-
         const FIREBASE_DB_URL = 'https://firebasedatabase.app';
 
         const tg = window.Telegram && window.Telegram.WebApp;
@@ -308,7 +308,8 @@
         async function syncAndLoadFirebaseLeaderboard() {
             currentPlayer = getCurrentTelegramPlayer();
             const listEl = document.getElementById('leaderboard-list');
-            listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-weight:700;">⏳ Оновлення рейтингу з бази...</div>';
+            const subTitleEl = document.querySelector('.title-box p');
+            listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-weight:700;">⏳ Зʼєднання з Firebase...</div>';
 
             let players = [];
 
@@ -324,26 +325,42 @@
                     updatedAt: Date.now()
                 };
 
-                await fetch(`${FIREBASE_DB_URL}/players/${encodeURIComponent(currentPlayer.id)}.json`, {
+                const putUrl = `${FIREBASE_DB_URL}/players/${encodeURIComponent(currentPlayer.id)}.json`;
+                const putRes = await fetch(putUrl, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                const res = await fetch(`${FIREBASE_DB_URL}/players.json?t=${Date.now()}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && typeof data === 'object') {
-                        players = Object.values(data)
-                            .filter(p => p && p.name)
-                            .map(p => ({
-                                ...p,
-                                isMe: p.id === currentPlayer.id
-                            }));
-                    }
+                if (!putRes.ok) {
+                    const errText = await putRes.text();
+                    throw new Error(`HTTP ${putRes.status}: ${errText}`);
+                }
+
+                const getRes = await fetch(`${FIREBASE_DB_URL}/players.json`);
+                if (!getRes.ok) {
+                    throw new Error(`GET HTTP ${getRes.status}`);
+                }
+
+                const data = await getRes.json();
+                if (data && typeof data === 'object') {
+                    players = Object.values(data)
+                        .filter(p => p && p.name)
+                        .map(p => ({
+                            ...p,
+                            isMe: p.id === currentPlayer.id
+                        }));
+                }
+
+                if (subTitleEl) {
+                    subTitleEl.textContent = `🟢 База підключена • Гравців: ${players.length}`;
+                    subTitleEl.style.color = '#4ade80';
                 }
             } catch (err) {
-                console.warn('Помилка зʼєднання з Firebase:', err);
+                console.error('Firebase error:', err);
+                if (subTitleEl) {
+                    subTitleEl.textContent = `🔴 Помилка: ${err.message}`;
+                    subTitleEl.style.color = '#f87171';
+                }
             }
 
             if (!players.length) {
@@ -408,10 +425,23 @@
                     }
                 }
 
-                row.addEventListener('click', () => openPlayerProfile(player, rank));
+                row.addEventListener('click', () => {
+                    if (window.openPlayerProfile3D) window.openPlayerProfile3D(player, rank);
+                });
                 listEl.appendChild(row);
             });
         }
+
+        syncAndLoadFirebaseLeaderboard();
+    </script>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 3 з 5 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 4 з 5 ==================== -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from './libs/GLTFLoader.js';
+        import { DRACOLoader } from './libs/DRACOLoader.js';
+        import { CATALOG } from './shop-catalog.js';
+
         const modalEl = document.getElementById('profile-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const canvasEl = document.getElementById('player-3d-canvas');
@@ -494,6 +524,9 @@
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
         loader.setDRACOLoader(dracoLoader);
+        
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 4 з 5 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 5 з 5 ==================== -->
         function buildDressedPlayer(kit) {
             while (playerHolder.children.length) {
                 playerHolder.remove(playerHolder.children.at(0));
@@ -568,8 +601,10 @@
             playerHolder.rotation.y = 0.35;
             modalEl.classList.add('open');
             resizeViewer();
-            buildDressedPlayer(player.kit || currentPlayer.kit);
+            buildDressedPlayer(player.kit || { jersey: 'j1', shorts: 's1', boots: 'b1', number: '10', numColor: '#ffffff' });
         }
+
+        window.openPlayerProfile3D = openPlayerProfile;
 
         closeModalBtn.addEventListener('click', () => modalEl.classList.remove('open'));
         modalEl.addEventListener('click', (e) => {
@@ -599,8 +634,8 @@
             }
         }
 
-        syncAndLoadFirebaseLeaderboard();
         requestAnimationFrame(animateViewer);
     </script>
 </body>
 </html>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 5 з 5 ==================== -->
