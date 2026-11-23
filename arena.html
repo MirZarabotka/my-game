@@ -114,7 +114,6 @@
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
         import { DRACOLoader } from './libs/DRACOLoader.js';
-        import { SkeletonUtils } from './libs/SkeletonUtils.js';
         import { CATALOG } from './shop-catalog.js';
 
         if (localStorage.getItem('player_coins') === null) {
@@ -556,7 +555,7 @@
                 setTimeout(() => { el.style.display = 'none'; }, 350);
             }
         }
-        setTimeout(hideLoader, 2500);
+        setTimeout(hideLoader, 3000);
 // ==================== КІНЕЦЬ ЧАСТИНИ 4A з 6 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 4B з 6 ====================
         function mountGKGloves(gloveScene, gloveColorHex) {
@@ -619,88 +618,95 @@
             gkGlovesLoaded = true;
         }
 
+        function setupPlayerModel(gltf, isGK, gloveItem) {
+            const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
+            if (!model) return;
+
+            if (!isGK) {
+                const jId = localStorage.getItem('eq_jerseys') || 'j1';
+                const sId = localStorage.getItem('eq_shorts') || 's1';
+                const bId = localStorage.getItem('eq_boots') || 'b1';
+                const num = localStorage.getItem('eq_number') || '10';
+                const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
+
+                const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
+                const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
+                const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
+                const jerseyTex = createJerseyTexture(jersey);
+
+                let spineBone = null;
+                model.traverse((child) => {
+                    if (child.isBone && child.name) {
+                        const n = child.name.toLowerCase();
+                        strikerBones[n] = child;
+                        if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) spineBone = child;
+                    }
+                    if (!child.isMesh || !child.material) return;
+                    child.castShadow = true;
+                    const name = (child.name || '').toLowerCase();
+                    if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
+                        child.material = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.7 });
+                    } else if (name.includes('short') || name.includes('pant')) {
+                        child.material = new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.75 });
+                    } else if (name.includes('shoe') || name.includes('boot')) {
+                        child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
+                    }
+                });
+
+                const numMesh = new THREE.Mesh(
+                    new THREE.PlaneGeometry(34, 34),
+                    new THREE.MeshBasicMaterial({ map: createBackNumberTexture(num, numCol), transparent: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4 })
+                );
+                if (spineBone) {
+                    numMesh.position.set(0, 1.5, -11.3);
+                    numMesh.rotation.set(0, Math.PI, 0);
+                    spineBone.add(numMesh);
+                }
+                strikerContainer.add(model);
+            } else {
+                model.traverse((child) => {
+                    if (child.isBone && child.name) {
+                        const n = child.name.toLowerCase();
+                        gkBones[n] = child;
+                        if (n.includes('forearm') && n.includes('left')) gkLeftForeArm = child;
+                        if (n.includes('forearm') && n.includes('right')) gkRightForeArm = child;
+                        if (n.includes('hand') && n.includes('left') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) gkLeftHand = child;
+                        if (n.includes('hand') && n.includes('right') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) gkRightHand = child;
+                    }
+                    if (!child.isMesh || !child.material) return;
+                    child.castShadow = true;
+                    const name = (child.name || '').toLowerCase();
+                    if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
+                        child.material = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.65 });
+                    } else if (name.includes('short') || name.includes('pant')) {
+                        child.material = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.75 });
+                    } else if (name.includes('shoe') || name.includes('boot')) {
+                        child.material = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4 });
+                    }
+                });
+                gkContainer.add(model);
+
+                loader.load('./glove.glb?v=3', (gGltf) => {
+                    const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
+                    if (gs) mountGKGloves(gs, gloveItem.c1);
+                });
+            }
+        }
+
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
         loader.setDRACOLoader(dracoLoader);
 
-        loader.load('player.glb', (gltf) => {
-            const baseScene = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
-            if (!baseScene) { hideLoader(); return; }
+        const gId = localStorage.getItem('eq_gloves') || 'g1';
+        const gloveItem = CATALOG.gloves.find(x => x.id === gId) || CATALOG.gloves.at(0);
 
-            const strikerModel = SkeletonUtils.clone(baseScene);
-            const jId = localStorage.getItem('eq_jerseys') || 'j1';
-            const sId = localStorage.getItem('eq_shorts') || 's1';
-            const bId = localStorage.getItem('eq_boots') || 'b1';
-            const gId = localStorage.getItem('eq_gloves') || 'g1';
-            const num = localStorage.getItem('eq_number') || '10';
-            const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
-
-            const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
-            const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
-            const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
-            const gloveItem = CATALOG.gloves.find(x => x.id === gId) || CATALOG.gloves.at(0);
-            const jerseyTex = createJerseyTexture(jersey);
-
-            let spineBone = null;
-            strikerModel.traverse((child) => {
-                if (child.isBone && child.name) {
-                    const n = child.name.toLowerCase();
-                    strikerBones[n] = child;
-                    if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) spineBone = child;
-                }
-                if (!child.isMesh || !child.material) return;
-                child.castShadow = true;
-                const name = (child.name || '').toLowerCase();
-                if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
-                    child.material = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.7 });
-                } else if (name.includes('short') || name.includes('pant')) {
-                    child.material = new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.75 });
-                } else if (name.includes('shoe') || name.includes('boot')) {
-                    child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
-                }
-            });
-
-            const numMesh = new THREE.Mesh(
-                new THREE.PlaneGeometry(34, 34),
-                new THREE.MeshBasicMaterial({ map: createBackNumberTexture(num, numCol), transparent: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4 })
-            );
-            if (spineBone) {
-                numMesh.position.set(0, 1.5, -11.3);
-                numMesh.rotation.set(0, Math.PI, 0);
-                spineBone.add(numMesh);
-            }
-            strikerContainer.add(strikerModel);
-
-            const gkModel = SkeletonUtils.clone(baseScene);
-            gkModel.traverse((child) => {
-                if (child.isBone && child.name) {
-                    const n = child.name.toLowerCase();
-                    gkBones[n] = child;
-                    if (n.includes('forearm') && n.includes('left')) gkLeftForeArm = child;
-                    if (n.includes('forearm') && n.includes('right')) gkRightForeArm = child;
-                    if (n.includes('hand') && n.includes('left') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) gkLeftHand = child;
-                    if (n.includes('hand') && n.includes('right') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) gkRightHand = child;
-                }
-                if (!child.isMesh || !child.material) return;
-                child.castShadow = true;
-                const name = (child.name || '').toLowerCase();
-                if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
-                    child.material = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.65 });
-                } else if (name.includes('short') || name.includes('pant')) {
-                    child.material = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.75 });
-                } else if (name.includes('shoe') || name.includes('boot')) {
-                    child.material = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4 });
-                }
-            });
-            gkContainer.add(gkModel);
-
-            loader.load('./glove.glb?v=3', (gGltf) => {
-                const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
-                if (gs) mountGKGloves(gs, gloveItem.c1);
-            });
-
-            hideLoader();
+        loader.load('player.glb?v=striker', (gltf) => {
+            setupPlayerModel(gltf, false, gloveItem);
+            loader.load('player.glb?v=gk', (gltf2) => {
+                setupPlayerModel(gltf2, true, gloveItem);
+                hideLoader();
+            }, undefined, () => hideLoader());
         }, undefined, () => hideLoader());
 // ==================== КІНЕЦЬ ЧАСТИНИ 4B з 6 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 5 з 6 ====================
