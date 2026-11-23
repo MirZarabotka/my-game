@@ -224,6 +224,9 @@
         </div>
     </div>
 
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+
     <script type="importmap">
         {
             "imports": {
@@ -234,7 +237,18 @@
 <!-- ==================== КІНЕЦЬ ЧАСТИНИ 2 з 5 ==================== -->
 <!-- ==================== ПОЧАТОК ЧАСТИНИ 3 з 5 ==================== -->
     <script type="module">
-        const FIREBASE_DB_URL = 'https://firebasedatabase.app';
+        import * as THREE from 'three';
+        import { GLTFLoader } from './libs/GLTFLoader.js';
+        import { DRACOLoader } from './libs/DRACOLoader.js';
+        import { CATALOG } from './shop-catalog.js';
+
+        const firebaseConfig = {
+            databaseURL: 'https://firebasedatabase.app'
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
 
         const tg = window.Telegram && window.Telegram.WebApp;
         if (tg) {
@@ -309,41 +323,27 @@
             currentPlayer = getCurrentTelegramPlayer();
             const listEl = document.getElementById('leaderboard-list');
             const subTitleEl = document.querySelector('.title-box p');
-            listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-weight:700;">⏳ Зʼєднання з Firebase...</div>';
+            listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-weight:700;">⏳ Підключення до Firebase...</div>';
 
             let players = [];
 
             try {
                 const payload = {
-                    [currentPlayer.id]: {
-                        id: currentPlayer.id,
-                        name: currentPlayer.name,
-                        avatar: currentPlayer.avatar,
-                        coins: currentPlayer.coins,
-                        wins: currentPlayer.wins,
-                        joinedAt: currentPlayer.joinedAt,
-                        kit: currentPlayer.kit,
-                        updatedAt: Date.now()
-                    }
+                    id: currentPlayer.id,
+                    name: currentPlayer.name,
+                    avatar: currentPlayer.avatar,
+                    coins: currentPlayer.coins,
+                    wins: currentPlayer.wins,
+                    joinedAt: currentPlayer.joinedAt,
+                    kit: currentPlayer.kit,
+                    updatedAt: Date.now()
                 };
 
-                // Використовуємо PATCH із text/plain — не викликає блокування CORS preflight у браузерах
-                const patchRes = await fetch(`${FIREBASE_DB_URL}/players.json`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-                    body: JSON.stringify(payload)
-                });
+                await db.ref('players/' + currentPlayer.id).set(payload);
 
-                if (!patchRes.ok) {
-                    throw new Error(`HTTP ${patchRes.status}`);
-                }
+                const snapshot = await db.ref('players').once('value');
+                const data = snapshot.val();
 
-                const getRes = await fetch(`${FIREBASE_DB_URL}/players.json`);
-                if (!getRes.ok) {
-                    throw new Error(`GET HTTP ${getRes.status}`);
-                }
-
-                const data = await getRes.json();
                 if (data && typeof data === 'object') {
                     players = Object.values(data)
                         .filter(p => p && p.name)
@@ -358,9 +358,9 @@
                     subTitleEl.style.color = '#4ade80';
                 }
             } catch (err) {
-                console.error('Firebase error:', err);
+                console.error('Firebase SDK error:', err);
                 if (subTitleEl) {
-                    subTitleEl.textContent = `🔴 Немає звʼязку з Firebase (${err.message}) — вимкни AdBlock/VPN`;
+                    subTitleEl.textContent = `🔴 Помилка бази: ${err.message}`;
                     subTitleEl.style.color = '#f87171';
                 }
             }
@@ -374,7 +374,8 @@
         }
 
         document.getElementById('refresh-btn').addEventListener('click', syncAndLoadFirebaseLeaderboard);
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 3 з 5 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 4 з 5 ====================
         function getInitials(name) {
             const clean = String(name || '').replace(/^@/, '').trim();
             const words = clean.split(/\s+/).filter(Boolean);
@@ -427,24 +428,10 @@
                     }
                 }
 
-                row.addEventListener('click', () => {
-                    if (window.openPlayerProfile3D) {
-                        window.openPlayerProfile3D(player, rank);
-                    }
-                });
+                row.addEventListener('click', () => openPlayerProfile(player, rank));
                 listEl.appendChild(row);
             });
         }
-
-        syncAndLoadFirebaseLeaderboard();
-    </script>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 3 з 5 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 4 з 5 ==================== -->
-    <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from './libs/GLTFLoader.js';
-        import { DRACOLoader } from './libs/DRACOLoader.js';
-        import { CATALOG } from './shop-catalog.js';
 
         const modalEl = document.getElementById('profile-modal');
         const closeModalBtn = document.getElementById('close-modal-btn');
@@ -523,12 +510,13 @@
             tex.colorSpace = THREE.SRGBColorSpace;
             return tex;
         }
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 5 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 5 з 5 ====================
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
         loader.setDRACOLoader(dracoLoader);
-// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 5 ====================
+
         function buildDressedPlayer(kit) {
             while (playerHolder.children.length) {
                 playerHolder.remove(playerHolder.children.at(0));
@@ -606,8 +594,6 @@
             buildDressedPlayer(player.kit || { jersey: 'j1', shorts: 's1', boots: 'b1', number: '10', numColor: '#ffffff' });
         }
 
-        window.openPlayerProfile3D = openPlayerProfile;
-
         closeModalBtn.addEventListener('click', () => modalEl.classList.remove('open'));
         modalEl.addEventListener('click', (e) => {
             if (e.target === modalEl) modalEl.classList.remove('open');
@@ -636,9 +622,9 @@
             }
         }
 
+        syncAndLoadFirebaseLeaderboard();
         requestAnimationFrame(animateViewer);
     </script>
 </body>
 </html>
-// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 5 ====================
-
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 5 з 5 ==================== -->
