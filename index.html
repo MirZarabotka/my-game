@@ -1317,10 +1317,9 @@
         const fixedTrickTarget = new THREE.Vector3();
         let lastStepIndex = -1;
 
-        // Стан фінта "Навколо світу" (Around The World)
+        // Стан одинарного фінта "Навколо світу" (правою або лівою ногою)
         let nextTrickStep = 4 + Math.floor(Math.random() * 4);
-        let trickMode = 'none'; // 'none' | 'single' | 'double' | 'both'
-        let trickStepCount = 0;
+        let isTrickStep = false;
 
         function rotateBoneWorldAxis(bone, worldAxis, angleRad) {
             if (!bone || !bone.parent) return;
@@ -1385,55 +1384,39 @@
             const lArm = getBone('leftarm');
 
             if (jugBlend > 0.005) {
-                const isTrickActive = trickMode !== 'none';
-                const phaseSpeed = isTrickActive ? (trickMode === 'double' ? 2.15 : 2.55) : 3.4;
+                const phaseSpeed = isTrickStep ? 2.4 : 3.4;
                 jugPhase += dt * phaseSpeed;
 
                 const stepIndex = Math.floor(jugPhase / Math.PI);
                 const localT = (jugPhase % Math.PI) / Math.PI;
 
-                // Визначаємо, яка нога працює на цьому кроці
-                let isRightTarget = stepIndex % 2 === 0;
-                if (trickMode === 'single' || trickMode === 'double') {
-                    isRightTarget = (stepIndex - 1) % 2 === 0;
-                }
-
                 if (stepIndex !== lastStepIndex) {
                     if (lastStepIndex === -1) {
                         startBouncePos.copy(ballMesh.position);
-                        trickMode = 'none';
+                        isTrickStep = false;
                         nextTrickStep = 4 + Math.floor(Math.random() * 4);
                     } else {
                         startBouncePos.copy(targetBouncePos);
                     }
 
-                    if (trickMode !== 'none') {
-                        trickStepCount++;
-                        const maxTrickSteps = trickMode === 'both' ? 2 : 1;
-                        if (trickStepCount > maxTrickSteps) {
-                            trickMode = 'none';
-                            trickStepCount = 0;
-                            nextTrickStep = stepIndex + 4 + Math.floor(Math.random() * 5);
-                        }
+                    if (isTrickStep) {
+                        isTrickStep = false;
+                        nextTrickStep = stepIndex + 4 + Math.floor(Math.random() * 5);
                     } else if (stepIndex >= nextTrickStep && stepIndex > 1) {
-                        const variants = ['single', 'double', 'both'];
-                        trickMode = variants[Math.floor(Math.random() * variants.length)];
-                        trickStepCount = 1;
+                        isTrickStep = true;
                     }
 
-                    // Перераховуємо цільову ногу після можливого старту трюку
-                    isRightTarget = stepIndex % 2 === 0;
-                    if (trickMode === 'single' || trickMode === 'double') {
-                        isRightTarget = (stepIndex - 1) % 2 === 0;
-                    }
-
-                    // Фіксуємо нерухому точку прийому м'яча на рівні паха (щоб м'яч не їздив убік за ногою)
-                    if (trickMode !== 'none') {
-                        fixedTrickTarget.set(isRightTarget ? -0.14 : 0.14, 0.56, 0.44);
+                    // Трюк робить та сама нога, яка щойно підбила м'яч (раз правою, раз лівою)
+                    const activeRight = isTrickStep ? ((stepIndex - 1) % 2 === 0) : (stepIndex % 2 === 0);
+                    if (isTrickStep) {
+                        // Низька точка прийому м'яча (нижче коліна), щоб нога легко пройшла зверху на рівні паха
+                        fixedTrickTarget.set(activeRight ? -0.14 : 0.14, 0.32, 0.44);
                     }
 
                     lastStepIndex = stepIndex;
                 }
+
+                const isRightTarget = isTrickStep ? ((stepIndex - 1) % 2 === 0) : (stepIndex % 2 === 0);
 
                 const dropProgress = Math.min(1, localT / 0.45);
                 const dropCurve = Math.cos(dropProgress * Math.PI * 0.5);
@@ -1450,29 +1433,27 @@
                 let rAbduct = 0;
                 let lAbduct = 0;
 
-                // Високий обліт ноги навколо м'яча на рівні паха ("Around The World")
-                if (trickMode !== 'none') {
-                    const loops = trickMode === 'double' ? 2 : 1;
-                    const orbitAngle = localT * Math.PI * 2 * loops;
-                    const orbitEnv = Math.sin(localT * Math.PI);
+                // Одинарний "Навколо світу": нога високо заноситься на рівень паху (localT = 0.5), перелітає над м'ячем і опускається під нього
+                if (isTrickStep) {
+                    const overArc = Math.sin(localT * Math.PI); // Пік висоти саме в середині трюку (localT = 0.5)
+                    const sideArc = Math.sin(localT * Math.PI * 2) * 0.78 * overArc; // Коло вбік -> вгору -> всередину -> вниз
 
-                    // Верхня півсфера кола: нога високо заноситься над м'ячем до рівня пояса/паха
-                    const overBallLift = (1 - Math.cos(orbitAngle)) * 0.5 * orbitEnv;
-                    // Широке відведення стегна вбік (вправо або вліво навколо м'яча)
-                    const sideCircle = Math.sin(orbitAngle) * 0.72 * orbitEnv;
+                    // Стегно піднімається до рівня пояса/паха (1.58 рад), а коліно випрямляється (0.35 рад), щоб стопа була високо
+                    const trickHip = 0.78 + overArc * 0.85;
+                    const trickKnee = 0.95 - overArc * 0.62;
 
                     if (isRightTarget) {
-                        rHipFlex = Math.max(riseCurve * 0.95, 0.65 * orbitEnv + overBallLift * 0.85);
-                        rKneeBend = Math.max(riseCurve * 0.85, 0.45 * orbitEnv + overBallLift * 0.45);
-                        rAbduct = -sideCircle;
-                        lHipFlex = prevLegLift * 0.5;
-                        lKneeBend = prevLegLift * 0.6;
+                        rHipFlex = trickHip;
+                        rKneeBend = trickKnee;
+                        rAbduct = -sideArc;
+                        lHipFlex = 0;
+                        lKneeBend = 0;
                     } else {
-                        lHipFlex = Math.max(riseCurve * 0.95, 0.65 * orbitEnv + overBallLift * 0.85);
-                        lKneeBend = Math.max(riseCurve * 0.85, 0.45 * orbitEnv + overBallLift * 0.45);
-                        lAbduct = sideCircle;
-                        rHipFlex = prevLegLift * 0.5;
-                        rKneeBend = prevLegLift * 0.6;
+                        lHipFlex = trickHip;
+                        lKneeBend = trickKnee;
+                        lAbduct = sideArc;
+                        rHipFlex = 0;
+                        rKneeBend = 0;
                     }
                 }
 
@@ -1490,20 +1471,19 @@
                 if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lKneeBend * jugBlend);
                 if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, -lHipFlex * 0.25 * jugBlend);
 
-                const balanceWave = (isRightTarget ? -rHipFlex : lHipFlex) * 0.7 + (rAbduct + lAbduct) * 0.45;
+                const balanceWave = (isRightTarget ? -rHipFlex : lHipFlex) * 0.6 + (rAbduct + lAbduct) * 0.45;
                 if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + balanceWave * 0.06 * jugBlend;
-                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - (0.16 + Math.abs(rAbduct) * 0.4) * jugBlend;
-                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + (0.16 + Math.abs(lAbduct) * 0.4) * jugBlend;
+                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - (0.16 + Math.abs(rAbduct) * 0.45) * jugBlend;
+                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + (0.16 + Math.abs(lAbduct) * 0.45) * jugBlend;
 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 14 з 14 ====================
                 playerModelUpdateMatrix(rFoot, lFoot);
 
-                // Під час трюку беремо фіксовану точку на рівні паха, а в кінці руху (localT > 0.85) плавно стикуємо з бутсою
-                if (trickMode !== 'none') {
+                if (isTrickStep) {
                     const liveFootPos = isRightTarget
                         ? getFootStrikePos(rToe, rFoot, true)
                         : getFootStrikePos(lToe, lFoot, false);
-                    const catchBlend = Math.max(0, (localT - 0.82) / 0.18);
+                    const catchBlend = Math.max(0, (localT - 0.85) / 0.15);
                     targetBouncePos.lerpVectors(fixedTrickTarget, liveFootPos, catchBlend);
                 } else {
                     const currentTargetPos = isRightTarget
@@ -1512,8 +1492,8 @@
                     targetBouncePos.copy(currentTargetPos);
                 }
 
-                // Під час фінта м'яч високо підлітає і повільно опускається до рівня паха, не зміщуючись убік за махом ноги
-                const peakHeight = trickMode !== 'none' ? 0.58 : 0.66;
+                // Під час фінта м'яч висить низько (лише +0.18 м над точкою удару), щоб високо піднята до паха нога чисто пройшла над ним!
+                const peakHeight = isTrickStep ? 0.18 : 0.66;
                 const arcWave = Math.sin(localT * Math.PI);
                 const jugPos = new THREE.Vector3().lerpVectors(startBouncePos, targetBouncePos, localT);
                 jugPos.y += arcWave * peakHeight;
@@ -1527,7 +1507,7 @@
             } else {
                 lastStepIndex = -1;
                 jugPhase = 0;
-                trickMode = 'none';
+                isTrickStep = false;
                 ballMesh.position.lerp(new THREE.Vector3(0.34, 0.103, 0.24), Math.min(1, dt * 4));
                 ballMesh.rotation.y += 0.01;
             }
