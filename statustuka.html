@@ -224,9 +224,6 @@
         </div>
     </div>
 
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
-
     <script type="importmap">
         {
             "imports": {
@@ -242,13 +239,33 @@
         import { DRACOLoader } from './libs/DRACOLoader.js';
         import { CATALOG } from './shop-catalog.js';
 
-        const firebaseConfig = {
-            databaseURL: 'https://firebasedatabase.app'
-        };
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+        const FIREBASE_DB_URL = 'https://test-d54a5-default-rtdb.europe-west1.firebasedatabase.app';
+
+        function fbRequest(method, path, bodyObj = null) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open(method, `${FIREBASE_DB_URL}${path}`, true);
+                xhr.timeout = 8000;
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            resolve(xhr.responseText ? JSON.parse(xhr.responseText) : null);
+                        } catch (e) {
+                            resolve(null);
+                        }
+                    } else {
+                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                    }
+                };
+                xhr.onerror = () => reject(new Error('Мережа заблокувала запит до firebasedatabase.app'));
+                xhr.ontimeout = () => reject(new Error('Таймаут підключення до бази'));
+                if (bodyObj) {
+                    xhr.send(JSON.stringify(bodyObj));
+                } else {
+                    xhr.send();
+                }
+            });
         }
-        const db = firebase.database();
 
         const tg = window.Telegram && window.Telegram.WebApp;
         if (tg) {
@@ -323,26 +340,26 @@
             currentPlayer = getCurrentTelegramPlayer();
             const listEl = document.getElementById('leaderboard-list');
             const subTitleEl = document.querySelector('.title-box p');
-            listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-weight:700;">⏳ Підключення до Firebase...</div>';
+            listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-weight:700;">⏳ Підключення до бази...</div>';
 
             let players = [];
 
             try {
                 const payload = {
-                    id: currentPlayer.id,
-                    name: currentPlayer.name,
-                    avatar: currentPlayer.avatar,
-                    coins: currentPlayer.coins,
-                    wins: currentPlayer.wins,
-                    joinedAt: currentPlayer.joinedAt,
-                    kit: currentPlayer.kit,
-                    updatedAt: Date.now()
+                    [currentPlayer.id]: {
+                        id: currentPlayer.id,
+                        name: currentPlayer.name,
+                        avatar: currentPlayer.avatar,
+                        coins: currentPlayer.coins,
+                        wins: currentPlayer.wins,
+                        joinedAt: currentPlayer.joinedAt,
+                        kit: currentPlayer.kit,
+                        updatedAt: Date.now()
+                    }
                 };
 
-                await db.ref('players/' + currentPlayer.id).set(payload);
-
-                const snapshot = await db.ref('players').once('value');
-                const data = snapshot.val();
+                await fbRequest('PATCH', '/players.json', payload);
+                const data = await fbRequest('GET', '/players.json');
 
                 if (data && typeof data === 'object') {
                     players = Object.values(data)
@@ -358,9 +375,9 @@
                     subTitleEl.style.color = '#4ade80';
                 }
             } catch (err) {
-                console.error('Firebase SDK error:', err);
+                console.error('Firebase error:', err);
                 if (subTitleEl) {
-                    subTitleEl.textContent = `🔴 Помилка бази: ${err.message}`;
+                    subTitleEl.textContent = `🔴 ${err.message}`;
                     subTitleEl.style.color = '#f87171';
                 }
             }
@@ -375,6 +392,7 @@
 
         document.getElementById('refresh-btn').addEventListener('click', syncAndLoadFirebaseLeaderboard);
 // ==================== КІНЕЦЬ ЧАСТИНИ 3 з 5 ====================
+
 // ==================== ПОЧАТОК ЧАСТИНИ 4 з 5 ====================
         function getInitials(name) {
             const clean = String(name || '').replace(/^@/, '').trim();
