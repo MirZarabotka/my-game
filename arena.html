@@ -216,7 +216,7 @@
                 if (this.ctx.state === 'suspended') this.ctx.resume();
                 const now = this.ctx.currentTime;
 
-                const freqs =;
+                const freqs = new Array(190, 520, 880);
                 freqs.forEach((f, idx) => {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
