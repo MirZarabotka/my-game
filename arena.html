@@ -1011,10 +1011,10 @@
             if (shotState !== 'ready') return;
 
             if (swipeDist > 35 && dy > 15) {
-                const normX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.34), -1.05, 1.05);
-                const normY = THREE.MathUtils.clamp((dy - 15) / (window.innerHeight * 0.42), 0.05, 1.02);
-                const tx = normX * (GOAL_W * 0.47);
-                const ty = BALL_R + normY * (GOAL_H - BALL_R * 1.3);
+                const normX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.30), -1.35, 1.35);
+                const normY = THREE.MathUtils.clamp((dy - 15) / (window.innerHeight * 0.38), 0.05, 1.35);
+                const tx = normX * (GOAL_W * 0.5);
+                const ty = BALL_R + normY * (GOAL_H - BALL_R * 0.4);
                 const curve = -normX * 0.52;
                 const power = THREE.MathUtils.clamp(swipeDist / 260, 0.7, 1.15);
                 openPowerGauge(tx, ty, curve, power);
@@ -1026,14 +1026,15 @@
                 raycaster.setFromCamera(ndc, camera);
                 const hit = new THREE.Vector3();
                 if (raycaster.ray.intersectPlane(goalPlane, hit)) {
-                    const tx = THREE.MathUtils.clamp(hit.x, -GOAL_W * 0.48, GOAL_W * 0.48);
-                    const ty = THREE.MathUtils.clamp(hit.y, BALL_R, GOAL_H * 0.96);
-                    openPowerGauge(tx, ty, -tx * 0.12, 1.0);
+                    // Вільний приціл без прилипання до штанги — можна пробити і мимо воріт
+                    const tx = THREE.MathUtils.clamp(hit.x, -GOAL_W * 0.85, GOAL_W * 0.85);
+                    const ty = THREE.MathUtils.clamp(hit.y, BALL_R, GOAL_H * 1.45);
+                    openPowerGauge(tx, ty, -tx * 0.10, 1.0);
                 }
             }
         });
 // ==================== КІНЕЦЬ ЧАСТИНИ 7 з 10 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 8 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 8A з 10 ====================
         const saveFlashMesh = new THREE.Mesh(
             new THREE.RingGeometry(0.08, 0.36, 24),
             new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0, side: THREE.DoubleSide })
@@ -1128,20 +1129,23 @@
         }
 
         const postRicochet = { active: false, targetPostX: 0 };
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 8A з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 8B з 10 ====================
         function evaluateShotResult() {
             const halfW = GOAL_W / 2;
             const postR = 0.085;
-            const hitZone = postR + BALL_R;
+            const hitZone = postR + BALL_R * 0.75;
 
             const distLeft = Math.abs(shotTarget.x + halfW);
             const distRight = Math.abs(shotTarget.x - halfW);
             const distTop = Math.abs(shotTarget.y - GOAL_H);
 
-            const hitLeftPost = distLeft < hitZone && shotTarget.y <= GOAL_H + hitZone * 0.65;
-            const hitRightPost = distRight < hitZone && shotTarget.y <= GOAL_H + hitZone * 0.65;
-            const hitCrossbar = distTop < hitZone && Math.abs(shotTarget.x) <= halfW + hitZone * 0.65;
-            const isOut = Math.abs(shotTarget.x) > halfW - 0.03 || shotTarget.y > GOAL_H - 0.03;
+            const hitLeftPost = distLeft <= hitZone && shotTarget.y <= GOAL_H + hitZone;
+            const hitRightPost = distRight <= hitZone && shotTarget.y <= GOAL_H + hitZone;
+            const hitCrossbar = distTop <= hitZone && Math.abs(shotTarget.x) <= halfW + hitZone;
+
+            const isCleanMiss = !hitLeftPost && !hitRightPost && !hitCrossbar &&
+                (Math.abs(shotTarget.x) > halfW || shotTarget.y > GOAL_H);
 
             if (gkState.mode === 'catch_center') {
                 gkState.mode = 'react';
@@ -1153,38 +1157,48 @@
 
             postRicochet.active = false;
 
+            if (isCleanMiss) {
+                gkState.outcome = 'save';
+                setBanner(shotTarget.y > GOAL_H ? '🚀 ВИЩЕ ВОРІТ!' : '❌ МИМО ВОРІТ!', 'save');
+                arenaAudio.playCrowd(false);
+                netBounceVel.set(shotCurveX * 0.5, -0.8, -(10 + shotPower * 4));
+                shotState = 'to_net';
+                setTimeout(resetPenalty, 2600);
+                return;
+            }
+
             if (hitLeftPost || hitRightPost || hitCrossbar) {
                 arenaAudio.playPost();
                 triggerSaveFlash(ballMesh.position);
 
-                let overlapPct = 60;
+                let signedOffset = 0;
                 let dirInward = 0;
                 const isBarOnly = hitCrossbar && !hitLeftPost && !hitRightPost;
 
                 if (hitLeftPost) {
-                    overlapPct = THREE.MathUtils.clamp(((-halfW + hitZone) - shotTarget.x) / (2 * hitZone) * 100, 0, 100);
+                    signedOffset = (-halfW) - shotTarget.x;
                     dirInward = 1;
                 } else if (hitRightPost) {
-                    overlapPct = THREE.MathUtils.clamp((shotTarget.x - (halfW - hitZone)) / (2 * hitZone) * 100, 0, 100);
+                    signedOffset = shotTarget.x - halfW;
                     dirInward = -1;
                 } else if (hitCrossbar) {
-                    overlapPct = THREE.MathUtils.clamp((shotTarget.y - (GOAL_H - hitZone)) / (2 * hitZone) * 100, 0, 100);
+                    signedOffset = shotTarget.y - GOAL_H;
                     dirInward = 0;
                 }
 
-                if (overlapPct <= 26) {
+                if (signedOffset < -0.05) {
                     registerGoal(isBarOnly ? '🔥 ГОООЛ ВІД ПЕРЕКЛАДИНИ! +25 💰' : '🔥 ГОООЛ ВІД ШТАНГИ! +25 💰');
                     const inX = isBarOnly ? (Math.random() - 0.5) * 1.2 : dirInward * 2.8;
                     const inY = isBarOnly ? -3.4 : 0.3;
                     netBounceVel.set(inX, inY, -(8.5 + shotPower * 3.5));
                     shotState = 'to_net';
-                } else if (overlapPct <= 36 && !isBarOnly) {
+                } else if (signedOffset < -0.015 && !isBarOnly) {
                     registerGoal('⚡ ВІД ДВОХ ШТАНГ У ВОРОТА! +25 💰');
                     postRicochet.active = true;
                     postRicochet.targetPostX = dirInward * (halfW - BALL_R * 0.9);
                     netBounceVel.set(dirInward * 13.5, 0.35, -1.65);
                     shotState = 'post_to_post';
-                } else if (overlapPct <= 45 && !isBarOnly) {
+                } else if (signedOffset <= 0.015 && !isBarOnly) {
                     gkState.outcome = 'save';
                     setBanner('😱 ВІД ШТАНГИ ПОПЕРЕК ВОРІТ!', 'save');
                     arenaAudio.playCrowd(false);
@@ -1194,19 +1208,13 @@
                     gkState.outcome = 'save';
                     setBanner(isBarOnly ? '💥 ПЕРЕКЛАДИНА!' : '💥 ШТАНГА!', 'save');
                     arenaAudio.playCrowd(false);
-                    const outX = isBarOnly ? (Math.random() - 0.5) * 3.0 : -dirInward * 2.6;
+                    const outX = isBarOnly ? (Math.random() - 0.5) * 3.0 : -dirInward * 2.8;
                     const outY = isBarOnly ? 3.5 : 2.1;
                     reboundVel.set(outX, outY, 4.8 + shotPower * 1.5);
                     shotState = 'rebound';
                 }
 
                 setTimeout(resetPenalty, 2800);
-            } else if (isOut) {
-                gkState.outcome = 'save';
-                setBanner(shotTarget.y > GOAL_H ? '🚀 ВИЩЕ ВОРІТ!' : '❌ МИМО ВОРІТ!', 'save');
-                arenaAudio.playCrowd(false);
-                shotState = 'resetting';
-                setTimeout(resetPenalty, 2600);
             } else {
                 registerGoal('⚽ ГОООЛ! +25 💰');
                 const speedZ = 12 + shotPower * 4.5;
@@ -1263,7 +1271,7 @@
             aimCtx.arc(swipeCurr.x, swipeCurr.y, 9, 0, Math.PI * 2);
             aimCtx.fill();
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 8 з 10 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 8B з 10 ====================
 
 // ==================== ПОЧАТОК ЧАСТИНИ 9 з 10 ====================
         const getBone = (map, part) => {
@@ -1376,7 +1384,7 @@
                 }
             }
 // ==================== КІНЕЦЬ ЧАСТИНИ 9 з 10 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 10 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 10A з 10 ====================
             const crouchSink = crouchAmt * 0.14;
             const lieLift = (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
             gkContainer.position.set(gkState.x, Math.max(0, gkState.y + lieLift - crouchSink), GOAL_Z + 0.25);
@@ -1461,7 +1469,8 @@
                 const pulse = 1 + Math.sin(now * 0.012) * 0.12;
                 targetReticle.scale.setScalar(pulse);
             }
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 10A з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 10B з 10 ====================
             if (shotState === 'flying') {
                 shotProgress = Math.min(1, shotProgress + dt / shotDuration);
                 const ease = 1 - Math.pow(1 - shotProgress, 1.55);
@@ -1498,33 +1507,43 @@
                 }
             } else if (shotState === 'to_net') {
                 ballMesh.position.addScaledVector(netBounceVel, dt);
-                const maxInX = GOAL_W / 2 - BALL_R * 1.2;
-                if (Math.abs(ballMesh.position.x) > maxInX) {
-                    ballMesh.position.x = Math.sign(ballMesh.position.x) * maxInX;
-                    netBounceVel.x *= -0.3;
-                }
                 ballMesh.rotation.x -= dt * 15;
 
-                const softPocketZ = GOAL_Z - GOAL_D - 0.28;
-                if (ballMesh.position.z <= softPocketZ) {
-                    ballMesh.position.z = softPocketZ;
+                if (gkState.outcome !== 'goal') {
+                    netBounceVel.y -= 9.8 * dt;
+                    if (ballMesh.position.y < BALL_R) {
+                        ballMesh.position.y = BALL_R;
+                        netBounceVel.y *= -0.35;
+                        netBounceVel.z *= 0.85;
+                    }
+                } else {
+                    const maxInX = GOAL_W / 2 - BALL_R * 1.2;
+                    if (Math.abs(ballMesh.position.x) > maxInX) {
+                        ballMesh.position.x = Math.sign(ballMesh.position.x) * maxInX;
+                        netBounceVel.x *= -0.3;
+                    }
 
-                    netImpact.active = true;
-                    netImpact.x = THREE.MathUtils.clamp(ballMesh.position.x, -GOAL_W * 0.45, GOAL_W * 0.45);
-                    netImpact.y = THREE.MathUtils.clamp(ballMesh.position.y, 0.2, GOAL_H - 0.1);
-                    netImpact.amp = 0.85 + shotPower * 0.45;
-                    netImpact.phase = 0;
+                    const softPocketZ = GOAL_Z - GOAL_D - 0.28;
+                    if (ballMesh.position.z <= softPocketZ) {
+                        ballMesh.position.z = softPocketZ;
 
-                    if (shotPower >= 1.08) {
-                        reboundVel.set(
-                            (Math.random() - 0.5) * 0.9,
-                            0.35,
-                            2.15 + (shotPower - 1.0) * 1.8
-                        );
-                        shotState = 'rebound';
-                    } else {
-                        reboundVel.set((Math.random() - 0.5) * 0.4, -0.4, 0.55);
-                        shotState = 'rebound';
+                        netImpact.active = true;
+                        netImpact.x = THREE.MathUtils.clamp(ballMesh.position.x, -GOAL_W * 0.45, GOAL_W * 0.45);
+                        netImpact.y = THREE.MathUtils.clamp(ballMesh.position.y, 0.2, GOAL_H - 0.1);
+                        netImpact.amp = 0.85 + shotPower * 0.45;
+                        netImpact.phase = 0;
+
+                        if (shotPower >= 1.08) {
+                            reboundVel.set(
+                                (Math.random() - 0.5) * 0.9,
+                                0.35,
+                                2.15 + (shotPower - 1.0) * 1.8
+                            );
+                            shotState = 'rebound';
+                        } else {
+                            reboundVel.set((Math.random() - 0.5) * 0.4, -0.4, 0.55);
+                            shotState = 'rebound';
+                        }
                     }
                 }
             } else if (shotState === 'caught') {
@@ -1566,5 +1585,4 @@
     </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 10 з 10 ==================== -->
-
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 10B з 10 ==================== -->
