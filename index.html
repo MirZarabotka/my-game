@@ -1315,9 +1315,10 @@
         const worldAxisZ = new THREE.Vector3(0, 0, 1);
         const startBouncePos = new THREE.Vector3(0.34, 0.103, 0.24);
         const targetBouncePos = new THREE.Vector3();
+        const dropStartPos = new THREE.Vector3();
         let lastStepIndex = -1;
 
-        // Стан циклу: 'idle' (чекає 10с) -> 'pickup' (підчіп м'яча 0.55с) -> 'juggling' (набиває 6с) -> 'waving' (махає рукою 5с)
+        // Цикл: 'idle' (10с) -> 'pickup' (0.55с) -> 'juggling' (6.5с) -> 'drop' (0.9с) -> 'waving' (5с)
         let playerAction = 'idle';
         let actionTimer = 0;
         let waveBlend = 0;
@@ -1385,7 +1386,15 @@
                 }
             } else if (playerAction === 'juggling') {
                 actionTimer += dt;
-                if (actionTimer >= 6.0) {
+                if (actionTimer >= 6.5) {
+                    playerAction = 'drop';
+                    actionTimer = 0;
+                    jugBlend = 0;
+                    dropStartPos.copy(ballMesh.position);
+                }
+            } else if (playerAction === 'drop') {
+                actionTimer += dt;
+                if (actionTimer >= 0.90) {
                     playerAction = 'waving';
                     actionTimer = 0;
                 }
@@ -1400,7 +1409,7 @@
 
             const targetJug = playerAction === 'juggling' ? 1.0 : 0.0;
             const targetWave = playerAction === 'waving' ? 1.0 : 0.0;
-            jugBlend += (targetJug - jugBlend) * Math.min(1, dt * (playerAction === 'juggling' ? 12.0 : 3.2));
+            jugBlend += (targetJug - jugBlend) * Math.min(1, dt * (playerAction === 'juggling' ? 12.0 : 4.0));
             waveBlend += (targetWave - waveBlend) * Math.min(1, dt * 3.8);
 
             const getBone = (part, exclude = '') => {
@@ -1424,7 +1433,7 @@
             const rForeArm = getBone('rightforearm');
             const lArm = getBone('leftarm');
 
-            // 0. Фаза підхоплення (підчіпу) м'яча лівою ногою з газону
+            // 0. Фаза підхоплення м'яча лівою ногою з газону
             if (playerAction === 'pickup') {
                 const pT = Math.min(1, actionTimer / 0.55);
                 const reach = Math.sin(Math.min(1, pT / 0.55) * Math.PI * 0.5);
@@ -1435,15 +1444,9 @@
                     rotateBoneWorldAxis(lUpLeg, worldAxisZ, 0.22 * reach * (1 - scoopEase * 0.6));
                     rotateBoneWorldAxis(lUpLeg, worldAxisX, (-0.18 * reach - 0.62 * scoopEase));
                 }
-                if (lLeg) {
-                    rotateBoneWorldAxis(lLeg, worldAxisX, (0.28 * reach + 0.72 * scoopEase));
-                }
-                if (lFoot) {
-                    rotateBoneWorldAxis(lFoot, worldAxisX, (0.24 * reach - 0.48 * scoopEase));
-                }
-                if (spine) {
-                    rotateBoneWorldAxis(spine, worldAxisZ, -0.05 * reach);
-                }
+                if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, (0.28 * reach + 0.72 * scoopEase));
+                if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, (0.24 * reach - 0.48 * scoopEase));
+                if (spine) rotateBoneWorldAxis(spine, worldAxisZ, -0.05 * reach);
                 if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.14 * reach;
                 if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.14 * reach;
 
@@ -1455,6 +1458,48 @@
                     0.24 + 0.12 * scoopEase
                 );
                 ballMesh.rotation.x -= dt * 5.5 * scoopEase;
+            }
+            // 0.5. Фаза прийому м'яча на носок лівої бутси і скочування на газон
+            else if (playerAction === 'drop') {
+                const dT = Math.min(1, actionTimer / 0.90);
+                // Підйом носка для прийому (0..0.45) і повернення ноги на місце (0.45..1.0)
+                const footCurve = dT < 0.45
+                    ? Math.sin((dT / 0.45) * Math.PI * 0.85)
+                    : Math.max(0, Math.cos(((dT - 0.45) / 0.55) * Math.PI * 0.5) * 0.45);
+
+                if (lUpLeg) {
+                    rotateBoneWorldAxis(lUpLeg, worldAxisX, -0.52 * footCurve);
+                    rotateBoneWorldAxis(lUpLeg, worldAxisZ, 0.12 * footCurve);
+                }
+                if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, 0.64 * footCurve);
+                if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, -0.26 * footCurve);
+                if (spine) rotateBoneWorldAxis(spine, worldAxisZ, -0.04 * footCurve);
+
+                playerModelUpdateMatrix(rFoot, lFoot);
+
+                const toeCatchPos = new THREE.Vector3(0.22, 0.29, 0.34);
+                const toeGroundPos = new THREE.Vector3(0.25, 0.103, 0.31);
+                const restPos = new THREE.Vector3(0.34, 0.103, 0.24);
+
+                if (dT < 0.30) {
+                    // М'яч опускається прямо на носок лівої бутси
+                    const k = dT / 0.30;
+                    const ease = k * k;
+                    ballMesh.position.lerpVectors(dropStartPos, toeCatchPos, ease);
+                    ballMesh.rotation.x += dt * 2.5;
+                } else if (dT < 0.55) {
+                    // Носок бутси м'яко опускає м'яч до трави
+                    const k = (dT - 0.30) / 0.25;
+                    ballMesh.position.lerpVectors(toeCatchPos, toeGroundPos, k);
+                    ballMesh.rotation.x += dt * 1.8;
+                } else {
+                    // М'яч скочується з носка бутси на свою точку на газоні
+                    const k = (dT - 0.55) / 0.45;
+                    const rollEase = 1 - Math.pow(1 - k, 2);
+                    ballMesh.position.lerpVectors(toeGroundPos, restPos, rollEase);
+                    ballMesh.rotation.z -= dt * 4.5 * (1 - k * 0.6);
+                    ballMesh.rotation.x -= dt * 2.5 * (1 - k * 0.6);
+                }
             }
 // ==================== КІНЕЦЬ ЧАСТИНИ 13A з 14 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 13B з 14 ====================
@@ -1522,7 +1567,7 @@
                 ballMesh.rotation.y += 0.01;
             }
 
-            // 2. Анімація привітання (5 сек): пряма рука піднімається спереду вгору, махає лише зап'ястя вліво-вправо
+            // 2. Анімація привітання (5 сек): починається лише після того, як м'яч скотився на газон
             const wristWave = Math.sin(actionTimer * 8.0);
             if (waveBlend > 0.005) {
                 if (rArm) {
