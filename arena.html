@@ -52,6 +52,41 @@
         .status-banner.goal { border-color: #22c55e; color: #4ade80; transform: translateX(-50%) scale(1.08); }
         .status-banner.save { border-color: #ef4444; color: #f87171; }
 
+        /* Шкала сили удару */
+        #power-box {
+            position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%);
+            width: min(340px, 86vw);
+            background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(10px);
+            padding: 10px 14px 12px; border-radius: 18px;
+            border: 2px solid #38bdf8;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.65);
+            display: none; flex-direction: column; gap: 7px;
+        }
+        #power-box.active { display: flex; }
+        .power-labels {
+            display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 800;
+            letter-spacing: 0.4px;
+        }
+        .power-track {
+            position: relative; width: 100%; height: 20px; border-radius: 10px;
+            background: linear-gradient(90deg, #38bdf8 0%, #facc15 58%, #22c55e 62%, #22c55e 82%, #ef4444 86%, #dc2626 100%);
+            border: 1.5px solid rgba(255,255,255,0.28);
+            overflow: visible;
+        }
+        .power-green-zone {
+            position: absolute; left: 62%; width: 20%; top: -2px; bottom: -2px;
+            border: 2px solid #ffffff; border-radius: 6px;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.9);
+            pointer-events: none;
+        }
+        #power-cursor {
+            position: absolute; top: -5px; bottom: -5px; width: 8px;
+            left: 0%; transform: translateX(-50%);
+            background: #ffffff; border-radius: 4px;
+            border: 1.5px solid #0f172a;
+            box-shadow: 0 0 10px #ffffff;
+        }
+
         .bottom-hint {
             position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(8px);
@@ -97,8 +132,21 @@
             <div class="coins-pill" id="arena-coins">💰 500</div>
         </div>
 
-        <div class="status-banner" id="status-banner">🎯 Проведи свайп або натисни у кут воріт!</div>
-        <div class="bottom-hint" id="bottom-hint">👆 Свайп від м'яча або клік у ворота — гравець розбіжиться і проб'є</div>
+        <div class="status-banner" id="status-banner">🎯 1. Обери точку удару у воротах!</div>
+
+        <div id="power-box">
+            <div class="power-labels">
+                <span style="color:#facc15">Слабко (низько)</span>
+                <span style="color:#4ade80">🎯 В ЦІЛЬ</span>
+                <span style="color:#f87171">Вище!</span>
+            </div>
+            <div class="power-track">
+                <div class="power-green-zone"></div>
+                <div id="power-cursor"></div>
+            </div>
+        </div>
+
+        <div class="bottom-hint" id="bottom-hint">👆 Свайп або клік у ворота ➔ потім тап у зелену зону шкали</div>
     </div>
 
     <script type="importmap">
@@ -109,6 +157,7 @@
         }
     </script>
 <!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 9 ==================== -->
+
 <!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 9 ==================== -->
     <script type="module">
         import * as THREE from 'three';
@@ -723,7 +772,7 @@
         }, undefined, () => hideLoader());
 // ==================== КІНЕЦЬ ЧАСТИНИ 6 з 9 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 7 з 9 ====================
-        let shotState = 'ready';
+        let shotState = 'ready'; // 'ready' | 'power' | 'runup' | 'flying' | 'rebound' | 'in_net' | 'resetting'
         let stateTimer = 0;
         let shotProgress = 0;
         let shotDuration = 0.56;
@@ -734,6 +783,28 @@
         let shotArcY = 0.45;
         let shotPower = 1.0;
         let reboundVel = new THREE.Vector3();
+
+        // Дані попереднього прицілювання перед натисканням на шкалі сили
+        const plannedAim = { x: 0, y: 1.2, curve: 0, basePower: 1.0 };
+        let powerValue = 0;
+        let powerDir = 1;
+
+        const powerBoxEl = document.getElementById('power-box');
+        const powerCursorEl = document.getElementById('power-cursor');
+
+        // 3D-мішень на воротах, яка показує вибрану точку прицілу
+        const targetReticle = new THREE.Group();
+        const reticleOuter = new THREE.Mesh(
+            new THREE.RingGeometry(0.18, 0.24, 28),
+            new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide })
+        );
+        const reticleInner = new THREE.Mesh(
+            new THREE.CircleGeometry(0.07, 16),
+            new THREE.MeshBasicMaterial({ color: 0x4ade80, side: THREE.DoubleSide })
+        );
+        targetReticle.add(reticleOuter, reticleInner);
+        targetReticle.visible = false;
+        scene.add(targetReticle);
 
         const gkState = {
             mode: 'ready',
@@ -787,23 +858,68 @@
         const raycaster = new THREE.Raycaster();
         const goalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -GOAL_Z);
 
-        function startPenaltyRunup(targetX, targetY, curveX = 0, power = 1.0) {
+        function openPowerGauge(aimX, aimY, curveX = 0, basePower = 1.0) {
             if (shotState !== 'ready') return;
+            plannedAim.x = aimX;
+            plannedAim.y = Math.max(BALL_R, aimY);
+            plannedAim.curve = curveX;
+            plannedAim.basePower = basePower;
+
+            targetReticle.position.set(plannedAim.x, plannedAim.y, GOAL_Z + 0.06);
+            targetReticle.visible = true;
+
+            powerValue = 0.05;
+            powerDir = 1;
+            powerCursorEl.style.left = '5%';
+            powerBoxEl.classList.add('active');
+
+            shotState = 'power';
+            setBanner('⚡ 2. Натисни на зеленій зоні шкали!');
+        }
+
+        function lockPowerAndShoot() {
+            if (shotState !== 'power') return;
+            powerBoxEl.classList.remove('active');
+            targetReticle.visible = false;
+
+            let finalX = plannedAim.x;
+            let finalY = plannedAim.y;
+            let finalPower = plannedAim.basePower;
+
+            // Зелена зона: 0.62 .. 0.82
+            if (powerValue >= 0.62 && powerValue <= 0.82) {
+                finalPower = 1.12;
+                setBanner('🔥 ІДЕАЛЬНИЙ ПОСТРІЛ!', 'goal');
+            } else if (powerValue < 0.62) {
+                // Натиснуто раніше — удар слабший, м'яч летить нижче цілі
+                const deficit = (0.62 - powerValue) / 0.62; // 0..1
+                finalY = Math.max(BALL_R, plannedAim.y - deficit * 1.48);
+                finalX = plannedAim.x * (1 - deficit * 0.25);
+                finalPower = 0.55 + powerValue * 0.65;
+                setBanner('⚠️ Слабко — м\'яч пішов нижче!');
+            } else {
+                // Натиснуто пізніше — перебір сили, м'яч летить вище воріт або мимо
+                const excess = (powerValue - 0.82) / 0.18; // 0..1
+                finalY = plannedAim.y + 0.48 + excess * 1.35;
+                finalX = plannedAim.x + Math.sign(plannedAim.x || (Math.random() - 0.5)) * (0.25 + excess * 0.65);
+                finalPower = 1.25;
+                setBanner('💥 Засильно — вище воріт!');
+            }
+
             shotState = 'runup';
             stateTimer = 0;
-            shotTarget.set(targetX, Math.max(BALL_R, targetY), GOAL_Z - 0.35);
-            shotCurveX = curveX;
-            shotPower = power;
-            setBanner('🏃 Розбіг...');
+            shotTarget.set(finalX, Math.max(BALL_R, finalY), GOAL_Z - 0.35);
+            shotCurveX = plannedAim.curve;
+            shotPower = finalPower;
         }
 
         function executeKick() {
             arenaAudio.playKick();
             shotState = 'flying';
             shotProgress = 0;
-            shotDuration = THREE.MathUtils.clamp(0.64 - shotPower * 0.14, 0.44, 0.66);
+            shotDuration = THREE.MathUtils.clamp(0.68 - shotPower * 0.16, 0.42, 0.72);
             shotStart.set(0, BALL_R, SPOT_Z);
-            shotArcY = 0.25 + (1 - Math.min(1, shotTarget.y / GOAL_H)) * 0.35;
+            shotArcY = 0.22 + (1 - Math.min(1, shotTarget.y / GOAL_H)) * 0.36;
 
             shotsCount++;
             shotsEl.textContent = shotsCount;
@@ -827,10 +943,21 @@
         }
 
         container.addEventListener('pointerdown', (e) => {
-            if (shotState !== 'ready') return;
             arenaAudio.init();
+            if (shotState === 'power') {
+                lockPowerAndShoot();
+                return;
+            }
+            if (shotState !== 'ready') return;
             swipeStart = { x: e.clientX, y: e.clientY };
             swipeCurr = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && shotState === 'power') {
+                e.preventDefault();
+                lockPowerAndShoot();
+            }
         });
 
         window.addEventListener('pointermove', (e) => {
@@ -851,13 +978,13 @@
             if (shotState !== 'ready') return;
 
             if (swipeDist > 35 && dy > 15) {
-                const normX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.34), -1.18, 1.18);
-                const normY = THREE.MathUtils.clamp((dy - 15) / (window.innerHeight * 0.42), 0.05, 1.15);
-                const tx = normX * (GOAL_W * 0.5);
-                const ty = BALL_R + normY * (GOAL_H - BALL_R);
-                const curve = -normX * 0.55;
-                const power = THREE.MathUtils.clamp(swipeDist / 260, 0.5, 1.2);
-                startPenaltyRunup(tx, ty, curve, power);
+                const normX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.34), -1.05, 1.05);
+                const normY = THREE.MathUtils.clamp((dy - 15) / (window.innerHeight * 0.42), 0.05, 1.02);
+                const tx = normX * (GOAL_W * 0.47);
+                const ty = BALL_R + normY * (GOAL_H - BALL_R * 1.3);
+                const curve = -normX * 0.52;
+                const power = THREE.MathUtils.clamp(swipeDist / 260, 0.7, 1.15);
+                openPowerGauge(tx, ty, curve, power);
             } else {
                 const ndc = new THREE.Vector2(
                     (e.clientX / window.innerWidth) * 2 - 1,
@@ -866,9 +993,9 @@
                 raycaster.setFromCamera(ndc, camera);
                 const hit = new THREE.Vector3();
                 if (raycaster.ray.intersectPlane(goalPlane, hit)) {
-                    const tx = THREE.MathUtils.clamp(hit.x, -GOAL_W * 0.56, GOAL_W * 0.56);
-                    const ty = THREE.MathUtils.clamp(hit.y, BALL_R, GOAL_H * 1.12);
-                    startPenaltyRunup(tx, ty, -tx * 0.12, 0.95);
+                    const tx = THREE.MathUtils.clamp(hit.x, -GOAL_W * 0.48, GOAL_W * 0.48);
+                    const ty = THREE.MathUtils.clamp(hit.y, BALL_R, GOAL_H * 0.96);
+                    openPowerGauge(tx, ty, -tx * 0.12, 1.0);
                 }
             }
         });
@@ -960,7 +1087,7 @@
                 shotState = 'rebound';
             } else if (isOut) {
                 gkState.outcome = 'save';
-                setBanner('❌ МИМО ВОРІТ!', 'save');
+                setBanner(shotTarget.y > GOAL_H ? '🚀 ВИЩЕ ВОРІТ!' : '❌ МИМО ВОРІТ!', 'save');
                 arenaAudio.playCrowd(false);
                 shotState = 'resetting';
             } else {
@@ -991,6 +1118,9 @@
             stateTimer = 0;
             shotProgress = 0;
 
+            powerBoxEl.classList.remove('active');
+            targetReticle.visible = false;
+
             ballMesh.position.set(0, BALL_R, SPOT_Z);
             ballMesh.rotation.set(0, 0, 0);
             ballShadow.position.set(0, 0.01, SPOT_Z);
@@ -1005,7 +1135,7 @@
 
             camera.position.copy(camBasePos);
             camera.lookAt(camLookTarget);
-            setBanner('🎯 Твій удар! Проведи або натисни у ворота');
+            setBanner('🎯 1. Обери точку удару у воротах!');
         }
 
         function drawSwipeGuide() {
@@ -1030,6 +1160,7 @@
             aimCtx.fill();
         }
 // ==================== КІНЕЦЬ ЧАСТИНИ 8 з 9 ====================
+
 // ==================== ПОЧАТОК ЧАСТИНИ 9A з 9 ====================
         const getBone = (map, part) => {
             const key = Object.keys(map).find(k => k.includes(part));
@@ -1202,6 +1333,22 @@
             updateStrikerAnim(dt);
             updateGoalkeeperAnim(dt);
 
+            // Рух бігунка на шкалі сили та пульсація мішені прицілу
+            if (shotState === 'power') {
+                powerValue += powerDir * dt * 1.35;
+                if (powerValue >= 1.0) {
+                    powerValue = 1.0;
+                    powerDir = -1;
+                } else if (powerValue <= 0.0) {
+                    powerValue = 0.0;
+                    powerDir = 1;
+                }
+                powerCursorEl.style.left = `${(powerValue * 100).toFixed(1)}%`;
+
+                const pulse = 1 + Math.sin(now * 0.012) * 0.12;
+                targetReticle.scale.setScalar(pulse);
+            }
+
             if (shotState === 'flying') {
                 shotProgress = Math.min(1, shotProgress + dt / shotDuration);
                 const ease = 1 - Math.pow(1 - shotProgress, 1.55);
@@ -1259,3 +1406,4 @@
 </body>
 </html>
 <!-- ==================== КІНЕЦЬ ЧАСТИНИ 9B з 9 ==================== -->
+
