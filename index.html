@@ -1311,15 +1311,15 @@
 // ==================== ПОЧАТОК ЧАСТИНИ 13 з 14 ====================
         let lastTime = performance.now();
         const worldAxisX = new THREE.Vector3(1, 0, 0);
-        const worldAxisY = new THREE.Vector3(0, 1, 0);
         const worldAxisZ = new THREE.Vector3(0, 0, 1);
         const startBouncePos = new THREE.Vector3(0.34, 0.103, 0.24);
         const targetBouncePos = new THREE.Vector3();
-        const fixedTrickTarget = new THREE.Vector3();
         let lastStepIndex = -1;
 
-        let nextTrickStep = 4 + Math.floor(Math.random() * 4);
-        let isTrickStep = false;
+        // Стан циклу: 'idle' (чекає 10с) -> 'juggling' (набиває 6с) -> 'waving' (махає рукою 2.8с)
+        let playerAction = 'idle';
+        let actionTimer = 0;
+        let waveBlend = 0;
 
         function rotateBoneWorldAxis(bone, worldAxis, angleRad) {
             if (!bone || !bone.parent) return;
@@ -1360,9 +1360,41 @@
 
             if (mixer) mixer.update(dt);
 
-            idleTimer += dt;
-            const targetBlend = idleTimer >= 10.0 ? 1.0 : 0.0;
-            jugBlend += (targetBlend - jugBlend) * Math.min(1, dt * 2.5);
+            // Якщо користувач торкнувся екрана чи покрутив камеру — скидаємо в режим очікування
+            if (idleTimer < 0.05 && playerAction !== 'idle') {
+                playerAction = 'idle';
+                actionTimer = 0;
+            }
+
+            if (playerAction === 'idle') {
+                idleTimer += dt;
+                if (idleTimer >= 10.0) {
+                    playerAction = 'juggling';
+                    actionTimer = 0;
+                    jugPhase = 0;
+                    lastStepIndex = -1;
+                }
+            } else if (playerAction === 'juggling') {
+                actionTimer += dt;
+                // Набиває м'яч 6 секунд (потім переходить до привітання глядачів)
+                if (actionTimer >= 6.0) {
+                    playerAction = 'waving';
+                    actionTimer = 0;
+                }
+            } else if (playerAction === 'waving') {
+                actionTimer += dt;
+                // Махає правою рукою 2.8 секунди і знову чекає 10 секунд бездіяльності
+                if (actionTimer >= 2.8) {
+                    playerAction = 'idle';
+                    actionTimer = 0;
+                    idleTimer = 0;
+                }
+            }
+
+            const targetJug = playerAction === 'juggling' ? 1.0 : 0.0;
+            const targetWave = playerAction === 'waving' ? 1.0 : 0.0;
+            jugBlend += (targetJug - jugBlend) * Math.min(1, dt * 3.2);
+            waveBlend += (targetWave - waveBlend) * Math.min(1, dt * 3.8);
 
             const getBone = (part, exclude = '') => {
                 const key = Object.keys(skeletonBones).find(k => k.includes(part) && (!exclude || !k.includes(exclude)));
@@ -1380,42 +1412,17 @@
             const lToe = getBone('lefttoebase') || getBone('lefttoe');
 
             const spine = getBone('spine');
+            const head = getBone('head');
             const rArm = getBone('rightarm');
+            const rForeArm = getBone('rightforearm');
             const lArm = getBone('leftarm');
 
+            // 1. Анімація плавного набивання м'яча
             if (jugBlend > 0.005) {
-                // Природна швидкість польоту м'яча без сповільнення під час трюку
-                const phaseSpeed = isTrickStep ? 3.15 : 3.4;
-                jugPhase += dt * phaseSpeed;
-
+                jugPhase += dt * 3.4;
                 const stepIndex = Math.floor(jugPhase / Math.PI);
                 const localT = (jugPhase % Math.PI) / Math.PI;
-
-                if (stepIndex !== lastStepIndex) {
-                    if (lastStepIndex === -1) {
-                        startBouncePos.copy(ballMesh.position);
-                        isTrickStep = false;
-                        nextTrickStep = 4 + Math.floor(Math.random() * 4);
-                    } else {
-                        startBouncePos.copy(targetBouncePos);
-                    }
-
-                    if (isTrickStep) {
-                        isTrickStep = false;
-                        nextTrickStep = stepIndex + 4 + Math.floor(Math.random() * 5);
-                    } else if (stepIndex >= nextTrickStep && stepIndex > 1) {
-                        isTrickStep = true;
-                    }
-
-                    const activeRight = isTrickStep ? ((stepIndex - 1) % 2 === 0) : (stepIndex % 2 === 0);
-                    if (isTrickStep) {
-                        fixedTrickTarget.set(activeRight ? -0.14 : 0.14, 0.34, 0.44);
-                    }
-
-                    lastStepIndex = stepIndex;
-                }
-
-                const isRightTarget = isTrickStep ? ((stepIndex - 1) % 2 === 0) : (stepIndex % 2 === 0);
+                const isRightTarget = stepIndex % 2 === 0;
 
                 const dropProgress = Math.min(1, localT / 0.45);
                 const dropCurve = Math.cos(dropProgress * Math.PI * 0.5);
@@ -1425,86 +1432,42 @@
 
                 const prevLegLift = stepIndex === 0 ? 0 : dropCurve;
 
-                let rHipFlex = isRightTarget ? riseCurve * 0.78 : prevLegLift * 0.78;
-                let lHipFlex = !isRightTarget ? riseCurve * 0.78 : prevLegLift * 0.78;
-                let rKneeBend = isRightTarget ? riseCurve * 0.98 : prevLegLift * 0.98;
-                let lKneeBend = !isRightTarget ? riseCurve * 0.98 : prevLegLift * 0.98;
-                let rAbduct = 0;
-                let lAbduct = 0;
-                let hipTwist = 0;
+                const rLift = isRightTarget ? riseCurve : prevLegLift;
+                const lLift = !isRightTarget ? riseCurve : prevLegLift;
 
-                if (isTrickStep) {
-                    const theta = localT * Math.PI * 2;
-                    const circleY = (1 - Math.cos(theta)) * 0.5;
-                    const circleX = Math.sin(theta);
+                if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisX, -rLift * 0.78 * jugBlend);
+                if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rLift * 0.98 * jugBlend);
+                if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, -rLift * 0.22 * jugBlend);
 
-                    const trickHip = 0.72 + circleY * 0.95;
-                    const trickKnee = 0.95 - circleY * 0.55;
-                    const sideSwing = circleX * 0.82;
-                    hipTwist = circleX * 0.38;
+                if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisX, -lLift * 0.78 * jugBlend);
+                if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lLift * 0.98 * jugBlend);
+                if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, -lLift * 0.22 * jugBlend);
 
-                    if (isRightTarget) {
-                        rHipFlex = trickHip;
-                        rKneeBend = trickKnee;
-                        rAbduct = -sideSwing;
-                        lHipFlex = 0;
-                        lKneeBend = 0;
-                    } else {
-                        lHipFlex = trickHip;
-                        lKneeBend = trickKnee;
-                        lAbduct = sideSwing;
-                        rHipFlex = 0;
-                        rKneeBend = 0;
-                    }
-                }
+                const balanceWave = isRightTarget ? -riseCurve : riseCurve;
+                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + balanceWave * 0.05 * jugBlend;
+                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.16 * jugBlend;
+                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.16 * jugBlend;
 
-                if (rUpLeg) {
-                    rotateBoneWorldAxis(rUpLeg, worldAxisX, -rHipFlex * jugBlend);
-                    if (Math.abs(rAbduct) > 0.001) {
-                        rotateBoneWorldAxis(rUpLeg, worldAxisZ, rAbduct * jugBlend);
-                        rotateBoneWorldAxis(rUpLeg, worldAxisY, -hipTwist * jugBlend);
-                    }
-                }
-                if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rKneeBend * jugBlend);
-                if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, -rHipFlex * 0.25 * jugBlend);
-
-                if (lUpLeg) {
-                    rotateBoneWorldAxis(lUpLeg, worldAxisX, -lHipFlex * jugBlend);
-                    if (Math.abs(lAbduct) > 0.001) {
-                        rotateBoneWorldAxis(lUpLeg, worldAxisZ, lAbduct * jugBlend);
-                        rotateBoneWorldAxis(lUpLeg, worldAxisY, hipTwist * jugBlend);
-                    }
-                }
-                if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lKneeBend * jugBlend);
-                if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, -lHipFlex * 0.25 * jugBlend);
-
-                const balanceWave = (isRightTarget ? -rHipFlex : lHipFlex) * 0.5 + (rAbduct + lAbduct) * 0.5;
-                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + balanceWave * 0.08 * jugBlend;
-                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - (0.16 + Math.abs(rAbduct) * 0.5) * jugBlend;
-                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + (0.16 + Math.abs(lAbduct) * 0.5) * jugBlend;
-// ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 14 з 14 ====================
                 playerModelUpdateMatrix(rFoot, lFoot);
 
-                if (isTrickStep) {
-                    const liveFootPos = isRightTarget
-                        ? getFootStrikePos(rToe, rFoot, true)
-                        : getFootStrikePos(lToe, lFoot, false);
-                    const catchBlend = Math.max(0, (localT - 0.85) / 0.15);
-                    targetBouncePos.lerpVectors(fixedTrickTarget, liveFootPos, catchBlend);
-                } else {
-                    const currentTargetPos = isRightTarget
-                        ? getFootStrikePos(rToe, rFoot, true)
-                        : getFootStrikePos(lToe, lFoot, false);
-                    targetBouncePos.copy(currentTargetPos);
-                }
+                const currentTargetPos = isRightTarget
+                    ? getFootStrikePos(rToe, rFoot, true)
+                    : getFootStrikePos(lToe, lFoot, false);
 
-                // Природний підліт м'яча, як при звичайному набиванні (0.54 м при трюку, 0.66 м при набиванні)
-                const peakHeight = isTrickStep ? 0.54 : 0.66;
+                if (stepIndex !== lastStepIndex) {
+                    if (lastStepIndex === -1) {
+                        startBouncePos.copy(ballMesh.position);
+                    } else {
+                        startBouncePos.copy(targetBouncePos);
+                    }
+                    lastStepIndex = stepIndex;
+                }
+                targetBouncePos.copy(currentTargetPos);
+
                 const arcWave = Math.sin(localT * Math.PI);
                 const jugPos = new THREE.Vector3().lerpVectors(startBouncePos, targetBouncePos, localT);
-                jugPos.y += arcWave * peakHeight;
-                jugPos.z = Math.max(jugPos.z, 0.40) + arcWave * 0.10;
+                jugPos.y += arcWave * 0.66;
+                jugPos.z = Math.max(jugPos.z, 0.38) + arcWave * 0.14;
 
                 const restPos = new THREE.Vector3(0.34, 0.103, 0.24);
                 ballMesh.position.lerpVectors(restPos, jugPos, jugBlend);
@@ -1514,11 +1477,31 @@
             } else {
                 lastStepIndex = -1;
                 jugPhase = 0;
-                isTrickStep = false;
-                ballMesh.position.lerp(new THREE.Vector3(0.34, 0.103, 0.24), Math.min(1, dt * 4));
+                ballMesh.position.lerp(new THREE.Vector3(0.34, 0.103, 0.24), Math.min(1, dt * 5));
                 ballMesh.rotation.y += 0.01;
             }
 
+            // 2. Анімація привітання: піднімає праву руку вгору і махає глядачам
+            if (waveBlend > 0.005) {
+                const waveSwing = Math.sin(actionTimer * 8.5) * 0.32;
+                if (rArm) {
+                    // Піднімаємо праве плече високо вгору і вбік
+                    rotateBoneWorldAxis(rArm, worldAxisZ, -(2.35 + waveSwing * 0.45) * waveBlend);
+                    rotateBoneWorldAxis(rArm, worldAxisX, -0.25 * waveBlend);
+                }
+                if (rForeArm) {
+                    // Згинаємо передпліччя для маху кистю
+                    rotateBoneWorldAxis(rForeArm, worldAxisZ, -(0.35 + waveSwing * 0.75) * waveBlend);
+                }
+                if (spine) {
+                    rotateBoneWorldAxis(spine, worldAxisZ, 0.07 * waveBlend);
+                }
+                if (head) {
+                    rotateBoneWorldAxis(head, worldAxisX, -0.08 * waveBlend);
+                }
+            }
+// ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 14 з 14 ====================
             if (glovesLoaded) {
                 if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
                 if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
