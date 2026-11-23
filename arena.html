@@ -156,7 +156,7 @@
         }
     </script>
 <!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 10 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 10 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 2A з 10 ==================== -->
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
@@ -185,81 +185,181 @@
             constructor() {
                 this.ctx = null;
                 this.enabled = localStorage.getItem('stadium_sound') !== 'off';
+                this.ambienceStarted = false;
+                this.ambienceGain = null;
             }
             init() {
-                if (this.ctx || !this.enabled) return;
-                const AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) this.ctx = new AudioCtx();
+                if (!this.enabled) return;
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+                if (this.ctx && !this.ambienceStarted) {
+                    this.startAmbience();
+                }
+            }
+            startAmbience() {
+                if (!this.ctx || this.ambienceStarted) return;
+                this.ambienceStarted = true;
+
+                const sr = this.ctx.sampleRate;
+                const len = sr * 6;
+                const buf = this.ctx.createBuffer(1, len, sr);
+                const data = buf.getChannelData(0);
+
+                let b0 = 0, b1 = 0, b2 = 0;
+                for (let i = 0; i < len; i++) {
+                    const t = i / sr;
+                    const white = Math.random() * 2 - 1;
+                    b0 = 0.997 * b0 + white * 0.025;
+                    b1 = 0.985 * b1 + white * 0.045;
+                    b2 = 0.950 * b2 + white * 0.080;
+                    const chantWave = 0.72 + 0.28 * Math.sin(t * Math.PI * 1.33) * Math.sin(t * Math.PI * 0.33);
+                    data[i] = (b0 + b1 + b2) * 0.55 * chantWave;
+                }
+
+                const src = this.ctx.createBufferSource();
+                src.buffer = buf;
+                src.loop = true;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 340;
+                filter.Q.value = 0.65;
+
+                const gain = this.ctx.createGain();
+                gain.gain.value = 0.22;
+                this.ambienceGain = gain;
+
+                src.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                src.start();
             }
             playKick() {
                 if (!this.enabled) return;
                 this.init();
                 if (!this.ctx) return;
-                if (this.ctx.state === 'suspended') this.ctx.resume();
                 const now = this.ctx.currentTime;
+
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(140, now);
-                osc.frequency.exponentialRampToValueAtTime(34, now + 0.16);
-                gain.gain.setValueAtTime(0.7, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(165, now);
+                osc.frequency.exponentialRampToValueAtTime(38, now + 0.14);
+                gain.gain.setValueAtTime(0.95, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
                 osc.start(now);
-                osc.stop(now + 0.18);
+                osc.stop(now + 0.16);
+
+                const snapLen = Math.floor(this.ctx.sampleRate * 0.055);
+                const snapBuf = this.ctx.createBuffer(1, snapLen, this.ctx.sampleRate);
+                const ch = snapBuf.getChannelData(0);
+                for (let i = 0; i < snapLen; i++) {
+                    ch[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / snapLen, 2.2);
+                }
+                const snapSrc = this.ctx.createBufferSource();
+                const snapFlt = this.ctx.createBiquadFilter();
+                const snapGain = this.ctx.createGain();
+                snapSrc.buffer = snapBuf;
+                snapFlt.type = 'bandpass';
+                snapFlt.frequency.value = 950;
+                snapFlt.Q.value = 1.1;
+                snapGain.gain.setValueAtTime(0.65, now);
+                snapGain.gain.exponentialRampToValueAtTime(0.01, now + 0.055);
+                snapSrc.connect(snapFlt);
+                snapFlt.connect(snapGain);
+                snapGain.connect(this.ctx.destination);
+                snapSrc.start(now);
             }
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 2A з 10 ==================== -->
+// ==================== ПОЧАТОК ЧАСТИНИ 2B з 10 ====================
             playPost() {
                 if (!this.enabled) return;
                 this.init();
                 if (!this.ctx) return;
-                if (this.ctx.state === 'suspended') this.ctx.resume();
                 const now = this.ctx.currentTime;
 
-                const freqs = new Array(190, 520, 880);
-                freqs.forEach((f, idx) => {
+                const thud = this.ctx.createOscillator();
+                const thudGain = this.ctx.createGain();
+                thud.type = 'triangle';
+                thud.frequency.setValueAtTime(135, now);
+                thud.frequency.exponentialRampToValueAtTime(48, now + 0.14);
+                thudGain.gain.setValueAtTime(0.85, now);
+                thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                thud.connect(thudGain);
+                thudGain.connect(this.ctx.destination);
+                thud.start(now);
+                thud.stop(now + 0.16);
+
+                const tubeFreqs = new Array(118, 236);
+                tubeFreqs.forEach((f, i) => {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
-                    osc.type = idx === 0 ? 'triangle' : 'sine';
+                    osc.type = 'sine';
                     osc.frequency.setValueAtTime(f, now);
-                    osc.frequency.exponentialRampToValueAtTime(f * 0.96, now + 0.45);
+                    osc.frequency.exponentialRampToValueAtTime(f * 0.985, now + 0.36);
 
-                    const vol = idx === 0 ? 0.65 : (idx === 1 ? 0.35 : 0.18);
-                    const dur = idx === 0 ? 0.22 : 0.58;
+                    const vol = i === 0 ? 0.45 : 0.18;
                     gain.gain.setValueAtTime(vol, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
 
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
                     osc.start(now);
-                    osc.stop(now + dur + 0.02);
+                    osc.stop(now + 0.38);
                 });
             }
             playCrowd(isGoal) {
                 if (!this.enabled) return;
                 this.init();
                 if (!this.ctx) return;
-                if (this.ctx.state === 'suspended') this.ctx.resume();
                 const now = this.ctx.currentTime;
-                const dur = isGoal ? 2.1 : 1.1;
-                const len = Math.floor(this.ctx.sampleRate * dur);
-                const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+
+                const dur = isGoal ? 2.4 : 1.5;
+                const sr = this.ctx.sampleRate;
+                const len = Math.floor(sr * dur);
+                const buf = this.ctx.createBuffer(1, len, sr);
                 const ch = buf.getChannelData(0);
+
                 let last = 0;
                 for (let i = 0; i < len; i++) {
-                    last = (last + 0.04 * (Math.random() * 2 - 1)) / 1.04;
-                    ch[i] = last * 3.8 * Math.sin(Math.PI * (i / len));
+                    const p = i / len;
+                    last = (last + 0.05 * (Math.random() * 2 - 1)) / 1.05;
+                    const env = isGoal
+                        ? Math.min(1, p * 9) * Math.pow(1 - p, 0.75)
+                        : Math.min(1, p * 7) * Math.pow(1 - p, 1.25);
+                    ch[i] = last * 4.2 * env;
                 }
+
                 const src = this.ctx.createBufferSource();
-                const flt = this.ctx.createBiquadFilter();
-                const gn = this.ctx.createGain();
                 src.buffer = buf;
-                flt.type = 'lowpass';
-                flt.frequency.setValueAtTime(isGoal ? 640 : 240, now);
-                gn.gain.setValueAtTime(isGoal ? 0.52 : 0.28, now);
+
+                const formant = this.ctx.createBiquadFilter();
+                formant.type = 'bandpass';
+                formant.Q.value = isGoal ? 1.4 : 2.1;
+
+                if (isGoal) {
+                    formant.frequency.setValueAtTime(360, now);
+                    formant.frequency.exponentialRampToValueAtTime(680, now + 0.35);
+                    formant.frequency.setValueAtTime(640, now + 1.4);
+                    formant.frequency.exponentialRampToValueAtTime(420, now + dur);
+                } else {
+                    formant.frequency.setValueAtTime(470, now);
+                    formant.frequency.exponentialRampToValueAtTime(205, now + dur);
+                }
+
+                const gn = this.ctx.createGain();
+                gn.gain.setValueAtTime(isGoal ? 0.78 : 0.58, now);
                 gn.gain.exponentialRampToValueAtTime(0.001, now + dur);
-                src.connect(flt);
-                flt.connect(gn);
+
+                src.connect(formant);
+                formant.connect(gn);
                 gn.connect(this.ctx.destination);
                 src.start(now);
             }
@@ -302,7 +402,7 @@
         const rimLight = new THREE.DirectionalLight(0x93c5fd, 1.15);
         rimLight.position.set(-12, 14, -36);
         scene.add(rimLight);
-// ==================== КІНЕЦЬ ЧАСТИНИ 2 з 10 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 2B з 10 ====================
 
 // ==================== ПОЧАТОК ЧАСТИНИ 3 з 10 ====================
         function createPitchTexture() {
