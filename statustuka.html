@@ -16,25 +16,33 @@
 
         .header {
             max-width: 620px; margin: 0 auto 14px;
-            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
         }
         .back-btn {
             text-decoration: none;
             background: rgba(15, 23, 42, 0.85);
-            color: #f8fafc; padding: 9px 14px; border-radius: 14px;
+            color: #f8fafc; padding: 9px 13px; border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.16);
             font-weight: 800; font-size: 0.85rem;
             box-shadow: 0 6px 18px rgba(0,0,0,0.4);
         }
         .title-box { text-align: center; }
-        .title-box h1 { font-size: 1.15rem; font-weight: 900; letter-spacing: 0.3px; color: #38bdf8; }
-        .title-box p { font-size: 0.74rem; color: #94a3b8; margin-top: 2px; }
+        .title-box h1 { font-size: 1.12rem; font-weight: 900; letter-spacing: 0.3px; color: #38bdf8; }
+        .title-box p { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
 
+        .header-right { display: flex; align-items: center; gap: 6px; }
+        .refresh-btn {
+            background: rgba(15, 23, 42, 0.88);
+            color: #38bdf8; width: 36px; height: 36px; border-radius: 50%;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
         .my-coins {
             background: rgba(15, 23, 42, 0.88);
-            color: #facc15; padding: 8px 14px; border-radius: 20px;
+            color: #facc15; padding: 8px 13px; border-radius: 20px;
             border: 1px solid rgba(250, 204, 21, 0.45);
-            font-weight: 800; font-size: 0.9rem;
+            font-weight: 800; font-size: 0.88rem;
         }
 
         .leaderboard-list {
@@ -76,20 +84,27 @@
             width: 42px; height: 42px; border-radius: 50%;
             background: linear-gradient(135deg, #0284c7, #2563eb);
             display: flex; justify-content: center; align-items: center;
-            font-weight: 900; font-size: 1rem; color: #fff;
-            flex-shrink: 0; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.2);
+            font-weight: 900; font-size: 0.95rem; letter-spacing: 0.5px; color: #fff;
+            flex-shrink: 0; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.22);
         }
         .tg-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
         .player-info { flex: 1; min-width: 0; }
         .player-name {
             font-weight: 800; font-size: 0.96rem; color: #f8fafc;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             display: flex; align-items: center; gap: 6px;
+        }
+        .player-name-text {
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .me-tag {
             background: #0284c7; color: #fff; font-size: 0.65rem;
-            padding: 2px 6px; border-radius: 6px; font-weight: 900;
+            padding: 2px 6px; border-radius: 6px; font-weight: 900; flex-shrink: 0;
+        }
+        .edit-name-btn {
+            background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.45);
+            color: #38bdf8; border-radius: 7px; padding: 2px 6px;
+            font-size: 0.72rem; cursor: pointer; flex-shrink: 0;
         }
         .player-sub { font-size: 0.74rem; color: #94a3b8; margin-top: 2px; }
 
@@ -168,7 +183,10 @@
             <h1>🏆 ТОП Гравців</h1>
             <p>Натисни на гравця для 3D-огляду</p>
         </div>
-        <div class="my-coins" id="header-coins">💰 500</div>
+        <div class="header-right">
+            <button class="refresh-btn" id="refresh-btn" title="Оновити рейтинг">🔄</button>
+            <div class="my-coins" id="header-coins">💰 500</div>
+        </div>
     </div>
 
     <div class="leaderboard-list" id="leaderboard-list"></div>
@@ -248,13 +266,13 @@
             let tgId = '';
             let avatarUrl = '';
 
-            if (tgUser) {
+            if (tgUser && tgUser.id) {
                 tgId = 'tg_' + String(tgUser.id);
                 fullName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ').trim();
                 if (!fullName && tgUser.username) fullName = '@' + tgUser.username;
                 avatarUrl = tgUser.photo_url || '';
                 localStorage.setItem('tg_player_id', tgId);
-                localStorage.setItem('tg_player_name', fullName);
+                if (fullName) localStorage.setItem('tg_player_name', fullName);
                 if (avatarUrl) localStorage.setItem('tg_player_avatar', avatarUrl);
             } else {
                 if (!localStorage.getItem('tg_player_id')) {
@@ -284,12 +302,13 @@
             };
         }
 
-        const currentPlayer = getCurrentTelegramPlayer();
+        let currentPlayer = getCurrentTelegramPlayer();
         document.getElementById('header-coins').textContent = `💰 ${currentPlayer.coins}`;
 
         async function syncAndLoadFirebaseLeaderboard() {
+            currentPlayer = getCurrentTelegramPlayer();
             const listEl = document.getElementById('leaderboard-list');
-            listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-weight:700;">⏳ Завантаження реальних гравців...</div>';
+            listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-weight:700;">⏳ Оновлення рейтингу з бази...</div>';
 
             let players = [];
 
@@ -311,7 +330,7 @@
                     body: JSON.stringify(payload)
                 });
 
-                const res = await fetch(`${FIREBASE_DB_URL}/players.json`);
+                const res = await fetch(`${FIREBASE_DB_URL}/players.json?t=${Date.now()}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data && typeof data === 'object') {
@@ -335,9 +354,15 @@
             renderLeaderboard(players);
         }
 
+        document.getElementById('refresh-btn').addEventListener('click', syncAndLoadFirebaseLeaderboard);
+
         function getInitials(name) {
-            const parts = String(name || '').replace('@', '').trim().split(/\s+/);
-            return parts.slice(0, 2).map(w => w ? w.toUpperCase() : '').join('') || '⚽';
+            const clean = String(name || '').replace(/^@/, '').trim();
+            const words = clean.split(/\s+/).filter(Boolean);
+            if (words.length >= 2) {
+                return (words.at(0).slice(0, 1) + words.at(1).slice(0, 1)).toUpperCase();
+            }
+            return clean.slice(0, 2).toUpperCase() || '⚽';
         }
 
         function renderLeaderboard(players) {
@@ -361,13 +386,27 @@
                     <div class="tg-avatar">${avatarHtml}</div>
                     <div class="player-info">
                         <div class="player-name">
-                            <span>${player.name}</span>
-                            ${player.isMe ? '<span class="me-tag">ТИ</span>' : ''}
+                            <span class="player-name-text">${player.name}</span>
+                            ${player.isMe ? '<span class="me-tag">ТИ</span><button class="edit-name-btn" title="Змінити ім\'я">✏️</button>' : ''}
                         </div>
                         <div class="player-sub">🏆 Перемог: ${player.wins || 0} • У грі з ${player.joinedAt || 'нещодавно'}</div>
                     </div>
                     <div class="player-coins">💰 ${player.coins || 0}</div>
                 `;
+
+                if (player.isMe) {
+                    const editBtn = row.querySelector('.edit-name-btn');
+                    if (editBtn) {
+                        editBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const newName = prompt('Введи своє ім\'я або нікнейм для рейтингу:', currentPlayer.name);
+                            if (newName && newName.trim().length >= 2) {
+                                localStorage.setItem('tg_player_name', newName.trim());
+                                syncAndLoadFirebaseLeaderboard();
+                            }
+                        });
+                    }
+                }
 
                 row.addEventListener('click', () => openPlayerProfile(player, rank));
                 listEl.appendChild(row);
