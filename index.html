@@ -1318,7 +1318,7 @@
         const dropStartPos = new THREE.Vector3();
         let lastStepIndex = -1;
 
-        // Цикл: 'idle' (10с) -> 'pickup' (0.55с) -> 'juggling' (6.5с) -> 'drop' (0.9с) -> 'waving' (5с)
+        // Цикл: 'idle' (10с) -> 'pickup' (0.55с) -> 'juggling' (7.4с) -> 'drop' (0.9с) -> 'waving' (5с)
         let playerAction = 'idle';
         let actionTimer = 0;
         let waveBlend = 0;
@@ -1386,7 +1386,7 @@
                 }
             } else if (playerAction === 'juggling') {
                 actionTimer += dt;
-                if (actionTimer >= 6.5) {
+                if (actionTimer >= 7.4) {
                     playerAction = 'drop';
                     actionTimer = 0;
                     jugBlend = 0;
@@ -1502,6 +1502,7 @@
                 }
             }
 // ==================== КІНЕЦЬ ЧАСТИНИ 13A з 14 ====================
+
 // ==================== ПОЧАТОК ЧАСТИНИ 13B з 14 ====================
             // 1. Анімація плавного набивання м'яча після підкидання
             else if (jugBlend > 0.005) {
