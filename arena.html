@@ -204,9 +204,9 @@
         const GOAL_H = 2.44;
         const GOAL_D = 1.9;
 
-        const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 180);
-        const camBasePos = new THREE.Vector3(-0.75, 1.85, SPOT_Z + 4.55);
-        const camLookTarget = new THREE.Vector3(0, 1.15, GOAL_Z);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 180);
+        const camBasePos = new THREE.Vector3(-0.95, 2.48, SPOT_Z + 4.95);
+        const camLookTarget = new THREE.Vector3(0, 1.05, GOAL_Z);
         camera.position.copy(camBasePos);
         camera.lookAt(camLookTarget);
 
@@ -230,6 +230,7 @@
         rimLight.position.set(-12, 14, -36);
         scene.add(rimLight);
 // ==================== КІНЕЦЬ ЧАСТИНИ 2 з 9 ====================
+
 // ==================== ПОЧАТОК ЧАСТИНИ 3 з 9 ====================
         function createPitchTexture() {
             const canvas = document.createElement('canvas');
@@ -1213,8 +1214,9 @@
                 ballMesh.rotation.x -= dt * 20;
                 ballMesh.rotation.y += shotCurveX * dt * 14;
 
-                camera.position.z = THREE.MathUtils.lerp(camera.position.z, SPOT_Z + 3.4, dt * 3);
-                camera.lookAt(curX * 0.25, 1.25, GOAL_Z);
+                camera.position.z = THREE.MathUtils.lerp(camera.position.z, SPOT_Z + 4.1, dt * 2.5);
+                camera.position.y = THREE.MathUtils.lerp(camera.position.y, 2.48, dt * 3);
+                camera.lookAt(curX * 0.25, 1.05, GOAL_Z);
 
                 if (!checkLiveGoalkeeperSave() && shotProgress >= 1) {
                     evaluateShotResult();
