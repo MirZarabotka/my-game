@@ -1500,9 +1500,9 @@
                 }
             }
 
-            // Повертаємо 3D-рукавицю долонею рівно в камеру
+            // Перекручуємо 3D-рукавицю ще на 180 градусів (3.14 рад) долонею рівно в камеру
             if (rightGloveHolder.children.length > 0) {
-                rightGloveHolder.children.at(0).rotation.y = 0;
+                rightGloveHolder.children.at(0).rotation.y = 3.14 * waveBlend;
             }
 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ====================
 
