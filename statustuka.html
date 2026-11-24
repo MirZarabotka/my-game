@@ -238,7 +238,6 @@
         }
     </script>
 <!-- ==================== КІНЕЦЬ ЧАСТИНИ 2 з 5 ==================== -->
-
 <!-- ==================== ПОЧАТОК ЧАСТИНИ 3 з 5 ==================== -->
     <script type="module">
         import * as THREE from 'three';
@@ -246,7 +245,7 @@
         import { DRACOLoader } from './libs/DRACOLoader.js';
         import { CATALOG } from './shop-catalog.js';
 
-        const FIREBASE_DB_URL = 'https://test-d54a5-default-rtdb.europe-west1.firebasedatabase.app';
+        const FIREBASE_DB_URL = 'https://firebasedatabase.app';
 
         function fbRequest(method, path, bodyObj = null) {
             return new Promise((resolve, reject) => {
@@ -264,7 +263,7 @@
                         reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
                     }
                 };
-                xhr.onerror = () => reject(new Error('Мережа заблокувала запит до firebasedatabase.app'));
+                xhr.onerror = () => reject(new Error('Помилка мережі при зверненні до Firebase'));
                 xhr.ontimeout = () => reject(new Error('Таймаут підключення до бази'));
                 if (bodyObj) {
                     xhr.send(JSON.stringify(bodyObj));
@@ -272,12 +271,6 @@
                     xhr.send();
                 }
             });
-        }
-
-        const tg = window.Telegram && window.Telegram.WebApp;
-        if (tg) {
-            tg.ready();
-            tg.expand();
         }
 
         function formatTodayDate() {
@@ -298,17 +291,41 @@
             localStorage.setItem('matches_won', '0');
         }
 
+        function parseTelegramUserFromHash() {
+            try {
+                const rawHash = (window.location.hash || '').replace(/^#/, '');
+                const rawSearch = (window.location.search || '').replace(/^\?/, '');
+                const params = new URLSearchParams(rawHash || rawSearch);
+                const webAppData = params.get('tgWebAppData');
+                if (webAppData) {
+                    const inner = new URLSearchParams(webAppData);
+                    const userJson = inner.get('user');
+                    if (userJson) return JSON.parse(userJson);
+                }
+            } catch (e) {}
+            return null;
+        }
+
         function getCurrentTelegramPlayer() {
-            const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+            const tgObj = window.Telegram && window.Telegram.WebApp;
+            if (tgObj) {
+                tgObj.ready();
+                tgObj.expand();
+            }
+
+            const tgUser = (tgObj && tgObj.initDataUnsafe && tgObj.initDataUnsafe.user) || parseTelegramUserFromHash();
             let fullName = '';
             let tgId = '';
             let avatarUrl = '';
 
             if (tgUser && tgUser.id) {
                 tgId = 'tg_' + String(tgUser.id);
-                fullName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ').trim();
-                if (!fullName && tgUser.username) fullName = '@' + tgUser.username;
+                const nameParts = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ').trim();
+                const login = tgUser.username ? ('@' + tgUser.username) : '';
+
+                fullName = nameParts ? (login ? `${nameParts} (${login})` : nameParts) : login;
                 avatarUrl = tgUser.photo_url || '';
+
                 localStorage.setItem('tg_player_id', tgId);
                 if (fullName) localStorage.setItem('tg_player_name', fullName);
                 if (avatarUrl) localStorage.setItem('tg_player_avatar', avatarUrl);
@@ -399,7 +416,6 @@
 
         document.getElementById('refresh-btn').addEventListener('click', syncAndLoadFirebaseLeaderboard);
 // ==================== КІНЕЦЬ ЧАСТИНИ 3 з 5 ====================
-
 // ==================== ПОЧАТОК ЧАСТИНИ 4 з 5 ====================
         function getInitials(name) {
             const clean = String(name || '').replace(/^@/, '').trim();
