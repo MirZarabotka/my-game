@@ -166,154 +166,192 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.65);
         }
 /* ==================== КІНЕЦЬ ЧАСТИНИ 2 з 13 ==================== */
-/* ==================== ПОЧАТОК ЧАСТИНИ 3 з 13 ==================== */
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-        }
-        .modal-header h3 { font-size: 1.1rem; font-weight: 800; }
-        .close-modal {
-            background: #1e293b;
-            color: #cbd5e1;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            font-weight: 800;
-            cursor: pointer;
-        }
-        .setting-row {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .setting-row label {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #cbd5e1;
-            display: flex;
-            justify-content: space-between;
-        }
-        .setting-row input[type="range"] {
-            width: 100%;
-            accent-color: #22c55e;
-            cursor: pointer;
-        }
-        .toggle-btn {
-            width: 100%;
-            padding: 10px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: #1e293b;
-            color: #f8fafc;
-            font-weight: 800;
-            cursor: pointer;
-        }
-        .toggle-btn.active {
-            background: rgba(34, 197, 94, 0.2);
-            border-color: #22c55e;
-            color: #4ade80;
-        }
+/* ==================== ПОЧАТОК ЧАСТИНИ 3 з 5 ==================== */
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from './libs/GLTFLoader.js';
+        import { DRACOLoader } from './libs/DRACOLoader.js';
+        import { CATALOG } from './shop-catalog.js';
 
-        #loader-screen {
-            position: absolute;
-            inset: 0;
-            background: #0f172a;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-            transition: opacity 0.4s;
-        }
-        .spinner {
-            width: 48px; height: 48px;
-            border: 4px solid rgba(56, 189, 248, 0.2);
-            border-top-color: #38bdf8;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
+        const FIREBASE_URLS = [
+            'https://firebasedatabase.app',
+            'https://firebaseio.com'
+        ];
 
-    <div id="loader-screen">
-        <div class="spinner"></div>
-        <div id="loader-text">Завантаження стадіону...</div>
-    </div>
-
-    <div id="canvas-container"></div>
-
-    <div class="ui-layer">
-        <div class="top-hud">
-            <button class="sound-btn" id="quick-sound-btn" title="Звук трибун">🔊</button>
-            <div class="coins-pill" id="home-coins">💰 500</div>
-        </div>
-
-        <div class="menu-actions">
-            <button class="nav-card play-card" id="start-btn">
-                <div class="nav-icon">⚽</div>
-                <div class="nav-text">
-                    <span class="nav-title">ГРАТИ</span>
-                    <span class="nav-sub">Серія пенальті</span>
-                </div>
-            </button>
-            <a href="statustuka.html" class="nav-card shop-card">
-                <div class="nav-icon">🏆</div>
-                <div class="nav-text">
-                    <span class="nav-title">РЕЙТИНГ</span>
-                    <span class="nav-sub">ТОП гравців</span>
-                </div>
-            </a>
-            <a href="shop.html" class="nav-card shop-card">
-                <div class="nav-icon">👕</div>
-                <div class="nav-text">
-                    <span class="nav-title">ГАРДЕРОБ</span>
-                    <span class="nav-sub">Форма та бутси</span>
-                </div>
-            </a>
-            <button class="nav-card settings-card" id="settings-btn">
-                <div class="nav-icon">⚙️</div>
-                <div class="nav-text">
-                    <span class="nav-title">НАЛАШТУВАННЯ</span>
-                    <span class="nav-sub">Звук та графіка</span>
-                </div>
-            </button>
-        </div>
-    </div>
-
-    <div id="settings-modal">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>⚙️ Налаштування</h3>
-                <button class="close-modal" id="close-settings">✕</button>
-            </div>
-            <div class="setting-row">
-                <label>Гучність трибун <span id="vol-label">70%</span></label>
-                <input type="range" id="stadium-vol" min="0" max="100" value="70">
-            </div>
-            <div class="setting-row">
-                <button class="toggle-btn active" id="toggle-crowd-sound">🔊 Спів та гул трибун: УВІМК</button>
-            </div>
-            <div class="setting-row">
-                <button class="toggle-btn active" id="toggle-shadows">✨ Тіні та деталізація: ВИСОКА</button>
-            </div>
-        </div>
-    </div>
-
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "./libs/three.module.js"
+        async function fbRequest(method, path, bodyObj = null) {
+            let lastErr = null;
+            for (const baseUrl of FIREBASE_URLS) {
+                try {
+                    const res = await new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open(method, `${baseUrl}${path}`, true);
+                        xhr.timeout = 7000;
+                        xhr.onload = () => {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                try {
+                                    resolve(xhr.responseText ? JSON.parse(xhr.responseText) : null);
+                                } catch (e) {
+                                    resolve(null);
+                                }
+                            } else {
+                                reject(new Error(`HTTP ${xhr.status}`));
+                            }
+                        };
+                        xhr.onerror = () => reject(new Error('DNS / Мережа недоступна (ERR_NAME_NOT_RESOLVED)'));
+                        xhr.ontimeout = () => reject(new Error('Таймаут підключення до бази'));
+                        xhr.send(bodyObj ? JSON.stringify(bodyObj) : null);
+                    });
+                    return res;
+                } catch (err) {
+                    lastErr = err;
+                }
             }
+            throw lastErr || new Error('База недоступна');
         }
-    </script>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 3 з 13 ==================== -->
+
+        function formatTodayDate() {
+            const d = new Date();
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+            return `${dd}.${mm}.${yyyy}`;
+        }
+
+        if (!localStorage.getItem('first_played_date')) {
+            localStorage.setItem('first_played_date', formatTodayDate());
+        }
+        if (localStorage.getItem('player_coins') === null) {
+            localStorage.setItem('player_coins', '500');
+        }
+        if (localStorage.getItem('matches_won') === null) {
+            localStorage.setItem('matches_won', '0');
+        }
+
+        function parseTelegramUserFromHash() {
+            try {
+                const rawHash = (window.location.hash || '').replace(/^#/, '');
+                const rawSearch = (window.location.search || '').replace(/^\?/, '');
+                const params = new URLSearchParams(rawHash || rawSearch);
+                const webAppData = params.get('tgWebAppData');
+                if (webAppData) {
+                    const inner = new URLSearchParams(webAppData);
+                    const userJson = inner.get('user');
+                    if (userJson) return JSON.parse(userJson);
+                }
+            } catch (e) {}
+            return null;
+        }
+
+        function getCurrentTelegramPlayer() {
+            const tgObj = window.Telegram && window.Telegram.WebApp;
+            if (tgObj) {
+                tgObj.ready();
+                tgObj.expand();
+            }
+
+            const tgUser = (tgObj && tgObj.initDataUnsafe && tgObj.initDataUnsafe.user) || parseTelegramUserFromHash();
+            let fullName = '';
+            let tgId = '';
+            let avatarUrl = '';
+
+            if (tgUser && tgUser.id) {
+                tgId = 'tg_' + String(tgUser.id);
+                const nameParts = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ').trim();
+                const login = tgUser.username ? ('@' + tgUser.username) : '';
+
+                fullName = nameParts ? (login ? `${nameParts} (${login})` : nameParts) : login;
+                avatarUrl = tgUser.photo_url || '';
+
+                localStorage.setItem('tg_player_id', tgId);
+                if (fullName) localStorage.setItem('tg_player_name', fullName);
+                if (avatarUrl) localStorage.setItem('tg_player_avatar', avatarUrl);
+            } else {
+                if (!localStorage.getItem('tg_player_id')) {
+                    localStorage.setItem('tg_player_id', 'web_' + Math.floor(100000 + Math.random() * 900000));
+                }
+                tgId = localStorage.getItem('tg_player_id');
+                fullName = localStorage.getItem('tg_player_name') || ('Гравець #' + tgId.slice(-4));
+                avatarUrl = localStorage.getItem('tg_player_avatar') || '';
+            }
+
+            return {
+                id: tgId,
+                isMe: true,
+                name: fullName,
+                avatar: avatarUrl,
+                coins: Number(localStorage.getItem('player_coins') || 500),
+                wins: Number(localStorage.getItem('matches_won') || 0),
+                joinedAt: localStorage.getItem('first_played_date') || formatTodayDate(),
+                kit: {
+                    jersey: localStorage.getItem('eq_jerseys') || 'j1',
+                    shorts: localStorage.getItem('eq_shorts') || 's1',
+                    boots: localStorage.getItem('eq_boots') || 'b1',
+                    hair: localStorage.getItem('eq_hair') || 'h1',
+                    number: localStorage.getItem('eq_number') || '10',
+                    numColor: localStorage.getItem('eq_numColor') || '#ffffff'
+                }
+            };
+        }
+
+        let currentPlayer = getCurrentTelegramPlayer();
+        document.getElementById('header-coins').textContent = `💰 ${currentPlayer.coins}`;
+
+        async function syncAndLoadFirebaseLeaderboard() {
+            currentPlayer = getCurrentTelegramPlayer();
+            const listEl = document.getElementById('leaderboard-list');
+            const subTitleEl = document.querySelector('.title-box p');
+            listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-weight:700;">⏳ Підключення до бази...</div>';
+
+            let players = [];
+
+            try {
+                const payload = {
+                    [currentPlayer.id]: {
+                        id: currentPlayer.id,
+                        name: currentPlayer.name,
+                        avatar: currentPlayer.avatar,
+                        coins: currentPlayer.coins,
+                        wins: currentPlayer.wins,
+                        joinedAt: currentPlayer.joinedAt,
+                        kit: currentPlayer.kit,
+                        updatedAt: Date.now()
+                    }
+                };
+
+                await fbRequest('PATCH', '/players.json', payload);
+                const data = await fbRequest('GET', '/players.json');
+
+                if (data && typeof data === 'object') {
+                    players = Object.values(data)
+                        .filter(p => p && p.name)
+                        .map(p => ({
+                            ...p,
+                            isMe: p.id === currentPlayer.id
+                        }));
+                }
+
+                if (subTitleEl) {
+                    subTitleEl.textContent = `🟢 База підключена • Гравців: ${players.length}`;
+                    subTitleEl.style.color = '#4ade80';
+                }
+            } catch (err) {
+                console.error('Firebase error:', err);
+                if (subTitleEl) {
+                    subTitleEl.textContent = `🔴 ${err.message}`;
+                    subTitleEl.style.color = '#f87171';
+                }
+            }
+
+            if (!players.length) {
+                players = [currentPlayer];
+            }
+
+            players.sort((a, b) => (Number(b.coins) || 0) - (Number(a.coins) || 0));
+            renderLeaderboard(players);
+        }
+
+        document.getElementById('refresh-btn').addEventListener('click', syncAndLoadFirebaseLeaderboard);
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 3 з 5 ==================== -->
 <!-- ==================== ПОЧАТОК ЧАСТИНИ 4 з 13 ==================== -->
     <script type="module">
         import * as THREE from 'three';
