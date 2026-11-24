@@ -118,13 +118,19 @@
 <!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 5 ==================== -->
 <!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 5 ==================== -->
         .modal-backdrop {
-            position: fixed; inset: 0;
+            position: fixed;
+            inset: 0;
             background: rgba(4, 11, 23, 0.86);
             backdrop-filter: blur(10px);
-            display: none; justify-content: center; align-items: center;
-            padding: 16px; z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            z-index: 100;
         }
-        .modal-backdrop.open { display: flex; }
+        .modal-backdrop.open {
+            display: flex;
+        }
 
         .profile-card {
             width: 100%; max-width: 400px;
@@ -232,6 +238,7 @@
         }
     </script>
 <!-- ==================== КІНЕЦЬ ЧАСТИНИ 2 з 5 ==================== -->
+
 <!-- ==================== ПОЧАТОК ЧАСТИНИ 3 з 5 ==================== -->
     <script type="module">
         import * as THREE from 'three';
@@ -529,7 +536,6 @@
             return tex;
         }
 // ==================== КІНЕЦЬ ЧАСТИНИ 4 з 5 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 5 з 5 ====================
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
@@ -645,4 +651,3 @@
     </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 5 з 5 ==================== -->
