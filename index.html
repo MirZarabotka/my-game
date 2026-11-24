@@ -173,40 +173,29 @@
         import { DRACOLoader } from './libs/DRACOLoader.js';
         import { CATALOG } from './shop-catalog.js';
 
-        const FIREBASE_URLS = [
-            'https://firebasedatabase.app',
-            'https://firebaseio.com'
-        ];
+        const DB_HOST = 'test-d54a5-default-rtdb.europe-west1.firebasedatabase.app';
+        const FIREBASE_DB_URL = 'https://' + DB_HOST;
 
-        async function fbRequest(method, path, bodyObj = null) {
-            let lastErr = null;
-            for (const baseUrl of FIREBASE_URLS) {
-                try {
-                    const res = await new Promise((resolve, reject) => {
-                        const xhr = new XMLHttpRequest();
-                        xhr.open(method, `${baseUrl}${path}`, true);
-                        xhr.timeout = 7000;
-                        xhr.onload = () => {
-                            if (xhr.status >= 200 && xhr.status < 300) {
-                                try {
-                                    resolve(xhr.responseText ? JSON.parse(xhr.responseText) : null);
-                                } catch (e) {
-                                    resolve(null);
-                                }
-                            } else {
-                                reject(new Error(`HTTP ${xhr.status}`));
-                            }
-                        };
-                        xhr.onerror = () => reject(new Error('DNS / Мережа недоступна (ERR_NAME_NOT_RESOLVED)'));
-                        xhr.ontimeout = () => reject(new Error('Таймаут підключення до бази'));
-                        xhr.send(bodyObj ? JSON.stringify(bodyObj) : null);
-                    });
-                    return res;
-                } catch (err) {
-                    lastErr = err;
-                }
-            }
-            throw lastErr || new Error('База недоступна');
+        function fbRequest(method, path, bodyObj = null) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open(method, `${FIREBASE_DB_URL}${path}`, true);
+                xhr.timeout = 8000;
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            resolve(xhr.responseText ? JSON.parse(xhr.responseText) : null);
+                        } catch (e) {
+                            resolve(null);
+                        }
+                    } else {
+                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                    }
+                };
+                xhr.onerror = () => reject(new Error(`Немає звʼязку з ${DB_HOST}`));
+                xhr.ontimeout = () => reject(new Error('Таймаут підключення до бази'));
+                xhr.send(bodyObj ? JSON.stringify(bodyObj) : null);
+            });
         }
 
         function formatTodayDate() {
@@ -227,7 +216,7 @@
             localStorage.setItem('matches_won', '0');
         }
 
-        function parseTelegramUserFromHash() {
+        function parseTelegramUserFromUrl() {
             try {
                 const rawHash = (window.location.hash || '').replace(/^#/, '');
                 const rawSearch = (window.location.search || '').replace(/^\?/, '');
@@ -249,7 +238,7 @@
                 tgObj.expand();
             }
 
-            const tgUser = (tgObj && tgObj.initDataUnsafe && tgObj.initDataUnsafe.user) || parseTelegramUserFromHash();
+            const tgUser = (tgObj && tgObj.initDataUnsafe && tgObj.initDataUnsafe.user) || parseTelegramUserFromUrl();
             let fullName = '';
             let tgId = '';
             let avatarUrl = '';
@@ -351,8 +340,8 @@
         }
 
         document.getElementById('refresh-btn').addEventListener('click', syncAndLoadFirebaseLeaderboard);
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 3 з 5 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 4 з 13 ==================== -->
+/* ==================== КІНЕЦЬ ЧАСТИНИ 3 з 5 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 4 з 13 ==================== */
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
@@ -524,9 +513,9 @@
                 stadiumAudio.ctx.resume();
             }
         }, { once: true });
-// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 13 ====================
+ /* ==================== КІНЕЦЬ ЧАСТИНИ 4 з 13 ==================== */
 
-// ==================== ПОЧАТОК ЧАСТИНИ 5 з 13 ====================
+/* ==================== ПОЧАТОК ЧАСТИНИ 5 з 13 ==================== */
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x071326);
@@ -654,8 +643,8 @@
         }
         stadiumGroup.add(createGoal(-29.8, 0));
         stadiumGroup.add(createGoal(29.8, Math.PI));
-// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 13 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 6 з 13 ====================
+/* ==================== КІНЕЦЬ ЧАСТИНИ 5 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 6 з 13 ==================== */
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
         const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
         const railMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
@@ -753,8 +742,8 @@
                     fanPositions.push({ x: fx, y: rowY, z: zDist - 0.08, rotY: Math.PI, phase: Math.random() * 6.28, hasPhone: false, hasScarf: false });
                 }
             }
-// ==================== КІНЕЦЬ ЧАСТИНИ 6 з 13 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 7 з 13 ====================
+/* ==================== КІНЕЦЬ ЧАСТИНИ 6 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 7 з 13 ==================== */
             const xDist = 25.4 + r * 1.02;
             const stepL = 66 + r * 2;
             const stepGeoX = new THREE.BoxGeometry(rowDepth, 0.68, stepL);
