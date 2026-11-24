@@ -3,230 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Penalty 3D — Рейтинг гравців</title>
+    <title>Penalty 3D — Головна</title>
     <script src="https://telegram.org"></script>
     <style>
-        /* ==================== ПОЧАТОК ЧАСТИНИ 1 з 5 ==================== */
+        /* ==================== ПОЧАТОК ЧАСТИНИ 1 з 8 ==================== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
-            min-height: 100vh;
-            background: radial-gradient(circle at top, #0f294a 0%, #071326 65%, #040b17 100%);
+            overflow: hidden;
+            background: #071326;
+            color: #ffffff;
+        }
+        #canvas-container { width: 100vw; height: 100vh; display: block; cursor: grab; }
+        #canvas-container:active { cursor: grabbing; }
+
+        .ui-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .top-hud {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            pointer-events: auto;
+        }
+        .sound-btn {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(10px);
             color: #f8fafc;
-            padding: 14px 14px 28px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.45);
         }
-
-        .header {
-            max-width: 620px; margin: 0 auto 14px;
-            display: flex; justify-content: space-between; align-items: center; gap: 8px;
-        }
-        .back-btn {
-            text-decoration: none;
-            background: rgba(15, 23, 42, 0.85);
-            color: #f8fafc; padding: 9px 13px; border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            font-weight: 800; font-size: 0.85rem;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
-        }
-        .title-box { text-align: center; }
-        .title-box h1 { font-size: 1.12rem; font-weight: 900; letter-spacing: 0.3px; color: #38bdf8; }
-        .title-box p { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
-
-        .header-right { display: flex; align-items: center; gap: 6px; }
-        .refresh-btn {
-            background: rgba(15, 23, 42, 0.88);
-            color: #38bdf8; width: 36px; height: 36px; border-radius: 50%;
-            border: 1px solid rgba(56, 189, 248, 0.4);
-            font-size: 1rem; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .my-coins {
-            background: rgba(15, 23, 42, 0.88);
-            color: #facc15; padding: 8px 13px; border-radius: 20px;
+        .coins-pill {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(10px);
+            color: #facc15;
+            padding: 8px 16px;
+            border-radius: 30px;
             border: 1px solid rgba(250, 204, 21, 0.45);
-            font-weight: 800; font-size: 0.88rem;
+            font-weight: 800;
+            font-size: 1rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.45);
         }
 
-        .leaderboard-list {
-            max-width: 620px; margin: 0 auto;
-            display: flex; flex-direction: column; gap: 10px;
+        .menu-actions {
+            position: absolute;
+            left: 16px;
+            top: 52%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+            pointer-events: auto;
+            z-index: 10;
         }
-
-        .player-row {
+        /* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 8 ==================== */
+        /* ==================== ПОЧАТОК ЧАСТИНИ 2 з 8 ==================== */
+        .nav-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 196px;
+            padding: 12px 15px;
+            border-radius: 18px;
+            text-decoration: none;
+            color: #ffffff;
             background: rgba(15, 23, 42, 0.82);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 18px;
-            padding: 12px 14px;
-            display: flex; align-items: center; gap: 12px;
+            border: 1.5px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.45);
             cursor: pointer;
-            transition: transform 0.16s, border-color 0.16s, background 0.16s;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+            transition: transform 0.16s, border-color 0.16s;
+            text-align: left;
         }
-        .player-row:active { transform: scale(0.985); }
-        .player-row.is-me {
-            border: 1.5px solid #38bdf8;
-            background: linear-gradient(90deg, rgba(14, 116, 144, 0.32), rgba(15, 23, 42, 0.9));
+        .nav-card:active { transform: scale(0.96); }
+        .play-card {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            border-color: #4ade80;
+            box-shadow: 0 12px 28px rgba(22, 163, 74, 0.45);
         }
-        .player-row.rank-1 { border-color: rgba(250, 204, 21, 0.65); }
-        .player-row.rank-2 { border-color: rgba(203, 213, 225, 0.55); }
-        .player-row.rank-3 { border-color: rgba(217, 119, 6, 0.55); }
+        .rank-card { border-color: rgba(250, 204, 21, 0.45); }
+        .shop-card { border-color: rgba(56, 189, 248, 0.4); }
+        .nav-icon { font-size: 1.45rem; }
+        .nav-text { display: flex; flex-direction: column; }
+        .nav-title { font-weight: 900; font-size: 0.92rem; letter-spacing: 0.3px; }
+        .nav-sub { font-size: 0.72rem; color: rgba(255,255,255,0.75); font-weight: 600; }
 
-        .rank-badge {
-            width: 34px; height: 34px; border-radius: 12px;
-            background: rgba(30, 41, 59, 0.95);
-            display: flex; justify-content: center; align-items: center;
-            font-weight: 900; font-size: 0.95rem; flex-shrink: 0;
-        }
-        .rank-1 .rank-badge { background: rgba(250, 204, 21, 0.2); color: #facc15; font-size: 1.15rem; }
-        .rank-2 .rank-badge { background: rgba(226, 232, 240, 0.2); color: #e2e8f0; font-size: 1.15rem; }
-        .rank-3 .rank-badge { background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-size: 1.15rem; }
-
-        .tg-avatar {
-            width: 42px; height: 42px; border-radius: 50%;
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            display: flex; justify-content: center; align-items: center;
-            font-weight: 900; font-size: 0.95rem; letter-spacing: 0.5px; color: #fff;
-            flex-shrink: 0; overflow: hidden; border: 1.5px solid rgba(255,255,255,0.22);
-        }
-        .tg-avatar img { width: 100%; height: 100%; object-fit: cover; }
-
-        .player-info { flex: 1; min-width: 0; }
-        .player-name {
-            font-weight: 800; font-size: 0.96rem; color: #f8fafc;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .player-name-text {
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .me-tag {
-            background: #0284c7; color: #fff; font-size: 0.65rem;
-            padding: 2px 6px; border-radius: 6px; font-weight: 900; flex-shrink: 0;
-        }
-        .edit-name-btn {
-            background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.45);
-            color: #38bdf8; border-radius: 7px; padding: 2px 6px;
-            font-size: 0.72rem; cursor: pointer; flex-shrink: 0;
-        }
-        .player-sub { font-size: 0.74rem; color: #94a3b8; margin-top: 2px; }
-
-        .player-coins {
-            background: rgba(250, 204, 21, 0.14);
-            border: 1px solid rgba(250, 204, 21, 0.35);
-            color: #facc15; padding: 6px 11px; border-radius: 14px;
-            font-weight: 900; font-size: 0.88rem; white-space: nowrap;
-        }
-        /* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 5 ==================== */
-        /* ==================== ПОЧАТОК ЧАСТИНИ 2 з 5 ==================== */
-        .modal-backdrop {
+        #settings-modal {
             position: fixed;
             inset: 0;
-            background: rgba(4, 11, 23, 0.86);
-            backdrop-filter: blur(10px);
+            background: rgba(4, 11, 23, 0.84);
+            backdrop-filter: blur(8px);
             display: none;
             justify-content: center;
             align-items: center;
             padding: 16px;
-            z-index: 100;
+            z-index: 40;
         }
-        .modal-backdrop.open {
+        #settings-modal.open { display: flex; }
+        .modal-box {
+            width: 100%;
+            max-width: 350px;
+            background: #0f172a;
+            border: 1.5px solid rgba(56, 189, 248, 0.4);
+            border-radius: 22px;
+            padding: 20px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.7);
+        }
+        .modal-header {
             display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
         }
-
-        .profile-card {
-            width: 100%; max-width: 400px;
-            background: linear-gradient(180deg, #132744 0%, #0b172a 100%);
-            border: 1.5px solid rgba(56, 189, 248, 0.45);
-            border-radius: 26px;
-            padding: 18px;
-            box-shadow: 0 24px 50px rgba(0,0,0,0.75);
-            position: relative;
-        }
+        .modal-header h3 { font-size: 1.1rem; font-weight: 800; }
         .close-modal {
-            position: absolute; top: 14px; right: 14px;
-            width: 34px; height: 34px; border-radius: 50%;
-            background: rgba(30, 41, 59, 0.9); color: #cbd5e1;
-            border: 1px solid rgba(255,255,255,0.18);
-            font-size: 1.1rem; font-weight: 900; cursor: pointer;
+            background: #1e293b;
+            color: #cbd5e1;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .setting-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .setting-row label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+        }
+        .setting-row input[type="range"] {
+            width: 100%;
+            accent-color: #22c55e;
+            cursor: pointer;
+        }
+        .toggle-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: #1e293b;
+            color: #f8fafc;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .toggle-btn.active {
+            background: rgba(34, 197, 94, 0.2);
+            border-color: #22c55e;
+            color: #4ade80;
         }
 
-        .profile-header { text-align: center; padding-right: 24px; padding-left: 24px; }
-        .profile-header h2 { font-size: 1.18rem; font-weight: 900; color: #ffffff; }
-        .profile-header span { font-size: 0.78rem; color: #38bdf8; font-weight: 700; }
-
-        .viewer-wrap {
-            width: 100%; height: 270px;
-            margin: 12px 0;
-            border-radius: 20px;
-            background: radial-gradient(circle at 50% 45%, rgba(56, 189, 248, 0.22), rgba(7, 19, 38, 0.92) 75%);
-            border: 1px solid rgba(255,255,255,0.1);
-            position: relative; overflow: hidden;
-            cursor: grab; touch-action: none;
+        #loader-screen {
+            position: absolute;
+            inset: 0;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            transition: opacity 0.4s;
         }
-        .viewer-wrap:active { cursor: grabbing; }
-        #player-3d-canvas { width: 100%; height: 100%; display: block; }
-        .rotate-hint {
-            position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
-            font-size: 0.68rem; color: #94a3b8; background: rgba(15,23,42,0.7);
-            padding: 3px 10px; border-radius: 10px; pointer-events: none;
+        .spinner {
+            width: 48px; height: 48px;
+            border: 4px solid rgba(56, 189, 248, 0.2);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
         }
-
-        .stats-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-        }
-        .stat-box {
-            background: rgba(15, 23, 42, 0.85);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 16px; padding: 10px 6px; text-align: center;
-        }
-        .stat-val { font-size: 0.96rem; font-weight: 900; color: #f8fafc; }
-        .stat-val.gold { color: #facc15; }
-        .stat-val.green { color: #4ade80; }
-        .stat-lbl { font-size: 0.68rem; color: #94a3b8; margin-top: 3px; font-weight: 700; }
-        /* ==================== КІНЕЦЬ ЧАСТИНИ 2 з 5 ==================== */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* ==================== КІНЕЦЬ ЧАСТИНИ 2 з 8 ==================== */
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <a href="index.html" class="back-btn">🏠 Меню</a>
-        <div class="title-box">
-            <h1>🏆 ТОП Гравців</h1>
-            <p>Натисни на гравця для 3D-огляду</p>
+    <div id="loader-screen">
+        <div class="spinner"></div>
+        <div id="loader-text">Завантаження стадіону...</div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div class="ui-layer">
+        <div class="top-hud">
+            <button class="sound-btn" id="quick-sound-btn" title="Звук трибун">🔊</button>
+            <div class="coins-pill" id="home-coins">💰 500</div>
         </div>
-        <div class="header-right">
-            <button class="refresh-btn" id="refresh-btn" title="Оновити рейтинг">🔄</button>
-            <div class="my-coins" id="header-coins">💰 500</div>
+
+        <div class="menu-actions">
+            <button class="nav-card play-card" id="start-btn">
+                <div class="nav-icon">⚽</div>
+                <div class="nav-text">
+                    <span class="nav-title">ГРАТИ</span>
+                    <span class="nav-sub">Серія пенальті</span>
+                </div>
+            </button>
+            <a href="statustuka.html" class="nav-card rank-card">
+                <div class="nav-icon">🏆</div>
+                <div class="nav-text">
+                    <span class="nav-title">РЕЙТИНГ</span>
+                    <span class="nav-sub">ТОП гравців</span>
+                </div>
+            </a>
+            <a href="shop.html" class="nav-card shop-card">
+                <div class="nav-icon">👕</div>
+                <div class="nav-text">
+                    <span class="nav-title">ГАРДЕРОБ</span>
+                    <span class="nav-sub">Форма та бутси</span>
+                </div>
+            </a>
+            <button class="nav-card settings-card" id="settings-btn">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-text">
+                    <span class="nav-title">НАЛАШТУВАННЯ</span>
+                    <span class="nav-sub">Звук та графіка</span>
+                </div>
+            </button>
         </div>
     </div>
 
-    <div class="leaderboard-list" id="leaderboard-list"></div>
-
-    <div class="modal-backdrop" id="profile-modal">
-        <div class="profile-card">
-            <button class="close-modal" id="close-modal-btn">✕</button>
-            <div class="profile-header">
-                <h2 id="modal-player-name">Ім'я гравця</h2>
-                <span id="modal-player-rank">Місце в рейтингу: #1</span>
+    <div id="settings-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>⚙️ Налаштування</h3>
+                <button class="close-modal" id="close-settings">✕</button>
             </div>
-
-            <div class="viewer-wrap" id="viewer-wrap">
-                <canvas id="player-3d-canvas"></canvas>
-                <div class="rotate-hint">🔄 Потягни вліво/вправо, щоб покрутити</div>
+            <div class="setting-row">
+                <label>Гучність трибун <span id="vol-label">70%</span></label>
+                <input type="range" id="stadium-vol" min="0" max="100" value="70">
             </div>
-
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-val gold" id="modal-coins">💰 0</div>
-                    <div class="stat-lbl">Монети</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-val green" id="modal-wins">0</div>
-                    <div class="stat-lbl">Виграно матчів</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-val" id="modal-joined">23.11.2026</div>
-                    <div class="stat-lbl">Почав грати</div>
-                </div>
+            <div class="setting-row">
+                <button class="toggle-btn active" id="toggle-crowd-sound">🔊 Спів та гул трибун: УВІМК</button>
+            </div>
+            <div class="setting-row">
+                <button class="toggle-btn active" id="toggle-shadows">✨ Тіні та деталізація: ВИСОКА</button>
             </div>
         </div>
     </div>
@@ -239,297 +270,534 @@
         }
     </script>
     <script type="module">
-        // ==================== ПОЧАТОК ЧАСТИНИ 3 з 5 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 3 з 8 ====================
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
         import { DRACOLoader } from './libs/DRACOLoader.js';
+        import { OrbitControls } from './libs/OrbitControls.js';
         import { CATALOG } from './shop-catalog.js';
 
-        const DB_HOST = 'test-d54a5-default-rtdb.europe-west1.firebasedatabase.app';
-        const FIREBASE_DB_URL = 'https://' + DB_HOST;
-
-        function fbRequest(method, path, bodyObj = null) {
-            return new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open(method, `${FIREBASE_DB_URL}${path}`, true);
-                xhr.timeout = 8000;
-                xhr.onload = () => {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        try {
-                            resolve(xhr.responseText ? JSON.parse(xhr.responseText) : null);
-                        } catch (e) {
-                            resolve(null);
-                        }
-                    } else {
-                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
-                    }
-                };
-                xhr.onerror = () => reject(new Error(`Немає звʼязку з ${DB_HOST}`));
-                xhr.ontimeout = () => reject(new Error('Таймаут підключення до бази'));
-                xhr.send(bodyObj ? JSON.stringify(bodyObj) : null);
-            });
-        }
-
-        function formatTodayDate() {
-            const d = new Date();
-            const dd = String(d.getDate()).padStart(2, '0');
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const yyyy = d.getFullYear();
-            return `${dd}.${mm}.${yyyy}`;
-        }
-
-        if (!localStorage.getItem('first_played_date')) {
-            localStorage.setItem('first_played_date', formatTodayDate());
-        }
         if (localStorage.getItem('player_coins') === null) {
             localStorage.setItem('player_coins', '500');
         }
-        if (localStorage.getItem('matches_won') === null) {
-            localStorage.setItem('matches_won', '0');
-        }
+        document.getElementById('home-coins').innerText = `💰 ${localStorage.getItem('player_coins')}`;
 
-        function parseTelegramUserFromUrl() {
-            try {
-                const rawHash = (window.location.hash || '').replace(/^#/, '');
-                const rawSearch = (window.location.search || '').replace(/^\?/, '');
-                const params = new URLSearchParams(rawHash || rawSearch);
-                const webAppData = params.get('tgWebAppData');
-                if (webAppData) {
-                    const inner = new URLSearchParams(webAppData);
-                    const userJson = inner.get('user');
-                    if (userJson) return JSON.parse(userJson);
-                }
-            } catch (e) {}
-            return null;
-        }
-
-        function getCurrentTelegramPlayer() {
-            const tgObj = window.Telegram && window.Telegram.WebApp;
-            if (tgObj) {
-                tgObj.ready();
-                tgObj.expand();
+        class StadiumChantAudio {
+            constructor() {
+                this.ctx = null;
+                this.masterGain = null;
+                this.enabled = localStorage.getItem('stadium_sound') !== 'off';
+                this.volume = Number(localStorage.getItem('stadium_vol') || 70) / 100;
+                this.started = false;
             }
 
-            const tgUser = (tgObj && tgObj.initDataUnsafe && tgObj.initDataUnsafe.user) || parseTelegramUserFromUrl();
-            let fullName = '';
-            let tgId = '';
-            let avatarUrl = '';
+            init() {
+                if (this.started || !this.enabled) return;
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
 
-            if (tgUser && tgUser.id) {
-                tgId = 'tg_' + String(tgUser.id);
-                const nameParts = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ').trim();
-                const login = tgUser.username ? ('@' + tgUser.username) : '';
+                this.ctx = new AudioCtx();
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = this.volume * 0.45;
+                this.masterGain.connect(this.ctx.destination);
 
-                fullName = nameParts ? (login ? `${nameParts} (${login})` : nameParts) : login;
-                avatarUrl = tgUser.photo_url || '';
-
-                localStorage.setItem('tg_player_id', tgId);
-                if (fullName) localStorage.setItem('tg_player_name', fullName);
-                if (avatarUrl) localStorage.setItem('tg_player_avatar', avatarUrl);
-            } else {
-                if (!localStorage.getItem('tg_player_id')) {
-                    localStorage.setItem('tg_player_id', 'web_' + Math.floor(100000 + Math.random() * 900000));
+                const bufferSize = this.ctx.sampleRate * 4;
+                const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                let b0 = 0, b1 = 0, b2 = 0;
+                for (let i = 0; i < bufferSize; i++) {
+                    const white = Math.random() * 2 - 1;
+                    b0 = 0.997 * b0 + white * 0.029;
+                    b1 = 0.985 * b1 + white * 0.032;
+                    b2 = 0.950 * b2 + white * 0.048;
+                    output[i] = (b0 + b1 + b2) * 0.35;
                 }
-                tgId = localStorage.getItem('tg_player_id');
-                fullName = localStorage.getItem('tg_player_name') || ('Гравець #' + tgId.slice(-4));
-                avatarUrl = localStorage.getItem('tg_player_avatar') || '';
+
+                const crowdNoise = this.ctx.createBufferSource();
+                crowdNoise.buffer = noiseBuffer;
+                crowdNoise.loop = true;
+
+                const crowdFilter = this.ctx.createBiquadFilter();
+                crowdFilter.type = 'bandpass';
+                crowdFilter.frequency.value = 480;
+                crowdFilter.Q.value = 0.7;
+
+                crowdNoise.connect(crowdFilter);
+                crowdFilter.connect(this.masterGain);
+                crowdNoise.start();
+
+                const chantNotes = new Array(261.63, 293.66, 329.63, 293.66, 329.63, 392.00);
+                let step = 0;
+                setInterval(() => {
+                    if (!this.enabled || !this.ctx || this.ctx.state !== 'running') return;
+                    const now = this.ctx.currentTime;
+                    const freq = chantNotes[step % chantNotes.length];
+                    step++;
+
+                    new Array(-4, 0, 5).forEach((detune) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        const filter = this.ctx.createBiquadFilter();
+
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, now);
+                        osc.detune.value = detune * 6;
+
+                        filter.type = 'lowpass';
+                        filter.frequency.value = 620;
+
+                        gain.gain.setValueAtTime(0.0001, now);
+                        gain.gain.linearRampToValueAtTime(0.045, now + 0.14);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.65);
+
+                        osc.connect(filter);
+                        filter.connect(gain);
+                        gain.connect(this.masterGain);
+
+                        osc.start(now);
+                        osc.stop(now + 0.68);
+                    });
+                }, 720);
+
+                this.started = true;
             }
 
-            return {
-                id: tgId,
-                isMe: true,
-                name: fullName,
-                avatar: avatarUrl,
-                coins: Number(localStorage.getItem('player_coins') || 500),
-                wins: Number(localStorage.getItem('matches_won') || 0),
-                joinedAt: localStorage.getItem('first_played_date') || formatTodayDate(),
-                kit: {
-                    jersey: localStorage.getItem('eq_jerseys') || 'j1',
-                    shorts: localStorage.getItem('eq_shorts') || 's1',
-                    boots: localStorage.getItem('eq_boots') || 'b1',
-                    hair: localStorage.getItem('eq_hair') || 'h1',
-                    number: localStorage.getItem('eq_number') || '10',
-                    numColor: localStorage.getItem('eq_numColor') || '#ffffff'
-                }
-            };
-        }
-
-        let currentPlayer = getCurrentTelegramPlayer();
-        document.getElementById('header-coins').textContent = `💰 ${currentPlayer.coins}`;
-
-        async function syncAndLoadFirebaseLeaderboard() {
-            currentPlayer = getCurrentTelegramPlayer();
-            const listEl = document.getElementById('leaderboard-list');
-            const subTitleEl = document.querySelector('.title-box p');
-            listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-weight:700;">⏳ Підключення до бази...</div>';
-
-            let players = [];
-
-            try {
-                const payload = {
-                    [currentPlayer.id]: {
-                        id: currentPlayer.id,
-                        name: currentPlayer.name,
-                        avatar: currentPlayer.avatar,
-                        coins: currentPlayer.coins,
-                        wins: currentPlayer.wins,
-                        joinedAt: currentPlayer.joinedAt,
-                        kit: currentPlayer.kit,
-                        updatedAt: Date.now()
-                    }
-                };
-
-                await fbRequest('PATCH', '/players.json', payload);
-                const data = await fbRequest('GET', '/players.json');
-
-                if (data && typeof data === 'object') {
-                    players = Object.values(data)
-                        .filter(p => p && p.name)
-                        .map(p => ({
-                            ...p,
-                            isMe: p.id === currentPlayer.id
-                        }));
-                }
-
-                if (subTitleEl) {
-                    subTitleEl.textContent = `🟢 База підключена • Гравців: ${players.length}`;
-                    subTitleEl.style.color = '#4ade80';
-                }
-            } catch (err) {
-                console.error('Firebase error:', err);
-                if (subTitleEl) {
-                    subTitleEl.textContent = `🔴 ${err.message}`;
-                    subTitleEl.style.color = '#f87171';
-                }
+            setVolume(v) {
+                this.volume = v;
+                localStorage.setItem('stadium_vol', String(Math.round(v * 100)));
+                if (this.masterGain) this.masterGain.gain.value = this.enabled ? v * 0.45 : 0;
             }
 
-            if (!players.length) {
-                players = [currentPlayer];
+            toggle() {
+                this.enabled = !this.enabled;
+                localStorage.setItem('stadium_sound', this.enabled ? 'on' : 'off');
+                if (this.enabled && !this.started) this.init();
+                if (this.ctx && this.ctx.state === 'suspended' && this.enabled) this.ctx.resume();
+                if (this.masterGain) this.masterGain.gain.value = this.enabled ? this.volume * 0.45 : 0;
+                return this.enabled;
             }
-
-            players.sort((a, b) => (Number(b.coins) || 0) - (Number(a.coins) || 0));
-            renderLeaderboard(players);
         }
 
-        document.getElementById('refresh-btn').addEventListener('click', syncAndLoadFirebaseLeaderboard);
-        // ==================== КІНЕЦЬ ЧАСТИНИ 3 з 5 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 4 з 5 ====================
-        function getInitials(name) {
-            const clean = String(name || '').replace(/^@/, '').trim();
-            const words = clean.split(/\s+/).filter(Boolean);
-            if (words.length >= 2) {
-                return (words.at(0).slice(0, 1) + words.at(1).slice(0, 1)).toUpperCase();
+        const stadiumAudio = new StadiumChantAudio();
+        window.addEventListener('pointerdown', () => {
+            stadiumAudio.init();
+            if (stadiumAudio.ctx && stadiumAudio.ctx.state === 'suspended' && stadiumAudio.enabled) {
+                stadiumAudio.ctx.resume();
             }
-            return clean.slice(0, 2).toUpperCase() || '⚽';
-        }
+        }, { once: true });
 
-        function renderLeaderboard(players) {
-            const listEl = document.getElementById('leaderboard-list');
-            listEl.innerHTML = '';
-
-            players.forEach((player, index) => {
-                const rank = index + 1;
-                const row = document.createElement('div');
-                row.className = 'player-row' +
-                    (player.isMe ? ' is-me' : '') +
-                    (rank <= 3 ? ` rank-${rank}` : '');
-
-                const medal = rank === 1 ? '🥇' : (rank === 2 ? '🥈' : (rank === 3 ? '🥉' : `#${rank}`));
-                const avatarHtml = player.avatar
-                    ? `<img src="${player.avatar}" alt="">`
-                    : getInitials(player.name);
-
-                row.innerHTML = `
-                    <div class="rank-badge">${medal}</div>
-                    <div class="tg-avatar">${avatarHtml}</div>
-                    <div class="player-info">
-                        <div class="player-name">
-                            <span class="player-name-text">${player.name}</span>
-                            ${player.isMe ? '<span class="me-tag">ТИ</span><button class="edit-name-btn" title="Змінити ім\'я">✏️</button>' : ''}
-                        </div>
-                        <div class="player-sub">🏆 Перемог: ${player.wins || 0} • У грі з ${player.joinedAt || 'нещодавно'}</div>
-                    </div>
-                    <div class="player-coins">💰 ${player.coins || 0}</div>
-                `;
-
-                if (player.isMe) {
-                    const editBtn = row.querySelector('.edit-name-btn');
-                    if (editBtn) {
-                        editBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const newName = prompt('Введи своє ім\'я або нікнейм для рейтингу:', currentPlayer.name);
-                            if (newName && newName.trim().length >= 2) {
-                                localStorage.setItem('tg_player_name', newName.trim());
-                                syncAndLoadFirebaseLeaderboard();
-                            }
-                        });
-                    }
-                }
-
-                row.addEventListener('click', () => openPlayerProfile(player, rank));
-                listEl.appendChild(row);
-            });
-        }
-
-        const modalEl = document.getElementById('profile-modal');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const canvasEl = document.getElementById('player-3d-canvas');
-        const viewerWrap = document.getElementById('viewer-wrap');
-
+        const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(36, 1.4, 0.1, 50);
-        camera.position.set(0, 1.05, 3.15);
-        camera.lookAt(0, 0.92, 0);
+        scene.background = new THREE.Color(0x071326);
+        scene.fog = new THREE.FogExp2(0x071326, 0.011);
 
-        const renderer = new THREE.WebGLRenderer({ canvas: canvasEl, antialias: true, alpha: true });
+        const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 200);
+        camera.position.set(1.15, 1.55, 4.15);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.15;
+        container.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0xdbeafe, 1.35));
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.06;
+        controls.enablePan = false;
+        controls.minDistance = 2.4;
+        controls.maxDistance = 6.2;
+        controls.minPolarAngle = Math.PI * 0.28;
+        controls.maxPolarAngle = Math.PI * 0.48;
+        controls.target.set(-0.35, 1.05, 0);
+        controls.update();
+
+        scene.add(new THREE.AmbientLight(0xdbeafe, 1.05));
         const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
-        keyLight.position.set(2.5, 4, 3);
+        keyLight.position.set(6, 12, 8);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.set(2048, 2048);
         scene.add(keyLight);
 
-        const backLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
-        backLight.position.set(-2.5, 3, -3);
-        scene.add(backLight);
+        const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.3);
+        rimLight.position.set(-7, 8, -9);
+        scene.add(rimLight);
+        // ==================== КІНЕЦЬ ЧАСТИНИ 3 з 8 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 4 з 8 ====================
+        function createPitchTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
 
-        const podium = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.68, 0.75, 0.08, 32),
-            new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.5, roughness: 0.3 })
+            const stripeCount = 12;
+            const stripeH = 1024 / stripeCount;
+            for (let i = 0; i < stripeCount; i++) {
+                ctx.fillStyle = i % 2 === 0 ? '#15803d' : '#166534';
+                ctx.fillRect(0, i * stripeH, 1024, stripeH);
+            }
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.92)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+            ctx.lineWidth = 7;
+            ctx.strokeRect(48, 48, 928, 928);
+
+            ctx.beginPath();
+            ctx.moveTo(48, 512);
+            ctx.lineTo(976, 512);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(512, 512, 95, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeRect(236, 48, 552, 210);
+            ctx.strokeRect(374, 48, 276, 78);
+            ctx.beginPath();
+            ctx.arc(512, 204, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(512, 204, 88, 0.22 * Math.PI, 0.78 * Math.PI);
+            ctx.stroke();
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.anisotropy = 8;
+            return tex;
+        }
+
+        const stadiumGroup = new THREE.Group();
+        scene.add(stadiumGroup);
+
+        const pitch = new THREE.Mesh(
+            new THREE.PlaneGeometry(46, 66),
+            new THREE.MeshStandardMaterial({ map: createPitchTexture(), roughness: 0.85 })
         );
-        podium.position.y = -0.04;
-        scene.add(podium);
+        pitch.rotation.x = -Math.PI / 2;
+        pitch.receiveShadow = true;
+        stadiumGroup.add(pitch);
 
-        const podiumRing = new THREE.Mesh(
-            new THREE.RingGeometry(0.66, 0.72, 32),
-            new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide })
+        const track = new THREE.Mesh(
+            new THREE.PlaneGeometry(66, 86),
+            new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 })
         );
-        podiumRing.rotation.x = -Math.PI / 2;
-        podiumRing.position.y = 0.005;
-        scene.add(podiumRing);
+        track.rotation.x = -Math.PI / 2;
+        track.position.y = -0.02;
+        stadiumGroup.add(track);
 
-        const playerHolder = new THREE.Group();
-        scene.add(playerHolder);
+        const goalMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+        const goalGroup = new THREE.Group();
+        const postGeo = new THREE.CylinderGeometry(0.08, 0.08, 2.44, 16);
+        const barGeo = new THREE.CylinderGeometry(0.08, 0.08, 7.32, 16);
+        const p1 = new THREE.Mesh(postGeo, goalMat); p1.position.set(-3.66, 1.22, -29.8);
+        const p2 = new THREE.Mesh(postGeo, goalMat); p2.position.set(3.66, 1.22, -29.8);
+        const bar = new THREE.Mesh(barGeo, goalMat); bar.rotation.z = Math.PI / 2; bar.position.set(0, 2.44, -29.8);
+        const net = new THREE.Mesh(
+            new THREE.BoxGeometry(7.32, 2.44, 1.8),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.25 })
+        );
+        net.position.set(0, 1.22, -30.7);
+        goalGroup.add(p1, p2, bar, net);
+        stadiumGroup.add(goalGroup);
 
-        let activeMixer = null;
+        function createBannerTexture() {
+            const c = document.createElement('canvas');
+            c.width = 2048; c.height = 128;
+            const ctx = c.getContext('2d');
+            const g = ctx.createLinearGradient(0, 0, 2048, 0);
+            g.addColorStop(0, '#0284c7'); g.addColorStop(0.5, '#1d4ed8'); g.addColorStop(1, '#0284c7');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, 2048, 128);
+            ctx.fillStyle = '#38bdf8'; ctx.fillRect(0, 0, 2048, 10); ctx.fillRect(0, 118, 2048, 10);
+            ctx.fillStyle = '#ffffff'; ctx.font = '900 54px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('⚽ PENALTY 3D ARENA   ★   CHAMPIONS CUP   ★   GOAL TIME! 🔥', 1024, 66);
+            const tex = new THREE.CanvasTexture(c);
+            tex.wrapS = THREE.RepeatWrapping; tex.repeat.set(3, 1); tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+        const bannerTex = createBannerTexture();
+        const adMat = new THREE.MeshBasicMaterial({ map: bannerTex });
 
+        const adBack = new THREE.Mesh(new THREE.BoxGeometry(52, 1.25, 0.25), adMat);
+        adBack.position.set(0, 0.62, -32.4);
+        const adFront = new THREE.Mesh(new THREE.BoxGeometry(52, 1.25, 0.25), adMat);
+        adFront.position.set(0, 0.62, 32.4);
+        const adLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 66), adMat);
+        adLeft.position.set(-24.2, 0.62, 0);
+        const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 66), adMat);
+        adRight.position.set(24.2, 0.62, 0);
+        stadiumGroup.add(adBack, adFront, adLeft, adRight);
+
+        const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
+        const fanPositions = [];
+        const seatPositions = [];
+        const phonePositions = [];
+
+        function buildSideStand(side) {
+            const rows = 9;
+            const standLen = 68;
+            for (let r = 0; r < rows; r++) {
+                const rowY = 1.35 + r * 0.68;
+                const xDist = 25.4 + r * 1.02;
+                const step = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.68, standLen), tierMat);
+                step.position.set(side * xDist, rowY - 0.34, 0);
+                stadiumGroup.add(step);
+
+                for (let z = -31.5; z <= 31.5; z += 0.86) {
+                    const aisle = Math.abs((Math.abs(z) % 13) - 6.5);
+                    if (aisle < 0.72) continue;
+
+                    seatPositions.push({ x: side * xDist, y: rowY + 0.12, z: z, rotY: side === -1 ? Math.PI / 2 : -Math.PI / 2 });
+
+                    if (Math.random() > 0.14) {
+                        const px = side * (xDist - 0.08) + (Math.random() - 0.5) * 0.1;
+                        const pz = z + (Math.random() - 0.5) * 0.14;
+                        const rotY = side === -1 ? Math.PI / 2 : -Math.PI / 2;
+                        const hasPhone = Math.random() < 0.12;
+                        const hasScarf = !hasPhone && Math.random() < 0.18;
+                        fanPositions.push({ x: px, y: rowY, z: pz, rotY, phase: Math.random() * Math.PI * 2, hasPhone, hasScarf });
+                        if (hasPhone) phonePositions.push({ x: px - side * 0.25, y: rowY + 0.92, z: pz, phase: Math.random() * 6.28 });
+                    }
+                }
+            }
+            const roof = new THREE.Mesh(new THREE.BoxGeometry(11.5, 0.45, standLen + 2), roofMat);
+            roof.position.set(side * 30.2, 8.8, 0);
+            roof.rotation.z = side * -0.14;
+            stadiumGroup.add(roof);
+        }
+
+        function buildEndStand(endSide) {
+            const rows = 8;
+            const standW = 54;
+            for (let r = 0; r < rows; r++) {
+                const rowY = 1.35 + r * 0.68;
+                const zDist = 33.6 + r * 1.02;
+                const step = new THREE.Mesh(new THREE.BoxGeometry(standW, 0.68, 1.05), tierMat);
+                step.position.set(0, rowY - 0.34, endSide * zDist);
+                stadiumGroup.add(step);
+
+                for (let x = -24.5; x <= 24.5; x += 0.88) {
+                    const aisle = Math.abs((Math.abs(x) % 11) - 5.5);
+                    if (aisle < 0.75) continue;
+
+                    seatPositions.push({ x: x, y: rowY + 0.12, z: endSide * zDist, rotY: endSide === -1 ? 0 : Math.PI });
+
+                    if (Math.random() > 0.16) {
+                        const px = x + (Math.random() - 0.5) * 0.14;
+                        const pz = endSide * (zDist - 0.08) + (Math.random() - 0.5) * 0.1;
+                        const rotY = endSide === -1 ? 0 : Math.PI;
+                        const hasPhone = Math.random() < 0.12;
+                        const hasScarf = !hasPhone && Math.random() < 0.18;
+                        fanPositions.push({ x: px, y: rowY, z: pz, rotY, phase: Math.random() * Math.PI * 2, hasPhone, hasScarf });
+                        if (hasPhone) phonePositions.push({ x: px, y: rowY + 0.92, z: pz - endSide * 0.25, phase: Math.random() * 6.28 });
+                    }
+                }
+            }
+            const roof = new THREE.Mesh(new THREE.BoxGeometry(standW + 18, 0.45, 11.5), roofMat);
+            roof.position.set(0, 8.8, endSide * 38.0);
+            roof.rotation.x = endSide * 0.14;
+            stadiumGroup.add(roof);
+        }
+
+        buildSideStand(-1);
+        buildSideStand(1);
+        buildEndStand(-1);
+        buildEndStand(1);
+        // ==================== КІНЕЦЬ ЧАСТИНИ 4 з 8 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 5 з 8 ====================
+        const dummy = new THREE.Object3D();
+        const tmpColor = new THREE.Color();
+
+        const seatMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.45 });
+        const seatGeo = new THREE.BoxGeometry(0.48, 0.34, 0.38);
+        const seatsInstanced = new THREE.InstancedMesh(seatGeo, seatMat, seatPositions.length);
+        seatPositions.forEach((s, i) => {
+            dummy.position.set(s.x, s.y, s.z);
+            dummy.rotation.set(0, s.rotY, 0);
+            dummy.scale.set(1, 1, 1);
+            dummy.updateMatrix();
+            seatsInstanced.setMatrixAt(i, dummy.matrix);
+        });
+        seatsInstanced.instanceMatrix.needsUpdate = true;
+        stadiumGroup.add(seatsInstanced);
+
+        const jerseyColors = [0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0xea580c, 0x0284c7, 0x9333ea];
+        const skinColors = [0xffdbac, 0xf1c27d, 0xe0ac69, 0xc68642, 0x8d5524];
+        const hairColors = [0x1c1917, 0x451a03, 0x78350f, 0xd97706, 0xfcd34d];
+
+        function createFanJerseyTex() {
+            const c = document.createElement('canvas');
+            c.width = 64; c.height = 64;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 64, 64);
+            ctx.fillStyle = 'rgba(0,0,0,0.22)';
+            ctx.fillRect(18, 0, 10, 64); ctx.fillRect(38, 0, 10, 64);
+            ctx.fillRect(0, 26, 64, 12);
+            const t = new THREE.CanvasTexture(c);
+            t.colorSpace = THREE.SRGBColorSpace;
+            return t;
+        }
+
+        function createFaceTex() {
+            const c = document.createElement('canvas');
+            c.width = 64; c.height = 64;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 64, 64);
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(22, 24, 5, 5); ctx.fillRect(37, 24, 5, 5);
+            ctx.fillStyle = '#991b1b';
+            ctx.fillRect(27, 40, 10, 4);
+            const t = new THREE.CanvasTexture(c);
+            t.colorSpace = THREE.SRGBColorSpace;
+            return t;
+        }
+
+        function createScarfTex() {
+            const c = document.createElement('canvas');
+            c.width = 128; c.height = 32;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 128, 32);
+            ctx.fillStyle = '#0f172a';
+            for (let x = 0; x < 128; x += 24) ctx.fillRect(x, 0, 12, 32);
+            const t = new THREE.CanvasTexture(c);
+            t.colorSpace = THREE.SRGBColorSpace;
+            return t;
+        }
+
+        const fanCount = fanPositions.length;
+        const torsoGeo = new THREE.CapsuleGeometry(0.21, 0.34, 8, 14);
+        const headGeo = new THREE.SphereGeometry(0.135, 14, 14);
+        const hairGeo = new THREE.SphereGeometry(0.142, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.58);
+        const armGeo = new THREE.CapsuleGeometry(0.05, 0.34, 6, 10);
+        const legGeo = new THREE.CapsuleGeometry(0.068, 0.36, 6, 10);
+
+        const torsosInstanced = new THREE.InstancedMesh(torsoGeo, new THREE.MeshStandardMaterial({ map: createFanJerseyTex(), roughness: 0.7 }), fanCount);
+        const headsInstanced = new THREE.InstancedMesh(headGeo, new THREE.MeshStandardMaterial({ map: createFaceTex(), roughness: 0.55 }), fanCount);
+        const hairsInstanced = new THREE.InstancedMesh(hairGeo, new THREE.MeshStandardMaterial({ roughness: 0.85 }), fanCount);
+        const leftArmsInstanced = new THREE.InstancedMesh(armGeo, new THREE.MeshStandardMaterial({ roughness: 0.55 }), fanCount);
+        const rightArmsInstanced = new THREE.InstancedMesh(armGeo, new THREE.MeshStandardMaterial({ roughness: 0.55 }), fanCount);
+        const legsInstanced = new THREE.InstancedMesh(legGeo, new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 }), fanCount * 2);
+
+        const scarfFans = fanPositions.filter(f => f.hasScarf);
+        const scarfsInstanced = new THREE.InstancedMesh(
+            new THREE.BoxGeometry(0.76, 0.14, 0.03),
+            new THREE.MeshStandardMaterial({ map: createScarfTex(), roughness: 0.6 }),
+            Math.max(1, scarfFans.length)
+        );
+        scarfsInstanced.visible = scarfFans.length > 0;
+
+        fanPositions.forEach((f, i) => {
+            const cosR = Math.cos(f.rotY);
+            const sinR = Math.sin(f.rotY);
+
+            dummy.rotation.set(0, f.rotY, 0);
+            dummy.scale.set(1.15, 1.0, 0.68);
+            dummy.position.set(f.x, f.y + 0.34, f.z);
+            dummy.updateMatrix();
+            torsosInstanced.setMatrixAt(i, dummy.matrix);
+            tmpColor.setHex(jerseyColors.at(i % jerseyColors.length));
+            torsosInstanced.setColorAt(i, tmpColor);
+
+            dummy.scale.set(0.95, 1.08, 0.98);
+            dummy.position.set(f.x, f.y + 0.76, f.z);
+            dummy.updateMatrix();
+            headsInstanced.setMatrixAt(i, dummy.matrix);
+            tmpColor.setHex(skinColors.at(i % skinColors.length));
+            headsInstanced.setColorAt(i, tmpColor);
+
+            dummy.scale.set(0.98, 1.05, 1.02);
+            dummy.position.set(f.x, f.y + 0.775, f.z);
+            dummy.updateMatrix();
+            hairsInstanced.setMatrixAt(i, dummy.matrix);
+            tmpColor.setHex(hairColors.at(i % hairColors.length));
+            hairsInstanced.setColorAt(i, tmpColor);
+
+            dummy.scale.set(1, 1, 1);
+            dummy.position.set(f.x - 0.27 * cosR, f.y + 0.36, f.z + 0.27 * sinR);
+            dummy.rotation.set(0, f.rotY, 0.14);
+            dummy.updateMatrix();
+            leftArmsInstanced.setMatrixAt(i, dummy.matrix);
+            leftArmsInstanced.setColorAt(i, tmpColor.setHex(skinColors.at(i % skinColors.length)));
+
+            dummy.position.set(f.x + 0.27 * cosR, f.y + 0.36, f.z - 0.27 * sinR);
+            dummy.rotation.set(0, f.rotY, -0.14);
+            dummy.updateMatrix();
+            rightArmsInstanced.setMatrixAt(i, dummy.matrix);
+            rightArmsInstanced.setColorAt(i, tmpColor);
+
+            dummy.rotation.set(1.35, f.rotY, 0);
+            dummy.position.set(f.x - 0.10 * cosR + 0.16 * sinR, f.y + 0.08, f.z + 0.10 * sinR + 0.16 * cosR);
+            dummy.updateMatrix();
+            legsInstanced.setMatrixAt(i * 2, dummy.matrix);
+
+            dummy.position.set(f.x + 0.10 * cosR + 0.16 * sinR, f.y + 0.08, f.z - 0.10 * sinR + 0.16 * cosR);
+            dummy.updateMatrix();
+            legsInstanced.setMatrixAt(i * 2 + 1, dummy.matrix);
+        });
+
+        scarfFans.forEach((f, i) => {
+            dummy.position.set(f.x, f.y + 1.04, f.z);
+            dummy.rotation.set(0, f.rotY, 0);
+            dummy.scale.set(1, 1, 1);
+            dummy.updateMatrix();
+            scarfsInstanced.setMatrixAt(i, dummy.matrix);
+            scarfsInstanced.setColorAt(i, tmpColor.setHex(jerseyColors.at(i % jerseyColors.length)));
+        });
+
+        [torsosInstanced, headsInstanced, hairsInstanced, leftArmsInstanced, rightArmsInstanced, legsInstanced, scarfsInstanced].forEach(m => {
+            m.instanceMatrix.needsUpdate = true;
+            if (m.instanceColor) m.instanceColor.needsUpdate = true;
+            stadiumGroup.add(m);
+        });
+
+        const phonesInstanced = new THREE.InstancedMesh(
+            new THREE.PlaneGeometry(0.16, 0.16),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
+            Math.max(1, phonePositions.length)
+        );
+        phonesInstanced.visible = phonePositions.length > 0;
+        phonePositions.forEach((p, i) => {
+            dummy.position.set(p.x, p.y, p.z);
+            dummy.lookAt(0, 1.2, 0);
+            dummy.updateMatrix();
+            phonesInstanced.setMatrixAt(i, dummy.matrix);
+        });
+        phonesInstanced.instanceMatrix.needsUpdate = true;
+        stadiumGroup.add(phonesInstanced);
+        // ==================== КІНЕЦЬ ЧАСТИНИ 5 з 8 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 6 з 8 ====================
         function createJerseyTexture(jersey) {
             const c = document.createElement('canvas');
             c.width = 512; c.height = 512;
             const ctx = c.getContext('2d');
             ctx.fillStyle = jersey.c1; ctx.fillRect(0, 0, 512, 512);
             ctx.fillStyle = jersey.c2;
-            if (jersey.pattern === 'stripes') { for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512); }
-            else if (jersey.pattern === 'hoops') { for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22); }
-            else if (jersey.pattern === 'half') { ctx.fillRect(105, 0, 60, 512); ctx.fillRect(265, 0, 85, 512); }
-            else if (jersey.pattern === 'centerBand') { ctx.fillRect(85, 0, 45, 512); ctx.fillRect(245, 0, 45, 512); }
-            else if (jersey.pattern === 'chestBand') { ctx.fillRect(0, 160, 512, 130); }
-            else if (jersey.pattern === 'sash') { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512); ctx.closePath(); ctx.fill(); }
-            else if (jersey.pattern === 'sleeves') { ctx.fillRect(203, 0, 22, 512); ctx.fillRect(398, 0, 114, 512); }
+
+            if (jersey.pattern === 'stripes') {
+                for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512);
+            } else if (jersey.pattern === 'hoops') {
+                for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
+            } else if (jersey.pattern === 'half') {
+                ctx.fillRect(105, 0, 60, 512);
+                ctx.fillRect(265, 0, 85, 512);
+            } else if (jersey.pattern === 'centerBand') {
+                ctx.fillRect(85, 0, 45, 512);
+                ctx.fillRect(245, 0, 45, 512);
+            } else if (jersey.pattern === 'chestBand') {
+                ctx.fillRect(0, 160, 512, 130);
+            } else if (jersey.pattern === 'sash') {
+                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512); ctx.closePath(); ctx.fill();
+            } else if (jersey.pattern === 'sleeves') {
+                ctx.fillRect(203, 0, 22, 512);
+                ctx.fillRect(398, 0, 114, 512);
+            }
+
             const tex = new THREE.CanvasTexture(c);
-            tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace;
+            tex.flipY = false;
+            tex.colorSpace = THREE.SRGBColorSpace;
             return tex;
         }
 
@@ -541,128 +809,449 @@
             ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
             ctx.lineWidth = 10;
             ctx.font = '900 165px "Segoe UI", sans-serif';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             ctx.strokeText(num, 128, 128);
             ctx.fillText(num, 128, 128);
             const tex = new THREE.CanvasTexture(c);
             tex.colorSpace = THREE.SRGBColorSpace;
             return tex;
         }
-        // ==================== КІНЕЦЬ ЧАСТИНИ 4 з 5 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 5 з 5 ====================
+
+        function createBallTexture(c1, c2) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 128;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = c1; ctx.fillRect(0, 0, 256, 128);
+            ctx.fillStyle = c2;
+            for (let x = 16; x < 256; x += 48) {
+                for (let y = 20; y < 128; y += 44) {
+                    ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            const tex = new THREE.CanvasTexture(c);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        function buildHairMesh(hairItem) {
+            const g = new THREE.Group();
+            if (!hairItem || hairItem.style === 'bald') return g;
+            const mat = new THREE.MeshStandardMaterial({ color: hairItem.c1, roughness: 0.78 });
+            const cap = new THREE.Mesh(new THREE.SphereGeometry(10.8, 22, 16, 0, Math.PI * 2, 0, Math.PI * 0.56), mat);
+            cap.position.set(0, 8.2, -0.5);
+            g.add(cap);
+            if (hairItem.style === 'mohawk') {
+                const crest = new THREE.Mesh(new THREE.BoxGeometry(3.4, 6.2, 16.5), mat);
+                crest.position.set(0, 17.5, -0.5);
+                g.add(crest);
+            } else if (hairItem.style === 'afro') {
+                const puff = new THREE.Mesh(new THREE.SphereGeometry(13.6, 22, 18), mat);
+                puff.position.set(0, 11.5, -1.2);
+                g.add(puff);
+            } else if (hairItem.style === 'ponytail') {
+                const tail = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 1.3, 13, 12), mat);
+                tail.position.set(0, 8.5, -12.5);
+                tail.rotation.x = 0.55;
+                g.add(tail);
+            } else if (hairItem.style === 'fade') {
+                const top = new THREE.Mesh(new THREE.CylinderGeometry(9.6, 10.2, 4.2, 20), mat);
+                top.position.set(0, 16.2, -0.2);
+                g.add(top);
+            }
+            return g;
+        }
+        // ==================== КІНЕЦЬ ЧАСТИНИ 6 з 8 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 7A з 8 ====================
+        const playerContainer = new THREE.Group();
+        playerContainer.position.set(-0.62, 0, 0);
+        playerContainer.rotation.y = 0.35;
+        scene.add(playerContainer);
+
+        const ballId = localStorage.getItem('eq_balls') || 'ball1';
+        const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
+        const ballMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(0.115, 28, 28),
+            new THREE.MeshStandardMaterial({ map: createBallTexture(ballItem.c1, ballItem.c2), roughness: 0.35 })
+        );
+        ballMesh.position.set(-0.22, 0.115, 0.25);
+        ballMesh.castShadow = true;
+        scene.add(ballMesh);
+
+        const ballShadow = new THREE.Mesh(
+            new THREE.CircleGeometry(0.18, 16),
+            new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.42 })
+        );
+        ballShadow.rotation.x = -Math.PI / 2;
+        ballShadow.position.set(-0.22, 0.005, 0.25);
+        scene.add(ballShadow);
+
+        let leftHandBone = null, rightHandBone = null;
+        let leftForeArmBone = null, rightForeArmBone = null;
+        let glovesLoaded = false;
+
+        function mountGlovePair(gloveScene, gloveColorHex) {
+            gloveScene.updateMatrixWorld(true);
+            const fullBox = new THREE.Box3().setFromObject(gloveScene);
+            const midX = (fullBox.min.x + fullBox.max.x) * 0.5;
+            const isSingle = (fullBox.max.x - fullBox.min.x) < (fullBox.max.y - fullBox.min.y) * 1.1;
+
+            function buildHalf(pickLeft) {
+                const grp = new THREE.Group();
+                gloveScene.traverse((node) => {
+                    if (!node.isMesh || !node.geometry) return;
+                    const geo = node.geometry.clone();
+                    geo.applyMatrix4(node.matrixWorld);
+                    if (!isSingle && geo.index) {
+                        const pos = geo.attributes.position;
+                        const idx = geo.index.array;
+                        const filtered = [];
+                        for (let i = 0; i < idx.length; i += 3) {
+                            const cx = (pos.getX(idx.at(i)) + pos.getX(idx.at(i + 1)) + pos.getX(idx.at(i + 2))) / 3;
+                            if (pickLeft ? cx < midX : cx >= midX) {
+                                filtered.push(idx.at(i), idx.at(i + 1), idx.at(i + 2));
+                            }
+                        }
+                        if (!filtered.length) return;
+                        geo.setIndex(filtered);
+                    }
+                    const mat = new THREE.MeshStandardMaterial({
+                        color: gloveColorHex,
+                        roughness: 0.45,
+                        side: THREE.DoubleSide
+                    });
+                    const m = new THREE.Mesh(geo, mat);
+                    m.castShadow = true;
+                    grp.add(m);
+                });
+
+                const box = new THREE.Box3().setFromObject(grp);
+                const size = new THREE.Vector3(); box.getSize(size);
+                const center = new THREE.Vector3(); box.getCenter(center);
+                const norm = 1.0 / (Math.max(size.x, size.y, size.z) || 1);
+                grp.scale.setScalar(norm);
+                grp.position.set(-center.x * norm, -box.min.y * norm, -center.z * norm);
+
+                const u = new THREE.Group();
+                u.add(grp);
+                u.rotation.y = pickLeft ? Math.PI : 0;
+                return u;
+            }
+
+            function attachToArm(unit, foreArm, hand) {
+                const arm = foreArm || (hand && hand.parent);
+                if (!arm) return;
+                const wristPos = hand ? hand.position.clone() : new THREE.Vector3(0, 24, 0);
+                const len = wristPos.length() || 24;
+                const dir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
+
+                const holder = new THREE.Group();
+                holder.add(unit);
+                holder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+
+                const sz = len * 2.25;
+                holder.scale.setScalar(sz);
+                holder.position.copy(wristPos).addScaledVector(dir, -sz * 0.04);
+                arm.add(holder);
+            }
+
+            attachToArm(buildHalf(false), rightForeArmBone, rightHandBone);
+            attachToArm(buildHalf(true), leftForeArmBone, leftHandBone);
+            glovesLoaded = true;
+        }
+        // ==================== КІНЕЦЬ ЧАСТИНИ 7A з 8 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 7B з 8 ====================
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
         loader.setDRACOLoader(dracoLoader);
 
-        function buildDressedPlayer(kit) {
-            while (playerHolder.children.length) {
-                playerHolder.remove(playerHolder.children.at(0));
-            }
-            activeMixer = null;
+        let mixer = null;
 
-            loader.load('player.glb?v=' + Date.now(), (gltf) => {
-                const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
-                if (!model) return;
+        loader.load('player.glb?v=home1', (gltf) => {
+            const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
+            const jId = localStorage.getItem('eq_jerseys') || 'j1';
+            const sId = localStorage.getItem('eq_shorts') || 's1';
+            const bId = localStorage.getItem('eq_boots') || 'b1';
+            const gId = localStorage.getItem('eq_gloves') || 'g1';
+            const hId = localStorage.getItem('eq_hair') || 'h1';
+            const num = localStorage.getItem('eq_number') || '10';
+            const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
 
-                const anim = gltf.animations && gltf.animations.at(0);
-                if (anim) {
-                    activeMixer = new THREE.AnimationMixer(model);
-                    activeMixer.clipAction(anim).play();
-                    activeMixer.update(0.01);
+            const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
+            const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
+            const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
+            const gloveItem = CATALOG.gloves.find(x => x.id === gId) || CATALOG.gloves.at(0);
+            const hairItem = CATALOG.hair.find(x => x.id === hId) || CATALOG.hair.at(0);
+
+            const jerseyTex = createJerseyTexture(jersey);
+            let spineBone = null, headBone = null;
+
+            model.traverse((child) => {
+                if (child.isBone) {
+                    const n = child.name.toLowerCase();
+                    if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) spineBone = child;
+                    if (n.includes('head') && !n.includes('top') && !n.includes('end')) headBone = child;
+                    if (n.includes('forearm') && n.includes('left')) leftForeArmBone = child;
+                    if (n.includes('forearm') && n.includes('right')) rightForeArmBone = child;
+                    if (n.includes('hand') && n.includes('left') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) leftHandBone = child;
+                    if (n.includes('hand') && n.includes('right') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) rightHandBone = child;
                 }
-
-                const jersey = (CATALOG.jerseys || []).find(x => x.id === kit.jersey) || CATALOG.jerseys.at(0);
-                const shortItem = (CATALOG.shorts || []).find(x => x.id === kit.shorts) || CATALOG.shorts.at(0);
-                const bootItem = (CATALOG.boots || []).find(x => x.id === kit.boots) || CATALOG.boots.at(0);
-                const jerseyTex = createJerseyTexture(jersey);
-
-                let spineBone = null;
-                model.traverse((child) => {
-                    if (child.isBone && child.name) {
-                        const n = child.name.toLowerCase();
-                        if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) spineBone = child;
-                    }
-                    if (!child.isMesh || !child.material) return;
-                    const name = (child.name || '').toLowerCase();
-                    if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
-                        child.material = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.65 });
-                    } else if (name.includes('short') || name.includes('pant')) {
-                        child.material = new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.72 });
-                    } else if (name.includes('shoe') || name.includes('boot')) {
-                        child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.38 });
-                    }
-                });
-
-                const numMesh = new THREE.Mesh(
-                    new THREE.PlaneGeometry(30, 30),
-                    new THREE.MeshBasicMaterial({
-                        map: createBackNumberTexture(kit.number || '10', kit.numColor || '#ffffff'),
-                        transparent: true, side: THREE.DoubleSide, depthWrite: false
-                    })
-                );
-                if (spineBone) {
-                    numMesh.position.set(0, 2.0, -13.2);
-                    numMesh.rotation.set(0.08, Math.PI, 0);
-                    spineBone.add(numMesh);
+                if (!child.isMesh || !child.material) return;
+                child.castShadow = true;
+                const name = child.name.toLowerCase();
+                if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
+                    child.material = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.7 });
+                } else if (name.includes('short') || name.includes('pant')) {
+                    child.material = new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.75 });
+                } else if (name.includes('shoe') || name.includes('boot')) {
+                    child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
                 }
-
-                playerHolder.add(model);
             });
-        }
 
-        function resizeViewer() {
-            const w = viewerWrap.clientWidth || 340;
-            const h = viewerWrap.clientHeight || 270;
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-            renderer.setSize(w, h, false);
-        }
-
-        function openPlayerProfile(player, rank) {
-            document.getElementById('modal-player-name').textContent = player.name;
-            document.getElementById('modal-player-rank').textContent = `Місце в рейтингу: #${rank}`;
-            document.getElementById('modal-coins').textContent = `💰 ${player.coins || 0}`;
-            document.getElementById('modal-wins').textContent = `${player.wins || 0}`;
-            document.getElementById('modal-joined').textContent = player.joinedAt || 'Невідомо';
-
-            playerHolder.rotation.y = 0.35;
-            modalEl.classList.add('open');
-            resizeViewer();
-            buildDressedPlayer(player.kit || { jersey: 'j1', shorts: 's1', boots: 'b1', number: '10', numColor: '#ffffff' });
-        }
-
-        closeModalBtn.addEventListener('click', () => modalEl.classList.remove('open'));
-        modalEl.addEventListener('click', (e) => {
-            if (e.target === modalEl) modalEl.classList.remove('open');
-        });
-
-        let isDragging = false;
-        let prevX = 0;
-        viewerWrap.addEventListener('pointerdown', (e) => { isDragging = true; prevX = e.clientX; });
-        window.addEventListener('pointermove', (e) => {
-            if (!isDragging) return;
-            playerHolder.rotation.y += (e.clientX - prevX) * 0.014;
-            prevX = e.clientX;
-        });
-        window.addEventListener('pointerup', () => { isDragging = false; });
-
-        let lastT = performance.now();
-        function animateViewer(now) {
-            requestAnimationFrame(animateViewer);
-            const dt = Math.min(0.05, (now - lastT) * 0.001);
-            lastT = now;
-
-            if (modalEl.classList.contains('open')) {
-                if (activeMixer) activeMixer.update(dt);
-                if (!isDragging) playerHolder.rotation.y += dt * 0.55;
-                renderer.render(scene, camera);
+            const numMesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(30, 30),
+                new THREE.MeshBasicMaterial({ map: createBackNumberTexture(num, numCol), transparent: true, side: THREE.DoubleSide, depthWrite: false })
+            );
+            if (spineBone) {
+                numMesh.position.set(0, 2.0, -13.2);
+                numMesh.rotation.set(0.08, Math.PI, 0);
+                spineBone.add(numMesh);
             }
+            if (headBone) headBone.add(buildHairMesh(hairItem));
+
+            playerContainer.add(model);
+
+            loader.load('./glove.glb?v=2', (gGltf) => {
+                const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
+                if (gs) mountGlovePair(gs, gloveItem.c1);
+            });
+
+            if (gltf.animations && gltf.animations.length > 0) {
+                mixer = new THREE.AnimationMixer(model);
+                mixer.clipAction(gltf.animations.at(0)).play();
+            }
+
+            const loaderEl = document.getElementById('loader-screen');
+            loaderEl.style.opacity = '0';
+            setTimeout(() => { loaderEl.style.display = 'none'; }, 400);
+        });
+
+        const quickSoundBtn = document.getElementById('quick-sound-btn');
+        const toggleCrowdBtn = document.getElementById('toggle-crowd-sound');
+        const volSlider = document.getElementById('stadium-vol');
+        const volLabel = document.getElementById('vol-label');
+        const toggleShadowsBtn = document.getElementById('toggle-shadows');
+        const settingsModal = document.getElementById('settings-modal');
+
+        function syncAudioUI() {
+            const on = stadiumAudio.enabled;
+            quickSoundBtn.textContent = on ? '🔊' : '🔇';
+            toggleCrowdBtn.textContent = on ? '🔊 Спів та гул трибун: УВІМК' : '🔇 Спів та гул трибун: ВИМК';
+            toggleCrowdBtn.classList.toggle('active', on);
+            const pct = Math.round(stadiumAudio.volume * 100);
+            volSlider.value = pct;
+            volLabel.textContent = `${pct}%`;
+        }
+        syncAudioUI();
+
+        quickSoundBtn.addEventListener('click', () => { stadiumAudio.toggle(); syncAudioUI(); });
+        toggleCrowdBtn.addEventListener('click', () => { stadiumAudio.toggle(); syncAudioUI(); });
+        volSlider.addEventListener('input', (e) => {
+            stadiumAudio.setVolume(Number(e.target.value) / 100);
+            volLabel.textContent = `${e.target.value}%`;
+        });
+
+        let highQuality = true;
+        toggleShadowsBtn.addEventListener('click', () => {
+            highQuality = !highQuality;
+            renderer.shadowMap.enabled = highQuality;
+            keyLight.castShadow = highQuality;
+            toggleShadowsBtn.textContent = highQuality ? '✨ Тіні та деталізація: ВИСОКА' : '⚡ Тіні та деталізація: ШВИДКА';
+            toggleShadowsBtn.classList.toggle('active', highQuality);
+        });
+
+        document.getElementById('settings-btn').addEventListener('click', () => settingsModal.classList.add('open'));
+        document.getElementById('close-settings').addEventListener('click', () => settingsModal.classList.remove('open'));
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) settingsModal.classList.remove('open');
+        });
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            stadiumAudio.init();
+            window.location.href = 'arena.html';
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        // ==================== КІНЕЦЬ ЧАСТИНИ 7B з 8 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 8 з 8 ====================
+        let lastTime = performance.now();
+        function animate(now) {
+            requestAnimationFrame(animate);
+            const dt = (now - lastTime) * 0.001;
+            const t = now * 0.001;
+            lastTime = now;
+
+            if (mixer) mixer.update(dt);
+
+            if (glovesLoaded) {
+                if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
+                if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
+            }
+
+            bannerTex.offset.x += dt * 0.08;
+
+            if (torsosInstanced.visible) {
+                for (let i = 0; i < fanPositions.length; i += 2) {
+                    const f = fanPositions[i];
+                    const wave = Math.sin(t * 4.2 + f.phase);
+                    const bounce = Math.max(0, wave) * 0.13;
+                    const cosR = Math.cos(f.rotY);
+                    const sinR = Math.sin(f.rotY);
+
+                    dummy.rotation.set(0, f.rotY, 0);
+                    dummy.scale.set(1.15, 1.0, 0.68);
+                    dummy.position.set(f.x, f.y + 0.34 + bounce, f.z);
+                    dummy.updateMatrix();
+                    torsosInstanced.setMatrixAt(i, dummy.matrix);
+
+                    dummy.scale.set(0.95, 1.08, 0.98);
+                    dummy.position.set(f.x, f.y + 0.76 + bounce, f.z);
+                    dummy.updateMatrix();
+                    headsInstanced.setMatrixAt(i, dummy.matrix);
+
+                    dummy.scale.set(0.98, 1.05, 1.02);
+                    dummy.position.set(f.x, f.y + 0.775 + bounce, f.z);
+                    dummy.updateMatrix();
+                    hairsInstanced.setMatrixAt(i, dummy.matrix);
+
+                    dummy.scale.set(1, 1, 1);
+                    const armRaise = (wave > 0.3 || f.hasScarf) ? 0.34 : 0;
+                    dummy.position.set(f.x - 0.27 * cosR, f.y + 0.36 + bounce + armRaise, f.z + 0.27 * sinR);
+                    dummy.rotation.set((wave > 0.3 || f.hasScarf) ? -2.65 : 0, f.rotY, 0.14);
+                    dummy.updateMatrix();
+                    leftArmsInstanced.setMatrixAt(i, dummy.matrix);
+
+                    const rightRaise = (f.hasPhone || f.hasScarf) ? 0.38 : armRaise;
+                    dummy.position.set(f.x + 0.27 * cosR, f.y + 0.36 + bounce + rightRaise, f.z - 0.27 * sinR);
+                    dummy.rotation.set((f.hasPhone || wave > 0.3 || f.hasScarf) ? -2.45 : 0, f.rotY, -0.14);
+                    dummy.updateMatrix();
+                    rightArmsInstanced.setMatrixAt(i, dummy.matrix);
+                }
+                torsosInstanced.instanceMatrix.needsUpdate = true;
+                headsInstanced.instanceMatrix.needsUpdate = true;
+                hairsInstanced.instanceMatrix.needsUpdate = true;
+                leftArmsInstanced.instanceMatrix.needsUpdate = true;
+                rightArmsInstanced.instanceMatrix.needsUpdate = true;
+
+                for (let i = 0; i < scarfFans.length; i++) {
+                    const f = scarfFans[i];
+                    const wave = Math.sin(t * 4.2 + f.phase);
+                    const bounce = Math.max(0, wave) * 0.13;
+                    dummy.position.set(f.x, f.y + 1.04 + bounce, f.z);
+                    dummy.rotation.set(0, f.rotY, Math.sin(t * 6 + f.phase) * 0.08);
+                    dummy.scale.set(1, 1, 1);
+                    dummy.updateMatrix();
+                    scarfsInstanced.setMatrixAt(i, dummy.matrix);
+                }
+                scarfsInstanced.instanceMatrix.needsUpdate = true;
+            }
+
+            if (phonesInstanced.visible) {
+                for (let i = 0; i < phonePositions.length; i++) {
+                    const p = phonePositions[i];
+                    const flash = Math.sin(t * 10 + p.phase) > 0.9 ? 1.9 : 1.0;
+                    dummy.position.set(p.x, p.y, p.z);
+                    dummy.lookAt(0, 1.2, 0);
+                    dummy.scale.setScalar(flash);
+                    dummy.updateMatrix();
+                    phonesInstanced.setMatrixAt(i, dummy.matrix);
+                }
+                phonesInstanced.instanceMatrix.needsUpdate = true;
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
         }
 
-        syncAndLoadFirebaseLeaderboard();
-        requestAnimationFrame(animateViewer);
-        // ==================== КІНЕЦЬ ЧАСТИНИ 5 з 5 ====================
+        requestAnimationFrame(animate);
+    </script>
+
+    <script>
+        (function () {
+            const DB_HOST = 'test-d54a5-default-rtdb.europe-west1.firebasedatabase.app';
+            const FIREBASE_DB_URL = 'https://' + DB_HOST;
+
+            const tg = window.Telegram && window.Telegram.WebApp;
+            if (tg) {
+                tg.ready();
+                tg.expand();
+            }
+
+            if (!localStorage.getItem('first_played_date')) {
+                const d = new Date();
+                localStorage.setItem('first_played_date', `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`);
+            }
+
+            let tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+            if (!tgUser) {
+                try {
+                    const raw = (window.location.hash || window.location.search || '').replace(/^[#?]/, '');
+                    const webAppData = new URLSearchParams(raw).get('tgWebAppData');
+                    if (webAppData) {
+                        const userStr = new URLSearchParams(webAppData).get('user');
+                        if (userStr) tgUser = JSON.parse(userStr);
+                    }
+                } catch (e) {}
+            }
+
+            let tgId = localStorage.getItem('tg_player_id') || '';
+            let fullName = localStorage.getItem('tg_player_name') || '';
+            let avatarUrl = localStorage.getItem('tg_player_avatar') || '';
+
+            if (tgUser && tgUser.id) {
+                tgId = 'tg_' + String(tgUser.id);
+                const nameParts = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ').trim();
+                const login = tgUser.username ? ('@' + tgUser.username) : '';
+                fullName = nameParts ? (login ? `${nameParts} (${login})` : nameParts) : login;
+                avatarUrl = tgUser.photo_url || '';
+
+                localStorage.setItem('tg_player_id', tgId);
+                if (fullName) localStorage.setItem('tg_player_name', fullName);
+                if (avatarUrl) localStorage.setItem('tg_player_avatar', avatarUrl);
+            }
+
+            if (!tgId) return;
+
+            const payload = {
+                [tgId]: {
+                    id: tgId,
+                    name: fullName || ('Гравець #' + tgId.slice(-4)),
+                    avatar: avatarUrl,
+                    coins: Number(localStorage.getItem('player_coins') || 500),
+                    wins: Number(localStorage.getItem('matches_won') || 0),
+                    joinedAt: localStorage.getItem('first_played_date'),
+                    kit: {
+                        jersey: localStorage.getItem('eq_jerseys') || 'j1',
+                        shorts: localStorage.getItem('eq_shorts') || 's1',
+                        boots: localStorage.getItem('eq_boots') || 'b1',
+                        hair: localStorage.getItem('eq_hair') || 'h1',
+                        number: localStorage.getItem('eq_number') || '10',
+                        numColor: localStorage.getItem('eq_numColor') || '#ffffff'
+                    },
+                    updatedAt: Date.now()
+                }
+            };
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('PATCH', `${FIREBASE_DB_URL}/players.json`, true);
+            xhr.send(JSON.stringify(payload));
+        })();
+        // ==================== КІНЕЦЬ ЧАСТИНИ 8 з 8 ====================
     </script>
 </body>
 </html>
