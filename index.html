@@ -6,7 +6,7 @@
     <title>Penalty 3D — Головна</title>
     <script src="https://telegram.org"></script>
     <style>
-        /* ==================== ПОЧАТОК ЧАСТИНИ 1 з 8 ==================== */
+        /* ==================== ПОЧАТОК ЧАСТИНИ 1 з 9 ==================== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
             overflow: hidden;
@@ -69,8 +69,8 @@
             pointer-events: auto;
             z-index: 10;
         }
-        /* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 8 ==================== */
-        /* ==================== ПОЧАТОК ЧАСТИНИ 2 з 8 ==================== */
+        /* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 9 ==================== */
+        /* ==================== ПОЧАТОК ЧАСТИНИ 2 з 9 ==================== */
         .nav-card {
             display: flex;
             align-items: center;
@@ -193,7 +193,7 @@
             margin-bottom: 15px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        /* ==================== КІНЕЦЬ ЧАСТИНИ 2 з 8 ==================== */
+        /* ==================== КІНЕЦЬ ЧАСТИНИ 2 з 9 ==================== */
     </style>
 </head>
 <body>
@@ -270,7 +270,7 @@
         }
     </script>
     <script type="module">
-        // ==================== ПОЧАТОК ЧАСТИНИ 3 з 8 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 3 з 9 ====================
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
         import { DRACOLoader } from './libs/DRACOLoader.js';
@@ -424,8 +424,8 @@
         const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.3);
         rimLight.position.set(-7, 8, -9);
         scene.add(rimLight);
-        // ==================== КІНЕЦЬ ЧАСТИНИ 3 з 8 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 4 з 8 ====================
+        // ==================== КІНЕЦЬ ЧАСТИНИ 3 з 9 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 4 з 9 ====================
         function createPitchTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
@@ -606,8 +606,8 @@
         buildSideStand(1);
         buildEndStand(-1);
         buildEndStand(1);
-        // ==================== КІНЕЦЬ ЧАСТИНИ 4 з 8 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 5 з 8 ====================
+        // ==================== КІНЕЦЬ ЧАСТИНИ 4 з 9 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 5 з 9 ====================
         const dummy = new THREE.Object3D();
         const tmpColor = new THREE.Color();
 
@@ -767,8 +767,8 @@
         });
         phonesInstanced.instanceMatrix.needsUpdate = true;
         stadiumGroup.add(phonesInstanced);
-        // ==================== КІНЕЦЬ ЧАСТИНИ 5 з 8 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 6 з 8 ====================
+        // ==================== КІНЕЦЬ ЧАСТИНИ 5 з 9 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 6 з 9 ====================
         function createJerseyTexture(jersey) {
             const c = document.createElement('canvas');
             c.width = 512; c.height = 512;
@@ -861,15 +861,15 @@
             }
             return g;
         }
-        // ==================== КІНЕЦЬ ЧАСТИНИ 6 з 8 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 7A з 8 ====================
+        // ==================== КІНЕЦЬ ЧАСТИНИ 6 з 9 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 7 з 9 ====================
         const playerContainer = new THREE.Group();
         playerContainer.position.set(-0.62, 0, 0);
         playerContainer.rotation.y = 0.35;
         scene.add(playerContainer);
 
         const ballId = localStorage.getItem('eq_balls') || 'ball1';
-        const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
+        const ballItem = (CATALOG.balls || []).find(x => x.id === ballId) || (CATALOG.balls && CATALOG.balls.at(0)) || { c1: '#ffffff', c2: '#111827' };
         const ballMesh = new THREE.Mesh(
             new THREE.SphereGeometry(0.115, 28, 28),
             new THREE.MeshStandardMaterial({ map: createBallTexture(ballItem.c1, ballItem.c2), roughness: 0.35 })
@@ -959,8 +959,8 @@
             attachToArm(buildHalf(true), leftForeArmBone, leftHandBone);
             glovesLoaded = true;
         }
-        // ==================== КІНЕЦЬ ЧАСТИНИ 7A з 8 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 7B з 8 ====================
+        // ==================== КІНЕЦЬ ЧАСТИНИ 7 з 9 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 8 з 9 ====================
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
@@ -978,11 +978,11 @@
             const num = localStorage.getItem('eq_number') || '10';
             const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
 
-            const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
-            const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
-            const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
-            const gloveItem = CATALOG.gloves.find(x => x.id === gId) || CATALOG.gloves.at(0);
-            const hairItem = CATALOG.hair.find(x => x.id === hId) || CATALOG.hair.at(0);
+            const jersey = (CATALOG.jerseys || []).find(x => x.id === jId) || (CATALOG.jerseys && CATALOG.jerseys.at(0)) || { c1: '#ffffff', c2: '#0284c7', pattern: 'solid' };
+            const shortItem = (CATALOG.shorts || []).find(x => x.id === sId) || (CATALOG.shorts && CATALOG.shorts.at(0)) || { c1: '#0f172a' };
+            const bootItem = (CATALOG.boots || []).find(x => x.id === bId) || (CATALOG.boots && CATALOG.boots.at(0)) || { c1: '#38bdf8' };
+            const gloveItem = (CATALOG.gloves || []).find(x => x.id === gId) || (CATALOG.gloves && CATALOG.gloves.at(0)) || { c1: '#22c55e' };
+            const hairItem = (CATALOG.hair || []).find(x => x.id === hId) || (CATALOG.hair && CATALOG.hair.at(0)) || { style: 'bald', c1: '#1c1917' };
 
             const jerseyTex = createJerseyTexture(jersey);
             let spineBone = null, headBone = null;
@@ -1087,8 +1087,8 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-        // ==================== КІНЕЦЬ ЧАСТИНИ 7B з 8 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 8 з 8 ====================
+        // ==================== КІНЕЦЬ ЧАСТИНИ 8 з 9 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 9 з 9 ====================
         let lastTime = performance.now();
         function animate(now) {
             requestAnimationFrame(animate);
@@ -1251,7 +1251,7 @@
             xhr.open('PATCH', `${FIREBASE_DB_URL}/players.json`, true);
             xhr.send(JSON.stringify(payload));
         })();
-        // ==================== КІНЕЦЬ ЧАСТИНИ 8 з 8 ====================
+        // ==================== КІНЕЦЬ ЧАСТИНИ 9 з 9 ====================
     </script>
 </body>
 </html>
