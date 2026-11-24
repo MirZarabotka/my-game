@@ -6,8 +6,7 @@
     <title>Penalty 3D — Головна</title>
     <script src="https://telegram.org"></script>
     <style>
-        /* ==================== ПОЧАТОК ЧАСТИНИ 1 з 9 ==================== */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; }
         body {
             overflow: hidden;
             background: #071326;
@@ -69,58 +68,101 @@
             pointer-events: auto;
             z-index: 10;
         }
-        /* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 9 ==================== */
-        /* ==================== ПОЧАТОК ЧАСТИНИ 2 з 9 ==================== */
         .nav-card {
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(15, 23, 42, 0.74);
+            backdrop-filter: blur(12px);
+            padding: 11px 15px 11px 14px;
+            border-radius: 16px;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 12px;
-            width: 196px;
-            padding: 12px 15px;
-            border-radius: 18px;
-            text-decoration: none;
-            color: #ffffff;
-            background: rgba(15, 23, 42, 0.82);
-            backdrop-filter: blur(10px);
-            border: 1.5px solid rgba(255, 255, 255, 0.16);
-            box-shadow: 0 10px 24px rgba(0,0,0,0.45);
-            cursor: pointer;
-            transition: transform 0.16s, border-color 0.16s;
+            gap: 11px;
+            min-width: 164px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.42);
+            transition: transform 0.2s, border-color 0.2s, background 0.2s;
+        }
+
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 16%;
+            bottom: 16%;
+            width: 4px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .nav-card.play-card::before { background: #22c55e; box-shadow: 0 0 12px #22c55e; }
+        .nav-card.rank-card::before { background: #facc15; box-shadow: 0 0 12px #facc15; }
+        .nav-card.shop-card::before { background: #38bdf8; box-shadow: 0 0 12px #38bdf8; }
+        .nav-card.settings-card::before { background: #f59e0b; box-shadow: 0 0 12px #f59e0b; }
+
+        .nav-card:hover {
+            transform: translateX(5px);
+            background: rgba(30, 41, 59, 0.9);
+        }
+        .nav-card.play-card:hover { border-color: rgba(34, 197, 94, 0.65); }
+        .nav-card.rank-card:hover { border-color: rgba(250, 204, 21, 0.65); }
+        .nav-card.shop-card:hover { border-color: rgba(56, 189, 248, 0.65); }
+        .nav-card.settings-card:hover { border-color: rgba(245, 158, 11, 0.65); }
+
+        .nav-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .play-card .nav-icon { background: rgba(34, 197, 94, 0.2); }
+        .rank-card .nav-icon { background: rgba(250, 204, 21, 0.2); }
+        .shop-card .nav-icon { background: rgba(56, 189, 248, 0.2); }
+        .settings-card .nav-icon { background: rgba(245, 158, 11, 0.2); }
+
+        .nav-text {
+            display: flex;
+            flex-direction: column;
             text-align: left;
         }
-        .nav-card:active { transform: scale(0.96); }
-        .play-card {
-            background: linear-gradient(135deg, #16a34a, #15803d);
-            border-color: #4ade80;
-            box-shadow: 0 12px 28px rgba(22, 163, 74, 0.45);
+        .nav-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.4px;
         }
-        .rank-card { border-color: rgba(250, 204, 21, 0.45); }
-        .shop-card { border-color: rgba(56, 189, 248, 0.4); }
-        .nav-icon { font-size: 1.45rem; }
-        .nav-text { display: flex; flex-direction: column; }
-        .nav-title { font-weight: 900; font-size: 0.92rem; letter-spacing: 0.3px; }
-        .nav-sub { font-size: 0.72rem; color: rgba(255,255,255,0.75); font-weight: 600; }
+        .nav-sub {
+            font-size: 0.66rem;
+            font-weight: 600;
+            color: #94a3b8;
+        }
 
         #settings-modal {
             position: fixed;
             inset: 0;
-            background: rgba(4, 11, 23, 0.84);
+            background: rgba(2, 6, 23, 0.75);
             backdrop-filter: blur(8px);
             display: none;
             justify-content: center;
             align-items: center;
-            padding: 16px;
             z-index: 40;
+            pointer-events: auto;
+            padding: 20px;
         }
         #settings-modal.open { display: flex; }
         .modal-box {
-            width: 100%;
-            max-width: 350px;
             background: #0f172a;
-            border: 1.5px solid rgba(56, 189, 248, 0.4);
-            border-radius: 22px;
-            padding: 20px;
-            box-shadow: 0 20px 45px rgba(0,0,0,0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 22px;
+            width: 100%;
+            max-width: 340px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.65);
         }
         .modal-header {
             display: flex;
@@ -193,7 +235,6 @@
             margin-bottom: 15px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        /* ==================== КІНЕЦЬ ЧАСТИНИ 2 з 9 ==================== */
     </style>
 </head>
 <body>
@@ -270,7 +311,6 @@
         }
     </script>
     <script type="module">
-        // ==================== ПОЧАТОК ЧАСТИНИ 3 з 9 ====================
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
         import { DRACOLoader } from './libs/DRACOLoader.js';
@@ -326,7 +366,7 @@
                 crowdFilter.connect(this.masterGain);
                 crowdNoise.start();
 
-                const chantNotes = new Array(261.63, 293.66, 329.63, 293.66, 329.63, 392.00);
+                const chantNotes = [261.63, 293.66, 329.63, 293.66, 329.63, 392.00];
                 let step = 0;
                 setInterval(() => {
                     if (!this.enabled || !this.ctx || this.ctx.state !== 'running') return;
@@ -334,7 +374,7 @@
                     const freq = chantNotes[step % chantNotes.length];
                     step++;
 
-                    new Array(-4, 0, 5).forEach((detune) => {
+                    [-4, 0, 5].forEach((detune) => {
                         const osc = this.ctx.createOscillator();
                         const gain = this.ctx.createGain();
                         const filter = this.ctx.createBiquadFilter();
@@ -385,47 +425,32 @@
                 stadiumAudio.ctx.resume();
             }
         }, { once: true });
-
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x071326);
-        scene.fog = new THREE.FogExp2(0x071326, 0.011);
+        scene.fog = new THREE.FogExp2(0x071326, 0.012);
 
-        const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 200);
-        camera.position.set(1.15, 1.55, 4.15);
+        const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 180);
+        camera.position.set(-0.45, 1.35, 3.5);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.15;
         container.appendChild(renderer.domElement);
 
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.06;
-        controls.enablePan = false;
-        controls.minDistance = 2.4;
-        controls.maxDistance = 6.2;
-        controls.minPolarAngle = Math.PI * 0.28;
-        controls.maxPolarAngle = Math.PI * 0.48;
-        controls.target.set(-0.35, 1.05, 0);
-        controls.update();
-
         scene.add(new THREE.AmbientLight(0xdbeafe, 1.05));
-        const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
-        keyLight.position.set(6, 12, 8);
-        keyLight.castShadow = true;
-        keyLight.shadow.mapSize.set(2048, 2048);
-        scene.add(keyLight);
+        const sunLight = new THREE.DirectionalLight(0xffffff, 2.3);
+        sunLight.position.set(8, 16, 10);
+        sunLight.castShadow = true;
+        scene.add(sunLight);
 
-        const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.3);
-        rimLight.position.set(-7, 8, -9);
-        scene.add(rimLight);
-        // ==================== КІНЕЦЬ ЧАСТИНИ 3 з 9 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 4 з 9 ====================
+        const backStadiumLight = new THREE.DirectionalLight(0x93c5fd, 1.1);
+        backStadiumLight.position.set(-10, 12, -16);
+        scene.add(backStadiumLight);
+
         function createPitchTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
@@ -439,9 +464,10 @@
                 ctx.fillRect(0, i * stripeH, 1024, stripeH);
             }
 
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.92)';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
             ctx.lineWidth = 7;
+
             ctx.strokeRect(48, 48, 928, 928);
 
             ctx.beginPath();
@@ -453,13 +479,22 @@
             ctx.arc(512, 512, 95, 0, Math.PI * 2);
             ctx.stroke();
 
-            ctx.strokeRect(236, 48, 552, 210);
-            ctx.strokeRect(374, 48, 276, 78);
+            ctx.strokeRect(256, 48, 512, 180);
+            ctx.strokeRect(384, 48, 256, 68);
             ctx.beginPath();
-            ctx.arc(512, 204, 7, 0, Math.PI * 2);
+            ctx.arc(512, 175, 6, 0, Math.PI * 2);
             ctx.fill();
             ctx.beginPath();
-            ctx.arc(512, 204, 88, 0.22 * Math.PI, 0.78 * Math.PI);
+            ctx.arc(512, 175, 85, 0.22 * Math.PI, 0.78 * Math.PI);
+            ctx.stroke();
+
+            ctx.strokeRect(256, 796, 512, 180);
+            ctx.strokeRect(384, 908, 256, 68);
+            ctx.beginPath();
+            ctx.arc(512, 849, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(512, 849, 85, 1.22 * Math.PI, 1.78 * Math.PI);
             ctx.stroke();
 
             const tex = new THREE.CanvasTexture(canvas);
@@ -480,302 +515,518 @@
         stadiumGroup.add(pitch);
 
         const track = new THREE.Mesh(
-            new THREE.PlaneGeometry(66, 86),
+            new THREE.PlaneGeometry(62, 82),
             new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 })
         );
         track.rotation.x = -Math.PI / 2;
         track.position.y = -0.02;
         stadiumGroup.add(track);
 
-        const goalMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
-        const goalGroup = new THREE.Group();
-        const postGeo = new THREE.CylinderGeometry(0.08, 0.08, 2.44, 16);
-        const barGeo = new THREE.CylinderGeometry(0.08, 0.08, 7.32, 16);
-        const p1 = new THREE.Mesh(postGeo, goalMat); p1.position.set(-3.66, 1.22, -29.8);
-        const p2 = new THREE.Mesh(postGeo, goalMat); p2.position.set(3.66, 1.22, -29.8);
-        const bar = new THREE.Mesh(barGeo, goalMat); bar.rotation.z = Math.PI / 2; bar.position.set(0, 2.44, -29.8);
-        const net = new THREE.Mesh(
-            new THREE.BoxGeometry(7.32, 2.44, 1.8),
-            new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.25 })
-        );
-        net.position.set(0, 1.22, -30.7);
-        goalGroup.add(p1, p2, bar, net);
-        stadiumGroup.add(goalGroup);
+        function createGoal(zPos, rotY) {
+            const goal = new THREE.Group();
+            const postMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+            const postGeo = new THREE.CylinderGeometry(0.08, 0.08, 2.44, 16);
+            const barGeo = new THREE.CylinderGeometry(0.08, 0.08, 7.32, 16);
 
-        function createBannerTexture() {
-            const c = document.createElement('canvas');
-            c.width = 2048; c.height = 128;
-            const ctx = c.getContext('2d');
-            const g = ctx.createLinearGradient(0, 0, 2048, 0);
-            g.addColorStop(0, '#0284c7'); g.addColorStop(0.5, '#1d4ed8'); g.addColorStop(1, '#0284c7');
-            ctx.fillStyle = g; ctx.fillRect(0, 0, 2048, 128);
-            ctx.fillStyle = '#38bdf8'; ctx.fillRect(0, 0, 2048, 10); ctx.fillRect(0, 118, 2048, 10);
-            ctx.fillStyle = '#ffffff'; ctx.font = '900 54px "Segoe UI", sans-serif';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText('⚽ PENALTY 3D ARENA   ★   CHAMPIONS CUP   ★   GOAL TIME! 🔥', 1024, 66);
-            const tex = new THREE.CanvasTexture(c);
-            tex.wrapS = THREE.RepeatWrapping; tex.repeat.set(3, 1); tex.colorSpace = THREE.SRGBColorSpace;
-            return tex;
+            const leftPost = new THREE.Mesh(postGeo, postMat);
+            leftPost.position.set(-3.66, 1.22, 0);
+            const rightPost = new THREE.Mesh(postGeo, postMat);
+            rightPost.position.set(3.66, 1.22, 0);
+            const crossbar = new THREE.Mesh(barGeo, postMat);
+            crossbar.rotation.z = Math.PI / 2;
+            crossbar.position.set(0, 2.44, 0);
+
+            const netMat = new THREE.MeshBasicMaterial({
+                color: 0xe2e8f0,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.35
+            });
+            const net = new THREE.Mesh(new THREE.BoxGeometry(7.32, 2.44, 1.8, 18, 6, 5), netMat);
+            net.position.set(0, 1.22, -0.9);
+
+            goal.add(leftPost, rightPost, crossbar, net);
+            goal.position.set(0, 0, zPos);
+            goal.rotation.y = rotY;
+            return goal;
         }
-        const bannerTex = createBannerTexture();
-        const adMat = new THREE.MeshBasicMaterial({ map: bannerTex });
-
-        const adBack = new THREE.Mesh(new THREE.BoxGeometry(52, 1.25, 0.25), adMat);
-        adBack.position.set(0, 0.62, -32.4);
-        const adFront = new THREE.Mesh(new THREE.BoxGeometry(52, 1.25, 0.25), adMat);
-        adFront.position.set(0, 0.62, 32.4);
-        const adLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 66), adMat);
-        adLeft.position.set(-24.2, 0.62, 0);
-        const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 66), adMat);
-        adRight.position.set(24.2, 0.62, 0);
-        stadiumGroup.add(adBack, adFront, adLeft, adRight);
-
+        stadiumGroup.add(createGoal(-29.8, 0));
+        stadiumGroup.add(createGoal(29.8, Math.PI));
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
         const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
-        const fanPositions = [];
+        const railMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+
+        function createBannerTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 2048;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+
+            const grad = ctx.createLinearGradient(0, 0, 2048, 0);
+            grad.addColorStop(0, '#0284c7');
+            grad.addColorStop(0.5, '#1d4ed8');
+            grad.addColorStop(1, '#0284c7');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 2048, 128);
+
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(0, 0, 2048, 10);
+            ctx.fillRect(0, 118, 2048, 10);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 54px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('⚽ PENALTY 3D ARENA   ★   CHAMPIONS CUP   ★   MAKE YOUR SHOT! 🔥', 1024, 66);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.ClampToEdgeWrapping;
+            tex.repeat.set(3, 1);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        const bannerTex = createBannerTexture();
+        const adBoardMat = new THREE.MeshBasicMaterial({ map: bannerTex });
+
+        const adBack = new THREE.Mesh(new THREE.BoxGeometry(50, 1.25, 0.25), adBoardMat);
+        adBack.position.set(0, 0.62, -31.8);
+        const adFront = new THREE.Mesh(new THREE.BoxGeometry(50, 1.25, 0.25), adBoardMat);
+        adFront.position.set(0, 0.62, 31.8);
+        const adLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 64), adBoardMat);
+        adLeft.position.set(-24.0, 0.62, 0);
+        const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 64), adBoardMat);
+        adRight.position.set(24.0, 0.62, 0);
+        stadiumGroup.add(adBack, adFront, adLeft, adRight);
+
+        const railBack = new THREE.Mesh(new THREE.BoxGeometry(52, 0.08, 0.08), railMat);
+        railBack.position.set(0, 1.55, -32.8);
+        const railLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 66), railMat);
+        railLeft.position.set(-24.8, 1.55, 0);
+        const railRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 66), railMat);
+        railRight.position.set(24.8, 1.55, 0);
+        stadiumGroup.add(railBack, railLeft, railRight);
+
         const seatPositions = [];
+        const fanPositions = [];
         const phonePositions = [];
+        const jerseyColors = [0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0xea580c, 0x0284c7, 0x9333ea, 0x1e293b];
+        const skinColors = [0xffdbac, 0xf1c27d, 0xe0ac69, 0xc68642, 0x8d5524];
+        const hairColors = [0x1c1917, 0x451a03, 0x78350f, 0xd97706, 0x57534e];
 
-        function buildSideStand(side) {
-            const rows = 9;
-            const standLen = 68;
-            for (let r = 0; r < rows; r++) {
-                const rowY = 1.35 + r * 0.68;
-                const xDist = 25.4 + r * 1.02;
-                const step = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.68, standLen), tierMat);
-                step.position.set(side * xDist, rowY - 0.34, 0);
-                stadiumGroup.add(step);
+        const numRows = 9;
+        for (let r = 0; r < numRows; r++) {
+            const rowY = 1.35 + r * 0.68;
+            const rowDepth = 1.05;
 
-                for (let z = -31.5; z <= 31.5; z += 0.86) {
-                    const aisle = Math.abs((Math.abs(z) % 13) - 6.5);
-                    if (aisle < 0.72) continue;
+            const zDist = 33.4 + r * 1.02;
+            const stepW = 54 + r * 2;
+            const stepGeoZ = new THREE.BoxGeometry(stepW, 0.68, rowDepth);
 
-                    seatPositions.push({ x: side * xDist, y: rowY + 0.12, z: z, rotY: side === -1 ? Math.PI / 2 : -Math.PI / 2 });
+            const backStep = new THREE.Mesh(stepGeoZ, tierMat);
+            backStep.position.set(0, rowY - 0.34, -zDist);
+            const frontStep = new THREE.Mesh(stepGeoZ, tierMat);
+            frontStep.position.set(0, rowY - 0.34, zDist);
+            stadiumGroup.add(backStep, frontStep);
 
-                    if (Math.random() > 0.14) {
-                        const px = side * (xDist - 0.08) + (Math.random() - 0.5) * 0.1;
-                        const pz = z + (Math.random() - 0.5) * 0.14;
-                        const rotY = side === -1 ? Math.PI / 2 : -Math.PI / 2;
-                        const hasPhone = Math.random() < 0.12;
-                        const hasScarf = !hasPhone && Math.random() < 0.18;
-                        fanPositions.push({ x: px, y: rowY, z: pz, rotY, phase: Math.random() * Math.PI * 2, hasPhone, hasScarf });
-                        if (hasPhone) phonePositions.push({ x: px - side * 0.25, y: rowY + 0.92, z: pz, phase: Math.random() * 6.28 });
-                    }
+            for (let x = -stepW * 0.46; x <= stepW * 0.46; x += 0.85) {
+                const isAisle = Math.abs((Math.abs(x) % 11) - 5.5) < 0.75;
+                if (isAisle) continue;
+
+                seatPositions.push({ x, y: rowY + 0.12, z: -zDist, rotY: 0 });
+                seatPositions.push({ x, y: rowY + 0.12, z: zDist, rotY: Math.PI });
+
+                if (Math.random() > 0.16) {
+                    const fx = x + (Math.random() - 0.5) * 0.15;
+                    const hasPhone = Math.random() > 0.78;
+                    const hasScarf = !hasPhone && Math.random() > 0.72;
+                    fanPositions.push({ x: fx, y: rowY, z: -zDist + 0.08, rotY: 0, phase: Math.random() * 6.28, hasPhone, hasScarf });
+                    if (hasPhone) phonePositions.push({ x: fx + 0.15, y: rowY + 0.82, z: -zDist + 0.32, phase: Math.random() * 10 });
+                }
+                if (Math.random() > 0.16) {
+                    const fx = x + (Math.random() - 0.5) * 0.15;
+                    fanPositions.push({ x: fx, y: rowY, z: zDist - 0.08, rotY: Math.PI, phase: Math.random() * 6.28, hasPhone: false, hasScarf: false });
                 }
             }
-            const roof = new THREE.Mesh(new THREE.BoxGeometry(11.5, 0.45, standLen + 2), roofMat);
-            roof.position.set(side * 30.2, 8.8, 0);
-            roof.rotation.z = side * -0.14;
-            stadiumGroup.add(roof);
-        }
+            const xDist = 25.4 + r * 1.02;
+            const stepL = 66 + r * 2;
+            const stepGeoX = new THREE.BoxGeometry(rowDepth, 0.68, stepL);
 
-        function buildEndStand(endSide) {
-            const rows = 8;
-            const standW = 54;
-            for (let r = 0; r < rows; r++) {
-                const rowY = 1.35 + r * 0.68;
-                const zDist = 33.6 + r * 1.02;
-                const step = new THREE.Mesh(new THREE.BoxGeometry(standW, 0.68, 1.05), tierMat);
-                step.position.set(0, rowY - 0.34, endSide * zDist);
-                stadiumGroup.add(step);
+            const leftStep = new THREE.Mesh(stepGeoX, tierMat);
+            leftStep.position.set(-xDist, rowY - 0.34, 0);
+            const rightStep = new THREE.Mesh(stepGeoX, tierMat);
+            rightStep.position.set(xDist, rowY - 0.34, 0);
+            stadiumGroup.add(leftStep, rightStep);
 
-                for (let x = -24.5; x <= 24.5; x += 0.88) {
-                    const aisle = Math.abs((Math.abs(x) % 11) - 5.5);
-                    if (aisle < 0.75) continue;
+            for (let z = -stepL * 0.46; z <= stepL * 0.46; z += 0.9) {
+                const isAisle = Math.abs((Math.abs(z) % 12) - 6.0) < 0.75;
+                if (isAisle) continue;
 
-                    seatPositions.push({ x: x, y: rowY + 0.12, z: endSide * zDist, rotY: endSide === -1 ? 0 : Math.PI });
+                seatPositions.push({ x: -xDist, y: rowY + 0.12, z, rotY: Math.PI / 2 });
+                seatPositions.push({ x: xDist, y: rowY + 0.12, z, rotY: -Math.PI / 2 });
 
-                    if (Math.random() > 0.16) {
-                        const px = x + (Math.random() - 0.5) * 0.14;
-                        const pz = endSide * (zDist - 0.08) + (Math.random() - 0.5) * 0.1;
-                        const rotY = endSide === -1 ? 0 : Math.PI;
-                        const hasPhone = Math.random() < 0.12;
-                        const hasScarf = !hasPhone && Math.random() < 0.18;
-                        fanPositions.push({ x: px, y: rowY, z: pz, rotY, phase: Math.random() * Math.PI * 2, hasPhone, hasScarf });
-                        if (hasPhone) phonePositions.push({ x: px, y: rowY + 0.92, z: pz - endSide * 0.25, phase: Math.random() * 6.28 });
-                    }
+                if (Math.random() > 0.18) {
+                    const fz = z + (Math.random() - 0.5) * 0.15;
+                    const hasPhone = Math.random() > 0.8;
+                    const hasScarf = !hasPhone && Math.random() > 0.72;
+                    fanPositions.push({ x: -xDist + 0.08, y: rowY, z: fz, rotY: Math.PI / 2, phase: Math.random() * 6.28, hasPhone, hasScarf });
+                    if (hasPhone) phonePositions.push({ x: -xDist + 0.32, y: rowY + 0.82, z: fz, phase: Math.random() * 10 });
+                }
+                if (Math.random() > 0.18) {
+                    const fz = z + (Math.random() - 0.5) * 0.15;
+                    const hasPhone = Math.random() > 0.8;
+                    const hasScarf = !hasPhone && Math.random() > 0.72;
+                    fanPositions.push({ x: xDist - 0.08, y: rowY, z: fz, rotY: -Math.PI / 2, phase: Math.random() * 6.28, hasPhone, hasScarf });
+                    if (hasPhone) phonePositions.push({ x: xDist - 0.32, y: rowY + 0.82, z: fz, phase: Math.random() * 10 });
                 }
             }
-            const roof = new THREE.Mesh(new THREE.BoxGeometry(standW + 18, 0.45, 11.5), roofMat);
-            roof.position.set(0, 8.8, endSide * 38.0);
-            roof.rotation.x = endSide * 0.14;
-            stadiumGroup.add(roof);
         }
 
-        buildSideStand(-1);
-        buildSideStand(1);
-        buildEndStand(-1);
-        buildEndStand(1);
-        // ==================== КІНЕЦЬ ЧАСТИНИ 4 з 9 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 5 з 9 ====================
+        const backRoof = new THREE.Mesh(new THREE.BoxGeometry(70, 0.45, 12), roofMat);
+        backRoof.position.set(0, 9.4, -38.0);
+        const frontRoof = new THREE.Mesh(new THREE.BoxGeometry(70, 0.45, 12), roofMat);
+        frontRoof.position.set(0, 9.4, 38.0);
+        const leftRoof = new THREE.Mesh(new THREE.BoxGeometry(12, 0.45, 84), roofMat);
+        leftRoof.position.set(-30.0, 9.4, 0);
+        const rightRoof = new THREE.Mesh(new THREE.BoxGeometry(12, 0.45, 84), roofMat);
+        rightRoof.position.set(30.0, 9.4, 0);
+        stadiumGroup.add(backRoof, frontRoof, leftRoof, rightRoof);
+
         const dummy = new THREE.Object3D();
         const tmpColor = new THREE.Color();
 
-        const seatMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.45 });
         const seatGeo = new THREE.BoxGeometry(0.48, 0.34, 0.38);
+        const seatMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.45 });
         const seatsInstanced = new THREE.InstancedMesh(seatGeo, seatMat, seatPositions.length);
-        seatPositions.forEach((s, i) => {
+        seatPositions.forEach((s, idx) => {
             dummy.position.set(s.x, s.y, s.z);
             dummy.rotation.set(0, s.rotY, 0);
             dummy.scale.set(1, 1, 1);
             dummy.updateMatrix();
-            seatsInstanced.setMatrixAt(i, dummy.matrix);
+            seatsInstanced.setMatrixAt(idx, dummy.matrix);
         });
         seatsInstanced.instanceMatrix.needsUpdate = true;
         stadiumGroup.add(seatsInstanced);
+        const count = fanPositions.length;
+        const torsoGeo = new THREE.CapsuleGeometry(0.21, 0.34, 6, 10);
+        const headGeo = new THREE.SphereGeometry(0.135, 12, 12);
+        const hairGeo = new THREE.SphereGeometry(0.142, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.58);
+        const armGeo = new THREE.CapsuleGeometry(0.052, 0.36, 4, 8);
+        const scarfGeo = new THREE.BoxGeometry(0.68, 0.11, 0.04);
 
-        const jerseyColors = [0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0xea580c, 0x0284c7, 0x9333ea];
-        const skinColors = [0xffdbac, 0xf1c27d, 0xe0ac69, 0xc68642, 0x8d5524];
-        const hairColors = [0x1c1917, 0x451a03, 0x78350f, 0xd97706, 0xfcd34d];
+        const bodyMat = new THREE.MeshStandardMaterial({ roughness: 0.72 });
+        const skinMat = new THREE.MeshStandardMaterial({ roughness: 0.55 });
+        const hairMat = new THREE.MeshStandardMaterial({ roughness: 0.85 });
 
-        function createFanJerseyTex() {
-            const c = document.createElement('canvas');
-            c.width = 64; c.height = 64;
-            const ctx = c.getContext('2d');
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 64, 64);
-            ctx.fillStyle = 'rgba(0,0,0,0.22)';
-            ctx.fillRect(18, 0, 10, 64); ctx.fillRect(38, 0, 10, 64);
-            ctx.fillRect(0, 26, 64, 12);
-            const t = new THREE.CanvasTexture(c);
-            t.colorSpace = THREE.SRGBColorSpace;
-            return t;
-        }
-
-        function createFaceTex() {
-            const c = document.createElement('canvas');
-            c.width = 64; c.height = 64;
-            const ctx = c.getContext('2d');
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 64, 64);
-            ctx.fillStyle = '#1e293b';
-            ctx.fillRect(22, 24, 5, 5); ctx.fillRect(37, 24, 5, 5);
-            ctx.fillStyle = '#991b1b';
-            ctx.fillRect(27, 40, 10, 4);
-            const t = new THREE.CanvasTexture(c);
-            t.colorSpace = THREE.SRGBColorSpace;
-            return t;
-        }
-
-        function createScarfTex() {
-            const c = document.createElement('canvas');
-            c.width = 128; c.height = 32;
-            const ctx = c.getContext('2d');
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 128, 32);
-            ctx.fillStyle = '#0f172a';
-            for (let x = 0; x < 128; x += 24) ctx.fillRect(x, 0, 12, 32);
-            const t = new THREE.CanvasTexture(c);
-            t.colorSpace = THREE.SRGBColorSpace;
-            return t;
-        }
-
-        const fanCount = fanPositions.length;
-        const torsoGeo = new THREE.CapsuleGeometry(0.21, 0.34, 8, 14);
-        const headGeo = new THREE.SphereGeometry(0.135, 14, 14);
-        const hairGeo = new THREE.SphereGeometry(0.142, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.58);
-        const armGeo = new THREE.CapsuleGeometry(0.05, 0.34, 6, 10);
-        const legGeo = new THREE.CapsuleGeometry(0.068, 0.36, 6, 10);
-
-        const torsosInstanced = new THREE.InstancedMesh(torsoGeo, new THREE.MeshStandardMaterial({ map: createFanJerseyTex(), roughness: 0.7 }), fanCount);
-        const headsInstanced = new THREE.InstancedMesh(headGeo, new THREE.MeshStandardMaterial({ map: createFaceTex(), roughness: 0.55 }), fanCount);
-        const hairsInstanced = new THREE.InstancedMesh(hairGeo, new THREE.MeshStandardMaterial({ roughness: 0.85 }), fanCount);
-        const leftArmsInstanced = new THREE.InstancedMesh(armGeo, new THREE.MeshStandardMaterial({ roughness: 0.55 }), fanCount);
-        const rightArmsInstanced = new THREE.InstancedMesh(armGeo, new THREE.MeshStandardMaterial({ roughness: 0.55 }), fanCount);
-        const legsInstanced = new THREE.InstancedMesh(legGeo, new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 }), fanCount * 2);
+        const torsosInstanced = new THREE.InstancedMesh(torsoGeo, bodyMat, count);
+        const headsInstanced = new THREE.InstancedMesh(headGeo, skinMat, count);
+        const hairsInstanced = new THREE.InstancedMesh(hairGeo, hairMat, count);
+        const leftArmsInstanced = new THREE.InstancedMesh(armGeo, skinMat, count);
+        const rightArmsInstanced = new THREE.InstancedMesh(armGeo, skinMat, count);
 
         const scarfFans = fanPositions.filter(f => f.hasScarf);
-        const scarfsInstanced = new THREE.InstancedMesh(
-            new THREE.BoxGeometry(0.76, 0.14, 0.03),
-            new THREE.MeshStandardMaterial({ map: createScarfTex(), roughness: 0.6 }),
-            Math.max(1, scarfFans.length)
-        );
-        scarfsInstanced.visible = scarfFans.length > 0;
+        const scarfsInstanced = new THREE.InstancedMesh(scarfGeo, bodyMat, Math.max(1, scarfFans.length));
 
-        fanPositions.forEach((f, i) => {
-            const cosR = Math.cos(f.rotY);
-            const sinR = Math.sin(f.rotY);
+        fanPositions.forEach((f, idx) => {
+            const jColor = jerseyColors[idx % jerseyColors.length];
+            const sColor = skinColors[idx % skinColors.length];
+            const hColor = hairColors[idx % hairColors.length];
 
+            dummy.position.set(f.x, f.y + 0.34, f.z);
             dummy.rotation.set(0, f.rotY, 0);
             dummy.scale.set(1.15, 1.0, 0.68);
-            dummy.position.set(f.x, f.y + 0.34, f.z);
             dummy.updateMatrix();
-            torsosInstanced.setMatrixAt(i, dummy.matrix);
-            tmpColor.setHex(jerseyColors.at(i % jerseyColors.length));
-            torsosInstanced.setColorAt(i, tmpColor);
+            torsosInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpColor.setHex(jColor);
+            torsosInstanced.setColorAt(idx, tmpColor);
 
-            dummy.scale.set(0.95, 1.08, 0.98);
             dummy.position.set(f.x, f.y + 0.76, f.z);
+            dummy.scale.set(0.95, 1.08, 0.98);
             dummy.updateMatrix();
-            headsInstanced.setMatrixAt(i, dummy.matrix);
-            tmpColor.setHex(skinColors.at(i % skinColors.length));
-            headsInstanced.setColorAt(i, tmpColor);
+            headsInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpColor.setHex(sColor);
+            headsInstanced.setColorAt(idx, tmpColor);
 
-            dummy.scale.set(0.98, 1.05, 1.02);
             dummy.position.set(f.x, f.y + 0.775, f.z);
+            dummy.scale.set(0.98, 1.05, 1.02);
             dummy.updateMatrix();
-            hairsInstanced.setMatrixAt(i, dummy.matrix);
-            tmpColor.setHex(hairColors.at(i % hairColors.length));
-            hairsInstanced.setColorAt(i, tmpColor);
+            hairsInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpColor.setHex(hColor);
+            hairsInstanced.setColorAt(idx, tmpColor);
 
+            const cosR = Math.cos(f.rotY);
+            const sinR = Math.sin(f.rotY);
             dummy.scale.set(1, 1, 1);
+
             dummy.position.set(f.x - 0.27 * cosR, f.y + 0.36, f.z + 0.27 * sinR);
             dummy.rotation.set(0, f.rotY, 0.14);
             dummy.updateMatrix();
-            leftArmsInstanced.setMatrixAt(i, dummy.matrix);
-            leftArmsInstanced.setColorAt(i, tmpColor.setHex(skinColors.at(i % skinColors.length)));
+            leftArmsInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpColor.setHex(sColor);
+            leftArmsInstanced.setColorAt(idx, tmpColor);
 
             dummy.position.set(f.x + 0.27 * cosR, f.y + 0.36, f.z - 0.27 * sinR);
             dummy.rotation.set(0, f.rotY, -0.14);
             dummy.updateMatrix();
-            rightArmsInstanced.setMatrixAt(i, dummy.matrix);
-            rightArmsInstanced.setColorAt(i, tmpColor);
-
-            dummy.rotation.set(1.35, f.rotY, 0);
-            dummy.position.set(f.x - 0.10 * cosR + 0.16 * sinR, f.y + 0.08, f.z + 0.10 * sinR + 0.16 * cosR);
-            dummy.updateMatrix();
-            legsInstanced.setMatrixAt(i * 2, dummy.matrix);
-
-            dummy.position.set(f.x + 0.10 * cosR + 0.16 * sinR, f.y + 0.08, f.z - 0.10 * sinR + 0.16 * cosR);
-            dummy.updateMatrix();
-            legsInstanced.setMatrixAt(i * 2 + 1, dummy.matrix);
+            rightArmsInstanced.setMatrixAt(idx, dummy.matrix);
+            rightArmsInstanced.setColorAt(idx, tmpColor);
         });
 
-        scarfFans.forEach((f, i) => {
-            dummy.position.set(f.x, f.y + 1.04, f.z);
+        scarfFans.forEach((f, idx) => {
+            dummy.position.set(f.x, f.y + 1.02, f.z);
             dummy.rotation.set(0, f.rotY, 0);
             dummy.scale.set(1, 1, 1);
             dummy.updateMatrix();
-            scarfsInstanced.setMatrixAt(i, dummy.matrix);
-            scarfsInstanced.setColorAt(i, tmpColor.setHex(jerseyColors.at(i % jerseyColors.length)));
+            scarfsInstanced.setMatrixAt(idx, dummy.matrix);
+            tmpColor.setHex(jerseyColors[(idx * 3) % jerseyColors.length]);
+            scarfsInstanced.setColorAt(idx, tmpColor);
         });
 
-        [torsosInstanced, headsInstanced, hairsInstanced, leftArmsInstanced, rightArmsInstanced, legsInstanced, scarfsInstanced].forEach(m => {
-            m.instanceMatrix.needsUpdate = true;
-            if (m.instanceColor) m.instanceColor.needsUpdate = true;
-            stadiumGroup.add(m);
+        [torsosInstanced, headsInstanced, hairsInstanced, leftArmsInstanced, rightArmsInstanced, scarfsInstanced].forEach((mesh) => {
+            mesh.instanceMatrix.needsUpdate = true;
+            if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+            stadiumGroup.add(mesh);
         });
 
-        const phonesInstanced = new THREE.InstancedMesh(
-            new THREE.PlaneGeometry(0.16, 0.16),
-            new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
-            Math.max(1, phonePositions.length)
-        );
-        phonesInstanced.visible = phonePositions.length > 0;
-        phonePositions.forEach((p, i) => {
+        const phoneGeo = new THREE.BoxGeometry(0.11, 0.19, 0.03);
+        const phoneMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe });
+        const phonesInstanced = new THREE.InstancedMesh(phoneGeo, phoneMat, phonePositions.length);
+        phonePositions.forEach((p, idx) => {
             dummy.position.set(p.x, p.y, p.z);
             dummy.lookAt(0, 1.2, 0);
+            dummy.scale.set(1, 1, 1);
             dummy.updateMatrix();
-            phonesInstanced.setMatrixAt(i, dummy.matrix);
+            phonesInstanced.setMatrixAt(idx, dummy.matrix);
         });
         phonesInstanced.instanceMatrix.needsUpdate = true;
         stadiumGroup.add(phonesInstanced);
-        // ==================== КІНЕЦЬ ЧАСТИНИ 5 з 9 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 6 з 9 ====================
-        function createJerseyTexture(jersey) {
-            const c = document.createElement('canvas');
-            c.width = 512; c.height = 512;
-            const ctx = c.getContext('2d');
-            ctx.fillStyle = jersey.c1; ctx.fillRect(0, 0, 512, 512);
-            ctx.fillStyle = jersey.c2;
 
+        const poleMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.6, roughness: 0.4 });
+        const lampMat = new THREE.MeshBasicMaterial({ color: 0xf0f9ff });
+        const lightTowers = [
+            [-28, -36],
+            [28, -36],
+            [-28, 36]
+        ];
+        lightTowers.forEach(([px, pz]) => {
+            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 19, 10), poleMat);
+            pole.position.set(px, 9.5, pz);
+            const panel = new THREE.Mesh(new THREE.BoxGeometry(3.8, 1.8, 0.4), lampMat);
+            panel.position.set(px, 18.8, pz);
+            panel.lookAt(0, 0, 0);
+            stadiumGroup.add(pole, panel);
+        });
+        const ballMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(0.103, 24, 24),
+            new THREE.MeshStandardMaterial({ roughness: 0.4 })
+        );
+        ballMesh.position.set(0.34, 0.103, 0.24);
+        ballMesh.castShadow = true;
+        scene.add(ballMesh);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.enablePan = false;
+        controls.minDistance = 2.2;
+        controls.maxDistance = 5.2;
+        controls.maxPolarAngle = Math.PI / 2 - 0.02;
+        controls.target.set(-0.32, 0.95, 0);
+        controls.update();
+
+        function walkModel(obj, callback) {
+            if (!obj) return;
+            callback(obj);
+            if (Array.isArray(obj.children)) {
+                for (const child of [...obj.children]) walkModel(child, callback);
+            }
+        }
+
+        const leftGloveHolder = new THREE.Group();
+        const rightGloveHolder = new THREE.Group();
+        let leftHandBone = null;
+        let rightHandBone = null;
+        let leftForeArmBone = null;
+        let rightForeArmBone = null;
+        let glovesLoaded = false;
+        const gloveMaterials = [];
+
+        function makeBrightDetailTexture(sourceTex) {
+            if (!sourceTex || !sourceTex.image) return null;
+            try {
+                const img = sourceTex.image;
+                const w = img.width || 512;
+                const h = img.height || 512;
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+
+                const imgData = ctx.getImageData(0, 0, w, h);
+                const data = imgData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    const lum = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
+                    const boosted = Math.min(255, Math.round((0.55 + lum * 0.45) * 255));
+                    data[i] = boosted;
+                    data[i + 1] = boosted;
+                    data[i + 2] = boosted;
+                }
+                ctx.putImageData(imgData, 0, 0);
+
+                const cleanTex = new THREE.CanvasTexture(canvas);
+                cleanTex.flipY = sourceTex.flipY;
+                cleanTex.colorSpace = THREE.SRGBColorSpace;
+                cleanTex.needsUpdate = true;
+                return cleanTex;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function extractSingleGlove(gloveScene, pickLeft) {
+            gloveScene.updateMatrixWorld(true);
+            const fullBox = new THREE.Box3().setFromObject(gloveScene);
+            const midX = (fullBox.min.x + fullBox.max.x) * 0.5;
+            const isSingle = (fullBox.max.x - fullBox.min.x) < (fullBox.max.y - fullBox.min.y) * 1.1;
+
+            const meshGroup = new THREE.Group();
+
+            gloveScene.traverse((node) => {
+                if (!node.isMesh || !node.geometry) return;
+                const geo = node.geometry.clone();
+                geo.applyMatrix4(node.matrixWorld);
+
+                if (!isSingle && geo.index) {
+                    const pos = geo.attributes.position;
+                    const idx = geo.index.array;
+                    const filtered = [];
+                    for (let i = 0; i < idx.length; i += 3) {
+                        const cx = (pos.getX(idx[i]) + pos.getX(idx[i + 1]) + pos.getX(idx[i + 2])) / 3;
+                        if (pickLeft ? cx < midX : cx >= midX) {
+                            filtered.push(idx[i], idx[i + 1], idx[i + 2]);
+                        }
+                    }
+                    if (filtered.length === 0) return;
+                    geo.setIndex(filtered);
+                }
+
+                geo.computeBoundingBox();
+                const mats = Array.isArray(node.material) ? node.material : [node.material];
+                const clonedMats = mats.map((m) => {
+                    const detailMap = makeBrightDetailTexture(m.map);
+                    const c = new THREE.MeshStandardMaterial({
+                        map: detailMap,
+                        normalMap: m.normalMap || null,
+                        roughness: 0.55,
+                        metalness: 0.05,
+                        side: THREE.DoubleSide
+                    });
+                    gloveMaterials.push(c);
+                    return c;
+                });
+
+                const mesh = new THREE.Mesh(geo, clonedMats.length === 1 ? clonedMats.at(0) : clonedMats);
+                mesh.castShadow = true;
+                mesh.frustumCulled = false;
+                meshGroup.add(mesh);
+            });
+
+            const box = new THREE.Box3().setFromObject(meshGroup);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+
+            const cuffThresholdY = box.min.y + size.y * 0.15;
+            let minCuffX = Infinity, maxCuffX = -Infinity;
+            let minCuffZ = Infinity, maxCuffZ = -Infinity;
+            let foundCuff = false;
+
+            meshGroup.traverse((m) => {
+                if (!m.isMesh || !m.geometry) return;
+                const pos = m.geometry.attributes.position;
+                const idx = m.geometry.index;
+                if (idx) {
+                    for (let i = 0; i < idx.count; i++) {
+                        const vi = idx.getX(i);
+                        const y = pos.getY(vi);
+                        if (y <= cuffThresholdY) {
+                            const x = pos.getX(vi);
+                            const z = pos.getZ(vi);
+                            if (x < minCuffX) minCuffX = x;
+                            if (x > maxCuffX) maxCuffX = x;
+                            if (z < minCuffZ) minCuffZ = z;
+                            if (z > maxCuffZ) maxCuffZ = z;
+                            foundCuff = true;
+                        }
+                    }
+                }
+            });
+
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            const pivotX = foundCuff ? (minCuffX + maxCuffX) * 0.5 : center.x;
+            const pivotZ = foundCuff ? (minCuffZ + maxCuffZ) * 0.5 : center.z;
+
+            const maxDim = Math.max(size.x, size.y, size.z) || 1;
+            const norm = 1.0 / maxDim;
+
+            meshGroup.scale.setScalar(norm);
+            meshGroup.position.set(-pivotX * norm, -box.min.y * norm, -pivotZ * norm);
+
+            const unit = new THREE.Group();
+            unit.add(meshGroup);
+            unit.rotation.y = pickLeft ? Math.PI : 0;
+            return unit;
+        }
+        function attachToSleeveEnd(holder, foreArmBone, handBone) {
+            const armBone = foreArmBone || (handBone && handBone.parent);
+            if (!armBone) return;
+
+            const wristPos = handBone ? handBone.position.clone() : new THREE.Vector3(0, 24, 0);
+            const foreLen = wristPos.length() || 24;
+            const dir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
+
+            const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+            holder.quaternion.copy(q);
+
+            const gloveSize = foreLen * 2.2;
+            holder.scale.setScalar(gloveSize);
+            holder.position.copy(wristPos).addScaledVector(dir, -gloveSize * 0.25);
+            armBone.add(holder);
+        }
+
+        function mountGloveModel(gloveScene, gloveColorHex) {
+            gloveMaterials.length = 0;
+            const rightUnit = extractSingleGlove(gloveScene, false);
+            const leftUnit = extractSingleGlove(gloveScene, true);
+
+            rightGloveHolder.clear();
+            leftGloveHolder.clear();
+            rightGloveHolder.add(rightUnit);
+            leftGloveHolder.add(leftUnit);
+
+            attachToSleeveEnd(rightGloveHolder, rightForeArmBone, rightHandBone);
+            attachToSleeveEnd(leftGloveHolder, leftForeArmBone, leftHandBone);
+
+            const cleanColor = new THREE.Color(gloveColorHex);
+            gloveMaterials.forEach((m) => {
+                m.color.copy(cleanColor);
+                m.needsUpdate = true;
+            });
+
+            glovesLoaded = true;
+        }
+
+        function createJerseyTexture(jersey) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = jersey.c1;
+            ctx.fillRect(0, 0, 512, 512);
+
+            ctx.fillStyle = jersey.c2;
             if (jersey.pattern === 'stripes') {
                 for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512);
             } else if (jersey.pattern === 'hoops') {
@@ -789,22 +1040,28 @@
             } else if (jersey.pattern === 'chestBand') {
                 ctx.fillRect(0, 160, 512, 130);
             } else if (jersey.pattern === 'sash') {
-                ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512); ctx.closePath(); ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
+                ctx.closePath(); ctx.fill();
             } else if (jersey.pattern === 'sleeves') {
                 ctx.fillRect(203, 0, 22, 512);
                 ctx.fillRect(398, 0, 114, 512);
             }
 
-            const tex = new THREE.CanvasTexture(c);
+            const tex = new THREE.CanvasTexture(canvas);
             tex.flipY = false;
             tex.colorSpace = THREE.SRGBColorSpace;
+            tex.needsUpdate = true;
             return tex;
         }
 
         function createBackNumberTexture(num, numCol) {
-            const c = document.createElement('canvas');
-            c.width = 256; c.height = 256;
-            const ctx = c.getContext('2d');
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 256, 256);
+
             ctx.fillStyle = numCol;
             ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
             ctx.lineWidth = 10;
@@ -813,262 +1070,217 @@
             ctx.textBaseline = 'middle';
             ctx.strokeText(num, 128, 128);
             ctx.fillText(num, 128, 128);
-            const tex = new THREE.CanvasTexture(c);
+
+            const tex = new THREE.CanvasTexture(canvas);
             tex.colorSpace = THREE.SRGBColorSpace;
+            tex.needsUpdate = true;
             return tex;
         }
 
         function createBallTexture(c1, c2) {
-            const c = document.createElement('canvas');
-            c.width = 256; c.height = 128;
-            const ctx = c.getContext('2d');
-            ctx.fillStyle = c1; ctx.fillRect(0, 0, 256, 128);
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = c1;
+            ctx.fillRect(0, 0, 256, 128);
             ctx.fillStyle = c2;
             for (let x = 16; x < 256; x += 48) {
                 for (let y = 20; y < 128; y += 44) {
                     ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fill();
                 }
             }
-            const tex = new THREE.CanvasTexture(c);
+            const tex = new THREE.CanvasTexture(canvas);
             tex.colorSpace = THREE.SRGBColorSpace;
+            tex.needsUpdate = true;
             return tex;
         }
 
-        function buildHairMesh(hairItem) {
-            const g = new THREE.Group();
-            if (!hairItem || hairItem.style === 'bald') return g;
-            const mat = new THREE.MeshStandardMaterial({ color: hairItem.c1, roughness: 0.78 });
-            const cap = new THREE.Mesh(new THREE.SphereGeometry(10.8, 22, 16, 0, Math.PI * 2, 0, Math.PI * 0.56), mat);
-            cap.position.set(0, 8.2, -0.5);
-            g.add(cap);
-            if (hairItem.style === 'mohawk') {
-                const crest = new THREE.Mesh(new THREE.BoxGeometry(3.4, 6.2, 16.5), mat);
-                crest.position.set(0, 17.5, -0.5);
-                g.add(crest);
-            } else if (hairItem.style === 'afro') {
-                const puff = new THREE.Mesh(new THREE.SphereGeometry(13.6, 22, 18), mat);
-                puff.position.set(0, 11.5, -1.2);
-                g.add(puff);
-            } else if (hairItem.style === 'ponytail') {
-                const tail = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 1.3, 13, 12), mat);
-                tail.position.set(0, 8.5, -12.5);
-                tail.rotation.x = 0.55;
-                g.add(tail);
-            } else if (hairItem.style === 'fade') {
-                const top = new THREE.Mesh(new THREE.CylinderGeometry(9.6, 10.2, 4.2, 20), mat);
-                top.position.set(0, 16.2, -0.2);
-                g.add(top);
-            }
-            return g;
-        }
-        // ==================== КІНЕЦЬ ЧАСТИНИ 6 з 9 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 7 з 9 ====================
-        const playerContainer = new THREE.Group();
-        playerContainer.position.set(-0.62, 0, 0);
-        playerContainer.rotation.y = 0.35;
-        scene.add(playerContainer);
-
-        const ballId = localStorage.getItem('eq_balls') || 'ball1';
-        const ballItem = (CATALOG.balls || []).find(x => x.id === ballId) || (CATALOG.balls && CATALOG.balls.at(0)) || { c1: '#ffffff', c2: '#111827' };
-        const ballMesh = new THREE.Mesh(
-            new THREE.SphereGeometry(0.115, 28, 28),
-            new THREE.MeshStandardMaterial({ map: createBallTexture(ballItem.c1, ballItem.c2), roughness: 0.35 })
-        );
-        ballMesh.position.set(-0.22, 0.115, 0.25);
-        ballMesh.castShadow = true;
-        scene.add(ballMesh);
-
-        const ballShadow = new THREE.Mesh(
-            new THREE.CircleGeometry(0.18, 16),
-            new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.42 })
-        );
-        ballShadow.rotation.x = -Math.PI / 2;
-        ballShadow.position.set(-0.22, 0.005, 0.25);
-        scene.add(ballShadow);
-
-        let leftHandBone = null, rightHandBone = null;
-        let leftForeArmBone = null, rightForeArmBone = null;
-        let glovesLoaded = false;
-
-        function mountGlovePair(gloveScene, gloveColorHex) {
-            gloveScene.updateMatrixWorld(true);
-            const fullBox = new THREE.Box3().setFromObject(gloveScene);
-            const midX = (fullBox.min.x + fullBox.max.x) * 0.5;
-            const isSingle = (fullBox.max.x - fullBox.min.x) < (fullBox.max.y - fullBox.min.y) * 1.1;
-
-            function buildHalf(pickLeft) {
-                const grp = new THREE.Group();
-                gloveScene.traverse((node) => {
-                    if (!node.isMesh || !node.geometry) return;
-                    const geo = node.geometry.clone();
-                    geo.applyMatrix4(node.matrixWorld);
-                    if (!isSingle && geo.index) {
-                        const pos = geo.attributes.position;
-                        const idx = geo.index.array;
-                        const filtered = [];
-                        for (let i = 0; i < idx.length; i += 3) {
-                            const cx = (pos.getX(idx.at(i)) + pos.getX(idx.at(i + 1)) + pos.getX(idx.at(i + 2))) / 3;
-                            if (pickLeft ? cx < midX : cx >= midX) {
-                                filtered.push(idx.at(i), idx.at(i + 1), idx.at(i + 2));
-                            }
-                        }
-                        if (!filtered.length) return;
-                        geo.setIndex(filtered);
-                    }
-                    const mat = new THREE.MeshStandardMaterial({
-                        color: gloveColorHex,
-                        roughness: 0.45,
-                        side: THREE.DoubleSide
-                    });
-                    const m = new THREE.Mesh(geo, mat);
-                    m.castShadow = true;
-                    grp.add(m);
-                });
-
-                const box = new THREE.Box3().setFromObject(grp);
-                const size = new THREE.Vector3(); box.getSize(size);
-                const center = new THREE.Vector3(); box.getCenter(center);
-                const norm = 1.0 / (Math.max(size.x, size.y, size.z) || 1);
-                grp.scale.setScalar(norm);
-                grp.position.set(-center.x * norm, -box.min.y * norm, -center.z * norm);
-
-                const u = new THREE.Group();
-                u.add(grp);
-                u.rotation.y = pickLeft ? Math.PI : 0;
-                return u;
-            }
-
-            function attachToArm(unit, foreArm, hand) {
-                const arm = foreArm || (hand && hand.parent);
-                if (!arm) return;
-                const wristPos = hand ? hand.position.clone() : new THREE.Vector3(0, 24, 0);
-                const len = wristPos.length() || 24;
-                const dir = wristPos.length() > 0.001 ? wristPos.clone().normalize() : new THREE.Vector3(0, 1, 0);
-
-                const holder = new THREE.Group();
-                holder.add(unit);
-                holder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-
-                const sz = len * 2.25;
-                holder.scale.setScalar(sz);
-                holder.position.copy(wristPos).addScaledVector(dir, -sz * 0.04);
-                arm.add(holder);
-            }
-
-            attachToArm(buildHalf(false), rightForeArmBone, rightHandBone);
-            attachToArm(buildHalf(true), leftForeArmBone, leftHandBone);
-            glovesLoaded = true;
-        }
-        // ==================== КІНЕЦЬ ЧАСТИНИ 7 з 9 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 8 з 9 ====================
         const dracoLoader = new DRACOLoader();
         dracoLoader.setDecoderPath('./libs/');
         const loader = new GLTFLoader();
         loader.setDRACOLoader(dracoLoader);
 
-        let mixer = null;
+        let mixer;
+        const skeletonBones = {};
+        const baseBoneRot = {};
+        let idleTimer = 0;
+        let jugBlend = 0;
+        let jugPhase = 0;
 
-        loader.load('player.glb?v=home1', (gltf) => {
-            const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
+        const resetIdle = () => { idleTimer = 0; };
+        window.addEventListener('pointerdown', resetIdle);
+        window.addEventListener('pointermove', resetIdle);
+        window.addEventListener('wheel', resetIdle);
+
+        function hideLoader() {
+            const loaderScreen = document.getElementById('loader-screen');
+            if (loaderScreen && loaderScreen.style.display !== 'none') {
+                loaderScreen.style.opacity = '0';
+                setTimeout(() => { loaderScreen.style.display = 'none'; }, 400);
+            }
+        }
+        setTimeout(hideLoader, 2500);
+        loader.load('player.glb', (gltf) => {
+            const playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
+            if (!playerModel) {
+                hideLoader();
+                return;
+            }
+
             const jId = localStorage.getItem('eq_jerseys') || 'j1';
             const sId = localStorage.getItem('eq_shorts') || 's1';
             const bId = localStorage.getItem('eq_boots') || 'b1';
             const gId = localStorage.getItem('eq_gloves') || 'g1';
-            const hId = localStorage.getItem('eq_hair') || 'h1';
+            const ballId = localStorage.getItem('eq_balls') || 'ball1';
             const num = localStorage.getItem('eq_number') || '10';
             const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
 
-            const jersey = (CATALOG.jerseys || []).find(x => x.id === jId) || (CATALOG.jerseys && CATALOG.jerseys.at(0)) || { c1: '#ffffff', c2: '#0284c7', pattern: 'solid' };
-            const shortItem = (CATALOG.shorts || []).find(x => x.id === sId) || (CATALOG.shorts && CATALOG.shorts.at(0)) || { c1: '#0f172a' };
-            const bootItem = (CATALOG.boots || []).find(x => x.id === bId) || (CATALOG.boots && CATALOG.boots.at(0)) || { c1: '#38bdf8' };
-            const gloveItem = (CATALOG.gloves || []).find(x => x.id === gId) || (CATALOG.gloves && CATALOG.gloves.at(0)) || { c1: '#22c55e' };
-            const hairItem = (CATALOG.hair || []).find(x => x.id === hId) || (CATALOG.hair && CATALOG.hair.at(0)) || { style: 'bald', c1: '#1c1917' };
+            const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
+            const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
+            const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
+            const gloveItem = CATALOG.gloves.find(x => x.id === gId) || CATALOG.gloves.at(0);
+            const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
+
+            ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
+            ballMesh.material.needsUpdate = true;
 
             const jerseyTex = createJerseyTexture(jersey);
-            let spineBone = null, headBone = null;
+            let spineBone = null;
 
-            model.traverse((child) => {
-                if (child.isBone) {
+            walkModel(playerModel, (child) => {
+                if (child.isBone && child.name) {
                     const n = child.name.toLowerCase();
-                    if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) spineBone = child;
-                    if (n.includes('head') && !n.includes('top') && !n.includes('end')) headBone = child;
+                    skeletonBones[n] = child;
+                    baseBoneRot[n] = child.rotation.clone();
+
                     if (n.includes('forearm') && n.includes('left')) leftForeArmBone = child;
                     if (n.includes('forearm') && n.includes('right')) rightForeArmBone = child;
-                    if (n.includes('hand') && n.includes('left') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) leftHandBone = child;
-                    if (n.includes('hand') && n.includes('right') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) rightHandBone = child;
+
+                    if (n.includes('hand') && n.includes('left') && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
+                        leftHandBone = child;
+                    }
+                    if (n.includes('hand') && n.includes('right') && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
+                        rightHandBone = child;
+                    }
+
+                    if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) {
+                        spineBone = child;
+                    }
                 }
+
                 if (!child.isMesh || !child.material) return;
                 child.castShadow = true;
-                const name = child.name.toLowerCase();
+                child.receiveShadow = true;
+                const name = (child.name || '').toLowerCase();
+
                 if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
                     child.material = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.7 });
                 } else if (name.includes('short') || name.includes('pant')) {
                     child.material = new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.75 });
                 } else if (name.includes('shoe') || name.includes('boot')) {
                     child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
+                } else if (Array.isArray(child.material)) {
+                    child.material = child.material.map((m, idx) => {
+                        const mName = (m.name || '').toLowerCase();
+                        if (mName.includes('shirt') || mName.includes('top') || idx === 1) {
+                            return new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.7 });
+                        }
+                        if (mName.includes('short') || idx === 2) {
+                            return new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.75 });
+                        }
+                        if (mName.includes('shoe') || mName.includes('boot') || idx === 3) {
+                            return new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
+                        }
+                        return m;
+                    });
                 }
             });
 
-            const numMesh = new THREE.Mesh(
-                new THREE.PlaneGeometry(30, 30),
-                new THREE.MeshBasicMaterial({ map: createBackNumberTexture(num, numCol), transparent: true, side: THREE.DoubleSide, depthWrite: false })
-            );
-            if (spineBone) {
-                numMesh.position.set(0, 2.0, -13.2);
-                numMesh.rotation.set(0.08, Math.PI, 0);
-                spineBone.add(numMesh);
-            }
-            if (headBone) headBone.add(buildHairMesh(hairItem));
-
-            playerContainer.add(model);
-
-            loader.load('./glove.glb?v=2', (gGltf) => {
-                const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
-                if (gs) mountGlovePair(gs, gloveItem.c1);
+            const backNumberMat = new THREE.MeshBasicMaterial({
+                map: createBackNumberTexture(num, numCol),
+                transparent: true,
+                side: THREE.DoubleSide,
+                polygonOffset: true,
+                polygonOffsetFactor: -4
             });
+            const backNumberMesh = new THREE.Mesh(new THREE.PlaneGeometry(34, 34), backNumberMat);
 
-            if (gltf.animations && gltf.animations.length > 0) {
-                mixer = new THREE.AnimationMixer(model);
-                mixer.clipAction(gltf.animations.at(0)).play();
+            if (spineBone) {
+                backNumberMesh.position.set(0, 1.5, -11.3);
+                backNumberMesh.rotation.set(0, Math.PI, 0);
+                spineBone.add(backNumberMesh);
+            } else {
+                backNumberMesh.scale.set(0.01, 0.01, 0.01);
+                backNumberMesh.position.set(0, 1.21, -0.113);
+                backNumberMesh.rotation.y = Math.PI;
+                playerModel.add(backNumberMesh);
             }
 
-            const loaderEl = document.getElementById('loader-screen');
-            loaderEl.style.opacity = '0';
-            setTimeout(() => { loaderEl.style.display = 'none'; }, 400);
+            scene.add(playerModel);
+            loader.load(
+                './glove.glb?v=3',
+                (gloveGltf) => {
+                    try {
+                        const gScene = gloveGltf.scene || (gloveGltf.scenes && gloveGltf.scenes.at(0));
+                        if (gScene) mountGloveModel(gScene, gloveItem.c1);
+                    } catch (e) {
+                        console.error('Помилка рукавиць:', e);
+                    }
+                },
+                undefined,
+                (err) => console.error('Помилка завантаження glove.glb:', err)
+            );
+
+            const firstAnim = gltf.animations && gltf.animations.at(0);
+            if (firstAnim) {
+                mixer = new THREE.AnimationMixer(playerModel);
+                mixer.clipAction(firstAnim).play();
+            }
+
+            hideLoader();
+        }, undefined, (err) => {
+            console.error('Помилка завантаження player.glb:', err);
+            hideLoader();
         });
 
+        document.getElementById('start-btn').addEventListener('click', () => {
+            window.location.href = 'game.html';
+        });
+
+        const settingsModal = document.getElementById('settings-modal');
         const quickSoundBtn = document.getElementById('quick-sound-btn');
-        const toggleCrowdBtn = document.getElementById('toggle-crowd-sound');
+        const toggleSoundBtn = document.getElementById('toggle-crowd-sound');
         const volSlider = document.getElementById('stadium-vol');
         const volLabel = document.getElementById('vol-label');
         const toggleShadowsBtn = document.getElementById('toggle-shadows');
-        const settingsModal = document.getElementById('settings-modal');
 
-        function syncAudioUI() {
-            const on = stadiumAudio.enabled;
-            quickSoundBtn.textContent = on ? '🔊' : '🔇';
-            toggleCrowdBtn.textContent = on ? '🔊 Спів та гул трибун: УВІМК' : '🔇 Спів та гул трибун: ВИМК';
-            toggleCrowdBtn.classList.toggle('active', on);
-            const pct = Math.round(stadiumAudio.volume * 100);
-            volSlider.value = pct;
-            volLabel.textContent = `${pct}%`;
+        function syncSoundUI(isOn) {
+            quickSoundBtn.textContent = isOn ? '🔊' : '🔇';
+            toggleSoundBtn.textContent = isOn ? '🔊 Спів та гул трибун: УВІМК' : '🔇 Спів та гул трибун: ВИМК';
+            toggleSoundBtn.classList.toggle('active', isOn);
         }
-        syncAudioUI();
+        syncSoundUI(stadiumAudio.enabled);
+        volSlider.value = Math.round(stadiumAudio.volume * 100);
+        volLabel.textContent = `${volSlider.value}%`;
 
-        quickSoundBtn.addEventListener('click', () => { stadiumAudio.toggle(); syncAudioUI(); });
-        toggleCrowdBtn.addEventListener('click', () => { stadiumAudio.toggle(); syncAudioUI(); });
+        quickSoundBtn.addEventListener('click', () => syncSoundUI(stadiumAudio.toggle()));
+        toggleSoundBtn.addEventListener('click', () => syncSoundUI(stadiumAudio.toggle()));
         volSlider.addEventListener('input', (e) => {
-            stadiumAudio.setVolume(Number(e.target.value) / 100);
-            volLabel.textContent = `${e.target.value}%`;
+            const val = Number(e.target.value);
+            volLabel.textContent = `${val}%`;
+            stadiumAudio.setVolume(val / 100);
         });
 
-        let highQuality = true;
+        let highGraphics = true;
         toggleShadowsBtn.addEventListener('click', () => {
-            highQuality = !highQuality;
-            renderer.shadowMap.enabled = highQuality;
-            keyLight.castShadow = highQuality;
-            toggleShadowsBtn.textContent = highQuality ? '✨ Тіні та деталізація: ВИСОКА' : '⚡ Тіні та деталізація: ШВИДКА';
-            toggleShadowsBtn.classList.toggle('active', highQuality);
+            highGraphics = !highGraphics;
+            renderer.shadowMap.enabled = highGraphics;
+            [torsosInstanced, headsInstanced, hairsInstanced, leftArmsInstanced, rightArmsInstanced, scarfsInstanced, phonesInstanced].forEach(m => {
+                m.visible = highGraphics;
+            });
+            toggleShadowsBtn.textContent = highGraphics ? '✨ Тіні та деталізація: ВИСОКА' : '⚡ Тіні та деталізація: НИЗЬКА';
+            toggleShadowsBtn.classList.toggle('active', highGraphics);
         });
 
         document.getElementById('settings-btn').addEventListener('click', () => settingsModal.classList.add('open'));
@@ -1077,27 +1289,200 @@
             if (e.target === settingsModal) settingsModal.classList.remove('open');
         });
 
-        document.getElementById('start-btn').addEventListener('click', () => {
-            stadiumAudio.init();
-            window.location.href = 'arena.html';
-        });
-
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-        // ==================== КІНЕЦЬ ЧАСТИНИ 8 з 9 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 9 з 9 ====================
         let lastTime = performance.now();
+        const worldAxisX = new THREE.Vector3(1, 0, 0);
+        const worldAxisY = new THREE.Vector3(0, 1, 0);
+        const worldAxisZ = new THREE.Vector3(0, 0, 1);
+        const startBouncePos = new THREE.Vector3(0.34, 0.103, 0.24);
+        const targetBouncePos = new THREE.Vector3();
+        let lastStepIndex = -1;
+
+        let playerAction = 'idle';
+        let actionTimer = 0;
+        let waveBlend = 0;
+
+        function rotateBoneWorldAxis(bone, worldAxis, angleRad) {
+            if (!bone || !bone.parent) return;
+            const parentWorldQuat = new THREE.Quaternion();
+            bone.parent.getWorldQuaternion(parentWorldQuat);
+            const localAxis = worldAxis.clone().applyQuaternion(parentWorldQuat.invert()).normalize();
+            const q = new THREE.Quaternion().setFromAxisAngle(localAxis, angleRad);
+            bone.quaternion.premultiply(q);
+        }
+
+        function playerModelUpdateMatrix(rFoot, lFoot) {
+            if (rFoot && rFoot.parent && rFoot.parent.parent) {
+                rFoot.parent.parent.updateMatrixWorld(true);
+            }
+            if (lFoot && lFoot.parent && lFoot.parent.parent) {
+                lFoot.parent.parent.updateMatrixWorld(true);
+            }
+        }
+
+        function getFootStrikePos(toeBone, footBone, isRight) {
+            const pos = new THREE.Vector3();
+            const bone = toeBone || footBone;
+            if (bone) {
+                bone.getWorldPosition(pos);
+                pos.y += 0.105;
+                pos.z += toeBone ? 0.03 : 0.14;
+            } else {
+                pos.set(isRight ? -0.14 : 0.14, 0.38, 0.42);
+            }
+            return pos;
+        }
+
         function animate(now) {
             requestAnimationFrame(animate);
             const dt = (now - lastTime) * 0.001;
-            const t = now * 0.001;
             lastTime = now;
+            const t = now * 0.001;
 
             if (mixer) mixer.update(dt);
 
+            if (idleTimer < 0.05 && playerAction !== 'idle') {
+                playerAction = 'idle';
+                actionTimer = 0;
+            }
+
+            if (playerAction === 'idle') {
+                idleTimer += dt;
+                if (idleTimer >= 10.0) {
+                    playerAction = 'juggling';
+                    actionTimer = 0;
+                    jugPhase = 0;
+                    lastStepIndex = -1;
+                }
+            } else if (playerAction === 'juggling') {
+                actionTimer += dt;
+                if (actionTimer >= 6.0) {
+                    playerAction = 'waving';
+                    actionTimer = 0;
+                }
+            } else if (playerAction === 'waving') {
+                actionTimer += dt;
+                if (actionTimer >= 5.0) {
+                    playerAction = 'idle';
+                    actionTimer = 0;
+                    idleTimer = 0;
+                }
+            }
+
+            const targetJug = playerAction === 'juggling' ? 1.0 : 0.0;
+            const targetWave = playerAction === 'waving' ? 1.0 : 0.0;
+            jugBlend += (targetJug - jugBlend) * Math.min(1, dt * 3.2);
+            waveBlend += (targetWave - waveBlend) * Math.min(1, dt * 3.8);
+
+            const getBone = (part, exclude = '') => {
+                const key = Object.keys(skeletonBones).find(k => k.includes(part) && (!exclude || !k.includes(exclude)));
+                return key ? skeletonBones[key] : null;
+            };
+
+            const rUpLeg = getBone('rightupleg');
+            const rLeg = getBone('rightleg');
+            const rFoot = getBone('rightfoot');
+            const rToe = getBone('righttoebase') || getBone('righttoe');
+
+            const lUpLeg = getBone('leftupleg');
+            const lLeg = getBone('leftleg');
+            const lFoot = getBone('leftfoot');
+            const lToe = getBone('lefttoebase') || getBone('lefttoe');
+
+            const spine = getBone('spine');
+            const head = getBone('head');
+            const rArm = getBone('rightarm');
+            const rForeArm = getBone('rightforearm');
+            const lArm = getBone('leftarm');
+
+            if (jugBlend > 0.005) {
+                jugPhase += dt * 3.4;
+                const stepIndex = Math.floor(jugPhase / Math.PI);
+                const localT = (jugPhase % Math.PI) / Math.PI;
+                const isRightTarget = stepIndex % 2 === 0;
+
+                const dropProgress = Math.min(1, localT / 0.45);
+                const dropCurve = Math.cos(dropProgress * Math.PI * 0.5);
+
+                const riseProgress = Math.max(0, (localT - 0.55) / 0.45);
+                const riseCurve = Math.sin(riseProgress * Math.PI * 0.5);
+
+                const prevLegLift = stepIndex === 0 ? 0 : dropCurve;
+
+                const rLift = isRightTarget ? riseCurve : prevLegLift;
+                const lLift = !isRightTarget ? riseCurve : prevLegLift;
+
+                if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisX, -rLift * 0.78 * jugBlend);
+                if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rLift * 0.98 * jugBlend);
+                if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, -rLift * 0.22 * jugBlend);
+
+                if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisX, -lLift * 0.78 * jugBlend);
+                if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lLift * 0.98 * jugBlend);
+                if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, -lLift * 0.22 * jugBlend);
+
+                const balanceWave = isRightTarget ? -riseCurve : riseCurve;
+                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + balanceWave * 0.05 * jugBlend;
+                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.16 * jugBlend;
+                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.16 * jugBlend;
+
+                playerModelUpdateMatrix(rFoot, lFoot);
+
+                const currentTargetPos = isRightTarget
+                    ? getFootStrikePos(rToe, rFoot, true)
+                    : getFootStrikePos(lToe, lFoot, false);
+
+                if (stepIndex !== lastStepIndex) {
+                    if (lastStepIndex === -1) {
+                        startBouncePos.copy(ballMesh.position);
+                    } else {
+                        startBouncePos.copy(targetBouncePos);
+                    }
+                    lastStepIndex = stepIndex;
+                }
+                targetBouncePos.copy(currentTargetPos);
+
+                const arcWave = Math.sin(localT * Math.PI);
+                const jugPos = new THREE.Vector3().lerpVectors(startBouncePos, targetBouncePos, localT);
+                jugPos.y += arcWave * 0.66;
+                jugPos.z = Math.max(jugPos.z, 0.38) + arcWave * 0.14;
+
+                const restPos = new THREE.Vector3(0.34, 0.103, 0.24);
+                ballMesh.position.lerpVectors(restPos, jugPos, jugBlend);
+
+                ballMesh.rotation.x -= dt * 3.8 * jugBlend;
+                ballMesh.rotation.z += (isRightTarget ? -1 : 1) * dt * 1.4 * jugBlend;
+            } else {
+                lastStepIndex = -1;
+                jugPhase = 0;
+                ballMesh.position.lerp(new THREE.Vector3(0.34, 0.103, 0.24), Math.min(1, dt * 5));
+                ballMesh.rotation.y += 0.01;
+            }
+
+            if (waveBlend > 0.005) {
+                const outwardSwing = (1 - Math.cos(actionTimer * 7.5)) * 0.5;
+                if (rArm) {
+                    rotateBoneWorldAxis(rArm, worldAxisZ, -(1.92 - outwardSwing * 0.18) * waveBlend);
+                    rotateBoneWorldAxis(rArm, worldAxisX, -0.18 * waveBlend);
+                }
+                if (rForeArm) {
+                    rotateBoneWorldAxis(rForeArm, worldAxisZ, -(0.10 + outwardSwing * 0.52) * waveBlend);
+                    rotateBoneWorldAxis(rForeArm, worldAxisY, -1.55 * waveBlend);
+                }
+                if (spine) {
+                    rotateBoneWorldAxis(spine, worldAxisZ, 0.06 * waveBlend);
+                }
+                if (head) {
+                    rotateBoneWorldAxis(head, worldAxisX, -0.07 * waveBlend);
+                }
+            }
+
+            if (rightGloveHolder.children.length > 0) {
+                rightGloveHolder.children[0].rotation.y = 0.65 * waveBlend;
+            }
             if (glovesLoaded) {
                 if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
                 if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
@@ -1251,7 +1636,6 @@
             xhr.open('PATCH', `${FIREBASE_DB_URL}/players.json`, true);
             xhr.send(JSON.stringify(payload));
         })();
-        // ==================== КІНЕЦЬ ЧАСТИНИ 9 з 9 ====================
     </script>
 </body>
 </html>
