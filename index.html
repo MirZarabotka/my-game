@@ -1333,9 +1333,9 @@
         let actionTimer = 0;
         let waveBlend = 0;
 
-        const T_FLICK_UP = 0.58;     // Носочок лівої бутси підкидає м'яч вгору під перший удар лівою
-        const JUG_SPEED = 2.6;       // Збільшений, комфортний час набивання (~6.0 с на 5 ударів)
-        const JUG_BEATS = 5;         // 5 ударів: ліва -> права -> ліва -> права -> ліва (фініш на лівій!)
+        const JUG_SPEED = 2.6;
+        const T_FLICK_UP = Math.PI / JUG_SPEED; // ~1.21 с — швидкість підкидання точно така ж, як при набиванні
+        const JUG_BEATS = 5;                    // 5 ударів: ліва -> права -> ліва -> права -> ліва (фініш на лівій!)
         const T_JUG_END = T_FLICK_UP + (JUG_BEATS * Math.PI) / JUG_SPEED;
         const T_ROLL_END = T_JUG_END + 1.05;
 
@@ -1441,7 +1441,7 @@
                 let spineZ = 0;
 
                 if (actionTimer < T_FLICK_UP) {
-                    // Носочок ЛІВОЇ бутси заходить під м'яч і підкидає його вгору під 1-й удар лівою ногою
+                    // Носочок лівої бутси піддіває м'яч з тією ж швидкістю і висотою, що й при набиванні
                     const p = actionTimer / T_FLICK_UP;
                     const lift = Math.sin(p * Math.PI);
                     lUpX = -0.44 * lift;
@@ -1457,9 +1457,9 @@
                     playerModelUpdateMatrix(rFoot, lFoot);
 
                     const firstLeftTarget = getFootStrikePos(lToe, lFoot, false);
-                    ballMesh.position.lerpVectors(REST_BALL_POS, firstLeftTarget, smooth01(p));
-                    ballMesh.position.y += lift * 0.54;
-                    ballMesh.rotation.x -= dt * 4.5;
+                    ballMesh.position.lerpVectors(REST_BALL_POS, firstLeftTarget, p);
+                    ballMesh.position.y += lift * 0.64;
+                    ballMesh.rotation.x -= dt * 3.8;
                     lastStepIndex = -1;
                 }
                 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 15 ====================
