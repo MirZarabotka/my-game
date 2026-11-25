@@ -60,7 +60,7 @@
             box-shadow: 0 6px 18px rgba(0,0,0,0.45);
         }
 /* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 16 ==================== */
-/*-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 16 ==================== */
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 16 ==================== -->
         .status-banner {
             position: absolute; top: 72px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px);
@@ -84,20 +84,15 @@
             text-align: center; white-space: nowrap;
         }
 
-        #gk-gloves-hud {
+        #goal-frame-overlay {
             position: absolute; inset: 0; pointer-events: none;
-            display: none; justify-content: space-between; align-items: flex-end;
-            padding: 0 14vw 9vh;
+            display: none;
+            border-top: 10px solid rgba(255, 255, 255, 0.88);
+            border-left: 10px solid rgba(255, 255, 255, 0.88);
+            border-right: 10px solid rgba(255, 255, 255, 0.88);
+            box-shadow: inset 0 0 45px rgba(0, 0, 0, 0.45);
         }
-        #gk-gloves-hud.active { display: flex; }
-        .hud-glove {
-            font-size: clamp(3.4rem, 11vw, 5.2rem);
-            filter: drop-shadow(0 10px 18px rgba(0,0,0,0.65));
-            transition: transform 0.14s ease-out;
-            opacity: 0.88;
-        }
-        .hud-glove.left { transform: rotate(-18deg); }
-        .hud-glove.right { transform: scaleX(-1) rotate(-18deg); }
+        #goal-frame-overlay.active { display: block; }
 
         #match-modal {
             position: absolute; inset: 0;
@@ -152,10 +147,7 @@
     <div id="canvas-container"></div>
     <canvas id="aim-canvas"></canvas>
 
-    <div id="gk-gloves-hud">
-        <div class="hud-glove left" id="hud-glove-l">🧤</div>
-        <div class="hud-glove right" id="hud-glove-r">🧤</div>
-    </div>
+    <div id="goal-frame-overlay"></div>
 
     <div class="ui-layer">
         <div class="top-bar">
@@ -218,9 +210,7 @@
         const botDotsEl = document.getElementById('bot-dots');
         const bannerEl = document.getElementById('status-banner');
         const hintEl = document.getElementById('bottom-hint');
-        const gkHudEl = document.getElementById('gk-gloves-hud');
-        const hudGloveL = document.getElementById('hud-glove-l');
-        const hudGloveR = document.getElementById('hud-glove-r');
+        const goalFrameEl = document.getElementById('goal-frame-overlay');
         const matchModalEl = document.getElementById('match-modal');
 
         coinsEl.textContent = `💰 ${coins}`;
@@ -889,6 +879,44 @@
         let playerJerseyTex = null;
         let playerShortCol = '#ffffff';
 
+        const fpGlovesGroup = new THREE.Group();
+        fpGlovesGroup.visible = false;
+        scene.add(fpGlovesGroup);
+        let fpLeftGlove = null;
+        let fpRightGlove = null;
+
+        function buildFirstPersonGloves(gloveScene, colorHex) {
+            fpGlovesGroup.clear();
+            const createSingle = (isLeft) => {
+                const clone = gloveScene.clone(true);
+                clone.traverse((n) => {
+                    if (n.isMesh) {
+                        n.material = new THREE.MeshStandardMaterial({
+                            color: colorHex,
+                            roughness: 0.38,
+                            metalness: 0.08
+                        });
+                    }
+                });
+                const box = new THREE.Box3().setFromObject(clone);
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                clone.scale.setScalar(0.32 / maxDim);
+                if (isLeft) clone.scale.x *= -1;
+                return clone;
+            };
+
+            fpLeftGlove = createSingle(true);
+            fpRightGlove = createSingle(false);
+            fpLeftGlove.position.set(-0.24, -0.18, -0.58);
+            fpRightGlove.position.set(0.24, -0.18, -0.58);
+            fpLeftGlove.rotation.set(0.35, 0.25, -0.2);
+            fpRightGlove.rotation.set(0.35, -0.25, 0.2);
+
+            fpGlovesGroup.add(fpLeftGlove, fpRightGlove);
+        }
+
         function applyStrikerKit(isBot) {
             if (!strikerShirtMat || !strikerShortMat) return;
             if (isBot) {
@@ -987,7 +1015,10 @@
 
                 loader.load('./glove.glb?v=3', (gGltf) => {
                     const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
-                    if (gs) mountGKGloves(gs, gloveItem.c1);
+                    if (gs) {
+                        mountGKGloves(gs, gloveItem.c1);
+                        buildFirstPersonGloves(gs, gloveItem.c1);
+                    }
                 });
             }
         }
@@ -1105,7 +1136,7 @@
             const roll = Math.random();
             let bx = 0;
             let by = 1.1;
-            let bPower = 0.92 + Math.random() * 0.34;
+            let bPower = 0.85 + Math.random() * 0.25;
 
             if (roll < 0.08) {
                 bx = (Math.random() < 0.5 ? -1 : 1) * (GOAL_W * 0.5 + 0.25 + Math.random() * 0.45);
@@ -1125,14 +1156,16 @@
             arenaAudio.playKick();
             shotState = 'flying';
             shotProgress = 0;
-            shotDuration = THREE.MathUtils.clamp(0.72 - shotPower * 0.22, 0.36, 0.74);
             shotStart.set(0, BALL_R, SPOT_Z);
             shotArcY = 0.18 + (1 - Math.min(1, shotTarget.y / GOAL_H)) * 0.34;
 
             if (series.turnMode === 'defend') {
+                shotDuration = THREE.MathUtils.clamp(1.42 - shotPower * 0.20, 1.15, 1.38);
                 setBanner('🧤 СВАЙПНИ У БІК М\'ЯЧА!', 'defend');
                 return;
             }
+
+            shotDuration = THREE.MathUtils.clamp(0.72 - shotPower * 0.22, 0.36, 0.74);
 
             const isCenterShot = Math.abs(shotTarget.x) < 0.75 && shotTarget.y <= GOAL_H;
             if (isCenterShot && Math.random() < 0.65) {
@@ -1474,7 +1507,8 @@
 
         function finishMatch(winner) {
             series.over = true;
-            gkHudEl.classList.remove('active');
+            fpGlovesGroup.visible = false;
+            if (goalFrameEl) goalFrameEl.classList.remove('active');
 
             const titleEl = document.getElementById('modal-title');
             const scoreEl = document.getElementById('modal-score');
@@ -1520,19 +1554,18 @@
             playerGK.jumped = false;
             playerGK.jumpTime = 0;
             playerGK.x = 0;
-            playerGK.y = 1.58;
+            playerGK.y = 1.48;
             playerGK.roll = 0;
             playerGK.targetX = 0;
-            playerGK.peakY = 1.58;
+            playerGK.peakY = 1.48;
             playerGK.targetRoll = 0;
 
             const isDefend = series.turnMode === 'defend';
             applyStrikerKit(isDefend);
 
             gkContainer.visible = !isDefend;
-            gkHudEl.classList.toggle('active', isDefend);
-            hudGloveL.style.transform = 'rotate(-18deg)';
-            hudGloveR.style.transform = 'scaleX(-1) rotate(-18deg)';
+            fpGlovesGroup.visible = isDefend;
+            if (goalFrameEl) goalFrameEl.classList.toggle('active', isDefend);
 
             if (!isDefend) {
                 camera.position.copy(attackCamPos);
@@ -1546,7 +1579,7 @@
                 camera.rotation.set(0, 0, 0);
                 camera.lookAt(defendLookAt);
                 setBanner('🧤 ЗАХИСТ ВОРІТ! Приготуйся ловити...', 'defend');
-                hintEl.textContent = '🧤 Коли бот розбіжиться — різко свайпни в бік м\'яча для стрибка!';
+                hintEl.textContent = '🧤 Коли бот розбіжиться — свайпни в бік м\'яча для стрибка!';
                 setTimeout(triggerBotShot, 1150);
             }
         }
@@ -1759,30 +1792,33 @@
             if (series.turnMode !== 'defend') return;
 
             if (!playerGK.jumped) {
-                const sway = Math.sin(now * 0.004) * 0.06;
-                const bob = Math.abs(Math.sin(now * 0.008)) * 0.035;
+                const sway = Math.sin(now * 0.004) * 0.05;
+                const bob = Math.abs(Math.sin(now * 0.008)) * 0.025;
                 playerGK.x = sway;
-                playerGK.y = 1.58 - bob;
-                playerGK.roll = sway * 0.18;
+                playerGK.y = 1.48 - bob;
+                playerGK.roll = sway * 0.12;
             } else {
                 playerGK.jumpTime += dt;
-                const t = Math.min(1, playerGK.jumpTime / 0.42);
+                const t = Math.min(1, playerGK.jumpTime / 0.45);
                 const ease = 1 - Math.pow(1 - t, 2.2);
 
                 playerGK.x = THREE.MathUtils.lerp(0, playerGK.targetX, ease);
-                const arc = Math.sin(Math.min(1, playerGK.jumpTime / 0.85) * Math.PI);
-                playerGK.y = THREE.MathUtils.lerp(1.58, playerGK.peakY, arc);
+                const arc = Math.sin(Math.min(1, playerGK.jumpTime / 0.95) * Math.PI);
+                playerGK.y = THREE.MathUtils.lerp(1.48, playerGK.peakY, arc);
                 playerGK.roll = THREE.MathUtils.lerp(0, playerGK.targetRoll, ease);
-
-                const shiftX = (playerGK.x / 3.5) * 42;
-                const shiftY = -(playerGK.y - 1.58) * 55;
-                hudGloveL.style.transform = `translate(${shiftX}px, ${shiftY}px) rotate(-12deg) scale(1.12)`;
-                hudGloveR.style.transform = `translate(${shiftX}px, ${shiftY}px) scaleX(-1) rotate(-12deg) scale(1.12)`;
             }
 
-            camera.position.set(playerGK.x, playerGK.y, GOAL_Z + 0.35);
-            camera.lookAt(playerGK.x * 0.35, 0.85, SPOT_Z);
+            camera.position.set(playerGK.x, playerGK.y, GOAL_Z + 0.15);
+            camera.lookAt(playerGK.x * 0.35, 0.92, SPOT_Z);
             camera.rotation.z += playerGK.roll;
+
+            fpGlovesGroup.position.copy(camera.position);
+            fpGlovesGroup.quaternion.copy(camera.quaternion);
+            if (fpLeftGlove && fpRightGlove) {
+                const reach = playerGK.jumped ? Math.min(1, playerGK.jumpTime / 0.3) : 0;
+                fpLeftGlove.position.set(-0.22 + reach * 0.06, -0.17 + reach * 0.12, -0.54 - reach * 0.14);
+                fpRightGlove.position.set(0.22 - reach * 0.06, -0.17 + reach * 0.12, -0.54 - reach * 0.14);
+            }
         }
 
         window.addEventListener('resize', () => {
@@ -1906,4 +1942,4 @@
     </script>
 </body>
 </html>
-// ==================== КІНЕЦЬ ЧАСТИНИ 16 з 16 ====================
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 16 з 16 ==================== -->
