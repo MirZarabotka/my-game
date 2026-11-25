@@ -895,13 +895,12 @@
                     clip.tracks.forEach((t) => {
                         if (t.name.endsWith('.position')) {
                             const vals = t.values;
-                            const baseX = vals;
-                            const baseZ = vals;
+                            const baseX = vals.at(0) || 0;
+                            const baseZ = vals.at(2) || 0;
                             let minY = Infinity;
                             for (let i = 1; i < vals.length; i += 3) {
                                 if (vals[i] < minY) minY = vals[i];
                             }
-                            // Опускаємо нижню точку падіння Hips до рівня газону (~14 од. скелета)
                             const targetGroundY = 14.0;
                             const shiftY = dropToGround && Number.isFinite(minY) ? (targetGroundY - minY) : 0;
 
@@ -918,7 +917,7 @@
                     onLoaded(action);
                 }
             }, undefined, () => {
-                // Файл ще не додано в папку
+                // Файл ще не додано
             });
         }
 
@@ -1719,8 +1718,8 @@
                 gkActiveAction.fadeOut(0.05);
             }
             chosenAction.reset();
-            chosenAction.time = 0.22;
-            chosenAction.setEffectiveTimeScale(1.75).fadeIn(0.05).play();
+            chosenAction.time = 0.14;
+            chosenAction.setEffectiveTimeScale(1.55).fadeIn(0.05).play();
             gkActiveAction = chosenAction;
             gkClipStarted = true;
             return true;
@@ -1797,7 +1796,6 @@
 
                 const usingClip = (gkState.isHigh ? (gkDiveHighAction || gkDiveLowAction) : gkDiveLowAction) !== null;
                 if (usingClip) {
-                    // Притискаємо тіло до газону при падінні, щоб рукавички йшли на рівні низького м'яча
                     gkState.y = gkState.isHigh ? Math.sin(p * Math.PI) * 0.25 : 0;
                     gkState.diveAngle = 0;
                 } else {
