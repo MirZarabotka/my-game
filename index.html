@@ -1333,9 +1333,9 @@
         let actionTimer = 0;
         let waveBlend = 0;
 
-        const T_FLICK_UP = 0.58;     // Підведення носочка лівої бутси під м'яч і підкидання вгору
-        const JUG_SPEED = 3.4;
-        const JUG_BEATS = 4;         // 4 удари (права -> ліва -> права -> ліва) -> фініш на лівій нозі
+        const T_FLICK_UP = 0.58;     // Носочок лівої бутси підкидає м'яч вгору під перший удар лівою
+        const JUG_SPEED = 2.6;       // Збільшений, комфортний час набивання (~6.0 с на 5 ударів)
+        const JUG_BEATS = 5;         // 5 ударів: ліва -> права -> ліва -> права -> ліва (фініш на лівій!)
         const T_JUG_END = T_FLICK_UP + (JUG_BEATS * Math.PI) / JUG_SPEED;
         const T_ROLL_END = T_JUG_END + 1.05;
 
@@ -1441,7 +1441,7 @@
                 let spineZ = 0;
 
                 if (actionTimer < T_FLICK_UP) {
-                    // Носочок ЛІВОЇ бутси заходить під м'яч і підкидає його вгору до правої ноги
+                    // Носочок ЛІВОЇ бутси заходить під м'яч і підкидає його вгору під 1-й удар лівою ногою
                     const p = actionTimer / T_FLICK_UP;
                     const lift = Math.sin(p * Math.PI);
                     lUpX = -0.44 * lift;
@@ -1456,9 +1456,9 @@
                     if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, lFootX);
                     playerModelUpdateMatrix(rFoot, lFoot);
 
-                    const firstRightTarget = getFootStrikePos(rToe, rFoot, true);
-                    ballMesh.position.lerpVectors(REST_BALL_POS, firstRightTarget, smooth01(p));
-                    ballMesh.position.y += lift * 0.52;
+                    const firstLeftTarget = getFootStrikePos(lToe, lFoot, false);
+                    ballMesh.position.lerpVectors(REST_BALL_POS, firstLeftTarget, smooth01(p));
+                    ballMesh.position.y += lift * 0.54;
                     ballMesh.rotation.x -= dt * 4.5;
                     lastStepIndex = -1;
                 }
@@ -1468,8 +1468,8 @@
                     jugPhase = (actionTimer - T_FLICK_UP) * JUG_SPEED;
                     const stepIndex = Math.min(JUG_BEATS - 1, Math.floor(jugPhase / Math.PI));
                     const localT = (jugPhase - stepIndex * Math.PI) / Math.PI;
-                    // 0-права, 1-ліва, 2-права, 3-ліва (фініш на лівій нозі)
-                    const isLeftTarget = stepIndex % 2 === 1;
+                    // 0-ліва (1-й удар!), 1-права, 2-ліва, 3-права, 4-ліва (фініш на лівій нозі)
+                    const isLeftTarget = stepIndex % 2 === 0;
 
                     const dropProgress = Math.min(1, localT / 0.45);
                     const dropCurve = Math.cos(dropProgress * Math.PI * 0.5);
@@ -1510,7 +1510,7 @@
 
                     const arcWave = Math.sin(localT * Math.PI);
                     ballMesh.position.lerpVectors(startBouncePos, targetBouncePos, localT);
-                    ballMesh.position.y += arcWave * 0.62;
+                    ballMesh.position.y += arcWave * 0.64;
                     ballMesh.position.z = Math.max(ballMesh.position.z, 0.36) + arcWave * 0.12;
                     ballMesh.rotation.x -= dt * 3.8;
                     ballMesh.rotation.z += (isLeftTarget ? 1 : -1) * dt * 1.4;
@@ -1584,7 +1584,6 @@
                 gloveUnit.rotation.z = 0.55 * wristSwing;
             }
             // ==================== КІНЕЦЬ ЧАСТИНИ 14 з 15 ====================
-
             // ==================== ПОЧАТОК ЧАСТИНИ 15 з 15 ====================
             if (glovesLoaded) {
                 if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
