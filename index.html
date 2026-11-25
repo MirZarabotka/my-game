@@ -1459,7 +1459,6 @@
                     lastStepIndex = -1;
                 }
                 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 15 ====================
-
                 // ==================== ПОЧАТОК ЧАСТИНИ 14 з 15 ====================
                 else if (actionTimer < T_JUG_END) {
                     jugPhase = (actionTimer - T_FLICK_UP) * JUG_SPEED;
@@ -1579,6 +1578,9 @@
                 const gloveUnit = rightGloveHolder.children.at(0);
                 gloveUnit.rotation.y = -1.69 * waveBlend;
                 gloveUnit.rotation.z = 0.55 * wristSwing;
+                // Злегка зміщуємо рукавицю вбік і вперед, щоб повністю приховати манжету рукава
+                gloveUnit.position.x = 0.08 * waveBlend;
+                gloveUnit.position.z = 0.04 * waveBlend;
             }
             // ==================== КІНЕЦЬ ЧАСТИНИ 14 з 15 ====================
             // ==================== ПОЧАТОК ЧАСТИНИ 15 з 15 ====================
