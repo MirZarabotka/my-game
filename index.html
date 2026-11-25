@@ -1464,7 +1464,6 @@
                     jugPhase = (actionTimer - T_FLICK_UP) * JUG_SPEED;
                     const stepIndex = Math.min(JUG_BEATS - 1, Math.floor(jugPhase / Math.PI));
                     const localT = (jugPhase - stepIndex * Math.PI) / Math.PI;
-                    // 0-права, 1-ліва, 2-права, 3-ліва, 4-права, 5-ліва (фініш на лівій нозі)
                     const isLeftTarget = stepIndex % 2 === 1;
 
                     const dropProgress = Math.min(1, localT / 0.45);
@@ -1512,7 +1511,6 @@
                     ballMesh.rotation.z += (isLeftTarget ? 1 : -1) * dt * 1.4;
                     rollStartPos.copy(ballMesh.position);
                 } else {
-                    // Фініш на лівій нозі: ліва нога опускається, м'яч скочується з носочка в початкову точку
                     const p = smooth01((actionTimer - T_JUG_END) / (T_ROLL_END - T_JUG_END));
                     const footDownPhase = Math.min(1, p / 0.45);
                     const legRemain = 1 - smooth01(footDownPhase);
@@ -1558,7 +1556,6 @@
                 ballMesh.rotation.y += 0.01;
             }
 
-            // Рівна права рука піднімається вгору без залому в лікті, долоня повертається до нас і зап'ястя махає вбік
             const wristSwing = waveBlend > 0.05 ? ((1 - Math.cos(actionTimer * 8.0)) * 0.5) * waveBlend : 0;
 
             if (waveBlend > 0.005) {
@@ -1578,9 +1575,6 @@
                 const gloveUnit = rightGloveHolder.children.at(0);
                 gloveUnit.rotation.y = -1.69 * waveBlend;
                 gloveUnit.rotation.z = 0.55 * wristSwing;
-                // Злегка зміщуємо рукавицю вбік і вперед, щоб повністю приховати манжету рукава
-                gloveUnit.position.x = 0.08 * waveBlend;
-                gloveUnit.position.z = 0.04 * waveBlend;
             }
             // ==================== КІНЕЦЬ ЧАСТИНИ 14 з 15 ====================
             // ==================== ПОЧАТОК ЧАСТИНИ 15 з 15 ====================
