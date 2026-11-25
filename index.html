@@ -1036,61 +1036,60 @@
             glovesLoaded = true;
         }
 
-        function createJerseyTexture(jersey) {
+        function createJerseyTexture(jersey, num, numCol, backUv) {
             const canvas = document.createElement('canvas');
-            canvas.width = 512;
-            canvas.height = 512;
+            canvas.width = 1024;
+            canvas.height = 1024;
             const ctx = canvas.getContext('2d');
 
             ctx.fillStyle = jersey.c1;
-            ctx.fillRect(0, 0, 512, 512);
+            ctx.fillRect(0, 0, 1024, 1024);
 
             ctx.fillStyle = jersey.c2;
             if (jersey.pattern === 'stripes') {
-                for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512);
+                for (let x = 0; x < 1024; x += 88) ctx.fillRect(x, 0, 44, 1024);
             } else if (jersey.pattern === 'hoops') {
-                for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
+                for (let y = 0; y < 1024; y += 88) ctx.fillRect(0, y, 1024, 44);
             } else if (jersey.pattern === 'half') {
-                ctx.fillRect(105, 0, 60, 512);
-                ctx.fillRect(265, 0, 85, 512);
+                ctx.fillRect(210, 0, 120, 1024);
+                ctx.fillRect(530, 0, 170, 1024);
             } else if (jersey.pattern === 'centerBand') {
-                ctx.fillRect(85, 0, 45, 512);
-                ctx.fillRect(245, 0, 45, 512);
+                ctx.fillRect(170, 0, 90, 1024);
+                ctx.fillRect(490, 0, 90, 1024);
             } else if (jersey.pattern === 'chestBand') {
-                ctx.fillRect(0, 160, 512, 130);
+                ctx.fillRect(0, 320, 1024, 260);
             } else if (jersey.pattern === 'sash') {
                 ctx.beginPath();
-                ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
+                ctx.moveTo(0, 0); ctx.lineTo(240, 0); ctx.lineTo(1024, 1024); ctx.lineTo(784, 1024);
                 ctx.closePath(); ctx.fill();
             } else if (jersey.pattern === 'sleeves') {
-                ctx.fillRect(203, 0, 22, 512);
-                ctx.fillRect(398, 0, 114, 512);
+                ctx.fillRect(406, 0, 44, 1024);
+                ctx.fillRect(796, 0, 228, 1024);
+            }
+
+            if (num && backUv) {
+                const px = backUv.u * 1024;
+                const py = backUv.v * 1024;
+                const sizePx = Math.max(70, Math.min(240, backUv.scale || 135));
+
+                ctx.save();
+                ctx.translate(px, py);
+                if (backUv.flipX) ctx.scale(-1, 1);
+                if (backUv.flipY) ctx.scale(1, -1);
+                ctx.fillStyle = numCol || '#ffffff';
+                ctx.strokeStyle = (numCol === '#000000') ? '#ffffff' : '#000000';
+                ctx.lineWidth = Math.max(6, sizePx * 0.08);
+                ctx.lineJoin = 'round';
+                ctx.font = `900 ${Math.round(sizePx)}px "Segoe UI", sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.strokeText(String(num), 0, 0);
+                ctx.fillText(String(num), 0, 0);
+                ctx.restore();
             }
 
             const tex = new THREE.CanvasTexture(canvas);
             tex.flipY = false;
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.needsUpdate = true;
-            return tex;
-        }
-
-        function createBackNumberTexture(num, numCol) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, 256, 256);
-
-            ctx.fillStyle = numCol;
-            ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
-            ctx.lineWidth = 10;
-            ctx.font = '900 165px "Segoe UI", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.strokeText(num, 128, 128);
-            ctx.fillText(num, 128, 128);
-
-            const tex = new THREE.CanvasTexture(canvas);
             tex.colorSpace = THREE.SRGBColorSpace;
             tex.needsUpdate = true;
             return tex;
@@ -1141,6 +1140,65 @@
         setTimeout(hideLoader, 2500);
         // ==================== КІНЕЦЬ ЧАСТИНИ 10 з 15 ====================
         // ==================== ПОЧАТОК ЧАСТИНИ 11 з 15 ====================
+        function detectShirtBackUV(model) {
+            model.updateMatrixWorld(true);
+            const shirtMeshes = [];
+            model.traverse((c) => {
+                if (!c.isMesh || !c.geometry || !c.geometry.attributes.uv) return;
+                const n = (c.name || '').toLowerCase();
+                if (n.includes('shirt') || n.includes('top') || n.includes('jersey') || n.includes('torso')) {
+                    shirtMeshes.push(c);
+                }
+            });
+            const targets = shirtMeshes.length ? shirtMeshes : [];
+            if (!targets.length) {
+                model.traverse((c) => { if (c.isMesh && c.geometry && c.geometry.attributes.uv) targets.push(c); });
+            }
+
+            const box = new THREE.Box3().setFromObject(model);
+            const center = new THREE.Vector3();
+            const size = new THREE.Vector3();
+            box.getCenter(center);
+            box.getSize(size);
+
+            const ray = new THREE.Raycaster();
+            const origin = new THREE.Vector3(center.x, box.min.y + size.y * 0.68, box.min.z - 1.5);
+            const dir = new THREE.Vector3(0, 0, 1);
+            ray.set(origin, dir);
+
+            const hits = ray.intersectObjects(targets, false);
+            if (hits.length > 0 && hits.at(0).uv) {
+                const hit = hits.at(0);
+                const originRight = origin.clone().add(new THREE.Vector3(0.06, 0, 0));
+                ray.set(originRight, dir);
+                const hitsR = ray.intersectObjects(targets, false);
+
+                const originUp = origin.clone().add(new THREE.Vector3(0, 0.06, 0));
+                ray.set(originUp, dir);
+                const hitsU = ray.intersectObjects(targets, false);
+
+                let flipX = false;
+                let flipY = false;
+                let scale = 135;
+
+                if (hitsR.length > 0 && hitsR.at(0).uv) {
+                    const du = hitsR.at(0).uv.x - hit.uv.x;
+                    if (du > 0) flipX = true;
+                    const pxPerUnit = (Math.abs(du) * 1024) / 0.06;
+                    if (pxPerUnit > 80 && pxPerUnit < 3000) {
+                        scale = pxPerUnit * 0.19;
+                    }
+                }
+                if (hitsU.length > 0 && hitsU.at(0).uv) {
+                    const dv = hitsU.at(0).uv.y - hit.uv.y;
+                    if (dv > 0) flipY = true;
+                }
+
+                return { u: hit.uv.x, v: hit.uv.y, flipX, flipY, scale };
+            }
+            return { u: 0.75, v: 0.35, flipX: false, flipY: false, scale: 135 };
+        }
+
         loader.load('player.glb', (gltf) => {
             const playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
             if (!playerModel) {
@@ -1165,9 +1223,8 @@
             ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
             ballMesh.material.needsUpdate = true;
 
-            const jerseyTex = createJerseyTexture(jersey);
-            let spineBone = null;
-            const bodyMeshes = [];
+            const backUv = detectShirtBackUV(playerModel);
+            const jerseyTex = createJerseyTexture(jersey, num, numCol, backUv);
 
             walkModel(playerModel, (child) => {
                 if (child.isBone && child.name) {
@@ -1184,16 +1241,11 @@
                     if (n.includes('hand') && n.includes('right') && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
                         rightHandBone = child;
                     }
-
-                    if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) {
-                        spineBone = child;
-                    }
                 }
 
                 if (!child.isMesh || !child.material) return;
                 child.castShadow = true;
                 child.receiveShadow = true;
-                bodyMeshes.push(child);
                 const name = (child.name || '').toLowerCase();
 
                 if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
@@ -1220,65 +1272,6 @@
             });
 
             scene.add(playerModel);
-            playerModel.updateMatrixWorld(true);
-
-            const backNumberMat = new THREE.MeshBasicMaterial({
-                map: createBackNumberTexture(num, numCol),
-                transparent: true,
-                side: THREE.DoubleSide,
-                depthWrite: false,
-                polygonOffset: true,
-                polygonOffsetFactor: -4
-            });
-
-            const backGeo = new THREE.PlaneGeometry(25, 25, 16, 16);
-            const backNumberMesh = new THREE.Mesh(backGeo, backNumberMat);
-
-            if (spineBone) {
-                backNumberMesh.position.set(0, 2.0, -14.0);
-                backNumberMesh.rotation.set(0, Math.PI, 0);
-                spineBone.add(backNumberMesh);
-                backNumberMesh.updateMatrixWorld(true);
-
-                // Проєктуємо кожну вершину сітки прямо на 3D-поверхню футболки по рельєфу спини
-                const posAttr = backGeo.attributes.position;
-                const raycaster = new THREE.Raycaster();
-                const localOrigin = new THREE.Vector3();
-                const localTarget = new THREE.Vector3();
-                const worldOrigin = new THREE.Vector3();
-                const worldTarget = new THREE.Vector3();
-                const rayDir = new THREE.Vector3();
-
-                for (let i = 0; i < posAttr.count; i++) {
-                    const vx = posAttr.getX(i);
-                    const vy = posAttr.getY(i);
-
-                    localOrigin.set(vx, vy, -8.0);
-                    localTarget.set(vx, vy, 12.0);
-                    worldOrigin.copy(localOrigin).applyMatrix4(backNumberMesh.matrixWorld);
-                    worldTarget.copy(localTarget).applyMatrix4(backNumberMesh.matrixWorld);
-                    rayDir.subVectors(worldTarget, worldOrigin).normalize();
-
-                    raycaster.set(worldOrigin, rayDir);
-                    const hits = raycaster.intersectObjects(bodyMeshes, false);
-
-                    if (hits.length > 0) {
-                        const hitLocal = backNumberMesh.worldToLocal(hits.at(0).point.clone());
-                        posAttr.setZ(i, hitLocal.z - 0.35);
-                    } else {
-                        // Плавний запасний вигин, якщо край сітки виходить за контур спини
-                        const curveZ = (vx * vx) * 0.028;
-                        posAttr.setZ(i, curveZ - 1.2);
-                    }
-                }
-                posAttr.needsUpdate = true;
-                backGeo.computeVertexNormals();
-            } else {
-                backNumberMesh.scale.set(0.01, 0.01, 0.01);
-                backNumberMesh.position.set(0, 1.21, -0.132);
-                backNumberMesh.rotation.y = Math.PI;
-                playerModel.add(backNumberMesh);
-            }
             // ==================== КІНЕЦЬ ЧАСТИНИ 11 з 15 ====================
             // ==================== ПОЧАТОК ЧАСТИНИ 12 з 15 ====================
             loader.load(
