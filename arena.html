@@ -898,15 +898,20 @@
                             const baseX = vals.at(0) || 0;
                             const baseZ = vals.at(2) || 0;
                             let minY = Infinity;
+                            let maxY = -Infinity;
                             for (let i = 1; i < vals.length; i += 3) {
                                 if (vals[i] < minY) minY = vals[i];
+                                if (vals[i] > maxY) maxY = vals[i];
                             }
-                            const targetGroundY = 14.0;
+                            // При падінні опускаємо нижню точку стегна (Hips) майже в нуль (3.5 од.), щоб тіло лягало на траву
+                            const targetGroundY = 3.5;
                             const shiftY = dropToGround && Number.isFinite(minY) ? (targetGroundY - minY) : 0;
 
                             for (let i = 0; i < vals.length; i += 3) {
                                 vals[i] = baseX;
-                                vals[i + 1] = Math.max(targetGroundY, vals[i + 1] + shiftY);
+                                vals[i + 1] = dropToGround
+                                    ? Math.max(targetGroundY, vals[i + 1] + shiftY)
+                                    : vals[i + 1];
                                 vals[i + 2] = baseZ;
                             }
                         }
@@ -1325,6 +1330,8 @@
 
         const tmpHandPosL = new THREE.Vector3();
         const tmpHandPosR = new THREE.Vector3();
+        const tmpGloveTipL = new THREE.Vector3();
+        const tmpGloveTipR = new THREE.Vector3();
 
         function recordShotOutcome(isGoal) {
             if (series.turnMode === 'attack') {
@@ -1339,8 +1346,7 @@
 
         function checkLiveGoalkeeperSave() {
             if (shotState !== 'flying') return false;
-            // Перевіряємо контакт лише в площині воріт
-            if (ballMesh.position.z > GOAL_Z + 0.55 || ballMesh.position.z < GOAL_Z - 0.12) return false;
+            if (ballMesh.position.z > GOAL_Z + 0.65 || ballMesh.position.z < GOAL_Z - 0.15) return false;
 
             const halfW = GOAL_W / 2;
             if (Math.abs(ballMesh.position.x) > halfW || ballMesh.position.y > GOAL_H) return false;
@@ -1351,27 +1357,38 @@
             gkContainer.updateMatrixWorld(true);
             let minHandDist = 99;
 
-            // Перевіряємо відстань суворо до лівої та правої рукавички
+            // Перевіряємо як самі зап'ястя, так і витягнуті рукавички (з урахуванням низових м'ячів біля газону)
             if (gkLeftHand) {
                 gkLeftHand.getWorldPosition(tmpHandPosL);
                 const dL = ballMesh.position.distanceTo(tmpHandPosL);
                 if (dL < minHandDist) minHandDist = dL;
+
+                tmpGloveTipL.copy(tmpHandPosL);
+                tmpGloveTipL.x += gkState.diveDir * 0.16;
+                tmpGloveTipL.y = Math.max(BALL_R, tmpGloveTipL.y - 0.14);
+                const dTipL = ballMesh.position.distanceTo(tmpGloveTipL);
+                if (dTipL < minHandDist) minHandDist = dTipL;
             }
             if (gkRightHand) {
                 gkRightHand.getWorldPosition(tmpHandPosR);
                 const dR = ballMesh.position.distanceTo(tmpHandPosR);
                 if (dR < minHandDist) minHandDist = dR;
+
+                tmpGloveTipR.copy(tmpHandPosR);
+                tmpGloveTipR.x += gkState.diveDir * 0.16;
+                tmpGloveTipR.y = Math.max(BALL_R, tmpGloveTipR.y - 0.14);
+                const dTipR = ballMesh.position.distanceTo(tmpGloveTipR);
+                if (dTipR < minHandDist) minHandDist = dTipR;
             }
 
-            // При ловлі по центру додатково перевіряємо зону між долонями
             if (gkState.mode === 'catch_center' && gkLeftHand && gkRightHand) {
                 const midHands = tmpHandPosL.clone().add(tmpHandPosR).multiplyScalar(0.5);
                 const dMid = ballMesh.position.distanceTo(midHands);
                 if (dMid < minHandDist) minHandDist = dMid;
             }
 
-            const catchRadius = isDefend ? 0.56 : 0.48;
-            const gloveRadius = isDefend ? 0.54 : 0.44;
+            const catchRadius = isDefend ? 0.58 : 0.50;
+            const gloveRadius = isDefend ? 0.58 : 0.50;
 
             if (gkState.mode === 'catch_center' && minHandDist < catchRadius) {
                 gkState.mode = 'react';
