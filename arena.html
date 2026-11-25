@@ -871,7 +871,7 @@
         let gkDiveHighAction = null;  // gk_dive_high.glb (верхній кут / дев'ятка)
         let gkCatchAction = null;     // gk_catch.glb (по центру)
         let gkActiveAction = null;
-        let gkDiveMirrored = true;    // якщо падає в протилежний бік — зміни на false
+        let gkDiveMirrored = true;
 
         function applyStrikerKit(isBot) {
             if (!strikerShirtMat || !strikerShortMat) return;
@@ -892,14 +892,25 @@
             loader.load(url, (animGltf) => {
                 const clip = animGltf.animations && animGltf.animations.at(0);
                 if (clip && gkMixer) {
-                    clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
+                    // Зберігаємо вертикальне опускання Hips на газон (Y), обнуляючи лише горизонтальний зсув (X, Z)
+                    clip.tracks.forEach((t) => {
+                        if (t.name.endsWith('.position')) {
+                            const vals = t.values;
+                            const baseX = vals[0];
+                            const baseZ = vals[2];
+                            for (let i = 0; i < vals.length; i += 3) {
+                                vals[i] = baseX;
+                                vals[i + 2] = baseZ;
+                            }
+                        }
+                    });
                     const action = gkMixer.clipAction(clip);
                     action.setLoop(THREE.LoopOnce);
                     action.clampWhenFinished = true;
                     onLoaded(action);
                 }
             }, undefined, () => {
-                // Якщо файл ще не додано в папку — використовується резервна анімація
+                // Якщо файл ще не доданий — використовується резервна анімація
             });
         }
 
@@ -1697,9 +1708,12 @@
             if (!chosenAction) return false;
 
             if (gkActiveAction && gkActiveAction !== chosenAction) {
-                gkActiveAction.fadeOut(0.06);
+                gkActiveAction.fadeOut(0.05);
             }
-            chosenAction.reset().setEffectiveTimeScale(1.35).fadeIn(0.06).play();
+            chosenAction.reset();
+            // Перемотуємо стартову затримку кліпу на початок стрибка і прискорюємо під політ м'яча
+            chosenAction.time = 0.16;
+            chosenAction.setEffectiveTimeScale(1.65).fadeIn(0.05).play();
             gkActiveAction = chosenAction;
             gkClipStarted = true;
             return true;
@@ -1741,11 +1755,11 @@
                 gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 10));
                 crouchAmt = 0.18 + Math.abs(Math.sin(gkState.readyTime * 3.2)) * 0.04;
             } else if (gkState.mode === 'step') {
-                const stepDur = 0.20;
+                const stepDur = 0.18;
                 const p = Math.min(1, gkState.modeTime / stepDur);
                 const ease = p * p * (3 - 2 * p);
                 gkState.x = THREE.MathUtils.lerp(0, gkState.startX, ease);
-                gkState.y = Math.sin(p * Math.PI) * 0.06;
+                gkState.y = Math.sin(p * Math.PI) * 0.05;
                 gkState.diveAngle = -gkState.diveDir * 0.15 * p;
                 crouchAmt = 0.32;
                 stepStride = Math.sin(p * Math.PI);
@@ -1759,7 +1773,7 @@
                 if (!gkClipStarted) {
                     playGKZoneClip('center', 0);
                 }
-                const p = Math.min(1, gkState.modeTime / 0.42);
+                const p = Math.min(1, gkState.modeTime / 0.38);
                 gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, p);
                 gkState.y = hasActiveExternalClip ? 0 : Math.sin(p * Math.PI) * gkState.peakY;
                 gkState.diveAngle = 0;
@@ -1768,14 +1782,17 @@
                 if (!gkClipStarted) {
                     playGKZoneClip(gkState.isHigh ? 'high' : 'low', gkState.diveDir);
                 }
-                const p = Math.min(1, gkState.modeTime / 0.44);
-                const easeX = 1 - Math.pow(1 - p, 1.85);
+                // Синхронізуємо швидкість зміщення воротаря з часом польоту м'яча (shotDuration)
+                const diveSpan = Math.max(0.32, shotDuration * 0.88);
+                const p = Math.min(1, gkState.modeTime / diveSpan);
+                const easeX = 1 - Math.pow(1 - p, 1.75);
 
                 gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, easeX);
 
                 const usingClip = (gkState.isHigh ? (gkDiveHighAction || gkDiveLowAction) : gkDiveLowAction) !== null;
                 if (usingClip) {
-                    gkState.y = gkState.isHigh ? Math.sin(p * Math.PI) * 0.28 : 0;
+                    // Висоту падіння задає сам трек Hips.y із Mixamo; для 9-ки додаємо легкий поштовх вгору
+                    gkState.y = gkState.isHigh ? Math.sin(p * Math.PI) * 0.32 : 0;
                     gkState.diveAngle = 0;
                 } else {
                     gkState.y = Math.sin(p * Math.PI) * gkState.peakY;
