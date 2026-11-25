@@ -1334,8 +1334,8 @@
         let waveBlend = 0;
 
         const JUG_SPEED = 2.6;
-        const T_FLICK_UP = Math.PI / JUG_SPEED; // Підкидання носочком лівої бутси
-        const JUG_BEATS = 6;                    // 6 ударів: права -> ліва -> права -> ліва -> права -> ліва
+        const T_FLICK_UP = 0.42; // Коротке підведення носочка лівої бутси під м'яч (м'яч ще не підпригує!)
+        const JUG_BEATS = 6;     // 6 ударів: права -> ліва -> права -> ліва -> права -> ліва
         const T_JUG_END = T_FLICK_UP + (JUG_BEATS * Math.PI) / JUG_SPEED;
         const T_ROLL_END = T_JUG_END + 1.05;
 
@@ -1441,14 +1441,13 @@
                 let spineZ = 0;
 
                 if (actionTimer < T_FLICK_UP) {
-                    // Тільки ліва бутса піддіває м'яч носочком знизу і направляє дугою до правої ноги
-                    const p = actionTimer / T_FLICK_UP;
-                    const lift = Math.sin(p * Math.PI);
-                    lUpX = -0.38 * lift;
-                    lUpZ = 0.14 * lift;
-                    lKneeX = 0.46 * lift;
-                    lFootX = 0.34 * lift;
-                    spineZ = 0.04 * lift;
+                    // Ліва нога лише підводить носочок знизу під м'яч на землі — без зайвого підскоку м'яча!
+                    const p = smooth01(actionTimer / T_FLICK_UP);
+                    lUpX = -0.34 * p;
+                    lUpZ = 0.14 * p;
+                    lKneeX = 0.44 * p;
+                    lFootX = 0.28 * p;
+                    spineZ = 0.03 * p;
 
                     if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisX, lUpX);
                     if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisZ, lUpZ);
@@ -1456,13 +1455,11 @@
                     if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, lFootX);
                     playerModelUpdateMatrix(rFoot, lFoot);
 
-                    const firstRightTarget = getFootStrikePos(rToe, rFoot, true);
-                    ballMesh.position.lerpVectors(REST_BALL_POS, firstRightTarget, p);
-                    ballMesh.position.y += lift * 0.64;
-                    ballMesh.rotation.x -= dt * 3.8;
+                    ballMesh.position.copy(REST_BALL_POS);
                     lastStepIndex = -1;
                 }
                 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 15 ====================
+
                 // ==================== ПОЧАТОК ЧАСТИНИ 14 з 15 ====================
                 else if (actionTimer < T_JUG_END) {
                     jugPhase = (actionTimer - T_FLICK_UP) * JUG_SPEED;
