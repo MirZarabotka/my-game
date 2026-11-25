@@ -1709,11 +1709,11 @@
             if (!chosenAction) return false;
 
             if (gkActiveAction && gkActiveAction !== chosenAction) {
-                gkActiveAction.fadeOut(0.05);
+                gkActiveAction.fadeOut(0.04);
             }
             chosenAction.reset();
-            chosenAction.time = 0.14;
-            chosenAction.setEffectiveTimeScale(1.55).fadeIn(0.05).play();
+            chosenAction.time = 0.18;
+            chosenAction.setEffectiveTimeScale(1.85).fadeIn(0.04).play();
             gkActiveAction = chosenAction;
             gkClipStarted = true;
             return true;
@@ -1742,11 +1742,10 @@
 
             let diveAmt = 0;
             let crouchAmt = 0;
-            let celebrateAmt = 0;
-            let despairAmt = 0;
-            let stepStride = 0;
+            let clipDropY = 0;
 
             const hasActiveExternalClip = gkClipStarted && (gkActiveAction !== gkIdleAction);
+            const usingDiveClip = hasActiveExternalClip && gkState.diveDir !== 0;
 
             if (gkState.mode === 'ready') {
                 gkState.readyTime += dt;
@@ -1754,26 +1753,11 @@
                 gkState.y = 0;
                 gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 10));
                 crouchAmt = 0.18 + Math.abs(Math.sin(gkState.readyTime * 3.2)) * 0.04;
-            } else if (gkState.mode === 'step') {
-                const stepDur = 0.18;
-                const p = Math.min(1, gkState.modeTime / stepDur);
-                const ease = p * p * (3 - 2 * p);
-                gkState.x = THREE.MathUtils.lerp(0, gkState.startX, ease);
-                gkState.y = Math.sin(p * Math.PI) * 0.05;
-                gkState.diveAngle = -gkState.diveDir * 0.15 * p;
-                crouchAmt = 0.32;
-                stepStride = Math.sin(p * Math.PI);
-
-                if (p >= 1) {
-                    gkState.mode = 'dive';
-                    gkState.modeTime = 0;
-                    gkClipStarted = false;
-                }
             } else if (gkState.mode === 'catch_center') {
                 if (!gkClipStarted) {
                     playGKZoneClip('center', 0);
                 }
-                const p = Math.min(1, gkState.modeTime / 0.38);
+                const p = Math.min(1, gkState.modeTime / 0.34);
                 gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, p);
                 gkState.y = hasActiveExternalClip ? 0 : Math.sin(p * Math.PI) * gkState.peakY;
                 gkState.diveAngle = 0;
@@ -1782,16 +1766,16 @@
                 if (!gkClipStarted) {
                     playGKZoneClip(gkState.isHigh ? 'high' : 'low', gkState.diveDir);
                 }
-                const diveSpan = Math.max(0.32, shotDuration * 0.88);
+                const diveSpan = Math.min(0.32, shotDuration * 0.72);
                 const p = Math.min(1, gkState.modeTime / diveSpan);
-                const easeX = 1 - Math.pow(1 - p, 1.75);
+                const easeX = 1 - Math.pow(1 - p, 2.1);
 
                 gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, easeX);
 
-                const usingClip = (gkState.isHigh ? (gkDiveHighAction || gkDiveLowAction) : gkDiveLowAction) !== null;
-                if (usingClip) {
+                if (usingDiveClip) {
                     gkState.y = gkState.isHigh ? Math.sin(p * Math.PI) * 0.25 : 0;
                     gkState.diveAngle = 0;
+                    clipDropY = -0.68 * Math.min(1, p * 1.6);
                 } else {
                     gkState.y = Math.sin(p * Math.PI) * gkState.peakY;
                     const maxAngle = gkState.isHigh ? 1.30 : 1.48;
@@ -1802,47 +1786,41 @@
 // ==================== КІНЕЦЬ ЧАСТИНИ 15B-1 з 16 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 15B-2 з 16 ====================
             else if (gkState.mode === 'land') {
-                const p = Math.min(1, gkState.modeTime / 0.55);
                 gkState.y = 0;
-                const usingClip = (gkState.isHigh ? (gkDiveHighAction || gkDiveLowAction) : gkDiveLowAction) !== null;
-                if (!usingClip) {
-                    gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, -gkState.diveDir * 1.54, Math.min(1, dt * 12));
-                } else {
+                if (usingDiveClip) {
                     gkState.diveAngle = 0;
+                    clipDropY = -0.68;
+                } else {
+                    gkState.diveAngle = -gkState.diveDir * 1.54;
                 }
-                diveAmt = 1.0 - p * 0.25;
-                if (p >= 1) {
+                diveAmt = 0.85;
+
+                if (gkState.modeTime >= 0.45) {
                     gkState.mode = 'getup';
                     gkState.modeTime = 0;
                 }
             } else if (gkState.mode === 'getup') {
-                const p = Math.min(1, gkState.modeTime / 0.55);
+                const p = Math.min(1, gkState.modeTime / 0.65);
                 const ease = p * p * (3 - 2 * p);
-                gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, ease);
                 gkState.y = 0;
-                diveAmt = (1 - ease) * 0.75;
-                crouchAmt = Math.sin(p * Math.PI) * 0.35;
+
+                if (usingDiveClip) {
+                    gkState.diveAngle = 0;
+                    clipDropY = -0.68 * (1 - ease);
+                } else {
+                    gkState.diveAngle = THREE.MathUtils.lerp(-gkState.diveDir * 1.54, 0, ease);
+                }
+
                 if (p >= 1) {
                     resetGKToIdleClip();
                     gkState.mode = 'react';
                     gkState.modeTime = 0;
                 }
             } else if (gkState.mode === 'react') {
-                gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 10));
-                if (shotState === 'caught') {
-                    gkState.y = 0;
-                    crouchAmt = 0.14;
-                } else if (gkState.outcome === 'save') {
-                    celebrateAmt = Math.min(1, gkState.modeTime * 4);
-                    gkState.y = Math.abs(Math.sin(gkState.modeTime * 7.5)) * 0.14;
-                } else {
-                    despairAmt = Math.min(1, gkState.modeTime * 3.5);
-                    gkState.y = 0;
-                }
+                gkState.y = 0;
+                gkState.diveAngle = 0;
+                clipDropY = 0;
             }
-
-            const isDivingClip = hasActiveExternalClip && (gkState.mode === 'dive' || gkState.mode === 'land');
-            const clipDropY = isDivingClip ? -0.68 : 0;
 
             const crouchSink = hasActiveExternalClip ? 0 : crouchAmt * 0.14;
             const lieLift = hasActiveExternalClip ? 0 : (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
@@ -1862,44 +1840,33 @@
                 const rLeg = getBone(gkBones, 'rightleg');
                 const lLeg = getBone(gkBones, 'leftleg');
                 const spine = getBone(gkBones, 'spine');
-                const head = getBone(gkBones, 'head');
 
                 const isHoldingBall = shotState === 'caught' || gkState.mode === 'catch_center';
                 if (rArm) {
-                    rArm.rotation.z += -crouchAmt * 0.45 - diveAmt * 2.55 - celebrateAmt * 2.5 + despairAmt * 0.35 + (isHoldingBall ? 0.35 : 0);
-                    rArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25 - despairAmt * 1.45 - (isHoldingBall ? 0.95 : 0);
+                    rArm.rotation.z += -crouchAmt * 0.45 - diveAmt * 2.55 + (isHoldingBall ? 0.35 : 0);
+                    rArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25 - (isHoldingBall ? 0.95 : 0);
                 }
                 if (lArm) {
-                    lArm.rotation.z += crouchAmt * 0.45 + diveAmt * 2.55 + celebrateAmt * 2.5 - despairAmt * 0.35 - (isHoldingBall ? 0.35 : 0);
-                    lArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25 - despairAmt * 1.45 - (isHoldingBall ? 0.95 : 0);
+                    lArm.rotation.z += crouchAmt * 0.45 + diveAmt * 2.55 - (isHoldingBall ? 0.35 : 0);
+                    lArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25 - (isHoldingBall ? 0.95 : 0);
                 }
                 if (rForeArm) {
                     rForeArm.rotation.y += -crouchAmt * 0.85;
-                    rForeArm.rotation.z += despairAmt * 1.65 + (isHoldingBall ? 0.55 : 0);
+                    rForeArm.rotation.z += (isHoldingBall ? 0.55 : 0);
                 }
                 if (lForeArm) {
                     lForeArm.rotation.y += crouchAmt * 0.85;
-                    lForeArm.rotation.z += -despairAmt * 1.65 - (isHoldingBall ? 0.55 : 0);
+                    lForeArm.rotation.z += (isHoldingBall ? 0.55 : 0);
                 }
 
                 const trailBend = diveAmt * 0.42;
-                const totalBend = crouchAmt + despairAmt * 0.22;
-                if (rUpLeg) {
-                    rUpLeg.rotation.x += -totalBend - (gkState.diveDir < 0 ? trailBend : 0);
-                    rUpLeg.rotation.z += stepStride * (gkState.diveDir < 0 ? -0.45 : 0.25);
-                }
-                if (lUpLeg) {
-                    lUpLeg.rotation.x += -totalBend - (gkState.diveDir > 0 ? trailBend : 0);
-                    lUpLeg.rotation.z += stepStride * (gkState.diveDir > 0 ? 0.45 : -0.25);
-                }
+                const totalBend = crouchAmt;
+                if (rUpLeg) rUpLeg.rotation.x += -totalBend - (gkState.diveDir < 0 ? trailBend : 0);
+                if (lUpLeg) lUpLeg.rotation.x += -totalBend - (gkState.diveDir > 0 ? trailBend : 0);
                 if (rLeg) rLeg.rotation.x += -totalBend * 1.9 - (gkState.diveDir < 0 ? trailBend * 1.4 : 0);
                 if (lLeg) lLeg.rotation.x += -totalBend * 1.9 - (gkState.diveDir > 0 ? trailBend * 1.4 : 0);
 
-                if (spine) {
-                    spine.rotation.x += crouchAmt * 0.55 + despairAmt * 0.42 - celebrateAmt * 0.12;
-                    spine.rotation.z += -gkState.diveDir * stepStride * 0.22;
-                }
-                if (head) head.rotation.x += despairAmt * 0.38 - celebrateAmt * 0.15;
+                if (spine) spine.rotation.x += crouchAmt * 0.55;
             }
         }
 // ==================== КІНЕЦЬ ЧАСТИНИ 15B-2 з 16 ====================
