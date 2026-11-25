@@ -1139,6 +1139,9 @@
         }
 // ==================== КІНЕЦЬ ЧАСТИНИ 11 з 16 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 12 з 16 ====================
+        const aimRaycaster = new THREE.Raycaster();
+        const aimGoalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -GOAL_Z);
+
         function triggerPlayerKeeperDive(dx, dy, speed) {
             if (series.turnMode !== 'defend' || playerGK.jumped) return;
             if (shotState !== 'runup' && shotState !== 'flying') return;
@@ -1146,17 +1149,19 @@
             playerGK.jumped = true;
             playerGK.jumpTime = 0;
 
-            const normX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.25), -1.15, 1.15);
+            // Камера дивиться в +Z (з воріт у поле), тому ліворуч на екрані = +X, праворуч = -X
+            const screenNormX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.24), -1.15, 1.15);
+            const worldNormX = -screenNormX;
             const normY = THREE.MathUtils.clamp(dy / (window.innerHeight * 0.26), -0.35, 1.15);
-            const reachBoost = THREE.MathUtils.clamp(0.85 + speed * 0.25, 0.85, 1.25);
+            const reachBoost = THREE.MathUtils.clamp(0.88 + speed * 0.22, 0.88, 1.25);
 
-            const targetX = THREE.MathUtils.clamp(normX * (GOAL_W * 0.44) * reachBoost, -2.55, 2.55);
-            const isCenter = Math.abs(normX) < 0.22;
+            const targetX = THREE.MathUtils.clamp(worldNormX * (GOAL_W * 0.45) * reachBoost, -2.75, 2.75);
+            const isCenter = Math.abs(worldNormX) < 0.20;
 
             gkState.mode = isCenter ? 'catch_center' : 'dive';
             gkState.modeTime = 0;
             gkState.outcome = 'none';
-            gkState.diveDir = isCenter ? 0 : Math.sign(normX);
+            gkState.diveDir = isCenter ? 0 : Math.sign(worldNormX);
             gkState.isHigh = normY > 0.35;
             gkState.startX = gkState.x;
             gkState.targetX = targetX;
@@ -1194,21 +1199,36 @@
 
             if (series.turnMode === 'attack') {
                 if (shotState !== 'ready') return;
-                if (swipeDist < 28 || dy < 12) {
-                    setBanner('👆 Проведи пальцем вгору у бік воріт!');
+                if (swipeDist < 24 || dy < 10) {
+                    setBanner('👆 Проведи пальцем у точку воріт, куди хочеш вдарити!');
                     return;
                 }
 
+                // Точне проєктування кінцевої точки свайпу на площину 3D-воріт
+                const ndc = new THREE.Vector2(
+                    (e.clientX / window.innerWidth) * 2 - 1,
+                    -(e.clientY / window.innerHeight) * 2 + 1
+                );
+                aimRaycaster.setFromCamera(ndc, camera);
+                const hitPoint = new THREE.Vector3();
+
+                let tx = 0;
+                let ty = 1.1;
+
+                if (aimRaycaster.ray.intersectPlane(aimGoalPlane, hitPoint)) {
+                    tx = THREE.MathUtils.clamp(hitPoint.x, -GOAL_W * 0.65, GOAL_W * 0.65);
+                    ty = THREE.MathUtils.clamp(hitPoint.y, BALL_R, GOAL_H * 1.32);
+                } else {
+                    const fallbackX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.28), -1.2, 1.2);
+                    const fallbackY = THREE.MathUtils.clamp(dy / (window.innerHeight * 0.36), 0.05, 1.2);
+                    tx = fallbackX * (GOAL_W * 0.5);
+                    ty = BALL_R + fallbackY * (GOAL_H - BALL_R * 0.4);
+                }
+
                 const speedNorm = THREE.MathUtils.clamp((swipeSpeed - 350) / 1700, 0, 1);
-                const power = 0.72 + speedNorm * 0.62;
-
-                const normX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.28), -1.25, 1.25);
-                const distNormY = THREE.MathUtils.clamp((dy - 12) / (window.innerHeight * 0.36), 0.04, 1.25);
-                const finalNormY = THREE.MathUtils.clamp(distNormY * 0.72 + speedNorm * 0.42, 0.05, 1.28);
-
-                const tx = normX * (GOAL_W * 0.5);
-                const ty = BALL_R + finalNormY * (GOAL_H - BALL_R * 0.4);
-                const curve = -normX * (0.38 + speedNorm * 0.28);
+                const power = 0.78 + speedNorm * 0.56;
+                // Невелика природна підкрутка, яка не збиває м'яч повз ціль
+                const curve = THREE.MathUtils.clamp(-dx / window.innerWidth, -1, 1) * 0.28;
 
                 startShotRunup(tx, ty, curve, power);
             } else if (series.turnMode === 'defend') {
