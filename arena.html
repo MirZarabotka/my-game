@@ -888,34 +888,11 @@
             }
         }
 
-        function loadGKAnimationClip(url, dropToGround, onLoaded) {
+        function loadGKAnimationClip(url, onLoaded) {
             loader.load(url, (animGltf) => {
                 const clip = animGltf.animations && animGltf.animations.at(0);
                 if (clip && gkMixer) {
-                    clip.tracks.forEach((t) => {
-                        if (t.name.endsWith('.position')) {
-                            const vals = t.values;
-                            const baseX = vals.at(0) || 0;
-                            const baseZ = vals.at(2) || 0;
-                            let minY = Infinity;
-                            let maxY = -Infinity;
-                            for (let i = 1; i < vals.length; i += 3) {
-                                if (vals[i] < minY) minY = vals[i];
-                                if (vals[i] > maxY) maxY = vals[i];
-                            }
-                            // При падінні опускаємо нижню точку стегна (Hips) майже в нуль (3.5 од.), щоб тіло лягало на траву
-                            const targetGroundY = 3.5;
-                            const shiftY = dropToGround && Number.isFinite(minY) ? (targetGroundY - minY) : 0;
-
-                            for (let i = 0; i < vals.length; i += 3) {
-                                vals[i] = baseX;
-                                vals[i + 1] = dropToGround
-                                    ? Math.max(targetGroundY, vals[i + 1] + shiftY)
-                                    : vals[i + 1];
-                                vals[i + 2] = baseZ;
-                            }
-                        }
-                    });
+                    clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
                     const action = gkMixer.clipAction(clip);
                     action.setLoop(THREE.LoopOnce);
                     action.clampWhenFinished = true;
@@ -1018,9 +995,9 @@
                     if (gs) mountGKGloves(gs, gloveItem.c1);
                 });
 
-                loadGKAnimationClip('./gk_dive.glb', true, (act) => { gkDiveLowAction = act; });
-                loadGKAnimationClip('./gk_dive_high.glb', true, (act) => { gkDiveHighAction = act; });
-                loadGKAnimationClip('./gk_catch.glb', false, (act) => { gkCatchAction = act; });
+                loadGKAnimationClip('./gk_dive.glb', (act) => { gkDiveLowAction = act; });
+                loadGKAnimationClip('./gk_dive_high.glb', (act) => { gkDiveHighAction = act; });
+                loadGKAnimationClip('./gk_catch.glb', (act) => { gkCatchAction = act; });
             }
         }
 
@@ -1864,9 +1841,16 @@
                 }
             }
 
+            const hasActiveExternalClip = gkClipStarted && (gkActiveAction !== gkIdleAction);
+            // Коли програється падіння в сторону, опускаємо пояс (Hips) з 0.85м на рівень газону (0.16м), щоб тіло лежало на білій лінії воріт
+            const isDivingClip = hasActiveExternalClip && (gkState.mode === 'dive' || gkState.mode === 'land');
+            const clipDropY = isDivingClip ? -0.68 : 0;
+
             const crouchSink = hasActiveExternalClip ? 0 : crouchAmt * 0.14;
             const lieLift = hasActiveExternalClip ? 0 : (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
-            gkContainer.position.set(gkState.x, Math.max(0, gkState.y + lieLift - crouchSink), GOAL_Z + 0.25);
+            const finalY = hasActiveExternalClip ? (gkState.y + clipDropY) : Math.max(0, gkState.y + lieLift - crouchSink);
+
+            gkContainer.position.set(gkState.x, finalY, GOAL_Z);
             gkContainer.rotation.z = gkState.diveAngle;
             gkContainer.rotation.x = hasActiveExternalClip ? 0 : diveAmt * 0.12;
 
