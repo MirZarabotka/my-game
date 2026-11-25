@@ -1841,8 +1841,6 @@
                 }
             }
 
-            const hasActiveExternalClip = gkClipStarted && (gkActiveAction !== gkIdleAction);
-            // Коли програється падіння в сторону, опускаємо пояс (Hips) з 0.85м на рівень газону (0.16м), щоб тіло лежало на білій лінії воріт
             const isDivingClip = hasActiveExternalClip && (gkState.mode === 'dive' || gkState.mode === 'land');
             const clipDropY = isDivingClip ? -0.68 : 0;
 
