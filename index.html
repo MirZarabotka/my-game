@@ -1324,7 +1324,6 @@
         const worldAxisZ = new THREE.Vector3(0, 0, 1);
 
         const REST_BALL_POS = new THREE.Vector3(0.34, 0.103, 0.24);
-        const PULL_END_POS = new THREE.Vector3(0.14, 0.103, 0.11);
         const startBouncePos = new THREE.Vector3();
         const targetBouncePos = new THREE.Vector3();
         const rollStartPos = new THREE.Vector3();
@@ -1334,13 +1333,11 @@
         let actionTimer = 0;
         let waveBlend = 0;
 
-        const T_STEP_ON = 0.55;
-        const T_PULL_BACK = 1.35;
-        const T_FLICK_UP = 1.85;
+        const T_FLICK_UP = 0.58;     // Підведення носочка бутси під м'яч і підкидання вгору
         const JUG_SPEED = 3.4;
-        const JUG_BEATS = 5;
+        const JUG_BEATS = 5;         // 5 ударів (ліва-права-ліва-права-ліва) -> фініш на лівій нозі
         const T_JUG_END = T_FLICK_UP + (JUG_BEATS * Math.PI) / JUG_SPEED;
-        const T_ROLL_END = T_JUG_END + 1.10;
+        const T_ROLL_END = T_JUG_END + 1.05;
 
         function smooth01(x) {
             const c = Math.max(0, Math.min(1, x));
@@ -1443,37 +1440,15 @@
                 let lUpX = 0, lKneeX = 0, lFootX = 0;
                 let spineZ = 0;
 
-                if (actionTimer < T_STEP_ON) {
-                    const p = smooth01(actionTimer / T_STEP_ON);
-                    rUpX = -0.36 * p;
-                    rUpZ = -0.22 * p;
-                    rKneeX = 0.56 * p;
-                    rFootX = -0.20 * p;
-                    spineZ = -0.04 * p;
-                    ballMesh.position.copy(REST_BALL_POS);
-                } else if (actionTimer < T_PULL_BACK) {
-                    const p = smooth01((actionTimer - T_STEP_ON) / (T_PULL_BACK - T_STEP_ON));
-                    rUpX = -0.36 * (1 - p) - 0.14 * p;
-                    rUpZ = -0.22 * (1 - p) - 0.06 * p;
-                    rKneeX = 0.56 * (1 - p) + 0.34 * p;
-                    rFootX = -0.20 * (1 - p) - 0.18 * p;
-                    spineZ = -0.04 * (1 - p);
-
-                    const prevX = ballMesh.position.x;
-                    const prevZ = ballMesh.position.z;
-                    ballMesh.position.lerpVectors(REST_BALL_POS, PULL_END_POS, p);
-                    const dx = ballMesh.position.x - prevX;
-                    const dz = ballMesh.position.z - prevZ;
-                    ballMesh.rotation.x += dz / 0.103;
-                    ballMesh.rotation.z -= dx / 0.103;
-                } else if (actionTimer < T_FLICK_UP) {
-                    const p = (actionTimer - T_PULL_BACK) / (T_FLICK_UP - T_PULL_BACK);
-                    const flick = Math.sin(p * Math.PI);
-                    rUpX = -0.14 * (1 - p) - 0.42 * flick;
-                    rUpZ = -0.06 * (1 - p);
-                    rKneeX = 0.34 * (1 - p) + 0.48 * flick;
-                    rFootX = -0.18 + 0.42 * flick;
-                    spineZ = -0.04 * flick;
+                if (actionTimer < T_FLICK_UP) {
+                    // Носочок правої бутси заходить під м'яч і підкидає його вгору
+                    const p = actionTimer / T_FLICK_UP;
+                    const lift = Math.sin(p * Math.PI);
+                    rUpX = -0.44 * lift;
+                    rUpZ = -0.18 * lift;
+                    rKneeX = 0.52 * lift;
+                    rFootX = 0.36 * lift;
+                    spineZ = -0.04 * lift;
 
                     if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisX, rUpX);
                     if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisZ, rUpZ);
@@ -1482,9 +1457,8 @@
                     playerModelUpdateMatrix(rFoot, lFoot);
 
                     const firstLeftTarget = getFootStrikePos(lToe, lFoot, false);
-                    const arc = Math.sin(p * Math.PI);
-                    ballMesh.position.lerpVectors(PULL_END_POS, firstLeftTarget, smooth01(p));
-                    ballMesh.position.y += arc * 0.48;
+                    ballMesh.position.lerpVectors(REST_BALL_POS, firstLeftTarget, smooth01(p));
+                    ballMesh.position.y += lift * 0.52;
                     ballMesh.rotation.x -= dt * 4.5;
                     lastStepIndex = -1;
                 }
@@ -1541,6 +1515,7 @@
                     ballMesh.rotation.z += (isLeftTarget ? 1 : -1) * dt * 1.4;
                     rollStartPos.copy(ballMesh.position);
                 } else {
+                    // Фініш на лівій нозі: ліва нога опускається, м'яч скочується з носочка в початкову точку
                     const p = smooth01((actionTimer - T_JUG_END) / (T_ROLL_END - T_JUG_END));
                     const footDownPhase = Math.min(1, p / 0.45);
                     const legRemain = 1 - smooth01(footDownPhase);
@@ -1576,12 +1551,6 @@
                     ballMesh.rotation.z -= dx / 0.103;
                 }
 
-                if (actionTimer < T_PULL_BACK) {
-                    if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisX, rUpX);
-                    if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisZ, rUpZ);
-                    if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rKneeX);
-                    if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, rFootX);
-                }
                 if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + spineZ;
                 if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.15;
                 if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.15;
