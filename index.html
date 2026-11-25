@@ -1333,9 +1333,9 @@
         let actionTimer = 0;
         let waveBlend = 0;
 
-        const T_FLICK_UP = 0.58;     // Підведення носочка бутси під м'яч і підкидання вгору
+        const T_FLICK_UP = 0.58;     // Підведення носочка лівої бутси під м'яч і підкидання вгору
         const JUG_SPEED = 3.4;
-        const JUG_BEATS = 5;         // 5 ударів (ліва-права-ліва-права-ліва) -> фініш на лівій нозі
+        const JUG_BEATS = 4;         // 4 удари (права -> ліва -> права -> ліва) -> фініш на лівій нозі
         const T_JUG_END = T_FLICK_UP + (JUG_BEATS * Math.PI) / JUG_SPEED;
         const T_ROLL_END = T_JUG_END + 1.05;
 
@@ -1437,27 +1437,27 @@
 
             if (playerAction === 'juggling') {
                 let rUpX = 0, rUpZ = 0, rKneeX = 0, rFootX = 0;
-                let lUpX = 0, lKneeX = 0, lFootX = 0;
+                let lUpX = 0, lUpZ = 0, lKneeX = 0, lFootX = 0;
                 let spineZ = 0;
 
                 if (actionTimer < T_FLICK_UP) {
-                    // Носочок правої бутси заходить під м'яч і підкидає його вгору
+                    // Носочок ЛІВОЇ бутси заходить під м'яч і підкидає його вгору до правої ноги
                     const p = actionTimer / T_FLICK_UP;
                     const lift = Math.sin(p * Math.PI);
-                    rUpX = -0.44 * lift;
-                    rUpZ = -0.18 * lift;
-                    rKneeX = 0.52 * lift;
-                    rFootX = 0.36 * lift;
-                    spineZ = -0.04 * lift;
+                    lUpX = -0.44 * lift;
+                    lUpZ = 0.16 * lift;
+                    lKneeX = 0.52 * lift;
+                    lFootX = 0.36 * lift;
+                    spineZ = 0.04 * lift;
 
-                    if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisX, rUpX);
-                    if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisZ, rUpZ);
-                    if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rKneeX);
-                    if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, rFootX);
+                    if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisX, lUpX);
+                    if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisZ, lUpZ);
+                    if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lKneeX);
+                    if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, lFootX);
                     playerModelUpdateMatrix(rFoot, lFoot);
 
-                    const firstLeftTarget = getFootStrikePos(lToe, lFoot, false);
-                    ballMesh.position.lerpVectors(REST_BALL_POS, firstLeftTarget, smooth01(p));
+                    const firstRightTarget = getFootStrikePos(rToe, rFoot, true);
+                    ballMesh.position.lerpVectors(REST_BALL_POS, firstRightTarget, smooth01(p));
                     ballMesh.position.y += lift * 0.52;
                     ballMesh.rotation.x -= dt * 4.5;
                     lastStepIndex = -1;
@@ -1468,7 +1468,8 @@
                     jugPhase = (actionTimer - T_FLICK_UP) * JUG_SPEED;
                     const stepIndex = Math.min(JUG_BEATS - 1, Math.floor(jugPhase / Math.PI));
                     const localT = (jugPhase - stepIndex * Math.PI) / Math.PI;
-                    const isLeftTarget = stepIndex % 2 === 0;
+                    // 0-права, 1-ліва, 2-права, 3-ліва (фініш на лівій нозі)
+                    const isLeftTarget = stepIndex % 2 === 1;
 
                     const dropProgress = Math.min(1, localT / 0.45);
                     const dropCurve = Math.cos(dropProgress * Math.PI * 0.5);
@@ -1515,6 +1516,7 @@
                     ballMesh.rotation.z += (isLeftTarget ? 1 : -1) * dt * 1.4;
                     rollStartPos.copy(ballMesh.position);
                 } else {
+                    // Фініш на лівій нозі: ліва нога опускається, м'яч скочується з носочка в початкову точку
                     const p = smooth01((actionTimer - T_JUG_END) / (T_ROLL_END - T_JUG_END));
                     const footDownPhase = Math.min(1, p / 0.45);
                     const legRemain = 1 - smooth01(footDownPhase);
