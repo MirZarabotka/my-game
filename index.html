@@ -1,3 +1,4 @@
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 15 ==================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -68,6 +69,8 @@
             pointer-events: auto;
             z-index: 10;
         }
+        /* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 15 ==================== -->
+        /* ==================== ПОЧАТОК ЧАСТИНИ 2 з 15 ==================== */
         .nav-card {
             text-decoration: none;
             border: 1px solid rgba(255, 255, 255, 0.14);
@@ -164,6 +167,8 @@
             max-width: 340px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.65);
         }
+        /* ==================== КІНЕЦЬ ЧАСТИНИ 2 з 15 ==================== */
+        /* ==================== ПОЧАТОК ЧАСТИНИ 3 з 15 ==================== */
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -310,6 +315,8 @@
             }
         }
     </script>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 3 з 15 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 4 з 15 ==================== -->
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
@@ -425,6 +432,8 @@
                 stadiumAudio.ctx.resume();
             }
         }, { once: true });
+        // ==================== КІНЕЦЬ ЧАСТИНИ 4 з 15 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 5 з 15 ====================
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x071326);
@@ -552,6 +561,8 @@
         }
         stadiumGroup.add(createGoal(-29.8, 0));
         stadiumGroup.add(createGoal(29.8, Math.PI));
+        // ==================== КІНЕЦЬ ЧАСТИНИ 5 з 15 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 6 з 15 ====================
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
         const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
         const railMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
@@ -649,6 +660,8 @@
                     fanPositions.push({ x: fx, y: rowY, z: zDist - 0.08, rotY: Math.PI, phase: Math.random() * 6.28, hasPhone: false, hasScarf: false });
                 }
             }
+            // ==================== КІНЕЦЬ ЧАСТИНИ 6 з 15 ====================
+            // ==================== ПОЧАТОК ЧАСТИНИ 7 з 15 ====================
             const xDist = 25.4 + r * 1.02;
             const stepL = 66 + r * 2;
             const stepGeoX = new THREE.BoxGeometry(rowDepth, 0.68, stepL);
@@ -708,6 +721,8 @@
         });
         seatsInstanced.instanceMatrix.needsUpdate = true;
         stadiumGroup.add(seatsInstanced);
+        // ==================== КІНЕЦЬ ЧАСТИНИ 7 з 15 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 8 з 15 ====================
         const count = fanPositions.length;
         const torsoGeo = new THREE.CapsuleGeometry(0.21, 0.34, 6, 10);
         const headGeo = new THREE.SphereGeometry(0.135, 12, 12);
@@ -817,6 +832,8 @@
             panel.lookAt(0, 0, 0);
             stadiumGroup.add(pole, panel);
         });
+        // ==================== КІНЕЦЬ ЧАСТИНИ 8 з 15 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 9 з 15 ====================
         const ballMesh = new THREE.Mesh(
             new THREE.SphereGeometry(0.103, 24, 24),
             new THREE.MeshStandardMaterial({ roughness: 0.4 })
@@ -978,6 +995,8 @@
             unit.rotation.y = pickLeft ? Math.PI : 0;
             return unit;
         }
+        // ==================== КІНЕЦЬ ЧАСТИНИ 9 з 15 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 10 з 15 ====================
         function attachToSleeveEnd(holder, foreArmBone, handBone) {
             const armBone = foreArmBone || (handBone && handBone.parent);
             if (!armBone) return;
@@ -1105,7 +1124,6 @@
         const skeletonBones = {};
         const baseBoneRot = {};
         let idleTimer = 0;
-        let jugBlend = 0;
         let jugPhase = 0;
 
         const resetIdle = () => { idleTimer = 0; };
@@ -1121,6 +1139,8 @@
             }
         }
         setTimeout(hideLoader, 2500);
+        // ==================== КІНЕЦЬ ЧАСТИНИ 10 з 15 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 11 з 15 ====================
         loader.load('player.glb', (gltf) => {
             const playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
             if (!playerModel) {
@@ -1136,11 +1156,11 @@
             const num = localStorage.getItem('eq_number') || '10';
             const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
 
-            const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
-            const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
-            const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
-            const gloveItem = CATALOG.gloves.find(x => x.id === gId) || CATALOG.gloves.at(0);
-            const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
+            const jersey = (CATALOG.jerseys || []).find(x => x.id === jId) || CATALOG.jerseys.at(0);
+            const shortItem = (CATALOG.shorts || []).find(x => x.id === sId) || CATALOG.shorts.at(0);
+            const bootItem = (CATALOG.boots || []).find(x => x.id === bId) || CATALOG.boots.at(0);
+            const gloveItem = (CATALOG.gloves || []).find(x => x.id === gId) || CATALOG.gloves.at(0);
+            const ballItem = (CATALOG.balls || []).find(x => x.id === ballId) || CATALOG.balls.at(0);
 
             ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
             ballMesh.material.needsUpdate = true;
@@ -1218,6 +1238,8 @@
             }
 
             scene.add(playerModel);
+            // ==================== КІНЕЦЬ ЧАСТИНИ 11 з 15 ====================
+            // ==================== ПОЧАТОК ЧАСТИНИ 12 з 15 ====================
             loader.load(
                 './glove.glb?v=3',
                 (gloveGltf) => {
@@ -1294,17 +1316,36 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
+        // ==================== КІНЕЦЬ ЧАСТИНИ 12 з 15 ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 13 з 15 ====================
         let lastTime = performance.now();
         const worldAxisX = new THREE.Vector3(1, 0, 0);
         const worldAxisY = new THREE.Vector3(0, 1, 0);
         const worldAxisZ = new THREE.Vector3(0, 0, 1);
-        const startBouncePos = new THREE.Vector3(0.34, 0.103, 0.24);
+
+        const REST_BALL_POS = new THREE.Vector3(0.34, 0.103, 0.24);
+        const PULL_END_POS = new THREE.Vector3(0.14, 0.103, 0.11);
+        const startBouncePos = new THREE.Vector3();
         const targetBouncePos = new THREE.Vector3();
+        const rollStartPos = new THREE.Vector3();
         let lastStepIndex = -1;
 
         let playerAction = 'idle';
         let actionTimer = 0;
         let waveBlend = 0;
+
+        const T_STEP_ON = 0.55;
+        const T_PULL_BACK = 1.35;
+        const T_FLICK_UP = 1.85;
+        const JUG_SPEED = 3.4;
+        const JUG_BEATS = 5;
+        const T_JUG_END = T_FLICK_UP + (JUG_BEATS * Math.PI) / JUG_SPEED;
+        const T_ROLL_END = T_JUG_END + 1.10;
+
+        function smooth01(x) {
+            const c = Math.max(0, Math.min(1, x));
+            return c * c * (3 - 2 * c);
+        }
 
         function rotateBoneWorldAxis(bone, worldAxis, angleRad) {
             if (!bone || !bone.parent) return;
@@ -1360,7 +1401,7 @@
                 }
             } else if (playerAction === 'juggling') {
                 actionTimer += dt;
-                if (actionTimer >= 6.0) {
+                if (actionTimer >= T_ROLL_END) {
                     playerAction = 'waving';
                     actionTimer = 0;
                 }
@@ -1373,9 +1414,7 @@
                 }
             }
 
-            const targetJug = playerAction === 'juggling' ? 1.0 : 0.0;
             const targetWave = playerAction === 'waving' ? 1.0 : 0.0;
-            jugBlend += (targetJug - jugBlend) * Math.min(1, dt * 3.2);
             waveBlend += (targetWave - waveBlend) * Math.min(1, dt * 3.8);
 
             const getBone = (part, exclude = '') => {
@@ -1399,66 +1438,157 @@
             const rForeArm = getBone('rightforearm');
             const lArm = getBone('leftarm');
 
-            if (jugBlend > 0.005) {
-                jugPhase += dt * 3.4;
-                const stepIndex = Math.floor(jugPhase / Math.PI);
-                const localT = (jugPhase % Math.PI) / Math.PI;
-                const isRightTarget = stepIndex % 2 === 0;
+            if (playerAction === 'juggling') {
+                let rUpX = 0, rUpZ = 0, rKneeX = 0, rFootX = 0;
+                let lUpX = 0, lKneeX = 0, lFootX = 0;
+                let spineZ = 0;
 
-                const dropProgress = Math.min(1, localT / 0.45);
-                const dropCurve = Math.cos(dropProgress * Math.PI * 0.5);
+                if (actionTimer < T_STEP_ON) {
+                    const p = smooth01(actionTimer / T_STEP_ON);
+                    rUpX = -0.36 * p;
+                    rUpZ = -0.22 * p;
+                    rKneeX = 0.56 * p;
+                    rFootX = -0.20 * p;
+                    spineZ = -0.04 * p;
+                    ballMesh.position.copy(REST_BALL_POS);
+                } else if (actionTimer < T_PULL_BACK) {
+                    const p = smooth01((actionTimer - T_STEP_ON) / (T_PULL_BACK - T_STEP_ON));
+                    rUpX = -0.36 * (1 - p) - 0.14 * p;
+                    rUpZ = -0.22 * (1 - p) - 0.06 * p;
+                    rKneeX = 0.56 * (1 - p) + 0.34 * p;
+                    rFootX = -0.20 * (1 - p) - 0.18 * p;
+                    spineZ = -0.04 * (1 - p);
 
-                const riseProgress = Math.max(0, (localT - 0.55) / 0.45);
-                const riseCurve = Math.sin(riseProgress * Math.PI * 0.5);
+                    const prevX = ballMesh.position.x;
+                    const prevZ = ballMesh.position.z;
+                    ballMesh.position.lerpVectors(REST_BALL_POS, PULL_END_POS, p);
+                    const dx = ballMesh.position.x - prevX;
+                    const dz = ballMesh.position.z - prevZ;
+                    ballMesh.rotation.x += dz / 0.103;
+                    ballMesh.rotation.z -= dx / 0.103;
+                } else if (actionTimer < T_FLICK_UP) {
+                    const p = (actionTimer - T_PULL_BACK) / (T_FLICK_UP - T_PULL_BACK);
+                    const flick = Math.sin(p * Math.PI);
+                    rUpX = -0.14 * (1 - p) - 0.42 * flick;
+                    rUpZ = -0.06 * (1 - p);
+                    rKneeX = 0.34 * (1 - p) + 0.48 * flick;
+                    rFootX = -0.18 + 0.42 * flick;
+                    spineZ = -0.04 * flick;
 
-                const prevLegLift = stepIndex === 0 ? 0 : dropCurve;
+                    if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisX, rUpX);
+                    if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisZ, rUpZ);
+                    if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rKneeX);
+                    if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, rFootX);
+                    playerModelUpdateMatrix(rFoot, lFoot);
 
-                const rLift = isRightTarget ? riseCurve : prevLegLift;
-                const lLift = !isRightTarget ? riseCurve : prevLegLift;
-
-                if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisX, -rLift * 0.78 * jugBlend);
-                if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rLift * 0.98 * jugBlend);
-                if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, -rLift * 0.22 * jugBlend);
-
-                if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisX, -lLift * 0.78 * jugBlend);
-                if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lLift * 0.98 * jugBlend);
-                if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, -lLift * 0.22 * jugBlend);
-
-                const balanceWave = isRightTarget ? -riseCurve : riseCurve;
-                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + balanceWave * 0.05 * jugBlend;
-                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.16 * jugBlend;
-                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.16 * jugBlend;
-
-                playerModelUpdateMatrix(rFoot, lFoot);
-
-                const currentTargetPos = isRightTarget
-                    ? getFootStrikePos(rToe, rFoot, true)
-                    : getFootStrikePos(lToe, lFoot, false);
-
-                if (stepIndex !== lastStepIndex) {
-                    if (lastStepIndex === -1) {
-                        startBouncePos.copy(ballMesh.position);
-                    } else {
-                        startBouncePos.copy(targetBouncePos);
-                    }
-                    lastStepIndex = stepIndex;
+                    const firstLeftTarget = getFootStrikePos(lToe, lFoot, false);
+                    const arc = Math.sin(p * Math.PI);
+                    ballMesh.position.lerpVectors(PULL_END_POS, firstLeftTarget, smooth01(p));
+                    ballMesh.position.y += arc * 0.48;
+                    ballMesh.rotation.x -= dt * 4.5;
+                    lastStepIndex = -1;
                 }
-                targetBouncePos.copy(currentTargetPos);
+                // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 15 ====================
+                // ==================== ПОЧАТОК ЧАСТИНИ 14 з 15 ====================
+                else if (actionTimer < T_JUG_END) {
+                    jugPhase = (actionTimer - T_FLICK_UP) * JUG_SPEED;
+                    const stepIndex = Math.min(JUG_BEATS - 1, Math.floor(jugPhase / Math.PI));
+                    const localT = (jugPhase - stepIndex * Math.PI) / Math.PI;
+                    const isLeftTarget = stepIndex % 2 === 0;
 
-                const arcWave = Math.sin(localT * Math.PI);
-                const jugPos = new THREE.Vector3().lerpVectors(startBouncePos, targetBouncePos, localT);
-                jugPos.y += arcWave * 0.66;
-                jugPos.z = Math.max(jugPos.z, 0.38) + arcWave * 0.14;
+                    const dropProgress = Math.min(1, localT / 0.45);
+                    const dropCurve = Math.cos(dropProgress * Math.PI * 0.5);
+                    const riseProgress = Math.max(0, (localT - 0.55) / 0.45);
+                    const riseCurve = Math.sin(riseProgress * Math.PI * 0.5);
+                    const prevLegLift = stepIndex === 0 ? 0 : dropCurve;
 
-                const restPos = new THREE.Vector3(0.34, 0.103, 0.24);
-                ballMesh.position.lerpVectors(restPos, jugPos, jugBlend);
+                    const lLift = isLeftTarget ? riseCurve : prevLegLift;
+                    const rLift = !isLeftTarget ? riseCurve : prevLegLift;
 
-                ballMesh.rotation.x -= dt * 3.8 * jugBlend;
-                ballMesh.rotation.z += (isRightTarget ? -1 : 1) * dt * 1.4 * jugBlend;
+                    rUpX = -rLift * 0.78;
+                    rKneeX = rLift * 0.98;
+                    rFootX = -rLift * 0.22;
+
+                    lUpX = -lLift * 0.78;
+                    lKneeX = lLift * 0.98;
+                    lFootX = -lLift * 0.22;
+
+                    spineZ = isLeftTarget ? riseCurve * 0.05 : -riseCurve * 0.05;
+
+                    if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisX, rUpX);
+                    if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rKneeX);
+                    if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, rFootX);
+                    if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisX, lUpX);
+                    if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lKneeX);
+                    if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, lFootX);
+                    playerModelUpdateMatrix(rFoot, lFoot);
+
+                    const currentTargetPos = isLeftTarget
+                        ? getFootStrikePos(lToe, lFoot, false)
+                        : getFootStrikePos(rToe, rFoot, true);
+
+                    if (stepIndex !== lastStepIndex) {
+                        startBouncePos.copy(ballMesh.position);
+                        lastStepIndex = stepIndex;
+                    }
+                    targetBouncePos.copy(currentTargetPos);
+
+                    const arcWave = Math.sin(localT * Math.PI);
+                    ballMesh.position.lerpVectors(startBouncePos, targetBouncePos, localT);
+                    ballMesh.position.y += arcWave * 0.62;
+                    ballMesh.position.z = Math.max(ballMesh.position.z, 0.36) + arcWave * 0.12;
+                    ballMesh.rotation.x -= dt * 3.8;
+                    ballMesh.rotation.z += (isLeftTarget ? 1 : -1) * dt * 1.4;
+                    rollStartPos.copy(ballMesh.position);
+                } else {
+                    const p = smooth01((actionTimer - T_JUG_END) / (T_ROLL_END - T_JUG_END));
+                    const footDownPhase = Math.min(1, p / 0.45);
+                    const legRemain = 1 - smooth01(footDownPhase);
+
+                    lUpX = -0.78 * legRemain;
+                    lKneeX = 0.98 * legRemain;
+                    lFootX = -0.22 * legRemain + 0.18 * Math.sin(footDownPhase * Math.PI);
+                    spineZ = 0.05 * legRemain;
+
+                    if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisX, lUpX);
+                    if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lKneeX);
+                    if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, lFootX);
+                    playerModelUpdateMatrix(rFoot, lFoot);
+
+                    const leftToeDropPos = getFootStrikePos(lToe, lFoot, false);
+                    leftToeDropPos.y = Math.max(0.103, leftToeDropPos.y);
+
+                    const prevX = ballMesh.position.x;
+                    const prevZ = ballMesh.position.z;
+
+                    if (p < 0.45) {
+                        const sub = smooth01(p / 0.45);
+                        ballMesh.position.lerpVectors(rollStartPos, leftToeDropPos, sub);
+                    } else {
+                        const sub = smooth01((p - 0.45) / 0.55);
+                        ballMesh.position.lerpVectors(leftToeDropPos, REST_BALL_POS, sub);
+                        ballMesh.position.y = 0.103;
+                    }
+
+                    const dx = ballMesh.position.x - prevX;
+                    const dz = ballMesh.position.z - prevZ;
+                    ballMesh.rotation.x += dz / 0.103;
+                    ballMesh.rotation.z -= dx / 0.103;
+                }
+
+                if (actionTimer < T_PULL_BACK) {
+                    if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisX, rUpX);
+                    if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisZ, rUpZ);
+                    if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rKneeX);
+                    if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, rFootX);
+                }
+                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + spineZ;
+                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.15;
+                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.15;
             } else {
                 lastStepIndex = -1;
                 jugPhase = 0;
-                ballMesh.position.lerp(new THREE.Vector3(0.34, 0.103, 0.24), Math.min(1, dt * 5));
+                ballMesh.position.lerp(REST_BALL_POS, Math.min(1, dt * 5));
                 ballMesh.rotation.y += 0.01;
             }
 
@@ -1481,8 +1611,10 @@
             }
 
             if (rightGloveHolder.children.length > 0) {
-                rightGloveHolder.children[0].rotation.y = 0.65 * waveBlend;
+                rightGloveHolder.children.rotation.y = 0.65 * waveBlend;
             }
+            // ==================== КІНЕЦЬ ЧАСТИНИ 14 з 15 ====================
+            // ==================== ПОЧАТОК ЧАСТИНИ 15 з 15 ====================
             if (glovesLoaded) {
                 if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
                 if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
@@ -1639,3 +1771,4 @@
     </script>
 </body>
 </html>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 15 з 15 ==================== -->
