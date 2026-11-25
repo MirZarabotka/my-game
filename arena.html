@@ -59,7 +59,7 @@
             font-weight: 800; font-size: 0.88rem;
             box-shadow: 0 6px 18px rgba(0,0,0,0.45);
         }
-/* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 16 ==================== */
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 16 ==================== -->
 <!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 16 ==================== -->
         .status-banner {
             position: absolute; top: 72px; left: 50%; transform: translateX(-50%);
@@ -83,16 +83,6 @@
             font-size: 0.8rem; font-weight: 700; color: #e2e8f0;
             text-align: center; white-space: nowrap;
         }
-
-        #goal-frame-overlay {
-            position: absolute; inset: 0; pointer-events: none;
-            display: none;
-            border-top: 10px solid rgba(255, 255, 255, 0.88);
-            border-left: 10px solid rgba(255, 255, 255, 0.88);
-            border-right: 10px solid rgba(255, 255, 255, 0.88);
-            box-shadow: inset 0 0 45px rgba(0, 0, 0, 0.45);
-        }
-        #goal-frame-overlay.active { display: block; }
 
         #match-modal {
             position: absolute; inset: 0;
@@ -146,8 +136,6 @@
 
     <div id="canvas-container"></div>
     <canvas id="aim-canvas"></canvas>
-
-    <div id="goal-frame-overlay"></div>
 
     <div class="ui-layer">
         <div class="top-bar">
@@ -210,7 +198,6 @@
         const botDotsEl = document.getElementById('bot-dots');
         const bannerEl = document.getElementById('status-banner');
         const hintEl = document.getElementById('bottom-hint');
-        const goalFrameEl = document.getElementById('goal-frame-overlay');
         const matchModalEl = document.getElementById('match-modal');
 
         coinsEl.textContent = `💰 ${coins}`;
@@ -457,8 +444,8 @@
         const attackCamPos = new THREE.Vector3(-0.95, 2.48, SPOT_Z + 4.95);
         const attackLookAt = new THREE.Vector3(0, 1.05, GOAL_Z);
 
-        const defendCamPos = new THREE.Vector3(0, 1.58, GOAL_Z + 0.35);
-        const defendLookAt = new THREE.Vector3(0, 0.85, SPOT_Z);
+        const defendCamPos = new THREE.Vector3(0, 2.38, GOAL_Z - 3.35);
+        const defendLookAt = new THREE.Vector3(0, 1.15, SPOT_Z + 1.5);
 
         camera.position.copy(attackCamPos);
         camera.lookAt(attackLookAt);
@@ -879,44 +866,6 @@
         let playerJerseyTex = null;
         let playerShortCol = '#ffffff';
 
-        const fpGlovesGroup = new THREE.Group();
-        fpGlovesGroup.visible = false;
-        scene.add(fpGlovesGroup);
-        let fpLeftGlove = null;
-        let fpRightGlove = null;
-
-        function buildFirstPersonGloves(gloveScene, colorHex) {
-            fpGlovesGroup.clear();
-            const createSingle = (isLeft) => {
-                const clone = gloveScene.clone(true);
-                clone.traverse((n) => {
-                    if (n.isMesh) {
-                        n.material = new THREE.MeshStandardMaterial({
-                            color: colorHex,
-                            roughness: 0.38,
-                            metalness: 0.08
-                        });
-                    }
-                });
-                const box = new THREE.Box3().setFromObject(clone);
-                const size = new THREE.Vector3();
-                box.getSize(size);
-                const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                clone.scale.setScalar(0.32 / maxDim);
-                if (isLeft) clone.scale.x *= -1;
-                return clone;
-            };
-
-            fpLeftGlove = createSingle(true);
-            fpRightGlove = createSingle(false);
-            fpLeftGlove.position.set(-0.24, -0.18, -0.58);
-            fpRightGlove.position.set(0.24, -0.18, -0.58);
-            fpLeftGlove.rotation.set(0.35, 0.25, -0.2);
-            fpRightGlove.rotation.set(0.35, -0.25, 0.2);
-
-            fpGlovesGroup.add(fpLeftGlove, fpRightGlove);
-        }
-
         function applyStrikerKit(isBot) {
             if (!strikerShirtMat || !strikerShortMat) return;
             if (isBot) {
@@ -1015,10 +964,7 @@
 
                 loader.load('./glove.glb?v=3', (gGltf) => {
                     const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
-                    if (gs) {
-                        mountGKGloves(gs, gloveItem.c1);
-                        buildFirstPersonGloves(gs, gloveItem.c1);
-                    }
+                    if (gs) mountGKGloves(gs, gloveItem.c1);
                 });
             }
         }
@@ -1070,13 +1016,7 @@
 
         const playerGK = {
             jumped: false,
-            jumpTime: 0,
-            x: 0,
-            y: 1.58,
-            roll: 0,
-            targetX: 0,
-            peakY: 1.58,
-            targetRoll: 0
+            jumpTime: 0
         };
 
         const netImpact = { active: false, x: 0, y: 1.2, amp: 0, phase: 0 };
@@ -1206,13 +1146,21 @@
             playerGK.jumped = true;
             playerGK.jumpTime = 0;
 
-            const normX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.26), -1.15, 1.15);
-            const normY = THREE.MathUtils.clamp(dy / (window.innerHeight * 0.28), -0.35, 1.1);
-            const reachBoost = THREE.MathUtils.clamp(0.75 + speed * 0.28, 0.75, 1.2);
+            const normX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.25), -1.15, 1.15);
+            const normY = THREE.MathUtils.clamp(dy / (window.innerHeight * 0.26), -0.35, 1.15);
+            const reachBoost = THREE.MathUtils.clamp(0.85 + speed * 0.25, 0.85, 1.25);
 
-            playerGK.targetX = THREE.MathUtils.clamp(normX * (GOAL_W * 0.46) * reachBoost, -GOAL_W * 0.46, GOAL_W * 0.46);
-            playerGK.peakY = THREE.MathUtils.clamp(1.25 + normY * 0.95, 0.85, 2.25);
-            playerGK.targetRoll = -normX * 0.78;
+            const targetX = THREE.MathUtils.clamp(normX * (GOAL_W * 0.44) * reachBoost, -2.55, 2.55);
+            const isCenter = Math.abs(normX) < 0.22;
+
+            gkState.mode = isCenter ? 'catch_center' : 'dive';
+            gkState.modeTime = 0;
+            gkState.outcome = 'none';
+            gkState.diveDir = isCenter ? 0 : Math.sign(normX);
+            gkState.isHigh = normY > 0.35;
+            gkState.startX = gkState.x;
+            gkState.targetX = targetX;
+            gkState.peakY = gkState.isHigh ? 0.56 : 0.14;
         }
 
         container.addEventListener('pointerdown', (e) => {
@@ -1264,7 +1212,7 @@
 
                 startShotRunup(tx, ty, curve, power);
             } else if (series.turnMode === 'defend') {
-                if (swipeDist < 20) return;
+                if (swipeDist < 18) return;
                 triggerPlayerKeeperDive(dx, dy, swipeSpeed / 1200);
             }
         });
@@ -1306,31 +1254,8 @@
             const halfW = GOAL_W / 2;
             if (Math.abs(ballMesh.position.x) > halfW || ballMesh.position.y > GOAL_H) return false;
 
-            if (series.turnMode === 'defend') {
-                const dx = Math.abs(ballMesh.position.x - playerGK.x);
-                const dy = Math.abs(ballMesh.position.y - (playerGK.y - 0.12));
-                const reachX = playerGK.jumped ? 1.12 : 0.62;
-                const reachY = playerGK.jumped ? 0.92 : 0.78;
-
-                if (dx <= reachX && dy <= reachY) {
-                    recordShotOutcome(false);
-                    coins += 15;
-                    coinsEl.textContent = `💰 ${coins}`;
-                    localStorage.setItem('player_coins', String(coins));
-
-                    setBanner('🧤 СУПЕРСЕЙВ! +15 💰', 'goal');
-                    arenaAudio.playCrowd(true);
-                    triggerSaveFlash(ballMesh.position);
-
-                    const deflectX = (Math.sign(ballMesh.position.x - playerGK.x) || (Math.random() < 0.5 ? -1 : 1)) * 3.1;
-                    reboundVel.set(deflectX, 2.2, 4.4);
-                    shotState = 'rebound';
-
-                    setTimeout(advanceSeriesTurn, 2300);
-                    return true;
-                }
-                return false;
-            }
+            const isDefend = series.turnMode === 'defend';
+            if (isDefend && !playerGK.jumped) return false;
 
             gkContainer.updateMatrixWorld(true);
             let minDist = 99;
@@ -1354,14 +1279,25 @@
             const dBody = ballMesh.position.distanceTo(tmpChestPos);
             if (dBody < minDist) minDist = dBody;
 
-            if (gkState.mode === 'catch_center' && minDist < 0.75) {
+            const catchRadius = isDefend ? 0.92 : 0.75;
+            const diveRadius = isDefend ? 0.85 : 0.64;
+
+            if (gkState.mode === 'catch_center' && minDist < catchRadius) {
                 gkState.mode = 'react';
                 gkState.modeTime = 0;
                 gkState.outcome = 'save';
 
                 recordShotOutcome(false);
-                setBanner('🧤 ВОРОТАР ЗЛОВИВ М\'ЯЧ!', 'save');
-                arenaAudio.playCrowd(false);
+                if (isDefend) {
+                    coins += 15;
+                    coinsEl.textContent = `💰 ${coins}`;
+                    localStorage.setItem('player_coins', String(coins));
+                    setBanner('🧤 ТИ ЗЛОВИВ М\'ЯЧ! +15 💰', 'goal');
+                    arenaAudio.playCrowd(true);
+                } else {
+                    setBanner('🧤 ВОРОТАР ЗЛОВИВ М\'ЯЧ!', 'save');
+                    arenaAudio.playCrowd(false);
+                }
                 triggerSaveFlash(ballMesh.position);
                 shotState = 'caught';
 
@@ -1369,14 +1305,22 @@
                 return true;
             }
 
-            if (minDist < 0.64) {
+            if (minDist < diveRadius) {
                 gkState.mode = 'land';
                 gkState.modeTime = 0;
                 gkState.outcome = 'save';
 
                 recordShotOutcome(false);
-                setBanner('🧤 СЕЙВ ВОРОТАРЯ!', 'save');
-                arenaAudio.playCrowd(false);
+                if (isDefend) {
+                    coins += 15;
+                    coinsEl.textContent = `💰 ${coins}`;
+                    localStorage.setItem('player_coins', String(coins));
+                    setBanner('🧤 СУПЕРСЕЙВ! +15 💰', 'goal');
+                    arenaAudio.playCrowd(true);
+                } else {
+                    setBanner('🧤 СЕЙВ ВОРОТАРЯ!', 'save');
+                    arenaAudio.playCrowd(false);
+                }
                 triggerSaveFlash(ballMesh.position);
 
                 const deflectX = (gkState.diveDir || (Math.random() < 0.5 ? -1 : 1)) * (2.6 + Math.random() * 1.4);
@@ -1425,14 +1369,12 @@
             const isCleanMiss = !hitLeftPost && !hitRightPost && !hitCrossbar &&
                 (Math.abs(shotTarget.x) > halfW || shotTarget.y > GOAL_H);
 
-            if (series.turnMode === 'attack') {
-                if (gkState.mode === 'catch_center') {
-                    gkState.mode = 'react';
-                    gkState.modeTime = 0;
-                } else {
-                    gkState.mode = 'land';
-                    gkState.modeTime = 0;
-                }
+            if (gkState.mode === 'catch_center') {
+                gkState.mode = 'react';
+                gkState.modeTime = 0;
+            } else if (gkState.mode === 'dive') {
+                gkState.mode = 'land';
+                gkState.modeTime = 0;
             }
 
             postRicochet.active = false;
@@ -1507,8 +1449,6 @@
 
         function finishMatch(winner) {
             series.over = true;
-            fpGlovesGroup.visible = false;
-            if (goalFrameEl) goalFrameEl.classList.remove('active');
 
             const titleEl = document.getElementById('modal-title');
             const scoreEl = document.getElementById('modal-score');
@@ -1546,6 +1486,7 @@
             strikerContainer.position.copy(STRIKER_START);
             strikerContainer.rotation.y = Math.PI - 0.25;
 
+            gkContainer.visible = true;
             gkState.mode = 'ready';
             gkState.modeTime = 0;
             gkState.outcome = 'none';
@@ -1553,19 +1494,9 @@
 
             playerGK.jumped = false;
             playerGK.jumpTime = 0;
-            playerGK.x = 0;
-            playerGK.y = 1.48;
-            playerGK.roll = 0;
-            playerGK.targetX = 0;
-            playerGK.peakY = 1.48;
-            playerGK.targetRoll = 0;
 
             const isDefend = series.turnMode === 'defend';
             applyStrikerKit(isDefend);
-
-            gkContainer.visible = !isDefend;
-            fpGlovesGroup.visible = isDefend;
-            if (goalFrameEl) goalFrameEl.classList.toggle('active', isDefend);
 
             if (!isDefend) {
                 camera.position.copy(attackCamPos);
@@ -1579,7 +1510,7 @@
                 camera.rotation.set(0, 0, 0);
                 camera.lookAt(defendLookAt);
                 setBanner('🧤 ЗАХИСТ ВОРІТ! Приготуйся ловити...', 'defend');
-                hintEl.textContent = '🧤 Коли бот розбіжиться — свайпни в бік м\'яча для стрибка!';
+                hintEl.textContent = '🧤 Свайпни в кут воріт, куди летить м\'яч, щоб стрибнути воротарем!';
                 setTimeout(triggerBotShot, 1150);
             }
         }
@@ -1672,7 +1603,6 @@
         }
 
         function updateGoalkeeperAnim(dt) {
-            if (series.turnMode === 'defend') return;
             if (gkMixer) gkMixer.update(dt);
 
             if (gkGlovesLoaded) {
@@ -1694,13 +1624,13 @@
                 gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 10));
                 crouchAmt = 0.18 + Math.abs(Math.sin(gkState.readyTime * 3.2)) * 0.04;
             } else if (gkState.mode === 'catch_center') {
-                const p = Math.min(1, gkState.modeTime / Math.max(0.32, shotDuration));
+                const p = Math.min(1, gkState.modeTime / 0.42);
                 gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, p);
                 gkState.y = Math.sin(p * Math.PI) * gkState.peakY;
                 gkState.diveAngle = 0;
                 crouchAmt = 0.32;
             } else if (gkState.mode === 'dive') {
-                const p = Math.min(1, gkState.modeTime / Math.max(0.38, shotDuration));
+                const p = Math.min(1, gkState.modeTime / 0.48);
                 const easeX = 1 - Math.pow(1 - p, 1.8);
                 gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, easeX);
                 gkState.y = Math.sin(p * Math.PI) * gkState.peakY;
@@ -1788,37 +1718,13 @@
         }
 // ==================== КІНЕЦЬ ЧАСТИНИ 15 з 16 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 16 з 16 ====================
-        function updateFirstPersonKeeper(dt, now) {
+        function updateDefendCamera(dt) {
             if (series.turnMode !== 'defend') return;
-
-            if (!playerGK.jumped) {
-                const sway = Math.sin(now * 0.004) * 0.05;
-                const bob = Math.abs(Math.sin(now * 0.008)) * 0.025;
-                playerGK.x = sway;
-                playerGK.y = 1.48 - bob;
-                playerGK.roll = sway * 0.12;
-            } else {
-                playerGK.jumpTime += dt;
-                const t = Math.min(1, playerGK.jumpTime / 0.45);
-                const ease = 1 - Math.pow(1 - t, 2.2);
-
-                playerGK.x = THREE.MathUtils.lerp(0, playerGK.targetX, ease);
-                const arc = Math.sin(Math.min(1, playerGK.jumpTime / 0.95) * Math.PI);
-                playerGK.y = THREE.MathUtils.lerp(1.48, playerGK.peakY, arc);
-                playerGK.roll = THREE.MathUtils.lerp(0, playerGK.targetRoll, ease);
-            }
-
-            camera.position.set(playerGK.x, playerGK.y, GOAL_Z + 0.15);
-            camera.lookAt(playerGK.x * 0.35, 0.92, SPOT_Z);
-            camera.rotation.z += playerGK.roll;
-
-            fpGlovesGroup.position.copy(camera.position);
-            fpGlovesGroup.quaternion.copy(camera.quaternion);
-            if (fpLeftGlove && fpRightGlove) {
-                const reach = playerGK.jumped ? Math.min(1, playerGK.jumpTime / 0.3) : 0;
-                fpLeftGlove.position.set(-0.22 + reach * 0.06, -0.17 + reach * 0.12, -0.54 - reach * 0.14);
-                fpRightGlove.position.set(0.22 - reach * 0.06, -0.17 + reach * 0.12, -0.54 - reach * 0.14);
-            }
+            const targetCamX = gkState.x * 0.35;
+            camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetCamX, dt * 6);
+            camera.position.y = THREE.MathUtils.lerp(camera.position.y, 2.38, dt * 6);
+            camera.position.z = GOAL_Z - 3.35;
+            camera.lookAt(gkState.x * 0.2, 1.15, SPOT_Z + 1.5);
         }
 
         window.addEventListener('resize', () => {
@@ -1836,7 +1742,7 @@
 
             updateStrikerAnim(dt);
             updateGoalkeeperAnim(dt);
-            updateFirstPersonKeeper(dt, now);
+            updateDefendCamera(dt);
 
             if (shotState === 'flying') {
                 shotProgress = Math.min(1, shotProgress + dt / shotDuration);
