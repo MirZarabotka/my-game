@@ -1463,7 +1463,7 @@
                     lastStepIndex = -1;
                 }
                 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 15 ====================
-                // ==================== ПОЧАТОК ЧАСТИНИ 14 з 15 ====================
+                 // ==================== ПОЧАТОК ЧАСТИНИ 14 з 15 ====================
                 else if (actionTimer < T_JUG_END) {
                     jugPhase = (actionTimer - T_FLICK_UP) * JUG_SPEED;
                     const stepIndex = Math.min(JUG_BEATS - 1, Math.floor(jugPhase / Math.PI));
@@ -1515,7 +1515,6 @@
                     ballMesh.rotation.z += (isLeftTarget ? 1 : -1) * dt * 1.4;
                     rollStartPos.copy(ballMesh.position);
                 } else {
-                    // Фініш на лівій нозі: ліва нога опускається, м'яч скочується з носочка в початкову точку
                     const p = smooth01((actionTimer - T_JUG_END) / (T_ROLL_END - T_JUG_END));
                     const footDownPhase = Math.min(1, p / 0.45);
                     const legRemain = 1 - smooth01(footDownPhase);
@@ -1561,26 +1560,33 @@
                 ballMesh.rotation.y += 0.01;
             }
 
+            // Пряма права рука піднімається кінчиками пальців вперед-вгору, розвертається долонею до нас і махає зап'ястям від гравця вбік
+            const wristSwing = waveBlend > 0.05 ? ((1 - Math.cos(actionTimer * 8.0)) * 0.5) * waveBlend : 0;
+
             if (waveBlend > 0.005) {
-                const outwardSwing = (1 - Math.cos(actionTimer * 7.5)) * 0.5;
                 if (rArm) {
-                    rotateBoneWorldAxis(rArm, worldAxisZ, -(1.92 - outwardSwing * 0.18) * waveBlend);
-                    rotateBoneWorldAxis(rArm, worldAxisX, -0.18 * waveBlend);
+                    // Підйом прямої руки вперед (-2.38 рад навколо X) та трохи вбік (-0.34 рад навколо Z), щоб не торкалася голови
+                    rotateBoneWorldAxis(rArm, worldAxisX, -2.38 * waveBlend);
+                    rotateBoneWorldAxis(rArm, worldAxisZ, -0.34 * waveBlend);
                 }
                 if (rForeArm) {
-                    rotateBoneWorldAxis(rForeArm, worldAxisZ, -(0.10 + outwardSwing * 0.52) * waveBlend);
-                    rotateBoneWorldAxis(rForeArm, worldAxisY, -1.55 * waveBlend);
+                    // Лікоть лишається рівним, передпліччя плавно розвертає долоню вперед до камери
+                    rotateBoneWorldAxis(rForeArm, worldAxisY, -1.45 * waveBlend);
                 }
                 if (spine) {
-                    rotateBoneWorldAxis(spine, worldAxisZ, 0.06 * waveBlend);
+                    rotateBoneWorldAxis(spine, worldAxisZ, 0.05 * waveBlend);
                 }
                 if (head) {
-                    rotateBoneWorldAxis(head, worldAxisX, -0.07 * waveBlend);
+                    rotateBoneWorldAxis(head, worldAxisX, -0.06 * waveBlend);
                 }
             }
 
             if (rightGloveHolder.children.length > 0) {
-                rightGloveHolder.children.at(0).rotation.y = 0.65 * waveBlend;
+                const gloveUnit = rightGloveHolder.children.at(0);
+                // Поворот долоні прямо на глядача у верхній точці
+                gloveUnit.rotation.y = 0.72 * waveBlend;
+                // Мах зап'ястям строго від гравця вправо в сторону
+                gloveUnit.rotation.z = -0.58 * wristSwing;
             }
             // ==================== КІНЕЦЬ ЧАСТИНИ 14 з 15 ====================
 
