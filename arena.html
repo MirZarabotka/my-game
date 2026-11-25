@@ -888,18 +888,26 @@
             }
         }
 
-        function loadGKAnimationClip(url, onLoaded) {
+        function loadGKAnimationClip(url, dropToGround, onLoaded) {
             loader.load(url, (animGltf) => {
                 const clip = animGltf.animations && animGltf.animations.at(0);
                 if (clip && gkMixer) {
-                    // Зберігаємо вертикальне опускання Hips на газон (Y), обнуляючи лише горизонтальний зсув (X, Z)
                     clip.tracks.forEach((t) => {
                         if (t.name.endsWith('.position')) {
                             const vals = t.values;
-                            const baseX = vals[0];
-                            const baseZ = vals[2];
+                            const baseX = vals;
+                            const baseZ = vals;
+                            let minY = Infinity;
+                            for (let i = 1; i < vals.length; i += 3) {
+                                if (vals[i] < minY) minY = vals[i];
+                            }
+                            // Опускаємо нижню точку падіння Hips до рівня газону (~14 од. скелета)
+                            const targetGroundY = 14.0;
+                            const shiftY = dropToGround && Number.isFinite(minY) ? (targetGroundY - minY) : 0;
+
                             for (let i = 0; i < vals.length; i += 3) {
                                 vals[i] = baseX;
+                                vals[i + 1] = Math.max(targetGroundY, vals[i + 1] + shiftY);
                                 vals[i + 2] = baseZ;
                             }
                         }
@@ -910,7 +918,7 @@
                     onLoaded(action);
                 }
             }, undefined, () => {
-                // Якщо файл ще не доданий — використовується резервна анімація
+                // Файл ще не додано в папку
             });
         }
 
@@ -1006,9 +1014,9 @@
                     if (gs) mountGKGloves(gs, gloveItem.c1);
                 });
 
-                loadGKAnimationClip('./gk_dive.glb', (act) => { gkDiveLowAction = act; });
-                loadGKAnimationClip('./gk_dive_high.glb', (act) => { gkDiveHighAction = act; });
-                loadGKAnimationClip('./gk_catch.glb', (act) => { gkCatchAction = act; });
+                loadGKAnimationClip('./gk_dive.glb', true, (act) => { gkDiveLowAction = act; });
+                loadGKAnimationClip('./gk_dive_high.glb', true, (act) => { gkDiveHighAction = act; });
+                loadGKAnimationClip('./gk_catch.glb', false, (act) => { gkCatchAction = act; });
             }
         }
 
@@ -1318,7 +1326,6 @@
 
         const tmpHandPosL = new THREE.Vector3();
         const tmpHandPosR = new THREE.Vector3();
-        const tmpChestPos = new THREE.Vector3();
 
         function recordShotOutcome(isGoal) {
             if (series.turnMode === 'attack') {
@@ -1333,7 +1340,8 @@
 
         function checkLiveGoalkeeperSave() {
             if (shotState !== 'flying') return false;
-            if (ballMesh.position.z > GOAL_Z + 0.7 || ballMesh.position.z < GOAL_Z - 0.15) return false;
+            // Перевіряємо контакт лише в площині воріт
+            if (ballMesh.position.z > GOAL_Z + 0.55 || ballMesh.position.z < GOAL_Z - 0.12) return false;
 
             const halfW = GOAL_W / 2;
             if (Math.abs(ballMesh.position.x) > halfW || ballMesh.position.y > GOAL_H) return false;
@@ -1342,31 +1350,31 @@
             if (isDefend && !playerGK.jumped) return false;
 
             gkContainer.updateMatrixWorld(true);
-            let minDist = 99;
+            let minHandDist = 99;
 
+            // Перевіряємо відстань суворо до лівої та правої рукавички
             if (gkLeftHand) {
                 gkLeftHand.getWorldPosition(tmpHandPosL);
                 const dL = ballMesh.position.distanceTo(tmpHandPosL);
-                if (dL < minDist) minDist = dL;
+                if (dL < minHandDist) minHandDist = dL;
             }
             if (gkRightHand) {
                 gkRightHand.getWorldPosition(tmpHandPosR);
                 const dR = ballMesh.position.distanceTo(tmpHandPosR);
-                if (dR < minDist) minDist = dR;
+                if (dR < minHandDist) minHandDist = dR;
             }
 
-            tmpChestPos.set(
-                gkState.x + gkState.diveDir * 0.35,
-                gkState.y + (gkState.isHigh ? 0.95 : 0.72),
-                GOAL_Z + 0.25
-            );
-            const dBody = ballMesh.position.distanceTo(tmpChestPos);
-            if (dBody < minDist) minDist = dBody;
+            // При ловлі по центру додатково перевіряємо зону між долонями
+            if (gkState.mode === 'catch_center' && gkLeftHand && gkRightHand) {
+                const midHands = tmpHandPosL.clone().add(tmpHandPosR).multiplyScalar(0.5);
+                const dMid = ballMesh.position.distanceTo(midHands);
+                if (dMid < minHandDist) minHandDist = dMid;
+            }
 
-            const catchRadius = isDefend ? 0.92 : 0.75;
-            const diveRadius = isDefend ? 0.85 : 0.64;
+            const catchRadius = isDefend ? 0.56 : 0.48;
+            const gloveRadius = isDefend ? 0.54 : 0.44;
 
-            if (gkState.mode === 'catch_center' && minDist < catchRadius) {
+            if (gkState.mode === 'catch_center' && minHandDist < catchRadius) {
                 gkState.mode = 'react';
                 gkState.modeTime = 0;
                 gkState.outcome = 'save';
@@ -1389,7 +1397,7 @@
                 return true;
             }
 
-            if (minDist < diveRadius) {
+            if (minHandDist < gloveRadius) {
                 gkState.mode = 'land';
                 gkState.modeTime = 0;
                 gkState.outcome = 'save';
@@ -1399,7 +1407,7 @@
                     coins += 15;
                     coinsEl.textContent = `💰 ${coins}`;
                     localStorage.setItem('player_coins', String(coins));
-                    setBanner('🧤 СУПЕРСЕЙВ! +15 💰', 'goal');
+                    setBanner('🧤 СУПЕРСЕЙВ РУКАМИ! +15 💰', 'goal');
                     arenaAudio.playCrowd(true);
                 } else {
                     setBanner('🧤 СЕЙВ ВОРОТАРЯ!', 'save');
@@ -1711,9 +1719,8 @@
                 gkActiveAction.fadeOut(0.05);
             }
             chosenAction.reset();
-            // Перемотуємо стартову затримку кліпу на початок стрибка і прискорюємо під політ м'яча
-            chosenAction.time = 0.16;
-            chosenAction.setEffectiveTimeScale(1.65).fadeIn(0.05).play();
+            chosenAction.time = 0.22;
+            chosenAction.setEffectiveTimeScale(1.75).fadeIn(0.05).play();
             gkActiveAction = chosenAction;
             gkClipStarted = true;
             return true;
@@ -1782,7 +1789,6 @@
                 if (!gkClipStarted) {
                     playGKZoneClip(gkState.isHigh ? 'high' : 'low', gkState.diveDir);
                 }
-                // Синхронізуємо швидкість зміщення воротаря з часом польоту м'яча (shotDuration)
                 const diveSpan = Math.max(0.32, shotDuration * 0.88);
                 const p = Math.min(1, gkState.modeTime / diveSpan);
                 const easeX = 1 - Math.pow(1 - p, 1.75);
@@ -1791,8 +1797,8 @@
 
                 const usingClip = (gkState.isHigh ? (gkDiveHighAction || gkDiveLowAction) : gkDiveLowAction) !== null;
                 if (usingClip) {
-                    // Висоту падіння задає сам трек Hips.y із Mixamo; для 9-ки додаємо легкий поштовх вгору
-                    gkState.y = gkState.isHigh ? Math.sin(p * Math.PI) * 0.32 : 0;
+                    // Притискаємо тіло до газону при падінні, щоб рукавички йшли на рівні низького м'яча
+                    gkState.y = gkState.isHigh ? Math.sin(p * Math.PI) * 0.25 : 0;
                     gkState.diveAngle = 0;
                 } else {
                     gkState.y = Math.sin(p * Math.PI) * gkState.peakY;
