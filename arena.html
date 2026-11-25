@@ -1157,20 +1157,20 @@
             const normY = THREE.MathUtils.clamp(dy / (window.innerHeight * 0.26), -0.35, 1.15);
             const reachBoost = THREE.MathUtils.clamp(0.90 + speed * 0.25, 0.90, 1.28);
 
-            const isTopDive = normY > 0.42 && Math.abs(worldNormX) > 0.55;
+            const isTopOrWideDive = (normY > 0.38 || Math.abs(worldNormX) > 0.52);
             const dir = Math.sign(worldNormX);
-            const stepShift = isTopDive ? dir * 0.95 : 0;
-            const targetX = THREE.MathUtils.clamp(worldNormX * (GOAL_W * 0.46) * reachBoost, -2.95, 2.95);
+            const stepShift = isTopOrWideDive ? dir * 1.05 : 0;
+            const targetX = THREE.MathUtils.clamp(worldNormX * (GOAL_W * 0.46) * reachBoost, -3.05, 3.05);
             const isCenter = Math.abs(worldNormX) < 0.20;
 
-            gkState.mode = isCenter ? 'catch_center' : 'dive';
+            gkState.mode = isCenter ? 'catch_center' : (isTopOrWideDive ? 'step' : 'dive');
             gkState.modeTime = 0;
             gkState.outcome = 'none';
             gkState.diveDir = isCenter ? 0 : dir;
             gkState.isHigh = normY > 0.35;
-            gkState.startX = gkState.x + stepShift;
+            gkState.startX = stepShift;
             gkState.targetX = targetX;
-            gkState.peakY = isTopDive ? 0.88 : (gkState.isHigh ? 0.58 : 0.14);
+            gkState.peakY = (normY > 0.45) ? 0.95 : (gkState.isHigh ? 0.62 : 0.16);
         }
 
         container.addEventListener('pointerdown', (e) => {
@@ -1220,8 +1220,8 @@
                 let ty = 1.1;
 
                 if (aimRaycaster.ray.intersectPlane(aimGoalPlane, hitPoint)) {
-                    tx = THREE.MathUtils.clamp(hitPoint.x, -GOAL_W * 0.65, GOAL_W * 0.65);
-                    ty = THREE.MathUtils.clamp(hitPoint.y, BALL_R, GOAL_H * 1.32);
+                    tx = THREE.MathUtils.clamp(hitPoint.x, -GOAL_W * 0.68, GOAL_W * 0.68);
+                    ty = THREE.MathUtils.clamp(hitPoint.y, BALL_R, GOAL_H * 1.38);
                 } else {
                     const fallbackX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.28), -1.2, 1.2);
                     const fallbackY = THREE.MathUtils.clamp(dy / (window.innerHeight * 0.36), 0.05, 1.2);
@@ -1229,17 +1229,25 @@
                     ty = BALL_R + fallbackY * (GOAL_H - BALL_R * 0.4);
                 }
 
-                const speedNorm = THREE.MathUtils.clamp((swipeSpeed - 350) / 1700, 0, 1);
-                const power = 0.78 + speedNorm * 0.56;
+                const speedNorm = THREE.MathUtils.clamp((swipeSpeed - 350) / 1600, 0, 1);
+                const power = 0.78 + speedNorm * 0.58;
 
-                const isAimingTopCorner = ty > 1.72 && Math.abs(tx) > 2.45;
-                if (isAimingTopCorner) {
-                    const spread = 0.22 + speedNorm * 0.24;
+                // Легкий свайп (малий speedNorm) опускає траєкторію м'яча нижче до газону
+                const heightScale = 0.25 + speedNorm * 0.85;
+                ty = BALL_R + (ty - BALL_R) * heightScale;
+
+                // Складність влучання в кути та дев'ятку: що вище і ближче до штанги + сильніший удар, то більший ризик промаху
+                const cornerFactorX = Math.max(0, (Math.abs(tx) - 1.7) / 1.9);
+                const heightFactorY = Math.max(0, (ty - 1.35) / 1.1);
+                const difficulty = cornerFactorX * 0.65 + heightFactorY * 0.75 + speedNorm * 0.45;
+
+                if (difficulty > 0.25) {
+                    const spread = difficulty * 0.52;
                     tx += (Math.random() - 0.5) * spread;
-                    ty += (Math.random() - 0.38) * spread;
+                    ty += (Math.random() - 0.35) * spread;
                 }
 
-                const curve = THREE.MathUtils.clamp(-dx / window.innerWidth, -1, 1) * 0.28;
+                const curve = THREE.MathUtils.clamp(-dx / window.innerWidth, -1, 1) * 0.26;
 
                 startShotRunup(tx, ty, curve, power);
             } else if (series.turnMode === 'defend') {
@@ -1568,7 +1576,7 @@
             setupTurnState();
         });
 // ==================== КІНЕЦЬ ЧАСТИНИ 14 з 16 ====================
-/// ==================== ПОЧАТОК ЧАСТИНИ 15 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 15A з 16 ====================
         function drawSwipeGuide() {
             if (!swipeStart || !swipeCurr) return;
             aimCtx.clearRect(0, 0, aimCanvas.width, aimCanvas.height);
@@ -1632,7 +1640,8 @@
                 }
             }
         }
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 15A з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 15B з 16 ====================
         function updateGoalkeeperAnim(dt) {
             if (gkMixer) gkMixer.update(dt);
 
@@ -1647,6 +1656,7 @@
             let crouchAmt = 0;
             let celebrateAmt = 0;
             let despairAmt = 0;
+            let stepStride = 0;
 
             if (gkState.mode === 'ready') {
                 gkState.readyTime += dt;
@@ -1654,6 +1664,20 @@
                 gkState.y = 0;
                 gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 10));
                 crouchAmt = 0.18 + Math.abs(Math.sin(gkState.readyTime * 3.2)) * 0.04;
+            } else if (gkState.mode === 'step') {
+                const stepDur = 0.22;
+                const p = Math.min(1, gkState.modeTime / stepDur);
+                const ease = p * p * (3 - 2 * p);
+                gkState.x = THREE.MathUtils.lerp(0, gkState.startX, ease);
+                gkState.y = Math.sin(p * Math.PI) * 0.09;
+                gkState.diveAngle = -gkState.diveDir * 0.18 * p;
+                crouchAmt = 0.34;
+                stepStride = Math.sin(p * Math.PI);
+
+                if (p >= 1) {
+                    gkState.mode = 'dive';
+                    gkState.modeTime = 0;
+                }
             } else if (gkState.mode === 'catch_center') {
                 const p = Math.min(1, gkState.modeTime / 0.42);
                 gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, p);
@@ -1661,18 +1685,15 @@
                 gkState.diveAngle = 0;
                 crouchAmt = 0.32;
             } else if (gkState.mode === 'dive') {
-                const p = Math.min(1, gkState.modeTime / 0.48);
-                const stepPhase = Math.min(1, p / 0.25);
-                const jumpPhase = Math.max(0, (p - 0.20) / 0.80);
-                const easeX = 1 - Math.pow(1 - jumpPhase, 1.75);
+                const p = Math.min(1, gkState.modeTime / 0.42);
+                const easeX = 1 - Math.pow(1 - p, 1.85);
 
-                const baseStepX = THREE.MathUtils.lerp(0, gkState.startX, stepPhase);
-                gkState.x = THREE.MathUtils.lerp(baseStepX, gkState.targetX, easeX);
-                gkState.y = Math.sin(jumpPhase * Math.PI) * gkState.peakY;
+                gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, easeX);
+                gkState.y = Math.sin(p * Math.PI) * gkState.peakY;
 
-                const maxAngle = gkState.isHigh ? 1.32 : 1.48;
-                gkState.diveAngle = -gkState.diveDir * maxAngle * Math.min(1, jumpPhase * 1.35);
-                diveAmt = Math.min(1, jumpPhase * 1.4);
+                const maxAngle = gkState.isHigh ? 1.30 : 1.48;
+                gkState.diveAngle = -gkState.diveDir * maxAngle * Math.min(1, p * 1.35);
+                diveAmt = Math.min(1, p * 1.4);
             } else if (gkState.mode === 'land') {
                 const p = Math.min(1, gkState.modeTime / 0.55);
                 gkState.y = THREE.MathUtils.lerp(gkState.y, 0.02, Math.min(1, dt * 14));
@@ -1744,15 +1765,24 @@
 
             const trailBend = diveAmt * 0.42;
             const totalBend = crouchAmt + despairAmt * 0.22;
-            if (rUpLeg) rUpLeg.rotation.x += -totalBend - (gkState.diveDir < 0 ? trailBend : 0);
-            if (lUpLeg) lUpLeg.rotation.x += -totalBend - (gkState.diveDir > 0 ? trailBend : 0);
+            if (rUpLeg) {
+                rUpLeg.rotation.x += -totalBend - (gkState.diveDir < 0 ? trailBend : 0);
+                rUpLeg.rotation.z += stepStride * (gkState.diveDir < 0 ? -0.45 : 0.25);
+            }
+            if (lUpLeg) {
+                lUpLeg.rotation.x += -totalBend - (gkState.diveDir > 0 ? trailBend : 0);
+                lUpLeg.rotation.z += stepStride * (gkState.diveDir > 0 ? 0.45 : -0.25);
+            }
             if (rLeg) rLeg.rotation.x += -totalBend * 1.9 - (gkState.diveDir < 0 ? trailBend * 1.4 : 0);
             if (lLeg) lLeg.rotation.x += -totalBend * 1.9 - (gkState.diveDir > 0 ? trailBend * 1.4 : 0);
 
-            if (spine) spine.rotation.x += crouchAmt * 0.55 + despairAmt * 0.42 - celebrateAmt * 0.12;
+            if (spine) {
+                spine.rotation.x += crouchAmt * 0.55 + despairAmt * 0.42 - celebrateAmt * 0.12;
+                spine.rotation.z += -gkState.diveDir * stepStride * 0.22;
+            }
             if (head) head.rotation.x += despairAmt * 0.38 - celebrateAmt * 0.15;
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 15 з 16 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 15B з 16 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 16 з 16 ====================
         const camLookCurrent = new THREE.Vector3();
 
