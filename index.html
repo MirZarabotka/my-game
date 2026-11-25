@@ -1167,6 +1167,7 @@
 
             const jerseyTex = createJerseyTexture(jersey);
             let spineBone = null;
+            const bodyMeshes = [];
 
             walkModel(playerModel, (child) => {
                 if (child.isBone && child.name) {
@@ -1192,6 +1193,7 @@
                 if (!child.isMesh || !child.material) return;
                 child.castShadow = true;
                 child.receiveShadow = true;
+                bodyMeshes.push(child);
                 const name = (child.name || '').toLowerCase();
 
                 if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
@@ -1217,30 +1219,66 @@
                 }
             });
 
+            scene.add(playerModel);
+            playerModel.updateMatrixWorld(true);
+
             const backNumberMat = new THREE.MeshBasicMaterial({
                 map: createBackNumberTexture(num, numCol),
                 transparent: true,
-                side: THREE.FrontSide,
+                side: THREE.DoubleSide,
                 depthWrite: false,
                 polygonOffset: true,
                 polygonOffsetFactor: -4
             });
 
-            const backGeo = new THREE.CylinderGeometry(13.8, 13.0, 28, 24, 1, true, Math.PI - 0.58, 1.16);
-            backGeo.scale(-1, 1, 1);
+            const backGeo = new THREE.PlaneGeometry(25, 25, 16, 16);
             const backNumberMesh = new THREE.Mesh(backGeo, backNumberMat);
 
             if (spineBone) {
-                backNumberMesh.position.set(0, 2.2, 1.2);
-                backNumberMesh.rotation.set(0.06, 0, 0);
+                backNumberMesh.position.set(0, 2.0, -14.0);
+                backNumberMesh.rotation.set(0, Math.PI, 0);
                 spineBone.add(backNumberMesh);
+                backNumberMesh.updateMatrixWorld(true);
+
+                // Проєктуємо кожну вершину сітки прямо на 3D-поверхню футболки по рельєфу спини
+                const posAttr = backGeo.attributes.position;
+                const raycaster = new THREE.Raycaster();
+                const localOrigin = new THREE.Vector3();
+                const localTarget = new THREE.Vector3();
+                const worldOrigin = new THREE.Vector3();
+                const worldTarget = new THREE.Vector3();
+                const rayDir = new THREE.Vector3();
+
+                for (let i = 0; i < posAttr.count; i++) {
+                    const vx = posAttr.getX(i);
+                    const vy = posAttr.getY(i);
+
+                    localOrigin.set(vx, vy, -8.0);
+                    localTarget.set(vx, vy, 12.0);
+                    worldOrigin.copy(localOrigin).applyMatrix4(backNumberMesh.matrixWorld);
+                    worldTarget.copy(localTarget).applyMatrix4(backNumberMesh.matrixWorld);
+                    rayDir.subVectors(worldTarget, worldOrigin).normalize();
+
+                    raycaster.set(worldOrigin, rayDir);
+                    const hits = raycaster.intersectObjects(bodyMeshes, false);
+
+                    if (hits.length > 0) {
+                        const hitLocal = backNumberMesh.worldToLocal(hits.at(0).point.clone());
+                        posAttr.setZ(i, hitLocal.z - 0.35);
+                    } else {
+                        // Плавний запасний вигин, якщо край сітки виходить за контур спини
+                        const curveZ = (vx * vx) * 0.028;
+                        posAttr.setZ(i, curveZ - 1.2);
+                    }
+                }
+                posAttr.needsUpdate = true;
+                backGeo.computeVertexNormals();
             } else {
                 backNumberMesh.scale.set(0.01, 0.01, 0.01);
-                backNumberMesh.position.set(0, 1.21, 0.012);
+                backNumberMesh.position.set(0, 1.21, -0.132);
+                backNumberMesh.rotation.y = Math.PI;
                 playerModel.add(backNumberMesh);
             }
-
-            scene.add(playerModel);
             // ==================== КІНЕЦЬ ЧАСТИНИ 11 з 15 ====================
             // ==================== ПОЧАТОК ЧАСТИНИ 12 з 15 ====================
             loader.load(
