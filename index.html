@@ -1611,9 +1611,10 @@
             }
 
             if (rightGloveHolder.children.length > 0) {
-                rightGloveHolder.children.rotation.y = 0.65 * waveBlend;
+                rightGloveHolder.children.at(0).rotation.y = 0.65 * waveBlend;
             }
             // ==================== КІНЕЦЬ ЧАСТИНИ 14 з 15 ====================
+
             // ==================== ПОЧАТОК ЧАСТИНИ 15 з 15 ====================
             if (glovesLoaded) {
                 if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
