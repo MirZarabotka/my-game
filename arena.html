@@ -1,4 +1,4 @@
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 14 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 16 ==================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -59,8 +59,8 @@
             font-weight: 800; font-size: 0.88rem;
             box-shadow: 0 6px 18px rgba(0,0,0,0.45);
         }
-/*-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 14 ==================== */
-/*-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 14 ==================== */
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 16 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 16 ==================== -->
         .status-banner {
             position: absolute; top: 72px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px);
@@ -198,8 +198,8 @@
             }
         }
     </script>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 2 з 14 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 3 з 14 ==================== -->
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 2 з 16 ==================== -->
+// ==================== ПОЧАТОК ЧАСТИНИ 3 з 16 ====================
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
@@ -230,12 +230,11 @@
             bannerEl.className = 'status-banner' + (type ? ' ' + type : '');
         }
 
-        // Стан серії пенальті
         const series = {
-            turnMode: 'attack', // 'attack' (б'є гравець) | 'defend' (ловить гравець)
+            turnMode: 'attack',
             youGoals: 0,
             botGoals: 0,
-            youHistory: [], // 'goal' | 'miss'
+            youHistory: [],
             botHistory: [],
             over: false
         };
@@ -277,8 +276,8 @@
             }
             return null;
         }
-/*-- ==================== КІНЕЦЬ ЧАСТИНИ 3 з 14 ==================== --*/
-/*-- ==================== ПОЧАТОК ЧАСТИНИ 4 з 14 ==================== -*/
+// ==================== КІНЕЦЬ ЧАСТИНИ 3 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 4 з 16 ====================
         class ArenaAudio {
             constructor() {
                 this.ctx = null;
@@ -383,7 +382,7 @@
                 thud.start(now);
                 thud.stop(now + 0.16);
 
-                [118, 236].forEach((f, i) => {
+               .forEach((f, i) => {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
                     osc.type = 'sine';
@@ -440,8 +439,8 @@
             }
         }
         const arenaAudio = new ArenaAudio();
-/*-- ==================== КІНЕЦЬ ЧАСТИНИ 4 з 14 ==================== */
-/*-- ==================== ПОЧАТОК ЧАСТИНИ 5 з 14 ==================== */
+// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 5 з 16 ====================
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x071326);
@@ -457,7 +456,6 @@
         const attackCamPos = new THREE.Vector3(-0.95, 2.48, SPOT_Z + 4.95);
         const attackLookAt = new THREE.Vector3(0, 1.05, GOAL_Z);
 
-        // Позиція очей воротаря у воротах (вид від першої особи)
         const defendCamPos = new THREE.Vector3(0, 1.58, GOAL_Z + 0.35);
         const defendLookAt = new THREE.Vector3(0, 0.85, SPOT_Z);
 
@@ -544,8 +542,8 @@
         track.rotation.x = -Math.PI / 2;
         track.position.y = -0.02;
         stadiumGroup.add(track);
-/*-- ==================== КІНЕЦЬ ЧАСТИНИ 5 з 14 ==================== --*/
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 6 з 14 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 6 з 16 ====================
         function createBannerTexture() {
             const c = document.createElement('canvas');
             c.width = 2048; c.height = 128;
@@ -660,8 +658,8 @@
             if (m.instanceColor) m.instanceColor.needsUpdate = true;
             stadiumGroup.add(m);
         });
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 6 з 14 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 7 з 14 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 6 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 7 з 16 ====================
         const goalGroup = new THREE.Group();
         goalGroup.position.set(0, 0, GOAL_Z);
         scene.add(goalGroup);
@@ -765,8 +763,8 @@
             tex.colorSpace = THREE.SRGBColorSpace;
             return tex;
         }
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 7 з 14 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 8 з 14 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 7 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 8 з 16 ====================
         const ballId = localStorage.getItem('eq_balls') || 'ball1';
         const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
 
@@ -873,14 +871,12 @@
             attachArm(buildHalf(true), gkLeftForeArm, gkLeftHand);
             gkGlovesLoaded = true;
         }
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 8 з 14 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 9 з 14 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 8 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 9 з 16 ====================
         let strikerShirtMat = null;
         let strikerShortMat = null;
         let playerJerseyTex = null;
         let playerShortCol = '#ffffff';
-        const botJerseyMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.7 });
-        const botShortMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.75 });
 
         function applyStrikerKit(isBot) {
             if (!strikerShirtMat || !strikerShortMat) return;
@@ -1000,9 +996,9 @@
                 hideLoader();
             }, undefined, () => hideLoader());
         }, undefined, () => hideLoader());
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 9 з 14 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 10A з 14 ==================== -->
-        let shotState = 'ready'; // 'ready' | 'runup' | 'flying' | 'post_to_post' | 'to_net' | 'caught' | 'rebound' | 'in_net'
+// ==================== КІНЕЦЬ ЧАСТИНИ 9 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 10 з 16 ====================
+        let shotState = 'ready';
         let stateTimer = 0;
         let shotProgress = 0;
         let shotDuration = 0.56;
@@ -1030,7 +1026,6 @@
             readyTime: 0
         };
 
-        // Стан стрибка гравця-воротаря від першої особи
         const playerGK = {
             jumped: false,
             jumpTime: 0,
@@ -1043,8 +1038,7 @@
         };
 
         const netImpact = { active: false, x: 0, y: 1.2, amp: 0, phase: 0 };
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 10A з 14 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 10B з 14 ==================== -->
+
         function deformGoalNet(dt) {
             if (!netImpact.active) return;
             netImpact.phase += dt * 11;
@@ -1066,7 +1060,8 @@
                 pos.needsUpdate = true;
             }
         }
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 10 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 11 з 16 ====================
         const aimCanvas = document.getElementById('aim-canvas');
         const aimCtx = aimCanvas.getContext('2d');
         function rszAim() {
@@ -1096,14 +1091,12 @@
         function triggerBotShot() {
             if (shotState !== 'ready' || series.turnMode !== 'defend' || series.over) return;
 
-            // Бот вибирає зону удару: кути, центр, інколи легкий промах
             const roll = Math.random();
             let bx = 0;
             let by = 1.1;
             let bPower = 0.92 + Math.random() * 0.34;
 
             if (roll < 0.08) {
-                // Невеликий промах бота
                 bx = (Math.random() < 0.5 ? -1 : 1) * (GOAL_W * 0.5 + 0.25 + Math.random() * 0.45);
                 by = 0.4 + Math.random() * 2.1;
             } else {
@@ -1116,13 +1109,11 @@
             const bCurve = -bx * 0.08;
             startShotRunup(bx, by, bCurve, bPower);
         }
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 10B з 14 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 11 з 14 ==================== -->
+
         function executeKick() {
             arenaAudio.playKick();
             shotState = 'flying';
             shotProgress = 0;
-            // Чим більша швидкість свайпу (shotPower), тим швидше летить м'яч
             shotDuration = THREE.MathUtils.clamp(0.72 - shotPower * 0.22, 0.36, 0.74);
             shotStart.set(0, BALL_R, SPOT_Z);
             shotArcY = 0.18 + (1 - Math.min(1, shotTarget.y / GOAL_H)) * 0.34;
@@ -1132,7 +1123,6 @@
                 return;
             }
 
-            // Якщо атакує гравець — AI воротар стрибає
             const isCenterShot = Math.abs(shotTarget.x) < 0.75 && shotTarget.y <= GOAL_H;
             if (isCenterShot && Math.random() < 0.65) {
                 gkState.mode = 'catch_center';
@@ -1163,7 +1153,8 @@
                 : THREE.MathUtils.clamp(dir * (1.25 + Math.random() * 0.75), -maxSafeX, maxSafeX);
             gkState.peakY = gkState.isHigh ? 0.48 : 0.12;
         }
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 11 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 12 з 16 ====================
         function triggerPlayerKeeperDive(dx, dy, speed) {
             if (series.turnMode !== 'defend' || playerGK.jumped) return;
             if (shotState !== 'runup' && shotState !== 'flying') return;
@@ -1175,7 +1166,6 @@
             const normY = THREE.MathUtils.clamp(dy / (window.innerHeight * 0.28), -0.35, 1.1);
             const reachBoost = THREE.MathUtils.clamp(0.75 + speed * 0.28, 0.75, 1.2);
 
-            // У виді з воріт обличчям у поле: свайп вправо = рух по +X
             playerGK.targetX = THREE.MathUtils.clamp(normX * (GOAL_W * 0.46) * reachBoost, -GOAL_W * 0.46, GOAL_W * 0.46);
             playerGK.peakY = THREE.MathUtils.clamp(1.25 + normY * 0.95, 0.85, 2.25);
             playerGK.targetRoll = -normX * 0.78;
@@ -1199,10 +1189,10 @@
         window.addEventListener('pointerup', (e) => {
             if (!swipeStart) return;
             const dx = e.clientX - swipeStart.x;
-            const dy = swipeStart.y - e.clientY; // вгору > 0
+            const dy = swipeStart.y - e.clientY;
             const elapsed = Math.max(0.04, (performance.now() - swipeStart.t) * 0.001);
             const swipeDist = Math.hypot(dx, dy);
-            const swipeSpeed = swipeDist / elapsed; // px / сек
+            const swipeSpeed = swipeDist / elapsed;
 
             swipeStart = null;
             swipeCurr = null;
@@ -1217,9 +1207,8 @@
                     return;
                 }
 
-                // Швидкість свайпу визначає силу удару та висоту польоту
                 const speedNorm = THREE.MathUtils.clamp((swipeSpeed - 350) / 1700, 0, 1);
-                const power = 0.72 + speedNorm * 0.62; // від 0.72 до 1.34
+                const power = 0.72 + speedNorm * 0.62;
 
                 const normX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.28), -1.25, 1.25);
                 const distNormY = THREE.MathUtils.clamp((dy - 12) / (window.innerHeight * 0.36), 0.04, 1.25);
@@ -1235,8 +1224,8 @@
                 triggerPlayerKeeperDive(dx, dy, swipeSpeed / 1200);
             }
         });
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 11 з 14 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 12 з 14 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 12 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 13 з 16 ====================
         const saveFlashMesh = new THREE.Mesh(
             new THREE.RingGeometry(0.08, 0.36, 24),
             new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0, side: THREE.DoubleSide })
@@ -1273,7 +1262,6 @@
             const halfW = GOAL_W / 2;
             if (Math.abs(ballMesh.position.x) > halfW || ballMesh.position.y > GOAL_H) return false;
 
-            // Режим захисту гравця від першої особи
             if (series.turnMode === 'defend') {
                 const dx = Math.abs(ballMesh.position.x - playerGK.x);
                 const dy = Math.abs(ballMesh.position.y - (playerGK.y - 0.12));
@@ -1300,7 +1288,6 @@
                 return false;
             }
 
-            // Режим атаки гравця (сейв робить AI-воротар)
             gkContainer.updateMatrixWorld(true);
             let minDist = 99;
 
@@ -1358,8 +1345,8 @@
             }
             return false;
         }
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 12 з 14 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 13 з 14 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 13 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 14 з 16 ====================
         function registerGoal(customBanner) {
             gkState.outcome = 'goal';
             recordShotOutcome(true);
@@ -1531,7 +1518,6 @@
             const isDefend = series.turnMode === 'defend';
             applyStrikerKit(isDefend);
 
-            // У режимі захисту ховаємо 3D модель воротаря, щоб дивитися від першої особи
             gkContainer.visible = !isDefend;
             gkHudEl.classList.toggle('active', isDefend);
             hudGloveL.style.transform = 'rotate(-18deg)';
@@ -1575,8 +1561,8 @@
             renderSeriesHUD();
             setupTurnState();
         });
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 13 з 14 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 14A з 14 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 14 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 15 з 16 ====================
         function drawSwipeGuide() {
             if (!swipeStart || !swipeCurr) return;
             aimCtx.clearRect(0, 0, aimCanvas.width, aimCanvas.height);
@@ -1756,8 +1742,8 @@
             if (spine) spine.rotation.x += crouchAmt * 0.55 + despairAmt * 0.42 - celebrateAmt * 0.12;
             if (head) head.rotation.x += despairAmt * 0.38 - celebrateAmt * 0.15;
         }
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 14A з 14 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 14B з 14 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 15 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 16 з 16 ====================
         function updateFirstPersonKeeper(dt, now) {
             if (series.turnMode !== 'defend') return;
 
@@ -1777,7 +1763,6 @@
                 playerGK.y = THREE.MathUtils.lerp(1.58, playerGK.peakY, arc);
                 playerGK.roll = THREE.MathUtils.lerp(0, playerGK.targetRoll, ease);
 
-                // Рух рукавичок на екрані в бік стрибка
                 const shiftX = (playerGK.x / 3.5) * 42;
                 const shiftY = -(playerGK.y - 1.58) * 55;
                 hudGloveL.style.transform = `translate(${shiftX}px, ${shiftY}px) rotate(-12deg) scale(1.12)`;
@@ -1910,4 +1895,4 @@
     </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 14B з 14 ==================== -->
+// ==================== КІНЕЦЬ ЧАСТИНИ 16 з 16 ====================
