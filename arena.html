@@ -1111,7 +1111,8 @@
 
         const playerGK = {
             jumped: false,
-            jumpTime: 0
+            jumpTime: 0,
+            queuedZone: null
         };
 
         const netImpact = { active: false, x: 0, y: 1.2, amp: 0, phase: 0 };
@@ -1243,15 +1244,11 @@
         const aimGoalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -GOAL_Z);
         const gkControlsEl = document.getElementById('gk-controls');
 
-        function triggerKeeperZone(zone) {
-            if (series.turnMode !== 'defend' || playerGK.jumped || series.over) return;
-            if (shotState !== 'runup' && shotState !== 'flying') return;
-
-            arenaAudio.init();
+        function executeKeeperDiveZone(zone) {
+            if (!zone || playerGK.jumped) return;
             playerGK.jumped = true;
             playerGK.jumpTime = 0;
 
-            // Камера дивиться в +Z (із воріт у поле), тому ліворуч на екрані = +X, праворуч = -X
             const isTop = zone.startsWith('top');
             const isLeft = zone.endsWith('left');
             const isRight = zone.endsWith('right');
@@ -1268,20 +1265,37 @@
             gkState.startX = 0;
             gkState.targetX = targetX;
             gkState.peakY = isTop ? 0.55 : 0.0;
+        }
+
+        function triggerKeeperZone(zone) {
+            if (series.turnMode !== 'defend' || playerGK.jumped || series.over) return;
+
+            arenaAudio.init();
+            playerGK.queuedZone = zone;
 
             if (gkControlsEl) {
                 gkControlsEl.querySelectorAll('.gk-btn').forEach(b => {
                     b.classList.toggle('pressed', b.dataset.zone === zone);
                 });
             }
+
+            if (shotState === 'flying' && shotProgress >= 0.42) {
+                executeKeeperDiveZone(zone);
+            } else {
+                setBanner('🧤 НАПРЯМОК ОБРАНО! Чекаємо удару...', 'defend');
+            }
         }
 
         if (gkControlsEl) {
             gkControlsEl.querySelectorAll('.gk-btn').forEach((btn) => {
-                btn.addEventListener('pointerdown', (e) => {
+                const handleBtn = (e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     triggerKeeperZone(btn.dataset.zone);
-                });
+                };
+                btn.addEventListener('pointerdown', handleBtn);
+                btn.addEventListener('touchstart', handleBtn, { passive: false });
+                btn.addEventListener('click', handleBtn);
             });
         }
 
@@ -1661,6 +1675,7 @@
 
             playerGK.jumped = false;
             playerGK.jumpTime = 0;
+            playerGK.queuedZone = null;
 
             const isDefend = series.turnMode === 'defend';
             applyStrikerKit(isDefend);
@@ -1681,8 +1696,8 @@
                 camera.position.copy(defendCamPos);
                 camera.rotation.set(0, 0, 0);
                 camera.lookAt(defendLookAt);
-                setBanner('🧤 ЗАХИСТ ВОРІТ! Натисни зону стрибка', 'defend');
-                hintEl.textContent = '🧤 Натисни потрібний кут або центр на панелі кнопок (або Q/W/E/A/S/D)!';
+                setBanner('🧤 ЗАХИСТ ВОРІТ! Обери зону стрибка', 'defend');
+                hintEl.textContent = '🧤 Натисни потрібну зону заздалегідь або під час удару (чи Q/W/E/A/S/D)!';
                 setTimeout(triggerBotShot, 1150);
             }
         }
@@ -1983,12 +1998,10 @@
 
         function updateMatchCamera(dt) {
             if (series.turnMode === 'attack') {
-                // В атаці камера стоїть на місці і дивиться прямо на ворота
                 camera.position.copy(attackCamPos);
                 camLookCurrent.copy(attackLookAt);
                 camera.lookAt(attackLookAt);
             } else {
-                // На воротах камера стоїть на місці, але повертає голову за м'ячем під час та після удару
                 camera.position.copy(defendCamPos);
 
                 const isTrackingBall =
@@ -2032,6 +2045,11 @@
 
             if (shotState === 'flying') {
                 shotProgress = Math.min(1, shotProgress + dt / shotDuration);
+
+                if (series.turnMode === 'defend' && playerGK.queuedZone && !playerGK.jumped && shotProgress >= 0.42) {
+                    executeKeeperDiveZone(playerGK.queuedZone);
+                }
+
                 const ease = 1 - Math.pow(1 - shotProgress, 1.55);
 
                 const curX = THREE.MathUtils.lerp(shotStart.x, shotTarget.x, ease) + Math.sin(shotProgress * Math.PI) * shotCurveX;
@@ -2093,7 +2111,14 @@
                     }
                 }
             } else if (shotState === 'caught') {
-                ballMesh.position.set(gkState.x, gkState.y + 1.05, GOAL_Z + 0.52);
+                gkContainer.updateMatrixWorld(true);
+                if (gkLeftHand && gkRightHand) {
+                    gkLeftHand.getWorldPosition(tmpHandPosL);
+                    gkRightHand.getWorldPosition(tmpHandPosR);
+                    ballMesh.position.copy(tmpHandPosL).add(tmpHandPosR).multiplyScalar(0.5);
+                } else {
+                    ballMesh.position.set(gkState.x, 0.22, GOAL_Z + 0.15);
+                }
             } else if (shotState === 'rebound') {
                 ballMesh.position.addScaledVector(reboundVel, dt);
                 reboundVel.y -= 9.8 * dt;
