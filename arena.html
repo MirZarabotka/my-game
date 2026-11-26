@@ -904,12 +904,13 @@
             gkGlovesLoaded = true;
         }
 // ==================== КІНЕЦЬ ЧАСТИНИ 8 з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 9 з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 9A з 16 ====================
         let strikerShirtMat = null;
         let strikerShortMat = null;
         let playerJerseyTex = null;
         let playerShortCol = '#ffffff';
 
+        let gkModelRoot = null;
         let gkIdleAction = null;        // idle.glb — стійка перед ударом
         let gkDiveLowAction = null;     // glove.glb / gk_dive.glb — падіння в нижній кут
         let gkDiveHighAction = null;    // gk_dive_high.glb — відбиття 9-ки
@@ -933,11 +934,37 @@
             }
         }
 
+        function normalizeAndBindClip(clip, targetModel) {
+            if (!clip || !targetModel) return clip;
+            const boneNames = [];
+            targetModel.traverse((n) => {
+                if (n.isBone && n.name) boneNames.push(n.name);
+            });
+
+            clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
+            clip.tracks.forEach((track) => {
+                const dotIdx = track.name.lastIndexOf('.');
+                if (dotIdx === -1) return;
+                const rawBone = track.name.slice(0, dotIdx);
+                const prop = track.name.slice(dotIdx);
+                const cleanKey = rawBone.replace(/^.*[:|]/, '').replace(/^mixamorig/i, '').toLowerCase();
+
+                const matched = boneNames.find((b) => {
+                    const bClean = b.replace(/^.*[:|]/, '').replace(/^mixamorig/i, '').toLowerCase();
+                    return bClean === cleanKey;
+                });
+                if (matched) {
+                    track.name = matched + prop;
+                }
+            });
+            return clip;
+        }
+
         function loadGKAnimationClip(url, isLoop, onLoaded) {
-            loader.load(url, (animGltf) => {
+            loader.load(url + '?v=' + Date.now(), (animGltf) => {
                 const clip = animGltf.animations && animGltf.animations.at(0);
-                if (clip && gkMixer) {
-                    clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
+                if (clip && gkMixer && gkModelRoot) {
+                    normalizeAndBindClip(clip, gkModelRoot);
                     const action = gkMixer.clipAction(clip);
                     if (isLoop) {
                         action.setLoop(THREE.LoopRepeat);
@@ -949,7 +976,8 @@
                 }
             }, undefined, () => {});
         }
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 9A з 16 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 9B з 16 ====================
         function setupPlayerModel(gltf, isGK, gloveItem) {
             const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
             if (!model) return;
@@ -1015,6 +1043,11 @@
                 }
                 strikerContainer.add(model);
             } else {
+                gkModelRoot = model;
+                if (!gkMixer) {
+                    gkMixer = new THREE.AnimationMixer(model);
+                }
+
                 model.traverse((child) => {
                     if (child.isBone && child.name) {
                         const n = child.name.toLowerCase();
@@ -1037,12 +1070,12 @@
                 });
                 gkContainer.add(model);
 
-                loader.load('./glove.glb?v=3', (gGltf) => {
+                loader.load('./glove.glb?v=' + Date.now(), (gGltf) => {
                     const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
                     if (gs) mountGKGloves(gs, gloveItem.c1);
                     const clip = gGltf.animations && gGltf.animations.at(0);
                     if (clip && gkMixer && !gkDiveLowAction) {
-                        clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
+                        normalizeAndBindClip(clip, gkModelRoot);
                         const act = gkMixer.clipAction(clip);
                         act.setLoop(THREE.LoopOnce);
                         act.clampWhenFinished = true;
@@ -1050,7 +1083,6 @@
                     }
                 });
 
-                // Підключаємо всі 5 анімацій воротаря
                 loadGKAnimationClip('./idle.glb', true, (act) => {
                     if (gkIdleAction) gkIdleAction.stop();
                     gkIdleAction = act;
@@ -1079,7 +1111,7 @@
                 hideLoader();
             }, undefined, () => hideLoader());
         }, undefined, () => hideLoader());
-// ==================== КІНЕЦЬ ЧАСТИНИ 9 з 16 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 9B з 16 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 10 з 16 ====================
         let shotState = 'ready';
         let stateTimer = 0;
@@ -1794,7 +1826,7 @@
         let gkCurrentZone = 'idle';
 
         function playGKZoneClip(zone, dir) {
-            if (!gkMixer || !gkIdleAction) return false;
+            if (!gkMixer) return false;
 
             let chosenAction = null;
             if (zone === 'center_high') {
@@ -1813,12 +1845,13 @@
 
             if (!chosenAction) return false;
 
-            if (gkActiveAction && gkActiveAction !== chosenAction) {
-                gkActiveAction.fadeOut(0.04);
-            }
+            gkMixer.stopAllAction();
             chosenAction.reset();
             chosenAction.time = 0.14;
-            chosenAction.setEffectiveTimeScale(1.75).fadeIn(0.04).play();
+            chosenAction.setEffectiveWeight(1.0);
+            chosenAction.setEffectiveTimeScale(1.75);
+            chosenAction.play();
+
             gkActiveAction = chosenAction;
             gkCurrentZone = zone;
             gkClipStarted = true;
@@ -1829,11 +1862,11 @@
             gkClipStarted = false;
             gkCurrentZone = 'idle';
             gkContainer.scale.x = 1;
-            if (!gkIdleAction) return;
-            if (gkActiveAction && gkActiveAction !== gkIdleAction) {
-                gkActiveAction.fadeOut(0.18);
-            }
-            gkIdleAction.reset().fadeIn(0.18).play();
+            if (!gkMixer || !gkIdleAction) return;
+            gkMixer.stopAllAction();
+            gkIdleAction.reset();
+            gkIdleAction.setEffectiveWeight(1.0);
+            gkIdleAction.play();
             gkActiveAction = gkIdleAction;
         }
 
@@ -1870,7 +1903,6 @@
                 gkState.diveAngle = 0;
                 crouchAmt = 0.32;
 
-                // Притискаємо нижній сейв по центру (gk_catch2.glb) до рівня трави
                 if (hasActiveExternalClip && gkCurrentZone === 'center_low') {
                     clipDropY = -0.44 * Math.min(1, p * 1.6);
                 }
@@ -1888,7 +1920,6 @@
                 if (hasActiveExternalClip) {
                     gkState.y = gkState.isHigh ? Math.sin(p * Math.PI) * 0.24 : 0;
                     gkState.diveAngle = 0;
-                    // Прив'язка до рівня низу штанги / білої лінії воріт
                     const targetDrop = gkState.isHigh ? -0.36 : -0.72;
                     clipDropY = targetDrop * Math.min(1, p * 1.6);
                 } else {
