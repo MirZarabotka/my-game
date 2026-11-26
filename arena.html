@@ -59,8 +59,8 @@
             font-weight: 800; font-size: 0.88rem;
             box-shadow: 0 6px 18px rgba(0,0,0,0.45);
         }
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 16 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 16 ==================== -->
+/* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 16 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 2 з 16 ==================== */
         .status-banner {
             position: absolute; top: 72px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px);
@@ -83,6 +83,40 @@
             font-size: 0.8rem; font-weight: 700; color: #e2e8f0;
             text-align: center; white-space: nowrap;
         }
+
+        #gk-controls {
+            position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%);
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: min(92vw, 390px);
+            pointer-events: auto;
+            z-index: 25;
+        }
+        #gk-controls.active { display: grid; }
+        .gk-btn {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(10px);
+            color: #f8fafc;
+            border: 1.5px solid rgba(251, 191, 36, 0.55);
+            border-radius: 16px;
+            padding: 13px 8px;
+            font-weight: 900;
+            font-size: 0.86rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55);
+            transition: transform 0.1s, background 0.15s, border-color 0.15s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        .gk-btn:active, .gk-btn.pressed {
+            transform: scale(0.93);
+            background: rgba(245, 158, 11, 0.35);
+            border-color: #fde047;
+        }
+        .gk-btn span.arrow { font-size: 1.25rem; line-height: 1; }
 
         #match-modal {
             position: absolute; inset: 0;
@@ -156,6 +190,16 @@
         </div>
 
         <div class="status-banner" id="status-banner">⚽ Твій удар! Проведи пальцем у ворота</div>
+
+        <div id="gk-controls">
+            <button class="gk-btn" data-zone="top-left"><span class="arrow">↖</span>9-КА ЛІВО</button>
+            <button class="gk-btn" data-zone="top-center"><span class="arrow">⬆</span>ЦЕНТР ВЕРХ</button>
+            <button class="gk-btn" data-zone="top-right"><span class="arrow">↗</span>9-КА ПРАВО</button>
+            <button class="gk-btn" data-zone="bot-left"><span class="arrow">↙</span>НИЗ ЛІВО</button>
+            <button class="gk-btn" data-zone="bot-center"><span class="arrow">⬇</span>ЦЕНТР НИЗ</button>
+            <button class="gk-btn" data-zone="bot-right"><span class="arrow">↘</span>НИЗ ПРАВО</button>
+        </div>
+
         <div class="bottom-hint" id="bottom-hint">👆 Швидкий свайп у бік воріт — чим різкіший рух, тим сильніший удар!</div>
     </div>
 
@@ -1197,42 +1241,65 @@
 // ==================== ПОЧАТОК ЧАСТИНИ 12 з 16 ====================
         const aimRaycaster = new THREE.Raycaster();
         const aimGoalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -GOAL_Z);
+        const gkControlsEl = document.getElementById('gk-controls');
 
-        function triggerPlayerKeeperDive(dx, dy, speed) {
-            if (series.turnMode !== 'defend' || playerGK.jumped) return;
+        function triggerKeeperZone(zone) {
+            if (series.turnMode !== 'defend' || playerGK.jumped || series.over) return;
             if (shotState !== 'runup' && shotState !== 'flying') return;
 
+            arenaAudio.init();
             playerGK.jumped = true;
             playerGK.jumpTime = 0;
 
-            const screenNormX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.24), -1.15, 1.15);
-            const worldNormX = -screenNormX;
-            const normY = THREE.MathUtils.clamp(dy / (window.innerHeight * 0.26), -0.35, 1.15);
-            const reachBoost = THREE.MathUtils.clamp(0.90 + speed * 0.25, 0.90, 1.28);
+            // Камера дивиться в +Z (із воріт у поле), тому ліворуч на екрані = +X, праворуч = -X
+            const isTop = zone.startsWith('top');
+            const isLeft = zone.endsWith('left');
+            const isRight = zone.endsWith('right');
+            const isCenter = zone.endsWith('center');
 
-            const isHighDive = normY > 0.38;
-            // При низькому свайпі воротар одразу падає без кроку; крок тільки для верхнього кута
-            const doStep = isHighDive && Math.abs(worldNormX) > 0.55;
-            const dir = Math.sign(worldNormX);
-            const stepShift = doStep ? dir * 1.0 : 0;
-            const targetX = THREE.MathUtils.clamp(worldNormX * (GOAL_W * 0.46) * reachBoost, -2.95, 2.95);
-            const isCenter = Math.abs(worldNormX) < 0.20;
+            const dir = isLeft ? 1 : (isRight ? -1 : 0);
+            const targetX = isCenter ? 0 : dir * (isTop ? 2.45 : 2.35);
 
-            gkState.mode = isCenter ? 'catch_center' : (doStep ? 'step' : 'dive');
+            gkState.mode = isCenter ? 'catch_center' : 'dive';
             gkState.modeTime = 0;
             gkState.outcome = 'none';
-            gkState.diveDir = isCenter ? 0 : dir;
-            gkState.isHigh = isHighDive;
-            gkState.startX = stepShift;
+            gkState.diveDir = dir;
+            gkState.isHigh = isTop;
+            gkState.startX = 0;
             gkState.targetX = targetX;
-            gkState.peakY = isHighDive ? 0.65 : 0.0;
+            gkState.peakY = isTop ? 0.55 : 0.0;
+
+            if (gkControlsEl) {
+                gkControlsEl.querySelectorAll('.gk-btn').forEach(b => {
+                    b.classList.toggle('pressed', b.dataset.zone === zone);
+                });
+            }
         }
+
+        if (gkControlsEl) {
+            gkControlsEl.querySelectorAll('.gk-btn').forEach((btn) => {
+                btn.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    triggerKeeperZone(btn.dataset.zone);
+                });
+            });
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (series.turnMode !== 'defend') return;
+            const k = e.key.toLowerCase();
+            if (k === 'q') triggerKeeperZone('top-left');
+            else if (k === 'w' || e.key === 'ArrowUp') triggerKeeperZone('top-center');
+            else if (k === 'e') triggerKeeperZone('top-right');
+            else if (k === 'a' || e.key === 'ArrowLeft') triggerKeeperZone('bot-left');
+            else if (k === 's' || e.key === 'ArrowDown') triggerKeeperZone('bot-center');
+            else if (k === 'd' || e.key === 'ArrowRight') triggerKeeperZone('bot-right');
+        });
 
         container.addEventListener('pointerdown', (e) => {
             arenaAudio.init();
             if (series.over) return;
-            if (series.turnMode === 'attack' && shotState !== 'ready') return;
-            if (series.turnMode === 'defend' && playerGK.jumped) return;
+            if (series.turnMode !== 'attack' || shotState !== 'ready') return;
 
             swipeStart = { x: e.clientX, y: e.clientY, t: performance.now() };
             swipeCurr = { x: e.clientX, y: e.clientY };
@@ -1255,58 +1322,52 @@
             swipeCurr = null;
             aimCtx.clearRect(0, 0, aimCanvas.width, aimCanvas.height);
 
-            if (series.over) return;
+            if (series.over || series.turnMode !== 'attack' || shotState !== 'ready') return;
 
-            if (series.turnMode === 'attack') {
-                if (shotState !== 'ready') return;
-                if (swipeDist < 24 || dy < 10) {
-                    setBanner('👆 Проведи пальцем у точку воріт, куди хочеш вдарити!');
-                    return;
-                }
-
-                const ndc = new THREE.Vector2(
-                    (e.clientX / window.innerWidth) * 2 - 1,
-                    -(e.clientY / window.innerHeight) * 2 + 1
-                );
-                aimRaycaster.setFromCamera(ndc, camera);
-                const hitPoint = new THREE.Vector3();
-
-                let tx = 0;
-                let ty = 1.1;
-
-                if (aimRaycaster.ray.intersectPlane(aimGoalPlane, hitPoint)) {
-                    tx = THREE.MathUtils.clamp(hitPoint.x, -GOAL_W * 0.68, GOAL_W * 0.68);
-                    ty = THREE.MathUtils.clamp(hitPoint.y, BALL_R, GOAL_H * 1.38);
-                } else {
-                    const fallbackX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.28), -1.2, 1.2);
-                    const fallbackY = THREE.MathUtils.clamp(dy / (window.innerHeight * 0.36), 0.05, 1.2);
-                    tx = fallbackX * (GOAL_W * 0.5);
-                    ty = BALL_R + fallbackY * (GOAL_H - BALL_R * 0.4);
-                }
-
-                const speedNorm = THREE.MathUtils.clamp((swipeSpeed - 350) / 1600, 0, 1);
-                const power = 0.78 + speedNorm * 0.58;
-
-                const heightScale = 0.25 + speedNorm * 0.85;
-                ty = BALL_R + (ty - BALL_R) * heightScale;
-
-                const cornerFactorX = Math.max(0, (Math.abs(tx) - 1.7) / 1.9);
-                const heightFactorY = Math.max(0, (ty - 1.35) / 1.1);
-                const difficulty = cornerFactorX * 0.65 + heightFactorY * 0.75 + speedNorm * 0.45;
-
-                if (difficulty > 0.25) {
-                    const spread = difficulty * 0.52;
-                    tx += (Math.random() - 0.5) * spread;
-                    ty += (Math.random() - 0.35) * spread;
-                }
-
-                const curve = THREE.MathUtils.clamp(-dx / window.innerWidth, -1, 1) * 0.26;
-
-                startShotRunup(tx, ty, curve, power);
-            } else if (series.turnMode === 'defend') {
-                if (swipeDist < 18) return;
-                triggerPlayerKeeperDive(dx, dy, swipeSpeed / 1200);
+            if (swipeDist < 24 || dy < 10) {
+                setBanner('👆 Проведи пальцем у точку воріт, куди хочеш вдарити!');
+                return;
             }
+
+            const ndc = new THREE.Vector2(
+                (e.clientX / window.innerWidth) * 2 - 1,
+                -(e.clientY / window.innerHeight) * 2 + 1
+            );
+            aimRaycaster.setFromCamera(ndc, camera);
+            const hitPoint = new THREE.Vector3();
+
+            let tx = 0;
+            let ty = 1.1;
+
+            if (aimRaycaster.ray.intersectPlane(aimGoalPlane, hitPoint)) {
+                tx = THREE.MathUtils.clamp(hitPoint.x, -GOAL_W * 0.68, GOAL_W * 0.68);
+                ty = THREE.MathUtils.clamp(hitPoint.y, BALL_R, GOAL_H * 1.38);
+            } else {
+                const fallbackX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.28), -1.2, 1.2);
+                const fallbackY = THREE.MathUtils.clamp(dy / (window.innerHeight * 0.36), 0.05, 1.2);
+                tx = fallbackX * (GOAL_W * 0.5);
+                ty = BALL_R + fallbackY * (GOAL_H - BALL_R * 0.4);
+            }
+
+            const speedNorm = THREE.MathUtils.clamp((swipeSpeed - 350) / 1600, 0, 1);
+            const power = 0.78 + speedNorm * 0.58;
+
+            const heightScale = 0.25 + speedNorm * 0.85;
+            ty = BALL_R + (ty - BALL_R) * heightScale;
+
+            const cornerFactorX = Math.max(0, (Math.abs(tx) - 1.7) / 1.9);
+            const heightFactorY = Math.max(0, (ty - 1.35) / 1.1);
+            const difficulty = cornerFactorX * 0.65 + heightFactorY * 0.75 + speedNorm * 0.45;
+
+            if (difficulty > 0.25) {
+                const spread = difficulty * 0.52;
+                tx += (Math.random() - 0.5) * spread;
+                ty += (Math.random() - 0.35) * spread;
+            }
+
+            const curve = THREE.MathUtils.clamp(-dx / window.innerWidth, -1, 1) * 0.26;
+
+            startShotRunup(tx, ty, curve, power);
         });
 // ==================== КІНЕЦЬ ЧАСТИНИ 12 з 16 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 13 з 16 ====================
@@ -1553,6 +1614,7 @@
 
         function finishMatch(winner) {
             series.over = true;
+            if (gkControlsEl) gkControlsEl.classList.remove('active');
 
             const titleEl = document.getElementById('modal-title');
             const scoreEl = document.getElementById('modal-score');
@@ -1603,6 +1665,11 @@
             const isDefend = series.turnMode === 'defend';
             applyStrikerKit(isDefend);
 
+            if (gkControlsEl) {
+                gkControlsEl.classList.toggle('active', isDefend);
+                gkControlsEl.querySelectorAll('.gk-btn').forEach(b => b.classList.remove('pressed'));
+            }
+
             if (!isDefend) {
                 camera.position.copy(attackCamPos);
                 camera.rotation.set(0, 0, 0);
@@ -1614,8 +1681,8 @@
                 camera.position.copy(defendCamPos);
                 camera.rotation.set(0, 0, 0);
                 camera.lookAt(defendLookAt);
-                setBanner('🧤 ЗАХИСТ ВОРІТ! Приготуйся ловити...', 'defend');
-                hintEl.textContent = '🧤 Свайпни в кут воріт, куди летить м\'яч, щоб стрибнути воротарем!';
+                setBanner('🧤 ЗАХИСТ ВОРІТ! Натисни зону стрибка', 'defend');
+                hintEl.textContent = '🧤 Натисни потрібний кут або центр на панелі кнопок (або Q/W/E/A/S/D)!';
                 setTimeout(triggerBotShot, 1150);
             }
         }
