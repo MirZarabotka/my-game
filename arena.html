@@ -987,7 +987,7 @@
             });
 
             if (matchedCount === 0 && boneNames.length > 0) {
-                setBanner(`⚠️ Кістки не збіглися (${url || 'clip'}): у моделі ${boneNames.at(0)}`, 'save');
+                setBanner(`⚠️ Кістки не збіглися: у моделі ${boneNames.at(0)}`, 'save');
             }
             return clip;
         }
@@ -995,7 +995,6 @@
         function loadGKAnimationClip(url, isLoop, onLoaded) {
             loader.load(url + '?v=' + Date.now(), (animGltf) => {
                 const anims = animGltf.animations || [];
-                // Беремо найдовшу анімацію у файлі (якщо в Blender експортувалося кілька доріжок)
                 const clip = anims.slice().sort((a, b) => b.duration - a.duration).at(0);
 
                 if (!clip) {
