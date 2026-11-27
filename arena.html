@@ -1,10 +1,10 @@
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 16 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 20 ==================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Penalty 3D — Серія Пенальті</title>
+    <title>Penalty 3D — Дуель Нервів</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { overflow: hidden; background: #071326; color: #ffffff; touch-action: none; }
@@ -38,12 +38,8 @@
         }
         .team-you { color: #38bdf8; }
         .team-bot { color: #f87171; }
-        .score-dots-row {
-            display: flex; align-items: center; gap: 10px;
-        }
-        .dots-group {
-            display: flex; gap: 4px;
-        }
+        .score-dots-row { display: flex; align-items: center; gap: 10px; }
+        .dots-group { display: flex; gap: 4px; }
         .p-dot {
             width: 9px; height: 9px; border-radius: 50%;
             background: rgba(255,255,255,0.18);
@@ -59,8 +55,8 @@
             font-weight: 800; font-size: 0.88rem;
             box-shadow: 0 6px 18px rgba(0,0,0,0.45);
         }
-/* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 16 ==================== */
-/* ==================== ПОЧАТОК ЧАСТИНИ 2 з 16 ==================== */
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 20 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 2 з 20 ==================== -->
         .status-banner {
             position: absolute; top: 72px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px);
@@ -74,6 +70,27 @@
         .status-banner.goal { border-color: #22c55e; color: #4ade80; transform: translateX(-50%) scale(1.08); }
         .status-banner.save { border-color: #ef4444; color: #f87171; }
         .status-banner.defend { border-color: #f59e0b; color: #fbbf24; }
+        .status-banner.tension { border-color: #e11d48; color: #fda4af; animation: pulseTension 0.9s infinite alternate; }
+
+        @keyframes pulseTension {
+            from { transform: translateX(-50%) scale(1.0); box-shadow: 0 0 12px rgba(225, 29, 72, 0.4); }
+            to { transform: translateX(-50%) scale(1.06); box-shadow: 0 0 24px rgba(225, 29, 72, 0.85); }
+        }
+
+        .nerves-bar-wrap {
+            position: absolute; top: 116px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(15, 23, 42, 0.82); padding: 4px 12px; border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.14); font-size: 0.76rem; font-weight: 800;
+        }
+        .nerves-track {
+            width: 90px; height: 7px; background: rgba(255,255,255,0.15);
+            border-radius: 6px; overflow: hidden;
+        }
+        .nerves-fill {
+            height: 100%; width: 25%; background: linear-gradient(90deg, #22c55e, #facc15, #ef4444);
+            transition: width 0.25s;
+        }
 
         .bottom-hint {
             position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
@@ -83,6 +100,26 @@
             font-size: 0.8rem; font-weight: 700; color: #e2e8f0;
             text-align: center; white-space: nowrap;
         }
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 2 з 20 ==================== -->
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 3 з 20 ==================== -->
+        #attack-tricks {
+            position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%);
+            display: none; gap: 10px; pointer-events: auto; z-index: 25;
+        }
+        #attack-tricks.active { display: flex; }
+        .trick-btn {
+            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px);
+            color: #f8fafc; border: 1.5px solid rgba(56, 189, 248, 0.55);
+            border-radius: 16px; padding: 10px 16px;
+            font-weight: 900; font-size: 0.85rem; cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            transition: transform 0.12s, background 0.15s, border-color 0.15s;
+        }
+        .trick-btn.selected {
+            background: rgba(56, 189, 248, 0.35); border-color: #fde047; color: #fde047;
+            transform: scale(1.05);
+        }
+        .trick-btn:active { transform: scale(0.94); }
 
         #gk-controls {
             position: absolute; bottom: 58px; left: 50%; transform: translateX(-50%);
@@ -117,6 +154,15 @@
             border-color: #fde047;
         }
         .gk-btn span.arrow { font-size: 1.25rem; line-height: 1; }
+        .taunt-btn {
+            grid-column: span 3;
+            background: linear-gradient(135deg, rgba(225, 29, 72, 0.85), rgba(190, 18, 60, 0.9));
+            border-color: #fda4af;
+            padding: 9px;
+            flex-direction: row;
+            justify-content: center;
+            gap: 8px;
+        }
 
         #match-modal {
             position: absolute; inset: 0;
@@ -165,7 +211,7 @@
 
     <div id="loader-screen">
         <div class="spinner"></div>
-        <div>Підготовка серії пенальті...</div>
+        <div>Підготовка дуелі нервів...</div>
     </div>
 
     <div id="canvas-container"></div>
@@ -191,7 +237,19 @@
 
         <div class="status-banner" id="status-banner">⚽ Твій удар! Проведи пальцем у ворота</div>
 
+        <div class="nerves-bar-wrap">
+            <span>💓 НЕРВИ:</span>
+            <div class="nerves-track"><div class="nerves-fill" id="nerves-fill"></div></div>
+            <span id="nerves-bpm">85 BPM</span>
+        </div>
+
+        <div id="attack-tricks">
+            <button class="trick-btn" id="btn-feint">⏸️ Фінт на розбігу</button>
+            <button class="trick-btn" id="btn-panenka">🪄 Паненка (x2 💰)</button>
+        </div>
+
         <div id="gk-controls">
+            <button class="gk-btn taunt-btn" id="btn-taunt">🤪 ПРОВОКУВАТИ Б'ЮЧОГО (Збити приціл)</button>
             <button class="gk-btn" data-zone="top-left"><span class="arrow">↖</span>9-КА ЛІВО</button>
             <button class="gk-btn" data-zone="top-center"><span class="arrow">⬆</span>ЦЕНТР ВЕРХ</button>
             <button class="gk-btn" data-zone="top-right"><span class="arrow">↗</span>9-КА ПРАВО</button>
@@ -200,7 +258,7 @@
             <button class="gk-btn" data-zone="bot-right"><span class="arrow">↘</span>НИЗ ПРАВО</button>
         </div>
 
-        <div class="bottom-hint" id="bottom-hint">👆 Швидкий свайп у бік воріт — чим різкіший рух, тим сильніший удар!</div>
+        <div class="bottom-hint" id="bottom-hint">👆 Обери фінт або зроби швидкий свайп у ворота!</div>
     </div>
 
     <div id="match-modal">
@@ -222,8 +280,8 @@
             }
         }
     </script>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 2 з 16 ==================== -->
-// ==================== ПОЧАТОК ЧАСТИНИ 3 з 16 ====================
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 3 з 20 ==================== -->
+// ==================== ПОЧАТОК ЧАСТИНИ 4 з 20 ====================
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
@@ -243,6 +301,8 @@
         const bannerEl = document.getElementById('status-banner');
         const hintEl = document.getElementById('bottom-hint');
         const matchModalEl = document.getElementById('match-modal');
+        const nervesFillEl = document.getElementById('nerves-fill');
+        const nervesBpmEl = document.getElementById('nerves-bpm');
 
         coinsEl.textContent = `💰 ${coins}`;
 
@@ -259,6 +319,23 @@
             botHistory: [],
             over: false
         };
+
+        const duelState = {
+            youNerves: 0.25,
+            botNerves: 0.25,
+            useFeint: false,
+            usePanenka: false,
+            tauntUsed: false,
+            isCrucialShot: false
+        };
+
+        function updateNervesUI() {
+            const val = series.turnMode === 'attack' ? duelState.youNerves : duelState.botNerves;
+            const pct = Math.round(THREE.MathUtils.clamp(val, 0.1, 1) * 100);
+            const bpm = Math.round(78 + val * 98);
+            if (nervesFillEl) nervesFillEl.style.width = `${pct}%`;
+            if (nervesBpmEl) nervesBpmEl.textContent = `${bpm} BPM`;
+        }
 
         function renderSeriesHUD() {
             youScoreEl.textContent = series.youGoals;
@@ -297,8 +374,8 @@
             }
             return null;
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 3 з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 4 з 16 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 5 з 20 ====================
         class ArenaAudio {
             constructor() {
                 this.ctx = null;
@@ -349,6 +426,27 @@
                 gain.connect(this.ctx.destination);
                 src.start();
             }
+            playHeartbeat() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                [0, 0.22].forEach((offset, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(idx === 0 ? 68 : 54, now + offset);
+                    osc.frequency.exponentialRampToValueAtTime(28, now + offset + 0.14);
+                    gain.gain.setValueAtTime(idx === 0 ? 0.55 : 0.4, now + offset);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.16);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + offset);
+                    osc.stop(now + offset + 0.17);
+                });
+            }
+// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 6 з 20 ====================
             playKick() {
                 if (!this.enabled) return;
                 this.init();
@@ -471,8 +569,8 @@
             }
         }
         const arenaAudio = new ArenaAudio();
-// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 5 з 16 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 6 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 7 з 20 ====================
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x071326);
@@ -574,8 +672,8 @@
         track.rotation.x = -Math.PI / 2;
         track.position.y = -0.02;
         stadiumGroup.add(track);
-// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 6 з 16 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 7 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 8 з 20 ====================
         function createBannerTexture() {
             const c = document.createElement('canvas');
             c.width = 2048; c.height = 128;
@@ -586,7 +684,7 @@
             ctx.fillStyle = '#38bdf8'; ctx.fillRect(0, 0, 2048, 10); ctx.fillRect(0, 118, 2048, 10);
             ctx.fillStyle = '#ffffff'; ctx.font = '900 54px "Segoe UI", sans-serif';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText('⚽ PENALTY 3D ARENA   ★   CHAMPIONS CUP   ★   GOAL TIME! 🔥', 1024, 66);
+            ctx.fillText('⚽ PENALTY 3D ARENA   ★   NERVE DUEL   ★   GOAL TIME! 🔥', 1024, 66);
             const tex = new THREE.CanvasTexture(c);
             tex.wrapS = THREE.RepeatWrapping; tex.repeat.set(3, 1); tex.colorSpace = THREE.SRGBColorSpace;
             return tex;
@@ -690,8 +788,8 @@
             if (m.instanceColor) m.instanceColor.needsUpdate = true;
             stadiumGroup.add(m);
         });
-// ==================== КІНЕЦЬ ЧАСТИНИ 6 з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 7 з 16 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 8 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 9 з 20 ====================
         const goalGroup = new THREE.Group();
         goalGroup.position.set(0, 0, GOAL_Z);
         scene.add(goalGroup);
@@ -795,8 +893,8 @@
             tex.colorSpace = THREE.SRGBColorSpace;
             return tex;
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 7 з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 8 з 16 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 9 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 10 з 20 ====================
         const ballId = localStorage.getItem('eq_balls') || 'ball1';
         const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
 
@@ -840,9 +938,6 @@
             }
         }
         setTimeout(hideLoader, 3000);
-
-        let strikerMixer = null;
-        let gkMixer = null;
 
         function mountGKGloves(gloveScene, gloveColorHex) {
             gloveScene.updateMatrixWorld(true);
@@ -903,22 +998,12 @@
             attachArm(buildHalf(true), gkLeftForeArm, gkLeftHand);
             gkGlovesLoaded = true;
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 8 з 16 ====================
-// ██████████████████████████████████████████████████████████████████
-// ██                    ПОЧАТОК ЧАСТИНИ 9A з 16                   ██
-// ██████████████████████████████████████████████████████████████████
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 10 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 11 з 20 ====================
         let strikerShirtMat = null;
         let strikerShortMat = null;
         let playerJerseyTex = null;
         let playerShortCol = '#ffffff';
-
-        // Тільки дві анімації воротаря: стійка та падіння в нижній кут
-        let gkModelRoot = null;
-        let gkIdleAction = null;        // idle.glb — стійка перед ударом
-        let gkDiveLowAction = null;     // gk_catch2.glb — падіння в нижній кут
-        let gkActiveAction = null;
-        let gkDiveMirrored = true;
 
         function applyStrikerKit(isBot) {
             if (!strikerShirtMat || !strikerShortMat) return;
@@ -935,113 +1020,9 @@
             }
         }
 
-        function normalizeAndBindClip(clip, targetModel) {
-            if (!clip || !targetModel) return clip;
-            const boneNames = [];
-            targetModel.traverse((n) => {
-                if (n.isBone && n.name) boneNames.push(n.name);
-            });
-
-            const simplify = (str) => String(str || '')
-                .replace(/^.*[:|/\\]/, '')
-                .replace(/^(mixamorig|armature|skeleton|rig|character|root)[\._:\-\s]*/i, '')
-                .replace(/[\._\-]\d+$/, '')
-                .replace(/[^a-zA-Z0-9]/g, '')
-                .toLowerCase();
-
-            const boneMap = new Map();
-            boneNames.forEach((b) => {
-                boneMap.set(simplify(b), b);
-            });
-
-            clip.tracks = clip.tracks.filter(t => {
-                if (t.name.endsWith('.position')) {
-                    const bonePart = t.name.slice(0, t.name.lastIndexOf('.'));
-                    const s = simplify(bonePart);
-                    return s.includes('hips') || s.includes('pelvis') || s.includes('root');
-                }
-                return true;
-            });
-
-            let matchedCount = 0;
-            clip.tracks.forEach((track) => {
-                const dotIdx = track.name.lastIndexOf('.');
-                if (dotIdx === -1) return;
-                const rawBone = track.name.slice(0, dotIdx);
-                const prop = track.name.slice(dotIdx);
-                const cleanKey = simplify(rawBone);
-
-                let matched = boneMap.get(cleanKey);
-                if (!matched) {
-                    for (const [k, origName] of boneMap.entries()) {
-                        if (k.length > 3 && (k.endsWith(cleanKey) || cleanKey.endsWith(k))) {
-                            matched = origName;
-                            break;
-                        }
-                    }
-                }
-                if (matched) {
-                    track.name = matched + prop;
-                    matchedCount++;
-                }
-            });
-
-            if (matchedCount === 0 && boneNames.length > 0) {
-                setBanner(`⚠️ Кістки не збіглися: у моделі ${boneNames.at(0)}`, 'save');
-            }
-            return clip;
-        }
-
-        function loadGKAnimationClip(url, isLoop, onLoaded) {
-            loader.load(url + '?v=' + Date.now(), (animGltf) => {
-                const anims = animGltf.animations || [];
-                const clip = anims.slice().sort((a, b) => b.duration - a.duration).at(0);
-
-                if (!clip) {
-                    setBanner(`⚠️ У файлі ${url} немає жодної анімації!`, 'save');
-                    return;
-                }
-                if (gkMixer && gkModelRoot) {
-                    normalizeAndBindClip(clip, gkModelRoot);
-                    const action = gkMixer.clipAction(clip);
-                    if (isLoop) {
-                        action.setLoop(THREE.LoopRepeat);
-                    } else {
-                        action.setLoop(THREE.LoopOnce);
-                        action.clampWhenFinished = true;
-                    }
-                    onLoaded(action);
-                }
-            }, undefined, () => {
-                setBanner(`❌ Не знайдено файл ${url} у папці гри!`, 'save');
-            });
-        }
-
-// ██████████████████████████████████████████████████████████████████
-// ██                    КІНЕЦЬ ЧАСТИНИ 9A з 16                    ██
-// ██████████████████████████████████████████████████████████████████
-// ██████████████████████████████████████████████████████████████████
-// ██                    ПОЧАТОК ЧАСТИНИ 9B з 16                   ██
-// ██████████████████████████████████████████████████████████████████
-
         function setupPlayerModel(gltf, isGK, gloveItem) {
             const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
             if (!model) return;
-
-            const anim = gltf.animations && gltf.animations.at(0);
-            if (anim) {
-                const mixer = new THREE.AnimationMixer(model);
-                const action = mixer.clipAction(anim);
-                action.play();
-                mixer.update(0.01);
-                if (isGK) {
-                    gkMixer = mixer;
-                    gkIdleAction = action;
-                    gkActiveAction = action;
-                } else {
-                    strikerMixer = mixer;
-                }
-            }
 
             if (!isGK) {
                 const jId = localStorage.getItem('eq_jerseys') || 'j1';
@@ -1089,11 +1070,6 @@
                 }
                 strikerContainer.add(model);
             } else {
-                gkModelRoot = model;
-                if (!gkMixer) {
-                    gkMixer = new THREE.AnimationMixer(model);
-                }
-
                 model.traverse((child) => {
                     if (child.isBone && child.name) {
                         const n = child.name.toLowerCase();
@@ -1120,17 +1096,6 @@
                     const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
                     if (gs) mountGKGloves(gs, gloveItem.c1);
                 });
-
-                // Завантажуємо початкову стійку (idle.glb) та падіння в кут (gk_dive.glb)
-                loadGKAnimationClip('./idle.glb', true, (act) => {
-                    if (gkIdleAction) gkIdleAction.stop();
-                    gkIdleAction = act;
-                    gkActiveAction = act;
-                    act.play();
-                });
-                loadGKAnimationClip('./gk_dive.glb', false, (act) => {
-                    gkDiveLowAction = act;
-                });
             }
         }
 
@@ -1149,15 +1114,14 @@
                 hideLoader();
             }, undefined, () => hideLoader());
         }, undefined, () => hideLoader());
-
-// ██████████████████████████████████████████████████████████████████
-// ██                    КІНЕЦЬ ЧАСТИНИ 9B з 16                    ██
-// ██████████████████████████████████████████████████████████████████
-// ==================== ПОЧАТОК ЧАСТИНИ 10 з 16 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 11 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 12 з 20 ====================
         let shotState = 'ready';
         let stateTimer = 0;
         let shotProgress = 0;
         let shotDuration = 0.56;
+        let heartbeatTimer = 0;
+        let turnWaitTimer = 0;
 
         const shotStart = new THREE.Vector3(0, BALL_R, SPOT_Z);
         const shotTarget = new THREE.Vector3(0, 1.2, GOAL_Z);
@@ -1179,7 +1143,8 @@
             startX: 0,
             targetX: 0,
             peakY: 0,
-            readyTime: 0
+            readyTime: 0,
+            tauntWave: 0
         };
 
         const playerGK = {
@@ -1211,11 +1176,8 @@
                 pos.needsUpdate = true;
             }
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 10 з 16 ====================
-// ██████████████████████████████████████████████████████████████████
-// ██                    ПОЧАТОК ЧАСТИНИ 11 з 16                   ██
-// ██████████████████████████████████████████████████████████████████
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 12 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 13 з 20 ====================
         const aimCanvas = document.getElementById('aim-canvas');
         const aimCtx = aimCanvas.getContext('2d');
         function rszAim() {
@@ -1227,8 +1189,66 @@
         let swipeStart = null;
         let swipeCurr = null;
 
+        const attackTricksEl = document.getElementById('attack-tricks');
+        const btnFeintEl = document.getElementById('btn-feint');
+        const btnPanenkaEl = document.getElementById('btn-panenka');
+        const btnTauntEl = document.getElementById('btn-taunt');
+
+        function updateTricksUI() {
+            if (btnFeintEl) btnFeintEl.classList.toggle('selected', duelState.useFeint);
+            if (btnPanenkaEl) btnPanenkaEl.classList.toggle('selected', duelState.usePanenka);
+        }
+
+        if (btnFeintEl) {
+            btnFeintEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (shotState !== 'ready' || series.turnMode !== 'attack') return;
+                arenaAudio.init();
+                duelState.useFeint = !duelState.useFeint;
+                duelState.youNerves = Math.min(1, duelState.youNerves + 0.08);
+                updateTricksUI();
+                updateNervesUI();
+                setBanner(duelState.useFeint ? '⏸️ Фінт на розбігу увімкнено!' : '⚽ Звичайний розбіг');
+            });
+        }
+
+        if (btnPanenkaEl) {
+            btnPanenkaEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (shotState !== 'ready' || series.turnMode !== 'attack') return;
+                arenaAudio.init();
+                duelState.usePanenka = !duelState.usePanenka;
+                duelState.youNerves = Math.min(1, duelState.youNerves + 0.14);
+                updateTricksUI();
+                updateNervesUI();
+                setBanner(duelState.usePanenka ? '🪄 Паненка обрана! Свайпни у ворота' : '⚽ Звичайний удар');
+            });
+        }
+
+        if (btnTauntEl) {
+            btnTauntEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (series.turnMode !== 'defend' || duelState.tauntUsed || series.over) return;
+                arenaAudio.init();
+                duelState.tauntUsed = true;
+                duelState.botNerves = Math.min(1, duelState.botNerves + 0.35);
+                gkState.tauntWave = 1.4;
+                btnTauntEl.classList.add('pressed');
+                updateNervesUI();
+                setBanner('🤪 ПРОВОКАЦІЯ! У бота затремтіли ноги!', 'tension');
+            });
+        }
+
         function startShotRunup(aimX, aimY, curveX, power) {
             if (shotState !== 'ready' || series.over) return;
+
+            if (series.turnMode === 'attack' && duelState.usePanenka) {
+                aimX = (Math.random() - 0.5) * 0.45;
+                aimY = 1.55 + Math.random() * 0.35;
+                curveX = 0;
+                power = 0.52;
+            }
+
             shotTarget.set(aimX, Math.max(BALL_R, aimY), GOAL_Z);
             shotCurveX = curveX;
             shotPower = power;
@@ -1236,23 +1256,30 @@
             stateTimer = 0;
 
             if (series.turnMode === 'attack') {
-                if (power >= 1.18) setBanner('🔥 ПОТУЖНИЙ ПОСТРІЛ!', 'goal');
+                if (duelState.usePanenka) setBanner('🪄 ПАНЕНКА! М\'який парашут...', 'goal');
+                else if (power >= 1.18) setBanner('🔥 ПОТУЖНИЙ ПОСТРІЛ!', 'goal');
                 else if (power <= 0.78) setBanner('🎯 ТЕХНІЧНИЙ УДАР!');
                 else setBanner('⚡ УДАР!');
             }
         }
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 13 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 14 з 20 ====================
         function triggerBotShot() {
             if (shotState !== 'ready' || series.turnMode !== 'defend' || series.over) return;
 
+            // Бот теж іноді робить фінт на розбігу
+            duelState.useFeint = Math.random() < 0.28;
+            duelState.usePanenka = false;
+
+            const missChance = 0.07 + duelState.botNerves * 0.22;
             const roll = Math.random();
             let bx = 0;
             let by = 1.1;
             let bPower = 0.92 + Math.random() * 0.28;
 
-            if (roll < 0.08) {
-                bx = (Math.random() < 0.5 ? -1 : 1) * (GOAL_W * 0.5 + 0.25 + Math.random() * 0.45);
-                by = 0.4 + Math.random() * 2.1;
+            if (roll < missChance) {
+                bx = (Math.random() < 0.5 ? -1 : 1) * (GOAL_W * 0.5 + 0.25 + Math.random() * 0.55);
+                by = 0.4 + Math.random() * 2.2;
             } else {
                 const side = Math.random() < 0.14 ? 0 : (Math.random() < 0.5 ? -1 : 1);
                 bx = side === 0
@@ -1269,37 +1296,74 @@
             shotState = 'flying';
             shotProgress = 0;
             shotStart.set(0, BALL_R, SPOT_Z);
-            shotArcY = 0.18 + (1 - Math.min(1, shotTarget.y / GOAL_H)) * 0.34;
+
+            if (series.turnMode === 'attack' && duelState.usePanenka) {
+                shotArcY = 1.15;
+                shotDuration = 1.05;
+            } else {
+                shotArcY = 0.18 + (1 - Math.min(1, shotTarget.y / GOAL_H)) * 0.34;
+                shotDuration = series.turnMode === 'defend'
+                    ? THREE.MathUtils.clamp(1.28 - shotPower * 0.20, 1.02, 1.25)
+                    : THREE.MathUtils.clamp(0.72 - shotPower * 0.22, 0.38, 0.74);
+            }
 
             if (series.turnMode === 'defend') {
-                shotDuration = THREE.MathUtils.clamp(1.28 - shotPower * 0.20, 1.02, 1.25);
-                setBanner('🧤 СВАЙПНИ У БІК М\'ЯЧА!', 'defend');
+                setBanner('🧤 СВАЙПНИ У БІК М\'ЯЧА АБО ТИСНИ ЗОНУ!', 'defend');
                 return;
             }
 
-            shotDuration = THREE.MathUtils.clamp(0.72 - shotPower * 0.22, 0.38, 0.74);
+            // Реакція воротаря бота з урахуванням фінтів та Паненки
+            const feintBonus = duelState.useFeint ? 0.28 : 0;
+            const isCenterShot = Math.abs(shotTarget.x) < 0.75 && shotTarget.y <= GOAL_H;
 
-            const guessSameSide = Math.random() < 0.56;
+            if (duelState.usePanenka) {
+                // При Паненці воротар у 75% випадків клює і завалюється в кут
+                if (Math.random() < 0.75) {
+                    const dir = Math.random() < 0.5 ? -1 : 1;
+                    gkState.mode = 'dive';
+                    gkState.modeTime = 0;
+                    gkState.outcome = 'none';
+                    gkState.diveDir = dir;
+                    gkState.isHigh = false;
+                    gkState.startX = 0;
+                    gkState.targetX = dir * 2.25;
+                    gkState.peakY = 0.0;
+                    return;
+                }
+            }
+
+            if (isCenterShot && Math.random() < (0.72 - feintBonus)) {
+                gkState.mode = 'catch_center';
+                gkState.modeTime = 0;
+                gkState.outcome = 'none';
+                gkState.diveDir = 0;
+                gkState.isHigh = shotTarget.y > 1.35;
+                gkState.startX = gkState.x;
+                gkState.targetX = THREE.MathUtils.clamp(shotTarget.x * 0.88, -0.55, 0.55);
+                gkState.peakY = gkState.isHigh ? 0.35 : 0.0;
+                return;
+            }
+
+            const guessChance = Math.max(0.22, 0.56 - feintBonus);
+            const guessSameSide = Math.random() < guessChance;
             const dir = guessSameSide
                 ? Math.sign(shotTarget.x || (Math.random() - 0.5))
                 : (Math.random() < 0.5 ? -1 : 1);
 
+            const isHighShot = shotTarget.y > 1.35;
             gkState.mode = 'dive';
             gkState.modeTime = 0;
             gkState.outcome = 'none';
             gkState.diveDir = dir;
-            gkState.isHigh = false;
+            gkState.isHigh = isHighShot;
             gkState.startX = 0;
             gkState.targetX = guessSameSide
-                ? THREE.MathUtils.clamp(shotTarget.x * 0.90, -2.35, 2.35)
-                : THREE.MathUtils.clamp(dir * (1.45 + Math.random() * 0.85), -2.35, 2.35);
-            gkState.peakY = 0.0;
+                ? THREE.MathUtils.clamp(shotTarget.x * 0.90, -2.55, 2.55)
+                : THREE.MathUtils.clamp(dir * (1.55 + Math.random() * 0.85), -2.45, 2.45);
+            gkState.peakY = isHighShot ? 0.68 : 0.0;
         }
-
-// ██████████████████████████████████████████████████████████████████
-// ██                    КІНЕЦЬ ЧАСТИНИ 11 з 16                    ██
-// ██████████████████████████████████████████████████████████████████
-// ==================== ПОЧАТОК ЧАСТИНИ 12 з 16 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 14 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 15 з 20 ====================
         const aimRaycaster = new THREE.Raycaster();
         const aimGoalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -GOAL_Z);
         const gkControlsEl = document.getElementById('gk-controls');
@@ -1324,7 +1388,7 @@
             gkState.isHigh = isTop;
             gkState.startX = 0;
             gkState.targetX = targetX;
-            gkState.peakY = isTop ? 0.55 : 0.0;
+            gkState.peakY = isTop ? 0.58 : 0.0;
         }
 
         function triggerKeeperZone(zone) {
@@ -1348,6 +1412,7 @@
 
         if (gkControlsEl) {
             gkControlsEl.querySelectorAll('.gk-btn').forEach((btn) => {
+                if (!btn.dataset.zone) return;
                 const handleBtn = (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -1429,22 +1494,16 @@
             const heightScale = 0.25 + speedNorm * 0.85;
             ty = BALL_R + (ty - BALL_R) * heightScale;
 
-            const cornerFactorX = Math.max(0, (Math.abs(tx) - 1.7) / 1.9);
-            const heightFactorY = Math.max(0, (ty - 1.35) / 1.1);
-            const difficulty = cornerFactorX * 0.65 + heightFactorY * 0.75 + speedNorm * 0.45;
-
-            if (difficulty > 0.25) {
-                const spread = difficulty * 0.52;
-                tx += (Math.random() - 0.5) * spread;
-                ty += (Math.random() - 0.35) * spread;
-            }
+            // Вплив нервів: чим вищий пульс, тим сильніше тремтить приціл
+            const nerveSpread = duelState.youNerves * 0.55;
+            tx += (Math.random() - 0.5) * nerveSpread;
+            ty += (Math.random() - 0.4) * nerveSpread * 0.7;
 
             const curve = THREE.MathUtils.clamp(-dx / window.innerWidth, -1, 1) * 0.26;
-
             startShotRunup(tx, ty, curve, power);
         });
-// ==================== КІНЕЦЬ ЧАСТИНИ 12 з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 13 з 16 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 15 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 16 з 20 ====================
         const saveFlashMesh = new THREE.Mesh(
             new THREE.RingGeometry(0.08, 0.36, 24),
             new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0, side: THREE.DoubleSide })
@@ -1467,11 +1526,25 @@
         function recordShotOutcome(isGoal) {
             if (series.turnMode === 'attack') {
                 series.youHistory.push(isGoal ? 'goal' : 'miss');
-                if (isGoal) series.youGoals++;
+                if (isGoal) {
+                    series.youGoals++;
+                    duelState.youNerves = Math.max(0.15, duelState.youNerves - 0.12);
+                    duelState.botNerves = Math.min(1.0, duelState.botNerves + 0.14);
+                } else {
+                    duelState.youNerves = Math.min(1.0, duelState.youNerves + 0.24);
+                }
             } else {
                 series.botHistory.push(isGoal ? 'goal' : 'miss');
-                if (isGoal) series.botGoals++;
+                if (isGoal) {
+                    series.botGoals++;
+                    duelState.botNerves = Math.max(0.15, duelState.botNerves - 0.12);
+                    duelState.youNerves = Math.min(1.0, duelState.youNerves + 0.14);
+                } else {
+                    duelState.botNerves = Math.min(1.0, duelState.botNerves + 0.24);
+                    duelState.youNerves = Math.max(0.15, duelState.youNerves - 0.10);
+                }
             }
+            updateNervesUI();
             renderSeriesHUD();
         }
 
@@ -1488,7 +1561,6 @@
             gkContainer.updateMatrixWorld(true);
             let minHandDist = 99;
 
-            // Перевіряємо як самі зап'ястя, так і витягнуті рукавички (з урахуванням низових м'ячів біля газону)
             if (gkLeftHand) {
                 gkLeftHand.getWorldPosition(tmpHandPosL);
                 const dL = ballMesh.position.distanceTo(tmpHandPosL);
@@ -1572,20 +1644,25 @@
             }
             return false;
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 13 з 16 ====================
-// ██████████████████████████████████████████████████████████████████
-// ██                    ПОЧАТОК ЧАСТИНИ 14 з 16                   ██
-// ██████████████████████████████████████████████████████████████████
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 16 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 17 з 20 ====================
         function registerGoal(customBanner) {
             gkState.outcome = 'goal';
+            gkState.mode = 'despair';
+            gkState.modeTime = 0;
             recordShotOutcome(true);
 
             if (series.turnMode === 'attack') {
-                coins += 25;
+                let reward = duelState.usePanenka ? 50 : 25;
+                if (duelState.isCrucialShot) reward *= 2;
+                coins += reward;
                 coinsEl.textContent = `💰 ${coins}`;
                 localStorage.setItem('player_coins', String(coins));
-                setBanner(customBanner || '⚽ ГОООЛ! +25 💰', 'goal');
+
+                const label = duelState.usePanenka
+                    ? `🪄 ГЕНІАЛЬНА ПАНЕНКА! +${reward} 💰`
+                    : (customBanner ? customBanner.replace('+25', `+${reward}`) : `⚽ ГОООЛ! +${reward} 💰`);
+                setBanner(label, 'goal');
                 arenaAudio.playCrowd(true);
             } else {
                 setBanner('😱 БОТ ЗАБИВ ГОЛ!', 'save');
@@ -1688,10 +1765,12 @@
                 setTimeout(advanceSeriesTurn, 2300);
             }
         }
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 17 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 18 з 20 ====================
         function finishMatch(winner) {
             series.over = true;
             if (gkControlsEl) gkControlsEl.classList.remove('active');
+            if (attackTricksEl) attackTricksEl.classList.remove('active');
 
             const titleEl = document.getElementById('modal-title');
             const scoreEl = document.getElementById('modal-score');
@@ -1700,7 +1779,7 @@
             scoreEl.textContent = `${series.youGoals} : ${series.botGoals}`;
 
             if (winner === 'you') {
-                titleEl.textContent = '🏆 ПЕРЕМОГА В СЕРІЇ!';
+                titleEl.textContent = '🏆 ПЕРЕМОГА В ДУЕЛІ!';
                 titleEl.style.color = '#4ade80';
                 rewardEl.textContent = 'Бонус переможця: +100 💰';
                 coins += 100;
@@ -1708,7 +1787,7 @@
                 localStorage.setItem('player_coins', String(coins));
                 arenaAudio.playCrowd(true);
             } else {
-                titleEl.textContent = '😔 ПОРАЗКА В СЕРІЇ';
+                titleEl.textContent = '😔 ПОРАЗКА В ДУЕЛІ';
                 titleEl.style.color = '#f87171';
                 rewardEl.textContent = 'Спробуй взяти реванш!';
             }
@@ -1720,7 +1799,21 @@
             shotState = 'ready';
             stateTimer = 0;
             shotProgress = 0;
+            turnWaitTimer = 0;
             postRicochet.active = false;
+
+            duelState.useFeint = false;
+            duelState.usePanenka = false;
+            duelState.tauntUsed = false;
+            updateTricksUI();
+
+            const shotIndex = Math.max(series.youHistory.length, series.botHistory.length);
+            duelState.isCrucialShot = shotIndex >= 4;
+            if (duelState.isCrucialShot) {
+                duelState.youNerves = Math.min(1, duelState.youNerves + 0.18);
+                duelState.botNerves = Math.min(1, duelState.botNerves + 0.18);
+            }
+            updateNervesUI();
 
             ballMesh.position.set(0, BALL_R, SPOT_Z);
             ballMesh.rotation.set(0, 0, 0);
@@ -1728,14 +1821,13 @@
 
             strikerContainer.position.copy(STRIKER_START);
             strikerContainer.rotation.y = Math.PI - 0.25;
-            if (typeof resetStrikerToIdleClip === 'function') resetStrikerToIdleClip();
 
             gkContainer.visible = true;
-            if (typeof resetGKToIdleClip === 'function') resetGKToIdleClip();
             gkState.mode = 'ready';
             gkState.modeTime = 0;
             gkState.outcome = 'none';
             gkState.diveDir = 0;
+            gkState.tauntWave = 0;
 
             playerGK.jumped = false;
             playerGK.jumpTime = 0;
@@ -1744,6 +1836,7 @@
             const isDefend = series.turnMode === 'defend';
             applyStrikerKit(isDefend);
 
+            if (attackTricksEl) attackTricksEl.classList.toggle('active', !isDefend);
             if (gkControlsEl) {
                 gkControlsEl.classList.toggle('active', isDefend);
                 gkControlsEl.querySelectorAll('.gk-btn').forEach(b => b.classList.remove('pressed'));
@@ -1753,16 +1846,19 @@
                 camera.position.copy(attackCamPos);
                 camera.rotation.set(0, 0, 0);
                 camera.lookAt(attackLookAt);
-                const isSD = series.youHistory.length >= 5;
-                setBanner(isSD ? '🔥 РАПТОВА СМЕРТЬ: Твій удар!' : '⚽ Твій удар! Проведи пальцем у ворота');
-                hintEl.textContent = '👆 Швидкий свайп у бік воріт — чим різкіший рух, тим сильніший удар!';
+                if (duelState.isCrucialShot) {
+                    setBanner('💓 ВИРІШАЛЬНИЙ УДАР (x2 💰)! Твій хід', 'tension');
+                } else {
+                    setBanner('⚽ Твій удар! Проведи пальцем у ворота');
+                }
+                hintEl.textContent = '👆 Не тягни час — від очікування росте пульс і тремтить приціл!';
             } else {
                 camera.position.copy(defendCamPos);
                 camera.rotation.set(0, 0, 0);
                 camera.lookAt(defendLookAt);
-                setBanner('🧤 ЗАХИСТ ВОРІТ! Обери зону стрибка', 'defend');
-                hintEl.textContent = '🧤 Натисни потрібну зону заздалегідь або під час удару (чи Q/W/E/A/S/D)!';
-                setTimeout(triggerBotShot, 1150);
+                setBanner(duelState.isCrucialShot ? '💓 ВИРІШАЛЬНИЙ СЕЙВ! Захищай ворота' : '🧤 ЗАХИСТ ВОРІТ! Обери зону стрибка', duelState.isCrucialShot ? 'tension' : 'defend');
+                hintEl.textContent = '🧤 Тисни провокацію, щоб збити бота, або обирай кут (Q/W/E/A/S/D)!';
+                setTimeout(triggerBotShot, 1300);
             }
         }
 
@@ -1783,38 +1879,38 @@
             series.youHistory = [];
             series.botHistory = [];
             series.over = false;
+            duelState.youNerves = 0.25;
+            duelState.botNerves = 0.25;
             matchModalEl.classList.remove('active');
             renderSeriesHUD();
             setupTurnState();
         });
-
-// ██████████████████████████████████████████████████████████████████
-// ██                    КІНЕЦЬ ЧАСТИНИ 14 з 16                    ██
-// ██████████████████████████████████████████████████████████████████
-// ██████████████████████████████████████████████████████████████████
-// ██                   ПОЧАТОК ЧАСТИНИ 15A з 16                   ██
-// ██████████████████████████████████████████████████████████████████
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 18 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 19 з 20 ====================
         function drawSwipeGuide() {
             if (!swipeStart || !swipeCurr) return;
             aimCtx.clearRect(0, 0, aimCanvas.width, aimCanvas.height);
 
             const isDefend = series.turnMode === 'defend';
-            const grad = aimCtx.createLinearGradient(swipeStart.x, swipeStart.y, swipeCurr.x, swipeCurr.y);
+            const shake = duelState.youNerves * 6;
+            const sx = swipeCurr.x + (Math.random() - 0.5) * shake;
+            const sy = swipeCurr.y + (Math.random() - 0.5) * shake;
+
+            const grad = aimCtx.createLinearGradient(swipeStart.x, swipeStart.y, sx, sy);
             grad.addColorStop(0, isDefend ? 'rgba(245, 158, 11, 0.25)' : 'rgba(56, 189, 248, 0.25)');
-            grad.addColorStop(1, isDefend ? 'rgba(251, 191, 36, 0.95)' : 'rgba(34, 197, 94, 0.95)');
+            grad.addColorStop(1, duelState.usePanenka ? 'rgba(250, 204, 21, 0.95)' : (isDefend ? 'rgba(251, 191, 36, 0.95)' : 'rgba(34, 197, 94, 0.95)'));
 
             aimCtx.strokeStyle = grad;
             aimCtx.lineWidth = 6;
             aimCtx.lineCap = 'round';
             aimCtx.beginPath();
             aimCtx.moveTo(swipeStart.x, swipeStart.y);
-            aimCtx.lineTo(swipeCurr.x, swipeCurr.y);
+            aimCtx.lineTo(sx, sy);
             aimCtx.stroke();
 
-            aimCtx.fillStyle = isDefend ? '#fbbf24' : '#4ade80';
+            aimCtx.fillStyle = duelState.usePanenka ? '#facc15' : (isDefend ? '#fbbf24' : '#4ade80');
             aimCtx.beginPath();
-            aimCtx.arc(swipeCurr.x, swipeCurr.y, 9, 0, Math.PI * 2);
+            aimCtx.arc(sx, sy, 9, 0, Math.PI * 2);
             aimCtx.fill();
         }
 
@@ -1824,8 +1920,6 @@
         };
 
         function updateStrikerAnim(dt) {
-            if (strikerMixer) strikerMixer.update(dt);
-
             const rUpLeg = getBone(strikerBones, 'rightupleg');
             const rLeg = getBone(strikerBones, 'rightleg');
             const lUpLeg = getBone(strikerBones, 'leftupleg');
@@ -1836,22 +1930,32 @@
 
             if (shotState === 'runup') {
                 stateTimer += dt;
-                const runDur = 0.56;
-                const p = Math.min(1, stateTimer / runDur);
+                const runDur = duelState.useFeint ? 0.85 : 0.56;
+                let p = Math.min(1, stateTimer / runDur);
+
+                // Фінт на розбігу: пауза в середині розбігу
+                let moveP = p;
+                if (duelState.useFeint) {
+                    if (p < 0.42) moveP = (p / 0.42) * 0.52;
+                    else if (p < 0.68) moveP = 0.52;
+                    else moveP = 0.52 + ((p - 0.68) / 0.32) * 0.48;
+                }
+
                 const kickTarget = new THREE.Vector3(-0.22, 0, SPOT_Z + 0.32);
-                strikerContainer.position.lerpVectors(STRIKER_START, kickTarget, p);
-                strikerContainer.rotation.y = THREE.MathUtils.lerp(Math.PI - 0.25, Math.PI - 0.08, p);
+                strikerContainer.position.lerpVectors(STRIKER_START, kickTarget, moveP);
+                strikerContainer.rotation.y = THREE.MathUtils.lerp(Math.PI - 0.25, Math.PI - 0.08, moveP);
 
-                const stride = Math.sin(p * Math.PI * 3.5);
-                const kickSwing = p > 0.72 ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
+                const isPausing = duelState.useFeint && p >= 0.42 && p < 0.68;
+                const stride = isPausing ? 0 : Math.sin(moveP * Math.PI * 3.5);
+                const kickSwing = moveP > 0.72 ? Math.sin(((moveP - 0.72) / 0.28) * Math.PI) : 0;
 
-                if (rUpLeg) rUpLeg.rotation.x += stride * 0.55 - kickSwing * 1.15;
-                if (rLeg) rLeg.rotation.x -= Math.max(0, -stride * 0.65) + (p > 0.72 ? (1 - kickSwing) * 0.85 : 0);
-                if (lUpLeg) lUpLeg.rotation.x += -stride * 0.55 + kickSwing * 0.25;
-                if (lLeg) lLeg.rotation.x -= Math.max(0, stride * 0.65);
-                if (spine) spine.rotation.z += -kickSwing * 0.16;
-                if (rArm) rArm.rotation.z -= kickSwing * 0.35;
-                if (lArm) lArm.rotation.z += kickSwing * 0.45;
+                if (rUpLeg) rUpLeg.rotation.x = stride * 0.55 - kickSwing * 1.15;
+                if (rLeg) rLeg.rotation.x = -Math.max(0, -stride * 0.65) - (moveP > 0.72 ? (1 - kickSwing) * 0.85 : 0);
+                if (lUpLeg) lUpLeg.rotation.x = -stride * 0.55 + kickSwing * 0.25;
+                if (lLeg) lLeg.rotation.x = -Math.max(0, stride * 0.65);
+                if (spine) spine.rotation.z = -kickSwing * 0.16;
+                if (rArm) rArm.rotation.z = -kickSwing * 0.35;
+                if (lArm) lArm.rotation.z = kickSwing * 0.45;
 
                 if (p >= 1) {
                     executeKick();
@@ -1859,97 +1963,45 @@
             }
         }
 
-// ██████████████████████████████████████████████████████████████████
-// ██                   КІНЕЦЬ ЧАСТИНИ 15A з 16                   ██
-// ██████████████████████████████████████████████████████████████████
-// ██████████████████████████████████████████████████████████████████
-// ██                  ПОЧАТОК ЧАСТИНИ 15B-1 з 16                  ██
-// ██████████████████████████████████████████████████████████████████
-
-        let gkClipStarted = false;
-
-        function playGKDiveLowClip(dir) {
-            if (!gkMixer || !gkDiveLowAction) return false;
-
-            gkContainer.scale.x = (dir > 0) ? (gkDiveMirrored ? 1 : -1) : (gkDiveMirrored ? -1 : 1);
-
-            gkMixer.stopAllAction();
-            gkDiveLowAction.reset();
-            gkDiveLowAction.time = 0.05;
-            gkDiveLowAction.setEffectiveWeight(1.0);
-            gkDiveLowAction.setEffectiveTimeScale(1.45);
-            gkDiveLowAction.play();
-
-            gkActiveAction = gkDiveLowAction;
-            gkClipStarted = true;
-            return true;
-        }
-
-        function resetGKToIdleClip() {
-            gkClipStarted = false;
-            gkContainer.scale.x = 1;
-            if (!gkMixer || !gkIdleAction) return;
-            gkMixer.stopAllAction();
-            gkIdleAction.reset();
-            gkIdleAction.setEffectiveWeight(1.0);
-            gkIdleAction.play();
-            gkActiveAction = gkIdleAction;
-        }
-
         function updateGoalkeeperAnim(dt) {
-            if (gkMixer) gkMixer.update(dt);
-
             if (gkGlovesLoaded) {
                 if (gkLeftHand) gkLeftHand.scale.setScalar(0.0001);
                 if (gkRightHand) gkRightHand.scale.setScalar(0.0001);
             }
 
             gkState.modeTime += dt;
+            if (gkState.tauntWave > 0) gkState.tauntWave = Math.max(0, gkState.tauntWave - dt);
 
             let diveAmt = 0;
             let crouchAmt = 0;
-
-            const hasActiveDiveClip = gkClipStarted && (gkActiveAction === gkDiveLowAction);
+            let despairAmt = 0;
 
             if (gkState.mode === 'ready') {
                 gkState.readyTime += dt;
-                gkState.x = THREE.MathUtils.lerp(gkState.x, 0, Math.min(1, dt * 8));
-                gkState.y = 0;
+                gkState.x = THREE.MathUtils.lerp(gkState.x, Math.sin(gkState.readyTime * 4.5) * 0.18, Math.min(1, dt * 8));
+                gkState.y = Math.abs(Math.sin(gkState.readyTime * 6.0)) * 0.04;
                 gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 10));
-                crouchAmt = 0.18 + Math.abs(Math.sin(gkState.readyTime * 3.2)) * 0.04;
-            } else if (gkState.mode === 'catch_center' || gkState.mode === 'step' || gkState.mode === 'dive') {
-                if (!gkClipStarted) {
-                    playGKDiveLowClip(gkState.diveDir || 1);
-                }
-                const diveSpan = Math.min(0.36, shotDuration * 0.78);
+                crouchAmt = 0.22 + Math.abs(Math.sin(gkState.readyTime * 3.5)) * 0.05;
+            } else if (gkState.mode === 'catch_center') {
+                const p = Math.min(1, gkState.modeTime / 0.30);
+                gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, p);
+                gkState.y = gkState.isHigh ? Math.sin(p * Math.PI) * 0.35 : 0;
+                gkState.diveAngle = 0;
+                crouchAmt = gkState.isHigh ? 0.05 : 0.45;
+            } else if (gkState.mode === 'dive') {
+                const diveSpan = Math.min(0.34, shotDuration * 0.75);
                 const p = Math.min(1, gkState.modeTime / diveSpan);
                 const easeX = 1 - Math.pow(1 - p, 2.1);
 
-                gkState.x = THREE.MathUtils.lerp(0, gkState.targetX, easeX);
-                gkState.y = 0;
-
-                if (hasActiveDiveClip) {
-                    gkState.diveAngle = 0;
-                } else {
-                    gkState.diveAngle = -gkState.diveDir * 1.48 * Math.min(1, p * 1.35);
-                }
+                gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, easeX);
+                gkState.y = Math.sin(p * Math.PI) * gkState.peakY;
+                const maxAngle = gkState.isHigh ? 1.28 : 1.48;
+                gkState.diveAngle = -gkState.diveDir * maxAngle * Math.min(1, p * 1.35);
                 diveAmt = Math.min(1, p * 1.4);
-            }
-
-// ██████████████████████████████████████████████████████████████████
-// ██                   КІНЕЦЬ ЧАСТИНИ 15B-1 з 16                  ██
-// ██████████████████████████████████████████████████████████████████
-
-
-// ██████████████████████████████████████████████████████████████████
-// ██                  ПОЧАТОК ЧАСТИНИ 15B-2 з 16                  ██
-// ██████████████████████████████████████████████████████████████████
-
-            else if (gkState.mode === 'land') {
+            } else if (gkState.mode === 'land') {
                 gkState.y = 0;
-                gkState.diveAngle = hasActiveDiveClip ? 0 : -gkState.diveDir * 1.54;
+                gkState.diveAngle = -gkState.diveDir * 1.54;
                 diveAmt = 0.85;
-
                 if (gkState.modeTime >= 0.45) {
                     gkState.mode = 'getup';
                     gkState.modeTime = 0;
@@ -1958,68 +2010,74 @@
                 const p = Math.min(1, gkState.modeTime / 0.65);
                 const ease = p * p * (3 - 2 * p);
                 gkState.y = 0;
-                gkState.diveAngle = hasActiveDiveClip ? 0 : THREE.MathUtils.lerp(-gkState.diveDir * 1.54, 0, ease);
-
+                gkState.diveAngle = THREE.MathUtils.lerp(-gkState.diveDir * 1.54, 0, ease);
                 if (p >= 1) {
-                    resetGKToIdleClip();
                     gkState.mode = 'react';
                     gkState.modeTime = 0;
                 }
+            } else if (gkState.mode === 'despair') {
+                // Падіння на коліна у розпачі після пропущеного голу
+                const p = Math.min(1, gkState.modeTime / 0.45);
+                gkState.y = 0;
+                gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 8));
+                crouchAmt = p * 0.75;
+                despairAmt = p;
             } else if (gkState.mode === 'react') {
                 gkState.y = 0;
                 gkState.diveAngle = 0;
             }
 
-            const crouchSink = hasActiveDiveClip ? 0 : crouchAmt * 0.14;
-            const lieLift = hasActiveDiveClip ? 0 : (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
-            const finalY = hasActiveDiveClip ? 0 : Math.max(0, gkState.y + lieLift - crouchSink);
+            const crouchSink = crouchAmt * 0.24;
+            const lieLift = (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
+            const finalY = Math.max(0, gkState.y + lieLift - crouchSink);
 
             gkContainer.position.set(gkState.x, finalY, GOAL_Z);
             gkContainer.rotation.z = gkState.diveAngle;
-            gkContainer.rotation.x = hasActiveDiveClip ? 0 : diveAmt * 0.12;
+            gkContainer.rotation.x = diveAmt * 0.12;
 
-            if (!hasActiveDiveClip) {
-                const rArm = getBone(gkBones, 'rightarm');
-                const lArm = getBone(gkBones, 'leftarm');
-                const rForeArm = getBone(gkBones, 'rightforearm');
-                const lForeArm = getBone(gkBones, 'leftforearm');
-                const rUpLeg = getBone(gkBones, 'rightupleg');
-                const lUpLeg = getBone(gkBones, 'leftupleg');
-                const rLeg = getBone(gkBones, 'rightleg');
-                const lLeg = getBone(gkBones, 'leftleg');
-                const spine = getBone(gkBones, 'spine');
+            const rArm = getBone(gkBones, 'rightarm');
+            const lArm = getBone(gkBones, 'leftarm');
+            const rForeArm = getBone(gkBones, 'rightforearm');
+            const lForeArm = getBone(gkBones, 'leftforearm');
+            const rUpLeg = getBone(gkBones, 'rightupleg');
+            const lUpLeg = getBone(gkBones, 'leftupleg');
+            const rLeg = getBone(gkBones, 'rightleg');
+            const lLeg = getBone(gkBones, 'leftleg');
+            const spine = getBone(gkBones, 'spine');
 
-                if (rArm) {
-                    rArm.rotation.z += -crouchAmt * 0.45 - diveAmt * 2.55;
-                    rArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25;
-                }
-                if (lArm) {
-                    lArm.rotation.z += crouchAmt * 0.45 + diveAmt * 2.55;
-                    lArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25;
-                }
-                if (rForeArm) rForeArm.rotation.y += -crouchAmt * 0.85;
-                if (lForeArm) lForeArm.rotation.y += crouchAmt * 0.85;
+            const isHoldingBall = shotState === 'caught' || gkState.mode === 'catch_center';
+            const tauntSwing = gkState.tauntWave > 0 ? Math.sin(gkState.tauntWave * 18) * 0.85 : 0;
 
-                const trailBend = diveAmt * 0.42;
-                const totalBend = crouchAmt;
-                if (rUpLeg) rUpLeg.rotation.x += -totalBend - (gkState.diveDir < 0 ? trailBend : 0);
-                if (lUpLeg) lUpLeg.rotation.x += -totalBend - (gkState.diveDir > 0 ? trailBend : 0);
-                if (rLeg) rLeg.rotation.x += -totalBend * 1.9 - (gkState.diveDir < 0 ? trailBend * 1.4 : 0);
-                if (lLeg) lLeg.rotation.x += -totalBend * 1.9 - (gkState.diveDir > 0 ? trailBend * 1.4 : 0);
-
-                if (spine) spine.rotation.x += crouchAmt * 0.55;
+            if (rArm) {
+                rArm.rotation.z = -crouchAmt * 0.45 - diveAmt * 2.55 + (isHoldingBall ? 0.35 : 0) - tauntSwing - despairAmt * 0.4;
+                rArm.rotation.x = -crouchAmt * 0.65 - diveAmt * 0.25 - (isHoldingBall ? 0.95 : 0) - despairAmt * 1.1;
             }
-        }
+            if (lArm) {
+                lArm.rotation.z = crouchAmt * 0.45 + diveAmt * 2.55 - (isHoldingBall ? 0.35 : 0) + tauntSwing + despairAmt * 0.4;
+                lArm.rotation.x = -crouchAmt * 0.65 - diveAmt * 0.25 - (isHoldingBall ? 0.95 : 0) - despairAmt * 1.1;
+            }
+            if (rForeArm) rForeArm.rotation.y = -crouchAmt * 0.85;
+            if (lForeArm) lForeArm.rotation.y = crouchAmt * 0.85;
 
-// ██████████████████████████████████████████████████████████████████
-// ██                   КІНЕЦЬ ЧАСТИНИ 15B-2 з 16                  ██
-// ██████████████████████████████████████████████████████████████████
-// ==================== ПОЧАТОК ЧАСТИНИ 16 з 16 ====================
+            const trailBend = diveAmt * 0.42;
+            const totalBend = crouchAmt;
+            if (rUpLeg) rUpLeg.rotation.x = -totalBend - (gkState.diveDir < 0 ? trailBend : 0);
+            if (lUpLeg) lUpLeg.rotation.x = -totalBend - (gkState.diveDir > 0 ? trailBend : 0);
+            if (rLeg) rLeg.rotation.x = -totalBend * 1.9 - (gkState.diveDir < 0 ? trailBend * 1.4 : 0);
+            if (lLeg) lLeg.rotation.x = -totalBend * 1.9 - (gkState.diveDir > 0 ? trailBend * 1.4 : 0);
+
+            if (spine) spine.rotation.x = crouchAmt * 0.55 + despairAmt * 0.35;
+        }
+// ==================== КІНЕЦЬ ЧАСТИНИ 19 з 20 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 20 з 20 ====================
         const camLookCurrent = new THREE.Vector3();
 
         function updateMatchCamera(dt) {
             if (series.turnMode === 'attack') {
-                camera.position.copy(attackCamPos);
+                // На вирішальному ударі камера злегка наближається для напруги
+                const zoomOffset = duelState.isCrucialShot ? -0.65 : 0;
+                const desiredPos = new THREE.Vector3(attackCamPos.x, attackCamPos.y, attackCamPos.z + zoomOffset);
+                camera.position.lerp(desiredPos, Math.min(1, dt * 6));
                 camLookCurrent.copy(attackLookAt);
                 camera.lookAt(attackLookAt);
             } else {
@@ -2059,6 +2117,25 @@
             requestAnimationFrame(animate);
             const dt = Math.min(0.05, (now - lastTime) * 0.001);
             lastTime = now;
+
+            // Якщо гравець довго думає перед ударом — росте рівень нервів
+            if (shotState === 'ready' && series.turnMode === 'attack' && !series.over) {
+                turnWaitTimer += dt;
+                if (turnWaitTimer > 2.5) {
+                    duelState.youNerves = Math.min(1.0, duelState.youNerves + dt * 0.05);
+                    updateNervesUI();
+                }
+            }
+
+            // Звук серцебиття на вирішальному ударі або високому пульсі
+            if ((duelState.isCrucialShot || duelState.youNerves > 0.72) && shotState === 'ready' && !series.over) {
+                heartbeatTimer += dt;
+                const beatInterval = Math.max(0.55, 1.05 - duelState.youNerves * 0.45);
+                if (heartbeatTimer >= beatInterval) {
+                    heartbeatTimer = 0;
+                    arenaAudio.playHeartbeat();
+                }
+            }
 
             updateStrikerAnim(dt);
             updateGoalkeeperAnim(dt);
@@ -2174,4 +2251,4 @@
     </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 16 з 16 ==================== -->
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 20 з 20 ==================== -->
