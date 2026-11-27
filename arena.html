@@ -913,21 +913,10 @@
         let playerJerseyTex = null;
         let playerShortCol = '#ffffff';
 
-        // Анімації нападника
-        let strikerModelRoot = null;
-        let strikerIdleAction = null;
-        let strikerKickNormalAction = null;
-        let strikerKickPowerAction = null;
-        let strikerKickCurveAction = null;
-        let strikerActiveAction = null;
-
-        // Анімації воротаря
+        // Тільки дві анімації воротаря: стійка та падіння в нижній кут
         let gkModelRoot = null;
         let gkIdleAction = null;        // idle.glb — стійка перед ударом
         let gkDiveLowAction = null;     // gk_dive.glb — падіння в нижній кут
-        let gkDiveHighAction = null;    // gk_dive_high.glb — відбиття 9-ки
-        let gkCatchHighAction = null;   // gk_catch.glb — по центру в верху
-        let gkCatchLowAction = null;    // gk_catch2.glb — по центру в низу
         let gkActiveAction = null;
         let gkDiveMirrored = true;
 
@@ -953,7 +942,6 @@
                 if (n.isBone && n.name) boneNames.push(n.name);
             });
 
-            // Максимальне очищення імені кістки від усіх префіксів та суфіксів Blender/Mixamo
             const simplify = (str) => str
                 .replace(/^.*[:|/\\]/, '')
                 .replace(/^(mixamorig|armature|skeleton|rig|character|root)[\._:\-\s]*/i, '')
@@ -968,13 +956,12 @@
 
             clip.tracks = clip.tracks.filter(t => {
                 if (t.name.endsWith('.position')) {
-                    const s = simplify(t.name.split('.')[0]);
+                    const s = simplify(t.name.split('.'));
                     return s.includes('hips') || s.includes('pelvis') || s.includes('root');
                 }
                 return true;
             });
 
-            let matchedCount = 0;
             clip.tracks.forEach((track) => {
                 const dotIdx = track.name.lastIndexOf('.');
                 if (dotIdx === -1) return;
@@ -984,7 +971,6 @@
 
                 let matched = boneMap.get(cleanKey);
                 if (!matched) {
-                    // Запасний пошук за входженням назви (наприклад, LeftArm == mixamorigLeftArm)
                     for (const [k, origName] of boneMap.entries()) {
                         if (k.length > 3 && (k.endsWith(cleanKey) || cleanKey.endsWith(k))) {
                             matched = origName;
@@ -994,21 +980,17 @@
                 }
                 if (matched) {
                     track.name = matched + prop;
-                    matchedCount++;
                 }
             });
-
-            console.log(`[Анімація ${clip.name || 'clip'}] Прив'язано кісток: ${matchedCount} з ${clip.tracks.length}`);
             return clip;
         }
 
-        function loadCharacterClip(url, targetMixer, targetRoot, isLoop, onLoaded) {
+        function loadGKAnimationClip(url, isLoop, onLoaded) {
             loader.load(url + '?v=' + Date.now(), (animGltf) => {
                 const clip = animGltf.animations && animGltf.animations.at(0);
-                if (clip && targetMixer && targetRoot) {
-                    clip.name = url;
-                    normalizeAndBindClip(clip, targetRoot);
-                    const action = targetMixer.clipAction(clip);
+                if (clip && gkMixer && gkModelRoot) {
+                    normalizeAndBindClip(clip, gkModelRoot);
+                    const action = gkMixer.clipAction(clip);
                     if (isLoop) {
                         action.setLoop(THREE.LoopRepeat);
                     } else {
@@ -1016,12 +998,8 @@
                         action.clampWhenFinished = true;
                     }
                     onLoaded(action);
-                } else {
-                    console.warn(`[Помилка] У файлі ${url} не знайдено анімації!`);
                 }
-            }, undefined, (err) => {
-                console.warn(`[Помилка завантаження] Не вдалося відкрити файл ${url}`, err);
-            });
+            }, undefined, () => {});
         }
 
 // ██████████████████████████████████████████████████████████████████
@@ -1047,17 +1025,10 @@
                     gkActiveAction = action;
                 } else {
                     strikerMixer = mixer;
-                    strikerIdleAction = action;
-                    strikerActiveAction = action;
                 }
             }
 
             if (!isGK) {
-                strikerModelRoot = model;
-                if (!strikerMixer) {
-                    strikerMixer = new THREE.AnimationMixer(model);
-                }
-
                 const jId = localStorage.getItem('eq_jerseys') || 'j1';
                 const sId = localStorage.getItem('eq_shorts') || 's1';
                 const bId = localStorage.getItem('eq_boots') || 'b1';
@@ -1102,11 +1073,6 @@
                     spineBone.add(numMesh);
                 }
                 strikerContainer.add(model);
-
-                // Завантаження окремих анімацій для кожного типу удару
-                loadCharacterClip('./kick_normal.glb', strikerMixer, strikerModelRoot, false, (act) => { strikerKickNormalAction = act; });
-                loadCharacterClip('./kick_power.glb', strikerMixer, strikerModelRoot, false, (act) => { strikerKickPowerAction = act; });
-                loadCharacterClip('./kick_curve.glb', strikerMixer, strikerModelRoot, false, (act) => { strikerKickCurveAction = act; });
             } else {
                 gkModelRoot = model;
                 if (!gkMixer) {
@@ -1117,8 +1083,8 @@
                     if (child.isBone && child.name) {
                         const n = child.name.toLowerCase();
                         gkBones[n] = child;
-                        if (n.includes('forearm') && child.name.toLowerCase().includes('left')) gkLeftForeArm = child;
-                        if (n.includes('forearm') && child.name.toLowerCase().includes('right')) gkRightForeArm = child;
+                        if (n.includes('forearm') && n.includes('left')) gkLeftForeArm = child;
+                        if (n.includes('forearm') && n.includes('right')) gkRightForeArm = child;
                         if (n.includes('hand') && n.includes('left') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) gkLeftHand = child;
                         if (n.includes('hand') && n.includes('right') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) gkRightHand = child;
                     }
@@ -1135,22 +1101,21 @@
                 });
                 gkContainer.add(model);
 
-                // Тільки рукавички, без перезапису анімації стрибка
                 loader.load('./glove.glb?v=' + Date.now(), (gGltf) => {
                     const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
                     if (gs) mountGKGloves(gs, gloveItem.c1);
                 });
 
-                loadCharacterClip('./idle.glb', gkMixer, gkModelRoot, true, (act) => {
+                // Завантажуємо лише початкову стійку та падіння в нижній кут
+                loadGKAnimationClip('./idle.glb', true, (act) => {
                     if (gkIdleAction) gkIdleAction.stop();
                     gkIdleAction = act;
                     gkActiveAction = act;
                     act.play();
                 });
-                loadCharacterClip('./gk_dive.glb', gkMixer, gkModelRoot, false, (act) => { gkDiveLowAction = act; });
-                loadCharacterClip('./gk_dive_high.glb', gkMixer, gkModelRoot, false, (act) => { gkDiveHighAction = act; });
-                loadCharacterClip('./gk_catch.glb', gkMixer, gkModelRoot, false, (act) => { gkCatchHighAction = act; });
-                loadCharacterClip('./gk_catch2.glb', gkMixer, gkModelRoot, false, (act) => { gkCatchLowAction = act; });
+                loadGKAnimationClip('./gk_dive.glb', false, (act) => {
+                    gkDiveLowAction = act;
+                });
             }
         }
 
@@ -1246,37 +1211,6 @@
 
         let swipeStart = null;
         let swipeCurr = null;
-        let strikerClipPlaying = false;
-
-        function playStrikerShotClip(power, curveX) {
-            if (!strikerMixer) return false;
-            let chosen = strikerKickNormalAction;
-            if (power >= 1.18 && strikerKickPowerAction) {
-                chosen = strikerKickPowerAction;
-            } else if ((power <= 0.85 || Math.abs(curveX) > 0.14) && strikerKickCurveAction) {
-                chosen = strikerKickCurveAction;
-            }
-            if (!chosen) return false;
-
-            strikerMixer.stopAllAction();
-            chosen.reset();
-            chosen.setEffectiveWeight(1.0);
-            chosen.setEffectiveTimeScale(1.15);
-            chosen.play();
-            strikerActiveAction = chosen;
-            strikerClipPlaying = true;
-            return true;
-        }
-
-        function resetStrikerToIdleClip() {
-            strikerClipPlaying = false;
-            if (!strikerMixer || !strikerIdleAction) return;
-            strikerMixer.stopAllAction();
-            strikerIdleAction.reset();
-            strikerIdleAction.setEffectiveWeight(1.0);
-            strikerIdleAction.play();
-            strikerActiveAction = strikerIdleAction;
-        }
 
         function startShotRunup(aimX, aimY, curveX, power) {
             if (shotState !== 'ready' || series.over) return;
@@ -1285,8 +1219,6 @@
             shotPower = power;
             shotState = 'runup';
             stateTimer = 0;
-
-            playStrikerShotClip(power, curveX);
 
             if (series.turnMode === 'attack') {
                 if (power >= 1.18) setBanner('🔥 ПОТУЖНИЙ ПОСТРІЛ!', 'goal');
@@ -1332,39 +1264,21 @@
 
             shotDuration = THREE.MathUtils.clamp(0.72 - shotPower * 0.22, 0.38, 0.74);
 
-            const isCenterShot = Math.abs(shotTarget.x) < 0.75 && shotTarget.y <= GOAL_H;
-            if (isCenterShot && Math.random() < 0.72) {
-                gkState.mode = 'catch_center';
-                gkState.modeTime = 0;
-                gkState.outcome = 'none';
-                gkState.diveDir = 0;
-                gkState.isHigh = shotTarget.y > 1.35;
-                gkState.startX = gkState.x;
-                gkState.targetX = THREE.MathUtils.clamp(shotTarget.x * 0.88, -0.55, 0.55);
-                gkState.peakY = gkState.isHigh ? 0.35 : 0.0;
-                return;
-            }
-
             const guessSameSide = Math.random() < 0.56;
             const dir = guessSameSide
                 ? Math.sign(shotTarget.x || (Math.random() - 0.5))
                 : (Math.random() < 0.5 ? -1 : 1);
 
-            const isHighShot = shotTarget.y > 1.35;
-            const doStep = guessSameSide && isHighShot && Math.abs(shotTarget.x) > 1.85;
-            const stepShift = doStep ? dir * 1.05 : 0;
-            const maxSafeX = doStep ? 2.95 : 2.35;
-
-            gkState.mode = doStep ? 'step' : 'dive';
+            gkState.mode = 'dive';
             gkState.modeTime = 0;
             gkState.outcome = 'none';
             gkState.diveDir = dir;
-            gkState.isHigh = isHighShot;
-            gkState.startX = stepShift;
+            gkState.isHigh = false;
+            gkState.startX = 0;
             gkState.targetX = guessSameSide
-                ? THREE.MathUtils.clamp(shotTarget.x * 0.90, -maxSafeX, maxSafeX)
+                ? THREE.MathUtils.clamp(shotTarget.x * 0.90, -2.35, 2.35)
                 : THREE.MathUtils.clamp(dir * (1.45 + Math.random() * 0.85), -2.35, 2.35);
-            gkState.peakY = isHighShot ? 0.65 : 0.0;
+            gkState.peakY = 0.0;
         }
 
 // ██████████████████████████████████████████████████████████████████
@@ -1897,6 +1811,14 @@
         function updateStrikerAnim(dt) {
             if (strikerMixer) strikerMixer.update(dt);
 
+            const rUpLeg = getBone(strikerBones, 'rightupleg');
+            const rLeg = getBone(strikerBones, 'rightleg');
+            const lUpLeg = getBone(strikerBones, 'leftupleg');
+            const lLeg = getBone(strikerBones, 'leftleg');
+            const spine = getBone(strikerBones, 'spine');
+            const rArm = getBone(strikerBones, 'rightarm');
+            const lArm = getBone(strikerBones, 'leftarm');
+
             if (shotState === 'runup') {
                 stateTimer += dt;
                 const runDur = 0.56;
@@ -1905,26 +1827,16 @@
                 strikerContainer.position.lerpVectors(STRIKER_START, kickTarget, p);
                 strikerContainer.rotation.y = THREE.MathUtils.lerp(Math.PI - 0.25, Math.PI - 0.08, p);
 
-                if (!strikerClipPlaying) {
-                    const rUpLeg = getBone(strikerBones, 'rightupleg');
-                    const rLeg = getBone(strikerBones, 'rightleg');
-                    const lUpLeg = getBone(strikerBones, 'leftupleg');
-                    const lLeg = getBone(strikerBones, 'leftleg');
-                    const spine = getBone(strikerBones, 'spine');
-                    const rArm = getBone(strikerBones, 'rightarm');
-                    const lArm = getBone(strikerBones, 'leftarm');
+                const stride = Math.sin(p * Math.PI * 3.5);
+                const kickSwing = p > 0.72 ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
 
-                    const stride = Math.sin(p * Math.PI * 3.5);
-                    const kickSwing = p > 0.72 ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
-
-                    if (rUpLeg) rUpLeg.rotation.x += stride * 0.55 - kickSwing * 1.15;
-                    if (rLeg) rLeg.rotation.x -= Math.max(0, -stride * 0.65) + (p > 0.72 ? (1 - kickSwing) * 0.85 : 0);
-                    if (lUpLeg) lUpLeg.rotation.x += -stride * 0.55 + kickSwing * 0.25;
-                    if (lLeg) lLeg.rotation.x -= Math.max(0, stride * 0.65);
-                    if (spine) spine.rotation.z += -kickSwing * 0.16;
-                    if (rArm) rArm.rotation.z -= kickSwing * 0.35;
-                    if (lArm) lArm.rotation.z += kickSwing * 0.45;
-                }
+                if (rUpLeg) rUpLeg.rotation.x += stride * 0.55 - kickSwing * 1.15;
+                if (rLeg) rLeg.rotation.x -= Math.max(0, -stride * 0.65) + (p > 0.72 ? (1 - kickSwing) * 0.85 : 0);
+                if (lUpLeg) lUpLeg.rotation.x += -stride * 0.55 + kickSwing * 0.25;
+                if (lLeg) lLeg.rotation.x -= Math.max(0, stride * 0.65);
+                if (spine) spine.rotation.z += -kickSwing * 0.16;
+                if (rArm) rArm.rotation.z -= kickSwing * 0.35;
+                if (lArm) lArm.rotation.z += kickSwing * 0.45;
 
                 if (p >= 1) {
                     executeKick();
@@ -1940,44 +1852,26 @@
 // ██████████████████████████████████████████████████████████████████
 
         let gkClipStarted = false;
-        let gkCurrentZone = 'idle';
 
-        function playGKZoneClip(zone, dir) {
-            if (!gkMixer) return false;
+        function playGKDiveLowClip(dir) {
+            if (!gkMixer || !gkDiveLowAction) return false;
 
-            let chosenAction = null;
-            if (zone === 'center_high') {
-                chosenAction = gkCatchHighAction || gkCatchLowAction;
-                gkContainer.scale.x = 1;
-            } else if (zone === 'center_low') {
-                chosenAction = gkCatchLowAction || gkCatchHighAction;
-                gkContainer.scale.x = 1;
-            } else if (zone === 'high') {
-                chosenAction = gkDiveHighAction || gkDiveLowAction;
-                gkContainer.scale.x = (dir > 0) ? (gkDiveMirrored ? 1 : -1) : (gkDiveMirrored ? -1 : 1);
-            } else {
-                chosenAction = gkDiveLowAction || gkDiveHighAction;
-                gkContainer.scale.x = (dir > 0) ? (gkDiveMirrored ? 1 : -1) : (gkDiveMirrored ? -1 : 1);
-            }
-
-            if (!chosenAction) return false;
+            gkContainer.scale.x = (dir > 0) ? (gkDiveMirrored ? 1 : -1) : (gkDiveMirrored ? -1 : 1);
 
             gkMixer.stopAllAction();
-            chosenAction.reset();
-            chosenAction.time = 0.05;
-            chosenAction.setEffectiveWeight(1.0);
-            chosenAction.setEffectiveTimeScale(1.45);
-            chosenAction.play();
+            gkDiveLowAction.reset();
+            gkDiveLowAction.time = 0.05;
+            gkDiveLowAction.setEffectiveWeight(1.0);
+            gkDiveLowAction.setEffectiveTimeScale(1.45);
+            gkDiveLowAction.play();
 
-            gkActiveAction = chosenAction;
-            gkCurrentZone = zone;
+            gkActiveAction = gkDiveLowAction;
             gkClipStarted = true;
             return true;
         }
 
         function resetGKToIdleClip() {
             gkClipStarted = false;
-            gkCurrentZone = 'idle';
             gkContainer.scale.x = 1;
             if (!gkMixer || !gkIdleAction) return;
             gkMixer.stopAllAction();
@@ -2001,7 +1895,7 @@
             let crouchAmt = 0;
             let clipDropY = 0;
 
-            const hasActiveExternalClip = gkClipStarted && (gkActiveAction !== gkIdleAction);
+            const hasActiveDiveClip = gkClipStarted && (gkActiveAction === gkDiveLowAction);
 
             if (gkState.mode === 'ready') {
                 gkState.readyTime += dt;
@@ -2009,24 +1903,9 @@
                 gkState.y = 0;
                 gkState.diveAngle = THREE.MathUtils.lerp(gkState.diveAngle, 0, Math.min(1, dt * 10));
                 crouchAmt = 0.18 + Math.abs(Math.sin(gkState.readyTime * 3.2)) * 0.04;
-            } else if (gkState.mode === 'catch_center') {
-                const centerZone = gkState.isHigh ? 'center_high' : 'center_low';
+            } else if (gkState.mode === 'catch_center' || gkState.mode === 'step' || gkState.mode === 'dive') {
                 if (!gkClipStarted) {
-                    playGKZoneClip(centerZone, 0);
-                }
-                const p = Math.min(1, gkState.modeTime / 0.34);
-                gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, p);
-                gkState.y = 0;
-                gkState.diveAngle = 0;
-                crouchAmt = 0.32;
-
-                if (hasActiveExternalClip && gkCurrentZone === 'center_low') {
-                    clipDropY = -0.44 * Math.min(1, p * 1.6);
-                }
-            } else if (gkState.mode === 'step' || gkState.mode === 'dive') {
-                const diveZone = gkState.isHigh ? 'high' : 'low';
-                if (!gkClipStarted) {
-                    playGKZoneClip(diveZone, gkState.diveDir);
+                    playGKDiveLowClip(gkState.diveDir || 1);
                 }
                 const diveSpan = Math.min(0.36, shotDuration * 0.78);
                 const p = Math.min(1, gkState.modeTime / diveSpan);
@@ -2034,15 +1913,13 @@
 
                 gkState.x = THREE.MathUtils.lerp(0, gkState.targetX, easeX);
 
-                if (hasActiveExternalClip) {
-                    gkState.y = gkState.isHigh ? Math.sin(p * Math.PI) * 0.24 : 0;
+                if (hasActiveDiveClip) {
+                    gkState.y = 0;
                     gkState.diveAngle = 0;
-                    const targetDrop = gkState.isHigh ? -0.36 : -0.72;
-                    clipDropY = targetDrop * Math.min(1, p * 1.6);
+                    clipDropY = -0.72 * Math.min(1, p * 1.6);
                 } else {
-                    gkState.y = Math.sin(p * Math.PI) * gkState.peakY;
-                    const maxAngle = gkState.isHigh ? 1.30 : 1.48;
-                    gkState.diveAngle = -gkState.diveDir * maxAngle * Math.min(1, p * 1.35);
+                    gkState.y = 0;
+                    gkState.diveAngle = -gkState.diveDir * 1.48 * Math.min(1, p * 1.35);
                 }
                 diveAmt = Math.min(1, p * 1.4);
             }
@@ -2050,15 +1927,17 @@
 // ██████████████████████████████████████████████████████████████████
 // ██                   КІНЕЦЬ ЧАСТИНИ 15B-1 з 16                  ██
 // ██████████████████████████████████████████████████████████████████
-// ==================== ПОЧАТОК ЧАСТИНИ 15B-2 з 16 ====================
+
+
+// ██████████████████████████████████████████████████████████████████
+// ██                  ПОЧАТОК ЧАСТИНИ 15B-2 з 16                  ██
+// ██████████████████████████████████████████████████████████████████
+
             else if (gkState.mode === 'land') {
                 gkState.y = 0;
-                if (hasActiveExternalClip) {
+                if (hasActiveDiveClip) {
                     gkState.diveAngle = 0;
-                    if (gkCurrentZone === 'low') clipDropY = -0.72;
-                    else if (gkCurrentZone === 'high') clipDropY = -0.48;
-                    else if (gkCurrentZone === 'center_low') clipDropY = -0.44;
-                    else clipDropY = 0;
+                    clipDropY = -0.72;
                 } else {
                     gkState.diveAngle = -gkState.diveDir * 1.54;
                 }
@@ -2073,13 +1952,9 @@
                 const ease = p * p * (3 - 2 * p);
                 gkState.y = 0;
 
-                if (hasActiveExternalClip) {
+                if (hasActiveDiveClip) {
                     gkState.diveAngle = 0;
-                    let startDrop = 0;
-                    if (gkCurrentZone === 'low') startDrop = -0.72;
-                    else if (gkCurrentZone === 'high') startDrop = -0.48;
-                    else if (gkCurrentZone === 'center_low') startDrop = -0.44;
-                    clipDropY = startDrop * (1 - ease);
+                    clipDropY = -0.72 * (1 - ease);
                 } else {
                     gkState.diveAngle = THREE.MathUtils.lerp(-gkState.diveDir * 1.54, 0, ease);
                 }
@@ -2095,16 +1970,15 @@
                 clipDropY = 0;
             }
 
-            const crouchSink = hasActiveExternalClip ? 0 : crouchAmt * 0.14;
-            const lieLift = hasActiveExternalClip ? 0 : (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
-            const finalY = hasActiveExternalClip ? (gkState.y + clipDropY) : Math.max(0, gkState.y + lieLift - crouchSink);
+            const crouchSink = hasActiveDiveClip ? 0 : crouchAmt * 0.14;
+            const lieLift = hasActiveDiveClip ? 0 : (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
+            const finalY = hasActiveDiveClip ? (gkState.y + clipDropY) : Math.max(0, gkState.y + lieLift - crouchSink);
 
-            // Воротар закріплений строго по білій лінії воріт (GOAL_Z)
             gkContainer.position.set(gkState.x, finalY, GOAL_Z);
             gkContainer.rotation.z = gkState.diveAngle;
-            gkContainer.rotation.x = hasActiveExternalClip ? 0 : diveAmt * 0.12;
+            gkContainer.rotation.x = hasActiveDiveClip ? 0 : diveAmt * 0.12;
 
-            if (!hasActiveExternalClip) {
+            if (!hasActiveDiveClip) {
                 const rArm = getBone(gkBones, 'rightarm');
                 const lArm = getBone(gkBones, 'leftarm');
                 const rForeArm = getBone(gkBones, 'rightforearm');
@@ -2115,23 +1989,16 @@
                 const lLeg = getBone(gkBones, 'leftleg');
                 const spine = getBone(gkBones, 'spine');
 
-                const isHoldingBall = shotState === 'caught' || gkState.mode === 'catch_center';
                 if (rArm) {
-                    rArm.rotation.z += -crouchAmt * 0.45 - diveAmt * 2.55 + (isHoldingBall ? 0.35 : 0);
-                    rArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25 - (isHoldingBall ? 0.95 : 0);
+                    rArm.rotation.z += -crouchAmt * 0.45 - diveAmt * 2.55;
+                    rArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25;
                 }
                 if (lArm) {
-                    lArm.rotation.z += crouchAmt * 0.45 + diveAmt * 2.55 - (isHoldingBall ? 0.35 : 0);
-                    lArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25 - (isHoldingBall ? 0.95 : 0);
+                    lArm.rotation.z += crouchAmt * 0.45 + diveAmt * 2.55;
+                    lArm.rotation.x += -crouchAmt * 0.65 - diveAmt * 0.25;
                 }
-                if (rForeArm) {
-                    rForeArm.rotation.y += -crouchAmt * 0.85;
-                    rForeArm.rotation.z += (isHoldingBall ? 0.55 : 0);
-                }
-                if (lForeArm) {
-                    lForeArm.rotation.y += crouchAmt * 0.85;
-                    lForeArm.rotation.z += (isHoldingBall ? 0.55 : 0);
-                }
+                if (rForeArm) rForeArm.rotation.y += -crouchAmt * 0.85;
+                if (lForeArm) lForeArm.rotation.y += crouchAmt * 0.85;
 
                 const trailBend = diveAmt * 0.42;
                 const totalBend = crouchAmt;
@@ -2143,7 +2010,10 @@
                 if (spine) spine.rotation.x += crouchAmt * 0.55;
             }
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 15B-2 з 16 ====================
+
+// ██████████████████████████████████████████████████████████████████
+// ██                   КІНЕЦЬ ЧАСТИНИ 15B-2 з 16                  ██
+// ██████████████████████████████████████████████████████████████████
 // ==================== ПОЧАТОК ЧАСТИНИ 16 з 16 ====================
         const camLookCurrent = new THREE.Vector3();
 
