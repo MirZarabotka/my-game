@@ -904,15 +904,27 @@
             gkGlovesLoaded = true;
         }
 // ==================== КІНЕЦЬ ЧАСТИНИ 8 з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 9A з 16 ====================
+// ██████████████████████████████████████████████████████████████████
+// ██                    ПОЧАТОК ЧАСТИНИ 9A з 16                   ██
+// ██████████████████████████████████████████████████████████████████
+
         let strikerShirtMat = null;
         let strikerShortMat = null;
         let playerJerseyTex = null;
         let playerShortCol = '#ffffff';
 
+        // Анімації нападника (під кожен тип удару)
+        let strikerModelRoot = null;
+        let strikerIdleAction = null;
+        let strikerKickNormalAction = null; // звичайний удар
+        let strikerKickPowerAction = null;  // потужний постріл
+        let strikerKickCurveAction = null;  // технічний / кручений удар
+        let strikerActiveAction = null;
+
+        // Анімації воротаря
         let gkModelRoot = null;
         let gkIdleAction = null;        // idle.glb — стійка перед ударом
-        let gkDiveLowAction = null;     // glove.glb / gk_dive.glb — падіння в нижній кут
+        let gkDiveLowAction = null;     // gk_dive.glb — падіння в нижній кут
         let gkDiveHighAction = null;    // gk_dive_high.glb — відбиття 9-ки
         let gkCatchHighAction = null;   // gk_catch.glb — по центру в верху
         let gkCatchLowAction = null;    // gk_catch2.glb — по центру в низу
@@ -941,18 +953,27 @@
                 if (n.isBone && n.name) boneNames.push(n.name);
             });
 
-            clip.tracks = clip.tracks.filter(t => !t.name.endsWith('.position'));
+            const cleanName = (str) => str
+                .replace(/^.*[:|]/, '')
+                .replace(/^mixamorig/i, '')
+                .replace(/[\._]\d+$/, '')
+                .toLowerCase();
+
+            clip.tracks = clip.tracks.filter(t => {
+                if (t.name.endsWith('.position')) {
+                    return t.name.toLowerCase().includes('hips');
+                }
+                return true;
+            });
+
             clip.tracks.forEach((track) => {
                 const dotIdx = track.name.lastIndexOf('.');
                 if (dotIdx === -1) return;
                 const rawBone = track.name.slice(0, dotIdx);
                 const prop = track.name.slice(dotIdx);
-                const cleanKey = rawBone.replace(/^.*[:|]/, '').replace(/^mixamorig/i, '').toLowerCase();
+                const cleanKey = cleanName(rawBone);
 
-                const matched = boneNames.find((b) => {
-                    const bClean = b.replace(/^.*[:|]/, '').replace(/^mixamorig/i, '').toLowerCase();
-                    return bClean === cleanKey;
-                });
+                const matched = boneNames.find((b) => cleanName(b) === cleanKey);
                 if (matched) {
                     track.name = matched + prop;
                 }
@@ -960,12 +981,12 @@
             return clip;
         }
 
-        function loadGKAnimationClip(url, isLoop, onLoaded) {
+        function loadCharacterClip(url, targetMixer, targetRoot, isLoop, onLoaded) {
             loader.load(url + '?v=' + Date.now(), (animGltf) => {
                 const clip = animGltf.animations && animGltf.animations.at(0);
-                if (clip && gkMixer && gkModelRoot) {
-                    normalizeAndBindClip(clip, gkModelRoot);
-                    const action = gkMixer.clipAction(clip);
+                if (clip && targetMixer && targetRoot) {
+                    normalizeAndBindClip(clip, targetRoot);
+                    const action = targetMixer.clipAction(clip);
                     if (isLoop) {
                         action.setLoop(THREE.LoopRepeat);
                     } else {
@@ -976,8 +997,14 @@
                 }
             }, undefined, () => {});
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 9A з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 9B з 16 ====================
+
+// ██████████████████████████████████████████████████████████████████
+// ██                    КІНЕЦЬ ЧАСТИНИ 9A з 16                    ██
+// ██████████████████████████████████████████████████████████████████
+// ██████████████████████████████████████████████████████████████████
+// ██                    ПОЧАТОК ЧАСТИНИ 9B з 16                   ██
+// ██████████████████████████████████████████████████████████████████
+
         function setupPlayerModel(gltf, isGK, gloveItem) {
             const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
             if (!model) return;
@@ -994,10 +1021,17 @@
                     gkActiveAction = action;
                 } else {
                     strikerMixer = mixer;
+                    strikerIdleAction = action;
+                    strikerActiveAction = action;
                 }
             }
 
             if (!isGK) {
+                strikerModelRoot = model;
+                if (!strikerMixer) {
+                    strikerMixer = new THREE.AnimationMixer(model);
+                }
+
                 const jId = localStorage.getItem('eq_jerseys') || 'j1';
                 const sId = localStorage.getItem('eq_shorts') || 's1';
                 const bId = localStorage.getItem('eq_boots') || 'b1';
@@ -1042,6 +1076,11 @@
                     spineBone.add(numMesh);
                 }
                 strikerContainer.add(model);
+
+                // Завантаження окремих анімацій для кожного типу удару
+                loadCharacterClip('./kick_normal.glb', strikerMixer, strikerModelRoot, false, (act) => { strikerKickNormalAction = act; });
+                loadCharacterClip('./kick_power.glb', strikerMixer, strikerModelRoot, false, (act) => { strikerKickPowerAction = act; });
+                loadCharacterClip('./kick_curve.glb', strikerMixer, strikerModelRoot, false, (act) => { strikerKickCurveAction = act; });
             } else {
                 gkModelRoot = model;
                 if (!gkMixer) {
@@ -1052,8 +1091,8 @@
                     if (child.isBone && child.name) {
                         const n = child.name.toLowerCase();
                         gkBones[n] = child;
-                        if (n.includes('forearm') && n.includes('left')) gkLeftForeArm = child;
-                        if (n.includes('forearm') && n.includes('right')) gkRightForeArm = child;
+                        if (n.includes('forearm') && child.name.toLowerCase().includes('left')) gkLeftForeArm = child;
+                        if (n.includes('forearm') && child.name.toLowerCase().includes('right')) gkRightForeArm = child;
                         if (n.includes('hand') && n.includes('left') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) gkLeftHand = child;
                         if (n.includes('hand') && n.includes('right') && !n.includes('index') && !n.includes('middle') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) gkRightHand = child;
                     }
@@ -1070,29 +1109,22 @@
                 });
                 gkContainer.add(model);
 
+                // Тільки рукавички, без перезапису анімації стрибка
                 loader.load('./glove.glb?v=' + Date.now(), (gGltf) => {
                     const gs = gGltf.scene || (gGltf.scenes && gGltf.scenes.at(0));
                     if (gs) mountGKGloves(gs, gloveItem.c1);
-                    const clip = gGltf.animations && gGltf.animations.at(0);
-                    if (clip && gkMixer && !gkDiveLowAction) {
-                        normalizeAndBindClip(clip, gkModelRoot);
-                        const act = gkMixer.clipAction(clip);
-                        act.setLoop(THREE.LoopOnce);
-                        act.clampWhenFinished = true;
-                        gkDiveLowAction = act;
-                    }
                 });
 
-                loadGKAnimationClip('./idle.glb', true, (act) => {
+                loadCharacterClip('./idle.glb', gkMixer, gkModelRoot, true, (act) => {
                     if (gkIdleAction) gkIdleAction.stop();
                     gkIdleAction = act;
                     gkActiveAction = act;
                     act.play();
                 });
-                loadGKAnimationClip('./gk_dive.glb', false, (act) => { gkDiveLowAction = act; });
-                loadGKAnimationClip('./gk_dive_high.glb', false, (act) => { gkDiveHighAction = act; });
-                loadGKAnimationClip('./gk_catch.glb', false, (act) => { gkCatchHighAction = act; });
-                loadGKAnimationClip('./gk_catch2.glb', false, (act) => { gkCatchLowAction = act; });
+                loadCharacterClip('./gk_dive.glb', gkMixer, gkModelRoot, false, (act) => { gkDiveLowAction = act; });
+                loadCharacterClip('./gk_dive_high.glb', gkMixer, gkModelRoot, false, (act) => { gkDiveHighAction = act; });
+                loadCharacterClip('./gk_catch.glb', gkMixer, gkModelRoot, false, (act) => { gkCatchHighAction = act; });
+                loadCharacterClip('./gk_catch2.glb', gkMixer, gkModelRoot, false, (act) => { gkCatchLowAction = act; });
             }
         }
 
@@ -1111,7 +1143,10 @@
                 hideLoader();
             }, undefined, () => hideLoader());
         }, undefined, () => hideLoader());
-// ==================== КІНЕЦЬ ЧАСТИНИ 9B з 16 ====================
+
+// ██████████████████████████████████████████████████████████████████
+// ██                    КІНЕЦЬ ЧАСТИНИ 9B з 16                    ██
+// ██████████████████████████████████████████████████████████████████
 // ==================== ПОЧАТОК ЧАСТИНИ 10 з 16 ====================
         let shotState = 'ready';
         let stateTimer = 0;
@@ -1171,7 +1206,10 @@
             }
         }
 // ==================== КІНЕЦЬ ЧАСТИНИ 10 з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 11 з 16 ====================
+// ██████████████████████████████████████████████████████████████████
+// ██                    ПОЧАТОК ЧАСТИНИ 11 з 16                   ██
+// ██████████████████████████████████████████████████████████████████
+
         const aimCanvas = document.getElementById('aim-canvas');
         const aimCtx = aimCanvas.getContext('2d');
         function rszAim() {
@@ -1182,6 +1220,37 @@
 
         let swipeStart = null;
         let swipeCurr = null;
+        let strikerClipPlaying = false;
+
+        function playStrikerShotClip(power, curveX) {
+            if (!strikerMixer) return false;
+            let chosen = strikerKickNormalAction;
+            if (power >= 1.18 && strikerKickPowerAction) {
+                chosen = strikerKickPowerAction;
+            } else if ((power <= 0.85 || Math.abs(curveX) > 0.14) && strikerKickCurveAction) {
+                chosen = strikerKickCurveAction;
+            }
+            if (!chosen) return false;
+
+            strikerMixer.stopAllAction();
+            chosen.reset();
+            chosen.setEffectiveWeight(1.0);
+            chosen.setEffectiveTimeScale(1.15);
+            chosen.play();
+            strikerActiveAction = chosen;
+            strikerClipPlaying = true;
+            return true;
+        }
+
+        function resetStrikerToIdleClip() {
+            strikerClipPlaying = false;
+            if (!strikerMixer || !strikerIdleAction) return;
+            strikerMixer.stopAllAction();
+            strikerIdleAction.reset();
+            strikerIdleAction.setEffectiveWeight(1.0);
+            strikerIdleAction.play();
+            strikerActiveAction = strikerIdleAction;
+        }
 
         function startShotRunup(aimX, aimY, curveX, power) {
             if (shotState !== 'ready' || series.over) return;
@@ -1190,6 +1259,8 @@
             shotPower = power;
             shotState = 'runup';
             stateTimer = 0;
+
+            playStrikerShotClip(power, curveX);
 
             if (series.turnMode === 'attack') {
                 if (power >= 1.18) setBanner('🔥 ПОТУЖНИЙ ПОСТРІЛ!', 'goal');
@@ -1254,7 +1325,6 @@
                 : (Math.random() < 0.5 ? -1 : 1);
 
             const isHighShot = shotTarget.y > 1.35;
-            // Підшаг робиться ТІЛЬКИ для високих ударів у дев'ятку; низом воротар одразу падає без кроку
             const doStep = guessSameSide && isHighShot && Math.abs(shotTarget.x) > 1.85;
             const stepShift = doStep ? dir * 1.05 : 0;
             const maxSafeX = doStep ? 2.95 : 2.35;
@@ -1270,7 +1340,10 @@
                 : THREE.MathUtils.clamp(dir * (1.45 + Math.random() * 0.85), -2.35, 2.35);
             gkState.peakY = isHighShot ? 0.65 : 0.0;
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 11 з 16 ====================
+
+// ██████████████████████████████████████████████████████████████████
+// ██                    КІНЕЦЬ ЧАСТИНИ 11 з 16                    ██
+// ██████████████████████████████████████████████████████████████████
 // ==================== ПОЧАТОК ЧАСТИНИ 12 з 16 ====================
         const aimRaycaster = new THREE.Raycaster();
         const aimGoalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -GOAL_Z);
@@ -1545,7 +1618,10 @@
             return false;
         }
 // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 14 з 16 ====================
+// ██████████████████████████████████████████████████████████████████
+// ██                    ПОЧАТОК ЧАСТИНИ 14 з 16                   ██
+// ██████████████████████████████████████████████████████████████████
+
         function registerGoal(customBanner) {
             gkState.outcome = 'goal';
             recordShotOutcome(true);
@@ -1697,6 +1773,7 @@
 
             strikerContainer.position.copy(STRIKER_START);
             strikerContainer.rotation.y = Math.PI - 0.25;
+            if (typeof resetStrikerToIdleClip === 'function') resetStrikerToIdleClip();
 
             gkContainer.visible = true;
             if (typeof resetGKToIdleClip === 'function') resetGKToIdleClip();
@@ -1755,8 +1832,14 @@
             renderSeriesHUD();
             setupTurnState();
         });
-// ==================== КІНЕЦЬ ЧАСТИНИ 14 з 16 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 15A з 16 ====================
+
+// ██████████████████████████████████████████████████████████████████
+// ██                    КІНЕЦЬ ЧАСТИНИ 14 з 16                    ██
+// ██████████████████████████████████████████████████████████████████
+// ██████████████████████████████████████████████████████████████████
+// ██                   ПОЧАТОК ЧАСТИНИ 15A з 16                   ██
+// ██████████████████████████████████████████████████████████████████
+
         function drawSwipeGuide() {
             if (!swipeStart || !swipeCurr) return;
             aimCtx.clearRect(0, 0, aimCanvas.width, aimCanvas.height);
@@ -1788,14 +1871,6 @@
         function updateStrikerAnim(dt) {
             if (strikerMixer) strikerMixer.update(dt);
 
-            const rUpLeg = getBone(strikerBones, 'rightupleg');
-            const rLeg = getBone(strikerBones, 'rightleg');
-            const lUpLeg = getBone(strikerBones, 'leftupleg');
-            const lLeg = getBone(strikerBones, 'leftleg');
-            const spine = getBone(strikerBones, 'spine');
-            const rArm = getBone(strikerBones, 'rightarm');
-            const lArm = getBone(strikerBones, 'leftarm');
-
             if (shotState === 'runup') {
                 stateTimer += dt;
                 const runDur = 0.56;
@@ -1804,23 +1879,36 @@
                 strikerContainer.position.lerpVectors(STRIKER_START, kickTarget, p);
                 strikerContainer.rotation.y = THREE.MathUtils.lerp(Math.PI - 0.25, Math.PI - 0.08, p);
 
-                const stride = Math.sin(p * Math.PI * 3.5);
-                const kickSwing = p > 0.72 ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
+                if (!strikerClipPlaying) {
+                    const rUpLeg = getBone(strikerBones, 'rightupleg');
+                    const rLeg = getBone(strikerBones, 'rightleg');
+                    const lUpLeg = getBone(strikerBones, 'leftupleg');
+                    const lLeg = getBone(strikerBones, 'leftleg');
+                    const spine = getBone(strikerBones, 'spine');
+                    const rArm = getBone(strikerBones, 'rightarm');
+                    const lArm = getBone(strikerBones, 'leftarm');
 
-                if (rUpLeg) rUpLeg.rotation.x += stride * 0.55 - kickSwing * 1.15;
-                if (rLeg) rLeg.rotation.x -= Math.max(0, -stride * 0.65) + (p > 0.72 ? (1 - kickSwing) * 0.85 : 0);
-                if (lUpLeg) lUpLeg.rotation.x += -stride * 0.55 + kickSwing * 0.25;
-                if (lLeg) lLeg.rotation.x -= Math.max(0, stride * 0.65);
-                if (spine) spine.rotation.z += -kickSwing * 0.16;
-                if (rArm) rArm.rotation.z -= kickSwing * 0.35;
-                if (lArm) lArm.rotation.z += kickSwing * 0.45;
+                    const stride = Math.sin(p * Math.PI * 3.5);
+                    const kickSwing = p > 0.72 ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
+
+                    if (rUpLeg) rUpLeg.rotation.x += stride * 0.55 - kickSwing * 1.15;
+                    if (rLeg) rLeg.rotation.x -= Math.max(0, -stride * 0.65) + (p > 0.72 ? (1 - kickSwing) * 0.85 : 0);
+                    if (lUpLeg) lUpLeg.rotation.x += -stride * 0.55 + kickSwing * 0.25;
+                    if (lLeg) lLeg.rotation.x -= Math.max(0, stride * 0.65);
+                    if (spine) spine.rotation.z += -kickSwing * 0.16;
+                    if (rArm) rArm.rotation.z -= kickSwing * 0.35;
+                    if (lArm) lArm.rotation.z += kickSwing * 0.45;
+                }
 
                 if (p >= 1) {
                     executeKick();
                 }
             }
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 15A з 16 ====================
+
+// ██████████████████████████████████████████████████████████████████
+// ██                   КІНЕЦЬ ЧАСТИНИ 15A з 16                   ██
+// ██████████████████████████████████████████████████████████████████
 // ==================== ПОЧАТОК ЧАСТИНИ 15B-1 з 16 ====================
         let gkClipStarted = false;
         let gkCurrentZone = 'idle';
