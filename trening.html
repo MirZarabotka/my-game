@@ -536,8 +536,8 @@
             stadiumGroup.add(m);
         });
 // ==================== КІНЕЦЬ ЧАСТИНИ 5А ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 5Б ====================
-        // 1. ПРАПОРИ В КОЛЬОРАХ ФОРМИ ГРАВЦЯ НА ТРИБУНАХ
+ // ==================== ПОЧАТОК ЧАСТИНИ 5Б-1 ====================
+        // 1. ПРАПОРИ В КОЛЬОРАХ ФОРМИ ГРАВЦЯ (менше штук і коротші держаки)
         function createClubFlagTexture(c1, c2) {
             const c = document.createElement('canvas');
             c.width = 256; c.height = 160;
@@ -545,7 +545,7 @@
             ctx.fillStyle = c1; ctx.fillRect(0, 0, 256, 80);
             ctx.fillStyle = c2; ctx.fillRect(0, 80, 256, 80);
             ctx.fillStyle = 'rgba(255,255,255,0.28)';
-            ctx.beginPath(); ctx.arc(128, 80, 32, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(128, 80, 28, 0, Math.PI * 2); ctx.fill();
             const tex = new THREE.CanvasTexture(c);
             tex.colorSpace = THREE.SRGBColorSpace;
             return tex;
@@ -555,33 +555,66 @@
         const poleMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.6, roughness: 0.3 });
 
         const stadiumFlags = [];
-        for (let i = 0; i < 24; i++) {
-            const fan = fanPositions[Math.floor((i / 24) * fanPositions.length)];
+        const flagFanIndices = new Set();
+        for (let i = 0; i < 8; i++) {
+            const fanIdx = Math.floor(((i + 0.5) / 8) * fanPositions.length);
+            const fan = fanPositions[fanIdx];
             if (!fan) continue;
-            const flagPivot = new THREE.Group();
-            flagPivot.position.set(fan.x + 0.25, fan.y + 0.65, fan.z + 0.1);
+            flagFanIndices.add(fanIdx);
 
-            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 2.3, 8), poleMat);
-            pole.position.y = 1.1;
-            const cloth = new THREE.Mesh(new THREE.PlaneGeometry(1.45, 0.92, 8, 4), flagMat);
-            cloth.position.set(0.74, 1.78, 0);
+            const flagPivot = new THREE.Group();
+            flagPivot.position.set(fan.x + 0.24, fan.y + 0.55, fan.z + 0.1);
+
+            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 1.35, 8), poleMat);
+            pole.position.y = 0.65;
+            const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.60, 8, 4), flagMat);
+            cloth.position.set(0.49, 1.02, 0);
 
             flagPivot.add(pole, cloth);
             stadiumGroup.add(flagPivot);
             stadiumFlags.push({ pivot: flagPivot, cloth, phase: Math.random() * 6.28 });
         }
 
-        // 2. СПАЛАХИ ФОТОКАМЕР НА ТРИБУНАХ
+        // 2. ФАНАТСЬКІ ШАРФИ В КОЛЬОРАХ ФОРМИ ГРАВЦЯ (тримають у піднятих руках)
+        function createClubScarfTexture(c1, c2) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 64;
+            const ctx = c.getContext('2d');
+            const stripes = 8;
+            const w = 256 / stripes;
+            for (let i = 0; i < stripes; i++) {
+                ctx.fillStyle = i % 2 === 0 ? c1 : c2;
+                ctx.fillRect(i * w, 0, w, 64);
+            }
+            const tex = new THREE.CanvasTexture(c);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+        const scarfTex = createClubScarfTexture(eqJersey.c1 || '#2563eb', eqJersey.c2 || '#facc15');
+        const scarfMat = new THREE.MeshStandardMaterial({ map: scarfTex, roughness: 0.75 });
+        const scarfGeo = new THREE.BoxGeometry(0.74, 0.13, 0.035);
+
+        const scarfFanIndices = [];
+        for (let i = 0; i < fanPositions.length; i++) {
+            if (!flagFanIndices.has(i) && i % 6 === 2) {
+                scarfFanIndices.push(i);
+            }
+        }
+        const scarfFanSet = new Set(scarfFanIndices);
+        const scarfsInst = new THREE.InstancedMesh(scarfGeo, scarfMat, Math.max(1, scarfFanIndices.length));
+        stadiumGroup.add(scarfsInst);
+
+        // 3. СПАЛАХИ ФОТОКАМЕР НА ТРИБУНАХ
         const cameraFlashes = [];
-        const flashGeo = new THREE.PlaneGeometry(0.45, 0.45);
-        for (let i = 0; i < 28; i++) {
+        const flashGeo = new THREE.PlaneGeometry(0.42, 0.42);
+        for (let i = 0; i < 24; i++) {
             const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
             const m = new THREE.Mesh(flashGeo, mat);
             stadiumGroup.add(m);
             cameraFlashes.push({ mesh: m, timer: Math.random() * 4.0, life: 0 });
         }
 
-        // 3. ФАЄРИ ТА КОЛЬОРОВИЙ ДИМ НА ТРИБУНАХ
+        // 4. ФАЄРИ ТА КОЛЬОРОВИЙ ДИМ НА ТРИБУНАХ
         const flares = [];
         const smokeParticles = [];
         const smokeGeo = new THREE.SphereGeometry(0.28, 8, 8);
@@ -614,13 +647,15 @@
                 }
             });
         }
-
+// ==================== КІНЕЦЬ ЧАСТИНИ 5Б-1 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 5Б-2 ====================
         function updateLiveFans(dt, nowSec) {
             if (crowdCheerTimer > 0) crowdCheerTimer = Math.max(0, crowdCheerTimer - dt);
             const cheerBoost = crowdCheerTimer > 0 ? 1.0 : 0.0;
 
             for (let i = 0; i < fCnt; i++) {
                 const f = fanPositions[i];
+                const hasScarf = scarfFanSet.has(i);
                 const wave = Math.sin(nowSec * (3.2 + cheerBoost * 5.5) + f.phase);
                 const jumpY = cheerBoost > 0 ? Math.abs(wave) * 0.24 : Math.max(0, wave) * 0.04;
 
@@ -641,8 +676,11 @@
                 dummy.updateMatrix();
                 hairsInst.setMatrixAt(i, dummy.matrix);
 
-                const raiseArms = cheerBoost > 0 || (i % 5 === 0 && wave > 0.5);
-                const armAngle = raiseArms ? 2.65 + Math.sin(nowSec * 10 + f.phase) * 0.22 : 0.16 + wave * 0.12;
+                // Вболівальники з шарфами завжди тримають руки вгорі з розтягнутим шарфом
+                const raiseArms = hasScarf || cheerBoost > 0 || (i % 5 === 0 && wave > 0.5);
+                const armAngle = hasScarf
+                    ? 2.85 + Math.sin(nowSec * 5 + f.phase) * 0.08
+                    : (raiseArms ? 2.65 + Math.sin(nowSec * 10 + f.phase) * 0.22 : 0.16 + wave * 0.12);
                 const armY = f.y + (raiseArms ? 0.68 : 0.36) + jumpY;
 
                 dummy.scale.set(1, 1, 1);
@@ -661,18 +699,34 @@
             hairsInst.instanceMatrix.needsUpdate = true;
             armsInst.instanceMatrix.needsUpdate = true;
 
+            // Оновлення позицій шарфів у руках
+            for (let sIdx = 0; sIdx < scarfFanIndices.length; sIdx++) {
+                const f = fanPositions[scarfFanIndices[sIdx]];
+                if (!f) continue;
+                const wave = Math.sin(nowSec * (3.2 + cheerBoost * 5.5) + f.phase);
+                const jumpY = cheerBoost > 0 ? Math.abs(wave) * 0.24 : Math.max(0, wave) * 0.04;
+                dummy.position.set(f.x, f.y + 1.04 + jumpY, f.z + 0.05);
+                dummy.rotation.set(0, 0, Math.sin(nowSec * 4.5 + f.phase) * 0.09);
+                dummy.scale.set(1, 1, 1);
+                dummy.updateMatrix();
+                scarfsInst.setMatrixAt(sIdx, dummy.matrix);
+            }
+            scarfsInst.instanceMatrix.needsUpdate = true;
+
+            // Хвиля прапорів
             stadiumFlags.forEach((fl) => {
                 const spd = 3.5 + cheerBoost * 4.5;
-                fl.pivot.rotation.z = Math.sin(nowSec * spd + fl.phase) * (0.22 + cheerBoost * 0.25);
-                fl.pivot.rotation.x = Math.cos(nowSec * 2.8 + fl.phase) * 0.14;
+                fl.pivot.rotation.z = Math.sin(nowSec * spd + fl.phase) * (0.18 + cheerBoost * 0.22);
+                fl.pivot.rotation.x = Math.cos(nowSec * 2.8 + fl.phase) * 0.12;
                 fl.cloth.rotation.y = Math.sin(nowSec * 6.0 + fl.phase) * 0.25;
             });
 
+            // Спалахи фотоапаратів
             cameraFlashes.forEach((cf) => {
                 if (cf.life > 0) {
                     cf.life -= dt;
                     cf.mesh.material.opacity = Math.max(0, cf.life / 0.22);
-                    cf.mesh.scale.setScalar(0.8 + (0.22 - cf.life) * 3.5);
+                    cf.mesh.scale.setScalar(0.8 + (0.22 - cf.life) * 3.2);
                 } else {
                     cf.mesh.material.opacity = 0;
                     cf.timer -= dt * (1 + cheerBoost * 3.5);
@@ -685,6 +739,7 @@
                 }
             });
 
+            // Фаєри та дим
             flares.forEach((fl) => {
                 if (fl.activeTimer > 0) {
                     fl.activeTimer -= dt;
@@ -723,7 +778,7 @@
                 }
             }
         }
-// ==================== КІНЕЦЬ ЧАСТИНИ 5Б ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 5Б-2 ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 6 з 10 ====================
         const goalGroup = new THREE.Group();
         goalGroup.position.set(0, 0, GOAL_Z);
