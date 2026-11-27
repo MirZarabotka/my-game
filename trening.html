@@ -321,11 +321,28 @@
         const GOAL_D = 1.9;
 
         const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 180);
-        const attackCamPos = new THREE.Vector3(-0.95, 2.48, SPOT_Z + 4.95);
-        const attackLookAt = new THREE.Vector3(0, 1.05, GOAL_Z);
+        const attackCamPos = new THREE.Vector3(-0.75, 2.75, SPOT_Z + 5.6);
+        const attackLookAt = new THREE.Vector3(0, 1.0, GOAL_Z);
 
-        camera.position.copy(attackCamPos);
-        camera.lookAt(attackLookAt);
+        function updateCameraFraming() {
+            const aspect = window.innerWidth / window.innerHeight;
+            camera.aspect = aspect;
+            if (aspect < 1.0) {
+                // Вертикальний екран телефону: піднімаємо камеру над головою, віддаляємо назад і розширюємо кут
+                camera.fov = 56;
+                attackCamPos.set(-0.55, 2.95, SPOT_Z + 6.55);
+                attackLookAt.set(0, 0.92, GOAL_Z);
+            } else {
+                // Горизонтальний екран (ПК / планшет)
+                camera.fov = 48;
+                attackCamPos.set(-0.85, 2.68, SPOT_Z + 5.35);
+                attackLookAt.set(0, 1.05, GOAL_Z);
+            }
+            camera.position.copy(attackCamPos);
+            camera.lookAt(attackLookAt);
+            camera.updateProjectionMatrix();
+        }
+        updateCameraFraming();
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -1400,8 +1417,7 @@
         }
 
         window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
+            updateCameraFraming();
             renderer.setSize(window.innerWidth, window.innerHeight);
             rszAim();
         });
@@ -1497,4 +1513,3 @@
 </body>
 </html>
 <!-- ==================== КІНЕЦЬ ЧАСТИНИ 10 з 10 ==================== -->
-
