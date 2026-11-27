@@ -408,7 +408,7 @@
         track.position.y = -0.02;
         stadiumGroup.add(track);
 // ==================== КІНЕЦЬ ЧАСТИНИ 4 з 10 ====================
-// ==================== ПОЧАТОК ЧАСТИНИ 5 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 5А ====================
         function createBannerTexture() {
             const c = document.createElement('canvas');
             c.width = 2048; c.height = 128;
@@ -435,11 +435,17 @@
         adRight.position.set(24.2, 0.62, 0);
         stadiumGroup.add(adBack, adLeft, adRight);
 
+        // Кольори форми гравця для прапорів та фаєрів
+        const eqJId = localStorage.getItem('eq_jerseys') || 'j1';
+        const eqJersey = CATALOG.jerseys.find(x => x.id === eqJId) || CATALOG.jerseys.at(0);
+        const clubCol1 = new THREE.Color(eqJersey.c1 || '#2563eb');
+        const clubCol2 = new THREE.Color(eqJersey.c2 || '#facc15');
+
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
         const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
         const fanPositions = [];
         const seatPositions = [];
-        const jerseyColors = [0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0xea580c, 0x0284c7, 0x9333ea];
+        const jerseyColors = [clubCol1.getHex(), clubCol2.getHex(), 0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0x0284c7];
         const skinColors = [0xffdbac, 0xf1c27d, 0xe0ac69, 0xc68642];
         const hairColors = [0x1c1917, 0x451a03, 0x78350f, 0xd97706];
 
@@ -454,8 +460,14 @@
             for (let x = -stepW * 0.46; x <= stepW * 0.46; x += 0.88) {
                 if (Math.abs((Math.abs(x) % 11) - 5.5) < 0.75) continue;
                 seatPositions.push({ x, y: rowY + 0.12, z: -zDist });
-                if (Math.random() > 0.18) {
-                    fanPositions.push({ x: x + (Math.random() - 0.5) * 0.12, y: rowY, z: -zDist + 0.08, phase: Math.random() * 6.28 });
+                if (Math.random() > 0.16) {
+                    fanPositions.push({
+                        x: x + (Math.random() - 0.5) * 0.12,
+                        y: rowY,
+                        z: -zDist + 0.08,
+                        phase: Math.random() * 6.28,
+                        skinHex: skinColors.at(fanPositions.length % skinColors.length)
+                    });
                 }
             }
         }
@@ -494,7 +506,7 @@
             dummy.scale.set(0.95, 1.08, 0.98);
             dummy.updateMatrix();
             headsInst.setMatrixAt(i, dummy.matrix);
-            tmpColor.setHex(skinColors.at(i % skinColors.length));
+            tmpColor.setHex(f.skinHex);
             headsInst.setColorAt(i, tmpColor);
 
             dummy.position.set(f.x, f.y + 0.775, f.z);
@@ -509,7 +521,7 @@
             dummy.rotation.set(0, 0, 0.14);
             dummy.updateMatrix();
             armsInst.setMatrixAt(i * 2, dummy.matrix);
-            armsInst.setColorAt(i * 2, tmpColor.setHex(skinColors.at(i % skinColors.length)));
+            armsInst.setColorAt(i * 2, tmpColor.setHex(f.skinHex));
 
             dummy.position.set(f.x + 0.27, f.y + 0.36, f.z);
             dummy.rotation.set(0, 0, -0.14);
@@ -523,7 +535,195 @@
             if (m.instanceColor) m.instanceColor.needsUpdate = true;
             stadiumGroup.add(m);
         });
-// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 10 ====================
+// ==================== КІНЕЦЬ ЧАСТИНИ 5А ====================
+        // ==================== ПОЧАТОК ЧАСТИНИ 5Б ====================
+        // 1. ПРАПОРИ В КОЛЬОРАХ ФОРМИ ГРАВЦЯ НА ТРИБУНАХ
+        function createClubFlagTexture(c1, c2) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 160;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = c1; ctx.fillRect(0, 0, 256, 80);
+            ctx.fillStyle = c2; ctx.fillRect(0, 80, 256, 80);
+            ctx.fillStyle = 'rgba(255,255,255,0.28)';
+            ctx.beginPath(); ctx.arc(128, 80, 32, 0, Math.PI * 2); ctx.fill();
+            const tex = new THREE.CanvasTexture(c);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+        const flagTex = createClubFlagTexture(eqJersey.c1 || '#2563eb', eqJersey.c2 || '#facc15');
+        const flagMat = new THREE.MeshStandardMaterial({ map: flagTex, side: THREE.DoubleSide, roughness: 0.6 });
+        const poleMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.6, roughness: 0.3 });
+
+        const stadiumFlags = [];
+        for (let i = 0; i < 24; i++) {
+            const fan = fanPositions[Math.floor((i / 24) * fanPositions.length)];
+            if (!fan) continue;
+            const flagPivot = new THREE.Group();
+            flagPivot.position.set(fan.x + 0.25, fan.y + 0.65, fan.z + 0.1);
+
+            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 2.3, 8), poleMat);
+            pole.position.y = 1.1;
+            const cloth = new THREE.Mesh(new THREE.PlaneGeometry(1.45, 0.92, 8, 4), flagMat);
+            cloth.position.set(0.74, 1.78, 0);
+
+            flagPivot.add(pole, cloth);
+            stadiumGroup.add(flagPivot);
+            stadiumFlags.push({ pivot: flagPivot, cloth, phase: Math.random() * 6.28 });
+        }
+
+        // 2. СПАЛАХИ ФОТОКАМЕР НА ТРИБУНАХ
+        const cameraFlashes = [];
+        const flashGeo = new THREE.PlaneGeometry(0.45, 0.45);
+        for (let i = 0; i < 28; i++) {
+            const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
+            const m = new THREE.Mesh(flashGeo, mat);
+            stadiumGroup.add(m);
+            cameraFlashes.push({ mesh: m, timer: Math.random() * 4.0, life: 0 });
+        }
+
+        // 3. ФАЄРИ ТА КОЛЬОРОВИЙ ДИМ НА ТРИБУНАХ
+        const flares = [];
+        const smokeParticles = [];
+        const smokeGeo = new THREE.SphereGeometry(0.28, 8, 8);
+        for (let i = 0; i < 8; i++) {
+            const fan = fanPositions[Math.floor(((i + 0.5) / 8) * fanPositions.length)];
+            const flareLight = new THREE.Mesh(
+                new THREE.SphereGeometry(0.16, 10, 10),
+                new THREE.MeshBasicMaterial({ color: 0xffedd5 })
+            );
+            flareLight.position.set(fan ? fan.x : (i - 3.5) * 6, fan ? fan.y + 1.05 : 2.5, fan ? fan.z + 0.25 : -34.5);
+            flareLight.visible = false;
+            stadiumGroup.add(flareLight);
+            flares.push({ mesh: flareLight, activeTimer: 0, spawnAccum: 0, colorHex: i % 2 === 0 ? clubCol1.getHex() : 0xff5722 });
+        }
+
+        let crowdCheerTimer = 0;
+        function triggerStadiumCelebration(big = false) {
+            crowdCheerTimer = big ? 3.2 : 2.0;
+            const count = big ? flares.length : 4;
+            for (let i = 0; i < count; i++) {
+                const fl = flares[(i + Math.floor(Math.random() * flares.length)) % flares.length];
+                fl.activeTimer = big ? 3.8 : 2.4;
+                fl.mesh.visible = true;
+            }
+            cameraFlashes.forEach((cf, idx) => {
+                if (idx % 2 === 0 || big) {
+                    const f = fanPositions[Math.floor(Math.random() * fanPositions.length)];
+                    if (f) cf.mesh.position.set(f.x, f.y + 0.85, f.z + 0.35);
+                    cf.life = 0.22;
+                }
+            });
+        }
+
+        function updateLiveFans(dt, nowSec) {
+            if (crowdCheerTimer > 0) crowdCheerTimer = Math.max(0, crowdCheerTimer - dt);
+            const cheerBoost = crowdCheerTimer > 0 ? 1.0 : 0.0;
+
+            for (let i = 0; i < fCnt; i++) {
+                const f = fanPositions[i];
+                const wave = Math.sin(nowSec * (3.2 + cheerBoost * 5.5) + f.phase);
+                const jumpY = cheerBoost > 0 ? Math.abs(wave) * 0.24 : Math.max(0, wave) * 0.04;
+
+                dummy.position.set(f.x, f.y + 0.34 + jumpY, f.z);
+                dummy.scale.set(1.15, 1.0, 0.68);
+                dummy.rotation.set(0, 0, Math.cos(nowSec * 2.5 + f.phase) * 0.06);
+                dummy.updateMatrix();
+                torsosInst.setMatrixAt(i, dummy.matrix);
+
+                dummy.position.set(f.x, f.y + 0.76 + jumpY, f.z);
+                dummy.scale.set(0.95, 1.08, 0.98);
+                dummy.rotation.set(0, 0, 0);
+                dummy.updateMatrix();
+                headsInst.setMatrixAt(i, dummy.matrix);
+
+                dummy.position.set(f.x, f.y + 0.775 + jumpY, f.z);
+                dummy.scale.set(0.98, 1.05, 1.02);
+                dummy.updateMatrix();
+                hairsInst.setMatrixAt(i, dummy.matrix);
+
+                const raiseArms = cheerBoost > 0 || (i % 5 === 0 && wave > 0.5);
+                const armAngle = raiseArms ? 2.65 + Math.sin(nowSec * 10 + f.phase) * 0.22 : 0.16 + wave * 0.12;
+                const armY = f.y + (raiseArms ? 0.68 : 0.36) + jumpY;
+
+                dummy.scale.set(1, 1, 1);
+                dummy.position.set(f.x - 0.27, armY, f.z);
+                dummy.rotation.set(0, 0, armAngle);
+                dummy.updateMatrix();
+                armsInst.setMatrixAt(i * 2, dummy.matrix);
+
+                dummy.position.set(f.x + 0.27, armY, f.z);
+                dummy.rotation.set(0, 0, -armAngle);
+                dummy.updateMatrix();
+                armsInst.setMatrixAt(i * 2 + 1, dummy.matrix);
+            }
+            torsosInst.instanceMatrix.needsUpdate = true;
+            headsInst.instanceMatrix.needsUpdate = true;
+            hairsInst.instanceMatrix.needsUpdate = true;
+            armsInst.instanceMatrix.needsUpdate = true;
+
+            stadiumFlags.forEach((fl) => {
+                const spd = 3.5 + cheerBoost * 4.5;
+                fl.pivot.rotation.z = Math.sin(nowSec * spd + fl.phase) * (0.22 + cheerBoost * 0.25);
+                fl.pivot.rotation.x = Math.cos(nowSec * 2.8 + fl.phase) * 0.14;
+                fl.cloth.rotation.y = Math.sin(nowSec * 6.0 + fl.phase) * 0.25;
+            });
+
+            cameraFlashes.forEach((cf) => {
+                if (cf.life > 0) {
+                    cf.life -= dt;
+                    cf.mesh.material.opacity = Math.max(0, cf.life / 0.22);
+                    cf.mesh.scale.setScalar(0.8 + (0.22 - cf.life) * 3.5);
+                } else {
+                    cf.mesh.material.opacity = 0;
+                    cf.timer -= dt * (1 + cheerBoost * 3.5);
+                    if (cf.timer <= 0) {
+                        cf.timer = 1.5 + Math.random() * 4.5;
+                        const f = fanPositions[Math.floor(Math.random() * fanPositions.length)];
+                        if (f) cf.mesh.position.set(f.x, f.y + 0.85, f.z + 0.35);
+                        cf.life = 0.18;
+                    }
+                }
+            });
+
+            flares.forEach((fl) => {
+                if (fl.activeTimer > 0) {
+                    fl.activeTimer -= dt;
+                    fl.mesh.scale.setScalar(0.85 + Math.random() * 0.55);
+                    fl.spawnAccum += dt;
+                    if (fl.spawnAccum >= 0.08) {
+                        fl.spawnAccum = 0;
+                        const smMat = new THREE.MeshBasicMaterial({ color: fl.colorHex, transparent: true, opacity: 0.65, depthWrite: false });
+                        const sm = new THREE.Mesh(smokeGeo, smMat);
+                        sm.position.copy(fl.mesh.position);
+                        sm.position.x += (Math.random() - 0.5) * 0.2;
+                        stadiumGroup.add(sm);
+                        smokeParticles.push({
+                            mesh: sm,
+                            vx: (Math.random() - 0.5) * 0.65,
+                            vy: 1.35 + Math.random() * 0.8,
+                            life: 1.8
+                        });
+                    }
+                    if (fl.activeTimer <= 0) fl.mesh.visible = false;
+                }
+            });
+
+            for (let i = smokeParticles.length - 1; i >= 0; i--) {
+                const sp = smokeParticles[i];
+                sp.life -= dt;
+                sp.mesh.position.x += sp.vx * dt;
+                sp.mesh.position.y += sp.vy * dt;
+                sp.mesh.scale.addScalar(dt * 1.6);
+                sp.mesh.material.opacity = Math.max(0, (sp.life / 1.8) * 0.55);
+                if (sp.life <= 0) {
+                    stadiumGroup.remove(sp.mesh);
+                    sp.mesh.geometry.dispose();
+                    sp.mesh.material.dispose();
+                    smokeParticles.splice(i, 1);
+                }
+            }
+        }
+// ==================== КІНЕЦЬ ЧАСТИНИ 5Б ====================
 // ==================== ПОЧАТОК ЧАСТИНИ 6 з 10 ====================
         const goalGroup = new THREE.Group();
         goalGroup.position.set(0, 0, GOAL_Z);
@@ -1120,7 +1320,14 @@
             }
         }
 
+        let lastCelebratedHits = 0;
+
         function updateTargetAnim(dt) {
+            if (training.hits > lastCelebratedHits) {
+                lastCelebratedHits = training.hits;
+                triggerStadiumCelebration(training.combo >= 3);
+            }
+
             if (targetState.moving && shotState === 'ready') {
                 targetState.movePhase += dt * targetState.moveSpeed;
                 const rangeX = GOAL_W * 0.38;
@@ -1150,6 +1357,7 @@
             const dt = Math.min(0.05, (now - lastTime) * 0.001);
             lastTime = now;
 
+            updateLiveFans(dt, now * 0.001);
             updateStrikerAnim(dt);
             updateTargetAnim(dt);
 
@@ -1234,3 +1442,4 @@
 </body>
 </html>
 <!-- ==================== КІНЕЦЬ ЧАСТИНИ 10 з 10 ==================== -->
+
