@@ -913,12 +913,12 @@
         let playerJerseyTex = null;
         let playerShortCol = '#ffffff';
 
-        // Анімації нападника (під кожен тип удару)
+        // Анімації нападника
         let strikerModelRoot = null;
         let strikerIdleAction = null;
-        let strikerKickNormalAction = null; // звичайний удар
-        let strikerKickPowerAction = null;  // потужний постріл
-        let strikerKickCurveAction = null;  // технічний / кручений удар
+        let strikerKickNormalAction = null;
+        let strikerKickPowerAction = null;
+        let strikerKickCurveAction = null;
         let strikerActiveAction = null;
 
         // Анімації воротаря
@@ -953,31 +953,52 @@
                 if (n.isBone && n.name) boneNames.push(n.name);
             });
 
-            const cleanName = (str) => str
-                .replace(/^.*[:|]/, '')
-                .replace(/^mixamorig/i, '')
-                .replace(/[\._]\d+$/, '')
+            // Максимальне очищення імені кістки від усіх префіксів та суфіксів Blender/Mixamo
+            const simplify = (str) => str
+                .replace(/^.*[:|/\\]/, '')
+                .replace(/^(mixamorig|armature|skeleton|rig|character|root)[\._:\-\s]*/i, '')
+                .replace(/[\._\-]\d+$/, '')
+                .replace(/[^a-zA-Z0-9]/g, '')
                 .toLowerCase();
+
+            const boneMap = new Map();
+            boneNames.forEach((b) => {
+                boneMap.set(simplify(b), b);
+            });
 
             clip.tracks = clip.tracks.filter(t => {
                 if (t.name.endsWith('.position')) {
-                    return t.name.toLowerCase().includes('hips');
+                    const s = simplify(t.name.split('.')[0]);
+                    return s.includes('hips') || s.includes('pelvis') || s.includes('root');
                 }
                 return true;
             });
 
+            let matchedCount = 0;
             clip.tracks.forEach((track) => {
                 const dotIdx = track.name.lastIndexOf('.');
                 if (dotIdx === -1) return;
                 const rawBone = track.name.slice(0, dotIdx);
                 const prop = track.name.slice(dotIdx);
-                const cleanKey = cleanName(rawBone);
+                const cleanKey = simplify(rawBone);
 
-                const matched = boneNames.find((b) => cleanName(b) === cleanKey);
+                let matched = boneMap.get(cleanKey);
+                if (!matched) {
+                    // Запасний пошук за входженням назви (наприклад, LeftArm == mixamorigLeftArm)
+                    for (const [k, origName] of boneMap.entries()) {
+                        if (k.length > 3 && (k.endsWith(cleanKey) || cleanKey.endsWith(k))) {
+                            matched = origName;
+                            break;
+                        }
+                    }
+                }
                 if (matched) {
                     track.name = matched + prop;
+                    matchedCount++;
                 }
             });
+
+            console.log(`[Анімація ${clip.name || 'clip'}] Прив'язано кісток: ${matchedCount} з ${clip.tracks.length}`);
             return clip;
         }
 
@@ -985,6 +1006,7 @@
             loader.load(url + '?v=' + Date.now(), (animGltf) => {
                 const clip = animGltf.animations && animGltf.animations.at(0);
                 if (clip && targetMixer && targetRoot) {
+                    clip.name = url;
                     normalizeAndBindClip(clip, targetRoot);
                     const action = targetMixer.clipAction(clip);
                     if (isLoop) {
@@ -994,8 +1016,12 @@
                         action.clampWhenFinished = true;
                     }
                     onLoaded(action);
+                } else {
+                    console.warn(`[Помилка] У файлі ${url} не знайдено анімації!`);
                 }
-            }, undefined, () => {});
+            }, undefined, (err) => {
+                console.warn(`[Помилка завантаження] Не вдалося відкрити файл ${url}`, err);
+            });
         }
 
 // ██████████████████████████████████████████████████████████████████
@@ -1909,7 +1935,10 @@
 // ██████████████████████████████████████████████████████████████████
 // ██                   КІНЕЦЬ ЧАСТИНИ 15A з 16                   ██
 // ██████████████████████████████████████████████████████████████████
-// ==================== ПОЧАТОК ЧАСТИНИ 15B-1 з 16 ====================
+// ██████████████████████████████████████████████████████████████████
+// ██                  ПОЧАТОК ЧАСТИНИ 15B-1 з 16                  ██
+// ██████████████████████████████████████████████████████████████████
+
         let gkClipStarted = false;
         let gkCurrentZone = 'idle';
 
@@ -1927,7 +1956,7 @@
                 chosenAction = gkDiveHighAction || gkDiveLowAction;
                 gkContainer.scale.x = (dir > 0) ? (gkDiveMirrored ? 1 : -1) : (gkDiveMirrored ? -1 : 1);
             } else {
-                chosenAction = gkDiveLowAction;
+                chosenAction = gkDiveLowAction || gkDiveHighAction;
                 gkContainer.scale.x = (dir > 0) ? (gkDiveMirrored ? 1 : -1) : (gkDiveMirrored ? -1 : 1);
             }
 
@@ -1935,9 +1964,9 @@
 
             gkMixer.stopAllAction();
             chosenAction.reset();
-            chosenAction.time = 0.14;
+            chosenAction.time = 0.05;
             chosenAction.setEffectiveWeight(1.0);
-            chosenAction.setEffectiveTimeScale(1.75);
+            chosenAction.setEffectiveTimeScale(1.45);
             chosenAction.play();
 
             gkActiveAction = chosenAction;
@@ -1994,16 +2023,16 @@
                 if (hasActiveExternalClip && gkCurrentZone === 'center_low') {
                     clipDropY = -0.44 * Math.min(1, p * 1.6);
                 }
-            } else if (gkState.mode === 'dive') {
+            } else if (gkState.mode === 'step' || gkState.mode === 'dive') {
                 const diveZone = gkState.isHigh ? 'high' : 'low';
                 if (!gkClipStarted) {
                     playGKZoneClip(diveZone, gkState.diveDir);
                 }
-                const diveSpan = Math.min(0.32, shotDuration * 0.72);
+                const diveSpan = Math.min(0.36, shotDuration * 0.78);
                 const p = Math.min(1, gkState.modeTime / diveSpan);
                 const easeX = 1 - Math.pow(1 - p, 2.1);
 
-                gkState.x = THREE.MathUtils.lerp(gkState.startX, gkState.targetX, easeX);
+                gkState.x = THREE.MathUtils.lerp(0, gkState.targetX, easeX);
 
                 if (hasActiveExternalClip) {
                     gkState.y = gkState.isHigh ? Math.sin(p * Math.PI) * 0.24 : 0;
@@ -2017,7 +2046,10 @@
                 }
                 diveAmt = Math.min(1, p * 1.4);
             }
-// ==================== КІНЕЦЬ ЧАСТИНИ 15B-1 з 16 ====================
+
+// ██████████████████████████████████████████████████████████████████
+// ██                   КІНЕЦЬ ЧАСТИНИ 15B-1 з 16                  ██
+// ██████████████████████████████████████████████████████████████████
 // ==================== ПОЧАТОК ЧАСТИНИ 15B-2 з 16 ====================
             else if (gkState.mode === 'land') {
                 gkState.y = 0;
