@@ -1121,14 +1121,14 @@
                     if (gs) mountGKGloves(gs, gloveItem.c1);
                 });
 
-                // Завантажуємо початкову стійку (idle.glb) та стрибок у кут (gk_catch2.glb)
+                // Завантажуємо початкову стійку (idle.glb) та падіння в кут (gk_dive.glb)
                 loadGKAnimationClip('./idle.glb', true, (act) => {
                     if (gkIdleAction) gkIdleAction.stop();
                     gkIdleAction = act;
                     gkActiveAction = act;
                     act.play();
                 });
-                loadGKAnimationClip('./gk_catch2.glb', false, (act) => {
+                loadGKAnimationClip('./gk_dive.glb', false, (act) => {
                     gkDiveLowAction = act;
                 });
             }
