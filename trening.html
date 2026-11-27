@@ -1,0 +1,1236 @@
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 10 ==================== -->
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Penalty 3D — Тренування влучності</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { overflow: hidden; background: #071326; color: #ffffff; touch-action: none; }
+        #canvas-container { width: 100vw; height: 100vh; display: block; cursor: grab; }
+        #canvas-container:active { cursor: grabbing; }
+
+        .ui-layer { position: absolute; inset: 0; pointer-events: none; }
+
+        .top-bar {
+            position: absolute; top: 12px; left: 12px; right: 12px;
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+        }
+        .home-btn {
+            pointer-events: auto; text-decoration: none;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px);
+            color: #f8fafc; padding: 8px 13px; border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-weight: 800; font-size: 0.82rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+        }
+        .score-board {
+            background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(10px);
+            padding: 7px 16px; border-radius: 22px;
+            border: 1.5px solid rgba(56, 189, 248, 0.5);
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+        }
+        .score-main {
+            display: flex; align-items: center; gap: 12px;
+            font-weight: 900; font-size: 0.96rem; letter-spacing: 0.5px;
+        }
+        .stat-hits { color: #4ade80; }
+        .stat-combo { color: #facc15; }
+        .stat-best { font-size: 0.72rem; color: #94a3b8; font-weight: 700; }
+
+        .coins-pill {
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px);
+            color: #facc15; padding: 8px 13px; border-radius: 22px;
+            border: 1px solid rgba(250, 204, 21, 0.45);
+            font-weight: 800; font-size: 0.88rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+        }
+
+        .status-banner {
+            position: absolute; top: 74px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px);
+            padding: 8px 20px; border-radius: 20px;
+            border: 1.5px solid #38bdf8;
+            font-weight: 800; font-size: 0.94rem; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transition: transform 0.2s, border-color 0.2s, color 0.2s;
+            white-space: nowrap;
+        }
+        .status-banner.goal { border-color: #22c55e; color: #4ade80; transform: translateX(-50%) scale(1.08); }
+        .status-banner.miss { border-color: #ef4444; color: #f87171; }
+        .status-banner.bullseye { border-color: #facc15; color: #fde047; transform: translateX(-50%) scale(1.12); }
+
+        .bottom-hint {
+            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(8px);
+            padding: 8px 18px; border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            font-size: 0.8rem; font-weight: 700; color: #e2e8f0;
+            text-align: center; white-space: nowrap;
+        }
+
+        #aim-canvas { position: absolute; inset: 0; pointer-events: none; }
+
+        #loader-screen {
+            position: absolute; inset: 0; background: #0f172a;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 50; transition: opacity 0.35s;
+        }
+        .spinner {
+            width: 46px; height: 46px;
+            border: 4px solid rgba(56, 189, 248, 0.2); border-top-color: #38bdf8;
+            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 14px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loader-screen">
+        <div class="spinner"></div>
+        <div>Підготовка тренувального поля...</div>
+    </div>
+
+    <div id="canvas-container"></div>
+    <canvas id="aim-canvas"></canvas>
+
+    <div class="ui-layer">
+        <div class="top-bar">
+            <a href="index.html" class="home-btn">🏠 Меню</a>
+            <div class="score-board">
+                <div class="score-main">
+                    <span class="stat-hits">🎯 ВЛУЧАНЬ: <b id="hits-count">0</b></span>
+                    <span style="color:#475569">|</span>
+                    <span class="stat-combo">🔥 СЕРІЯ: <b id="combo-count">0</b></span>
+                </div>
+                <div class="stat-best">Рекорд серії: <b id="best-combo">0</b> • Очки: <b id="total-points">0</b></div>
+            </div>
+            <div class="coins-pill" id="arena-coins">💰 500</div>
+        </div>
+
+        <div class="status-banner" id="status-banner">🎯 Влуч у мішень! Проведи пальцем у ворота</div>
+        <div class="bottom-hint" id="bottom-hint">👆 Влучай у центр мішені для x2 монет та збереження серії!</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./libs/three.module.js"
+            }
+        }
+    </script>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 1 з 10 ==================== -->
+// ==================== ПОЧАТОК ЧАСТИНИ 2 з 10 ====================
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from './libs/GLTFLoader.js';
+        import { DRACOLoader } from './libs/DRACOLoader.js';
+        import { CATALOG } from './shop-catalog.js';
+
+        if (localStorage.getItem('player_coins') === null) {
+            localStorage.setItem('player_coins', '500');
+        }
+        let coins = Number(localStorage.getItem('player_coins') || 500);
+
+        const coinsEl = document.getElementById('arena-coins');
+        const hitsEl = document.getElementById('hits-count');
+        const comboEl = document.getElementById('combo-count');
+        const bestComboEl = document.getElementById('best-combo');
+        const pointsEl = document.getElementById('total-points');
+        const bannerEl = document.getElementById('status-banner');
+
+        coinsEl.textContent = `💰 ${coins}`;
+
+        const training = {
+            hits: 0,
+            combo: 0,
+            bestCombo: Number(localStorage.getItem('trening_best_combo') || 0),
+            points: 0
+        };
+        bestComboEl.textContent = training.bestCombo;
+
+        function setBanner(text, type = '') {
+            bannerEl.textContent = text;
+            bannerEl.className = 'status-banner' + (type ? ' ' + type : '');
+        }
+
+        function updateTrainingHUD() {
+            hitsEl.textContent = training.hits;
+            comboEl.textContent = training.combo;
+            pointsEl.textContent = training.points;
+            if (training.combo > training.bestCombo) {
+                training.bestCombo = training.combo;
+                localStorage.setItem('trening_best_combo', String(training.bestCombo));
+            }
+            bestComboEl.textContent = training.bestCombo;
+        }
+// ==================== КІНЕЦЬ ЧАСТИНИ 2 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 3 з 10 ====================
+        class ArenaAudio {
+            constructor() {
+                this.ctx = null;
+                this.enabled = localStorage.getItem('stadium_sound') !== 'off';
+                this.ambienceStarted = false;
+            }
+            init() {
+                if (!this.enabled) return;
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+                if (this.ctx && !this.ambienceStarted) {
+                    this.startAmbience();
+                }
+            }
+            startAmbience() {
+                if (!this.ctx || this.ambienceStarted) return;
+                this.ambienceStarted = true;
+                const sr = this.ctx.sampleRate;
+                const len = sr * 6;
+                const buf = this.ctx.createBuffer(1, len, sr);
+                const data = buf.getChannelData(0);
+                let b0 = 0, b1 = 0, b2 = 0;
+                for (let i = 0; i < len; i++) {
+                    const t = i / sr;
+                    const white = Math.random() * 2 - 1;
+                    b0 = 0.997 * b0 + white * 0.025;
+                    b1 = 0.985 * b1 + white * 0.045;
+                    b2 = 0.950 * b2 + white * 0.080;
+                    const chantWave = 0.72 + 0.28 * Math.sin(t * Math.PI * 1.33) * Math.sin(t * Math.PI * 0.33);
+                    data[i] = (b0 + b1 + b2) * 0.45 * chantWave;
+                }
+                const src = this.ctx.createBufferSource();
+                src.buffer = buf;
+                src.loop = true;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 340;
+                filter.Q.value = 0.65;
+                const gain = this.ctx.createGain();
+                gain.gain.value = 0.16;
+                src.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+                src.start();
+            }
+            playKick() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(165, now);
+                osc.frequency.exponentialRampToValueAtTime(38, now + 0.14);
+                gain.gain.setValueAtTime(0.95, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.16);
+            }
+            playTargetHit(isBullseye) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const freqs = isBullseye ? [523.25, 659.25, 783.99, 1046.5] : [440, 587.33];
+                freqs.forEach((f, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, now + idx * 0.06);
+                    gain.gain.setValueAtTime(0.38, now + idx * 0.06);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.28);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.06);
+                    osc.stop(now + idx * 0.06 + 0.3);
+                });
+            }
+            playPost() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc1 = this.ctx.createOscillator();
+                const gain1 = this.ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(118, now);
+                osc1.frequency.exponentialRampToValueAtTime(116.2, now + 0.36);
+                gain1.gain.setValueAtTime(0.45, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+                osc1.connect(gain1);
+                gain1.connect(this.ctx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.38);
+            }
+            playCrowd(isHappy) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const dur = isHappy ? 1.8 : 1.1;
+                const sr = this.ctx.sampleRate;
+                const len = Math.floor(sr * dur);
+                const buf = this.ctx.createBuffer(1, len, sr);
+                const ch = buf.getChannelData(0);
+                let last = 0;
+                for (let i = 0; i < len; i++) {
+                    const p = i / len;
+                    last = (last + 0.05 * (Math.random() * 2 - 1)) / 1.05;
+                    const env = isHappy
+                        ? Math.min(1, p * 9) * Math.pow(1 - p, 0.75)
+                        : Math.min(1, p * 7) * Math.pow(1 - p, 1.25);
+                    ch[i] = last * 3.8 * env;
+                }
+                const src = this.ctx.createBufferSource();
+                src.buffer = buf;
+                const formant = this.ctx.createBiquadFilter();
+                formant.type = 'bandpass';
+                formant.Q.value = isHappy ? 1.4 : 2.1;
+                formant.frequency.setValueAtTime(isHappy ? 420 : 450, now);
+                formant.frequency.exponentialRampToValueAtTime(isHappy ? 660 : 210, now + dur);
+                const gn = this.ctx.createGain();
+                gn.gain.setValueAtTime(isHappy ? 0.65 : 0.45, now);
+                gn.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                src.connect(formant);
+                formant.connect(gn);
+                gn.connect(this.ctx.destination);
+                src.start(now);
+            }
+        }
+        const arenaAudio = new ArenaAudio();
+// ==================== КІНЕЦЬ ЧАСТИНИ 3 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 4 з 10 ====================
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x071326);
+        scene.fog = new THREE.FogExp2(0x071326, 0.011);
+
+        const SPOT_Z = -19.86;
+        const GOAL_Z = -29.8;
+        const GOAL_W = 7.32;
+        const GOAL_H = 2.44;
+        const GOAL_D = 1.9;
+
+        const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 180);
+        const attackCamPos = new THREE.Vector3(-0.95, 2.48, SPOT_Z + 4.95);
+        const attackLookAt = new THREE.Vector3(0, 1.05, GOAL_Z);
+
+        camera.position.copy(attackCamPos);
+        camera.lookAt(attackLookAt);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xdbeafe, 1.1));
+        const sunLight = new THREE.DirectionalLight(0xffffff, 2.3);
+        sunLight.position.set(10, 18, -8);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.set(2048, 2048);
+        scene.add(sunLight);
+
+        const rimLight = new THREE.DirectionalLight(0x93c5fd, 1.15);
+        rimLight.position.set(-12, 14, -36);
+        scene.add(rimLight);
+
+        function createPitchTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+
+            const stripeCount = 12;
+            const stripeH = 1024 / stripeCount;
+            for (let i = 0; i < stripeCount; i++) {
+                ctx.fillStyle = i % 2 === 0 ? '#15803d' : '#166534';
+                ctx.fillRect(0, i * stripeH, 1024, stripeH);
+            }
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.92)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+            ctx.lineWidth = 7;
+            ctx.strokeRect(48, 48, 928, 928);
+
+            ctx.beginPath();
+            ctx.moveTo(48, 512);
+            ctx.lineTo(976, 512);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(512, 512, 95, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeRect(236, 48, 552, 210);
+            ctx.strokeRect(374, 48, 276, 78);
+            ctx.beginPath();
+            ctx.arc(512, 204, 7, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(512, 204, 88, 0.22 * Math.PI, 0.78 * Math.PI);
+            ctx.stroke();
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.anisotropy = 8;
+            return tex;
+        }
+
+        const stadiumGroup = new THREE.Group();
+        scene.add(stadiumGroup);
+
+        const pitch = new THREE.Mesh(
+            new THREE.PlaneGeometry(46, 66),
+            new THREE.MeshStandardMaterial({ map: createPitchTexture(), roughness: 0.85 })
+        );
+        pitch.rotation.x = -Math.PI / 2;
+        pitch.receiveShadow = true;
+        stadiumGroup.add(pitch);
+
+        const track = new THREE.Mesh(
+            new THREE.PlaneGeometry(66, 86),
+            new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 })
+        );
+        track.rotation.x = -Math.PI / 2;
+        track.position.y = -0.02;
+        stadiumGroup.add(track);
+// ==================== КІНЕЦЬ ЧАСТИНИ 4 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 5 з 10 ====================
+        function createBannerTexture() {
+            const c = document.createElement('canvas');
+            c.width = 2048; c.height = 128;
+            const ctx = c.getContext('2d');
+            const g = ctx.createLinearGradient(0, 0, 2048, 0);
+            g.addColorStop(0, '#0284c7'); g.addColorStop(0.5, '#1d4ed8'); g.addColorStop(1, '#0284c7');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, 2048, 128);
+            ctx.fillStyle = '#38bdf8'; ctx.fillRect(0, 0, 2048, 10); ctx.fillRect(0, 118, 2048, 10);
+            ctx.fillStyle = '#ffffff'; ctx.font = '900 54px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('🎯 PENALTY 3D TRAINING   ★   HIT THE TARGET   ★   COMBO MODE! 🔥', 1024, 66);
+            const tex = new THREE.CanvasTexture(c);
+            tex.wrapS = THREE.RepeatWrapping; tex.repeat.set(3, 1); tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+        const bannerTex = createBannerTexture();
+        const adMat = new THREE.MeshBasicMaterial({ map: bannerTex });
+
+        const adBack = new THREE.Mesh(new THREE.BoxGeometry(52, 1.25, 0.25), adMat);
+        adBack.position.set(0, 0.62, -32.4);
+        const adLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 66), adMat);
+        adLeft.position.set(-24.2, 0.62, 0);
+        const adRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.25, 66), adMat);
+        adRight.position.set(24.2, 0.62, 0);
+        stadiumGroup.add(adBack, adLeft, adRight);
+
+        const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
+        const fanPositions = [];
+        const seatPositions = [];
+        const jerseyColors = [0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0xea580c, 0x0284c7, 0x9333ea];
+        const skinColors = [0xffdbac, 0xf1c27d, 0xe0ac69, 0xc68642];
+        const hairColors = [0x1c1917, 0x451a03, 0x78350f, 0xd97706];
+
+        for (let r = 0; r < 8; r++) {
+            const rowY = 1.35 + r * 0.68;
+            const zDist = 33.6 + r * 1.02;
+            const stepW = 54 + r * 2;
+            const step = new THREE.Mesh(new THREE.BoxGeometry(stepW, 0.68, 1.05), tierMat);
+            step.position.set(0, rowY - 0.34, -zDist);
+            stadiumGroup.add(step);
+
+            for (let x = -stepW * 0.46; x <= stepW * 0.46; x += 0.88) {
+                if (Math.abs((Math.abs(x) % 11) - 5.5) < 0.75) continue;
+                seatPositions.push({ x, y: rowY + 0.12, z: -zDist });
+                if (Math.random() > 0.18) {
+                    fanPositions.push({ x: x + (Math.random() - 0.5) * 0.12, y: rowY, z: -zDist + 0.08, phase: Math.random() * 6.28 });
+                }
+            }
+        }
+
+        const backRoof = new THREE.Mesh(new THREE.BoxGeometry(70, 0.45, 12), roofMat);
+        backRoof.position.set(0, 8.8, -38.0);
+        stadiumGroup.add(backRoof);
+
+        const dummy = new THREE.Object3D();
+        const tmpColor = new THREE.Color();
+
+        const seatsInst = new THREE.InstancedMesh(new THREE.BoxGeometry(0.48, 0.34, 0.38), new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.45 }), seatPositions.length);
+        seatPositions.forEach((s, i) => {
+            dummy.position.set(s.x, s.y, s.z);
+            dummy.updateMatrix();
+            seatsInst.setMatrixAt(i, dummy.matrix);
+        });
+        seatsInst.instanceMatrix.needsUpdate = true;
+        stadiumGroup.add(seatsInst);
+
+        const fCnt = fanPositions.length;
+        const torsosInst = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.21, 0.34, 6, 10), new THREE.MeshStandardMaterial({ roughness: 0.72 }), fCnt);
+        const headsInst = new THREE.InstancedMesh(new THREE.SphereGeometry(0.135, 10, 10), new THREE.MeshStandardMaterial({ roughness: 0.55 }), fCnt);
+        const hairsInst = new THREE.InstancedMesh(new THREE.SphereGeometry(0.142, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.58), new THREE.MeshStandardMaterial({ roughness: 0.85 }), fCnt);
+        const armsInst = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.05, 0.34, 4, 8), new THREE.MeshStandardMaterial({ roughness: 0.55 }), fCnt * 2);
+
+        fanPositions.forEach((f, i) => {
+            dummy.position.set(f.x, f.y + 0.34, f.z);
+            dummy.scale.set(1.15, 1.0, 0.68);
+            dummy.updateMatrix();
+            torsosInst.setMatrixAt(i, dummy.matrix);
+            tmpColor.setHex(jerseyColors.at(i % jerseyColors.length));
+            torsosInst.setColorAt(i, tmpColor);
+
+            dummy.position.set(f.x, f.y + 0.76, f.z);
+            dummy.scale.set(0.95, 1.08, 0.98);
+            dummy.updateMatrix();
+            headsInst.setMatrixAt(i, dummy.matrix);
+            tmpColor.setHex(skinColors.at(i % skinColors.length));
+            headsInst.setColorAt(i, tmpColor);
+
+            dummy.position.set(f.x, f.y + 0.775, f.z);
+            dummy.scale.set(0.98, 1.05, 1.02);
+            dummy.updateMatrix();
+            hairsInst.setMatrixAt(i, dummy.matrix);
+            tmpColor.setHex(hairColors.at(i % hairColors.length));
+            hairsInst.setColorAt(i, tmpColor);
+
+            dummy.scale.set(1, 1, 1);
+            dummy.position.set(f.x - 0.27, f.y + 0.36, f.z);
+            dummy.rotation.set(0, 0, 0.14);
+            dummy.updateMatrix();
+            armsInst.setMatrixAt(i * 2, dummy.matrix);
+            armsInst.setColorAt(i * 2, tmpColor.setHex(skinColors.at(i % skinColors.length)));
+
+            dummy.position.set(f.x + 0.27, f.y + 0.36, f.z);
+            dummy.rotation.set(0, 0, -0.14);
+            dummy.updateMatrix();
+            armsInst.setMatrixAt(i * 2 + 1, dummy.matrix);
+            armsInst.setColorAt(i * 2 + 1, tmpColor);
+            dummy.rotation.set(0, 0, 0);
+        });
+        [torsosInst, headsInst, hairsInst, armsInst].forEach(m => {
+            m.instanceMatrix.needsUpdate = true;
+            if (m.instanceColor) m.instanceColor.needsUpdate = true;
+            stadiumGroup.add(m);
+        });
+// ==================== КІНЕЦЬ ЧАСТИНИ 5 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 6 з 10 ====================
+        const goalGroup = new THREE.Group();
+        goalGroup.position.set(0, 0, GOAL_Z);
+        scene.add(goalGroup);
+
+        const postMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25, metalness: 0.15 });
+        const postGeo = new THREE.CylinderGeometry(0.085, 0.085, GOAL_H, 16);
+        const barGeo = new THREE.CylinderGeometry(0.085, 0.085, GOAL_W + 0.17, 16);
+
+        const leftPost = new THREE.Mesh(postGeo, postMat);
+        leftPost.position.set(-GOAL_W / 2, GOAL_H / 2, 0);
+        leftPost.castShadow = true;
+
+        const rightPost = new THREE.Mesh(postGeo, postMat);
+        rightPost.position.set(GOAL_W / 2, GOAL_H / 2, 0);
+        rightPost.castShadow = true;
+
+        const crossbar = new THREE.Mesh(barGeo, postMat);
+        crossbar.rotation.z = Math.PI / 2;
+        crossbar.position.set(0, GOAL_H, 0);
+        crossbar.castShadow = true;
+
+        const netTexCanvas = document.createElement('canvas');
+        netTexCanvas.width = 64; netTexCanvas.height = 64;
+        const nctx = netTexCanvas.getContext('2d');
+        nctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        nctx.lineWidth = 3;
+        nctx.strokeRect(0, 0, 64, 64);
+        const netTex = new THREE.CanvasTexture(netTexCanvas);
+        netTex.wrapS = THREE.RepeatWrapping;
+        netTex.wrapT = THREE.RepeatWrapping;
+        netTex.repeat.set(36, 12);
+
+        const netPlaneMat = new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false });
+        const backNetGeo = new THREE.PlaneGeometry(GOAL_W, GOAL_H, 24, 10);
+        const backNetBase = backNetGeo.attributes.position.array.slice();
+        const backNet = new THREE.Mesh(backNetGeo, netPlaneMat);
+        backNet.position.set(0, GOAL_H / 2, -GOAL_D);
+
+        const topNet = new THREE.Mesh(new THREE.PlaneGeometry(GOAL_W, GOAL_D), netPlaneMat);
+        topNet.rotation.x = Math.PI / 2;
+        topNet.position.set(0, GOAL_H, -GOAL_D / 2);
+
+        const sideNetMat = new THREE.MeshBasicMaterial({ map: netTex.clone(), transparent: true, side: THREE.DoubleSide, depthWrite: false });
+        sideNetMat.map.repeat.set(10, 12);
+        const leftNet = new THREE.Mesh(new THREE.PlaneGeometry(GOAL_D, GOAL_H), sideNetMat);
+        leftNet.rotation.y = Math.PI / 2;
+        leftNet.position.set(-GOAL_W / 2, GOAL_H / 2, -GOAL_D / 2);
+
+        const rightNet = new THREE.Mesh(new THREE.PlaneGeometry(GOAL_D, GOAL_H), sideNetMat);
+        rightNet.rotation.y = -Math.PI / 2;
+        rightNet.position.set(GOAL_W / 2, GOAL_H / 2, -GOAL_D / 2);
+
+        goalGroup.add(leftPost, rightPost, crossbar, backNet, topNet, leftNet, rightNet);
+
+        // 3D-мішень у воротах
+        const targetGroup = new THREE.Group();
+        scene.add(targetGroup);
+
+        const TARGET_RADIUS = 0.54;
+        const outerRing = new THREE.Mesh(
+            new THREE.RingGeometry(0.36, TARGET_RADIUS, 36),
+            new THREE.MeshBasicMaterial({ color: 0xef4444, side: THREE.DoubleSide })
+        );
+        const midRing = new THREE.Mesh(
+            new THREE.RingGeometry(0.18, 0.36, 36),
+            new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
+        );
+        const bullseyeCircle = new THREE.Mesh(
+            new THREE.CircleGeometry(0.18, 32),
+            new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide })
+        );
+        const targetGlow = new THREE.Mesh(
+            new THREE.RingGeometry(TARGET_RADIUS, TARGET_RADIUS + 0.08, 36),
+            new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.75, side: THREE.DoubleSide })
+        );
+        targetGroup.add(outerRing, midRing, bullseyeCircle, targetGlow);
+
+        const targetState = {
+            baseX: 0,
+            baseY: 1.2,
+            x: 0,
+            y: 1.2,
+            moving: false,
+            moveSpeed: 0,
+            movePhase: 0,
+            hitFlash: 0
+        };
+
+        function spawnNewTarget() {
+            const zones = [
+                { x: -2.85, y: 1.85 }, // ліва 9-ка
+                { x: 2.85, y: 1.85 },  // права 9-ка
+                { x: -2.85, y: 0.58 }, // лівий низ
+                { x: 2.85, y: 0.58 },  // правий низ
+                { x: 0.0, y: 1.88 },   // верх центр
+                { x: -1.45, y: 1.25 }, // лівий центр
+                { x: 1.45, y: 1.25 }   // правий центр
+            ];
+            let next = zones[Math.floor(Math.random() * zones.length)];
+            if (Math.hypot(next.x - targetState.baseX, next.y - targetState.baseY) < 0.8) {
+                next = zones[(zones.indexOf(next) + 2) % zones.length];
+            }
+
+            targetState.baseX = next.x;
+            targetState.baseY = next.y;
+            targetState.x = next.x;
+            targetState.y = next.y;
+            targetState.movePhase = Math.random() * Math.PI * 2;
+
+            // Починаючи з серії 3 мішень починає рухатися
+            targetState.moving = training.combo >= 3;
+            targetState.moveSpeed = targetState.moving ? Math.min(2.6, 1.1 + training.combo * 0.15) : 0;
+
+            targetGroup.position.set(targetState.x, targetState.y, GOAL_Z + 0.04);
+            targetGroup.scale.setScalar(1.0);
+        }
+        spawnNewTarget();
+// ==================== КІНЕЦЬ ЧАСТИНИ 6 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 7 з 10 ====================
+        function createBallTexture(c1, c2) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 128;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = c1; ctx.fillRect(0, 0, 256, 128);
+            ctx.fillStyle = c2;
+            for (let x = 16; x < 256; x += 48) {
+                for (let y = 20; y < 128; y += 44) {
+                    ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            const tex = new THREE.CanvasTexture(c);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        function createJerseyTexture(jersey) {
+            const c = document.createElement('canvas');
+            c.width = 512; c.height = 512;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = jersey.c1; ctx.fillRect(0, 0, 512, 512);
+            ctx.fillStyle = jersey.c2;
+            if (jersey.pattern === 'stripes') { for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512); }
+            else if (jersey.pattern === 'hoops') { for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22); }
+            else if (jersey.pattern === 'half') { ctx.fillRect(105, 0, 60, 512); ctx.fillRect(265, 0, 85, 512); }
+            else if (jersey.pattern === 'centerBand') { ctx.fillRect(85, 0, 45, 512); ctx.fillRect(245, 0, 45, 512); }
+            else if (jersey.pattern === 'chestBand') { ctx.fillRect(0, 160, 512, 130); }
+            else if (jersey.pattern === 'sash') { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512); ctx.closePath(); ctx.fill(); }
+            else if (jersey.pattern === 'sleeves') { ctx.fillRect(203, 0, 22, 512); ctx.fillRect(398, 0, 114, 512); }
+            const tex = new THREE.CanvasTexture(c);
+            tex.flipY = false; tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        function createBackNumberTexture(num, numCol) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 256;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = numCol;
+            ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
+            ctx.lineWidth = 10;
+            ctx.font = '900 165px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.strokeText(num, 128, 128);
+            ctx.fillText(num, 128, 128);
+            const tex = new THREE.CanvasTexture(c);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+
+        const ballId = localStorage.getItem('eq_balls') || 'ball1';
+        const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
+
+        const BALL_R = 0.115;
+        const ballMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(BALL_R, 28, 28),
+            new THREE.MeshStandardMaterial({ map: createBallTexture(ballItem.c1, ballItem.c2), roughness: 0.35 })
+        );
+        ballMesh.position.set(0, BALL_R, SPOT_Z);
+        ballMesh.castShadow = true;
+        scene.add(ballMesh);
+
+        const ballShadow = new THREE.Mesh(
+            new THREE.CircleGeometry(0.18, 16),
+            new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.42 })
+        );
+        ballShadow.rotation.x = -Math.PI / 2;
+        ballShadow.position.set(0, 0.01, SPOT_Z);
+        scene.add(ballShadow);
+
+        const strikerContainer = new THREE.Group();
+        const STRIKER_START = new THREE.Vector3(-0.75, 0, SPOT_Z + 2.35);
+        strikerContainer.position.copy(STRIKER_START);
+        strikerContainer.rotation.y = Math.PI - 0.25;
+        scene.add(strikerContainer);
+
+        const strikerBones = {};
+        let strikerMixer = null;
+
+        function hideLoader() {
+            const el = document.getElementById('loader-screen');
+            if (el) {
+                el.style.opacity = '0';
+                setTimeout(() => { el.style.display = 'none'; }, 350);
+            }
+        }
+        setTimeout(hideLoader, 2500);
+
+        function setupStrikerModel(gltf) {
+            const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
+            if (!model) return;
+
+            const anim = gltf.animations && gltf.animations.at(0);
+            if (anim) {
+                strikerMixer = new THREE.AnimationMixer(model);
+                const action = strikerMixer.clipAction(anim);
+                action.play();
+                strikerMixer.update(0.01);
+            }
+
+            const jId = localStorage.getItem('eq_jerseys') || 'j1';
+            const sId = localStorage.getItem('eq_shorts') || 's1';
+            const bId = localStorage.getItem('eq_boots') || 'b1';
+            const num = localStorage.getItem('eq_number') || '10';
+            const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
+
+            const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
+            const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
+            const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
+
+            const strikerShirtMat = new THREE.MeshStandardMaterial({ map: createJerseyTexture(jersey), roughness: 0.7 });
+            const strikerShortMat = new THREE.MeshStandardMaterial({ color: shortItem.c1, roughness: 0.75 });
+
+            let spineBone = null;
+            model.traverse((child) => {
+                if (child.isBone && child.name) {
+                    const n = child.name.toLowerCase();
+                    strikerBones[n] = child;
+                    if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) spineBone = child;
+                }
+                if (!child.isMesh || !child.material) return;
+                child.castShadow = true;
+                const name = (child.name || '').toLowerCase();
+                if (name.includes('shirt') || name.includes('top') || name.includes('jersey') || name.includes('torso')) {
+                    child.material = strikerShirtMat;
+                } else if (name.includes('short') || name.includes('pant')) {
+                    child.material = strikerShortMat;
+                } else if (name.includes('shoe') || name.includes('boot')) {
+                    child.material = new THREE.MeshStandardMaterial({ color: bootItem.c1, roughness: 0.4 });
+                }
+            });
+
+            const numMesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(30, 30),
+                new THREE.MeshBasicMaterial({ map: createBackNumberTexture(num, numCol), transparent: true, side: THREE.DoubleSide, depthWrite: false })
+            );
+            if (spineBone) {
+                numMesh.position.set(0, 2.0, -13.2);
+                numMesh.rotation.set(0.08, Math.PI, 0);
+                spineBone.add(numMesh);
+            }
+            strikerContainer.add(model);
+        }
+
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('./libs/');
+        const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+
+        loader.load('player.glb?v=trening', (gltf) => {
+            setupStrikerModel(gltf);
+            hideLoader();
+        }, undefined, () => hideLoader());
+// ==================== КІНЕЦЬ ЧАСТИНИ 7 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 8 з 10 ====================
+        let shotState = 'ready';
+        let stateTimer = 0;
+        let shotProgress = 0;
+        let shotDuration = 0.56;
+
+        const shotStart = new THREE.Vector3(0, BALL_R, SPOT_Z);
+        const shotTarget = new THREE.Vector3(0, 1.2, GOAL_Z);
+        let shotCurveX = 0;
+        let shotArcY = 0.45;
+        let shotPower = 1.0;
+        let reboundVel = new THREE.Vector3();
+        let netBounceVel = new THREE.Vector3();
+        let lastShotWasGoal = false;
+
+        const netImpact = { active: false, x: 0, y: 1.2, amp: 0, phase: 0 };
+
+        function deformGoalNet(dt) {
+            if (!netImpact.active) return;
+            netImpact.phase += dt * 11;
+            netImpact.amp *= Math.pow(0.32, dt);
+
+            const pos = backNetGeo.attributes.position;
+            for (let i = 0; i < pos.count; i++) {
+                const bx = backNetBase[i * 3];
+                const by = backNetBase[i * 3 + 1];
+                const dist = Math.hypot(bx - netImpact.x, (by + GOAL_H / 2) - netImpact.y);
+                const wave = Math.exp(-(dist * dist) / 4.2) * (0.65 + 0.35 * Math.cos(netImpact.phase)) * netImpact.amp;
+                pos.setZ(i, -wave * 0.72);
+            }
+            pos.needsUpdate = true;
+
+            if (netImpact.amp < 0.008) {
+                netImpact.active = false;
+                pos.array.set(backNetBase);
+                pos.needsUpdate = true;
+            }
+        }
+
+        const aimCanvas = document.getElementById('aim-canvas');
+        const aimCtx = aimCanvas.getContext('2d');
+        function rszAim() {
+            aimCanvas.width = window.innerWidth;
+            aimCanvas.height = window.innerHeight;
+        }
+        rszAim();
+
+        let swipeStart = null;
+        let swipeCurr = null;
+
+        function startShotRunup(aimX, aimY, curveX, power) {
+            if (shotState !== 'ready') return;
+            shotTarget.set(aimX, Math.max(BALL_R, aimY), GOAL_Z);
+            shotCurveX = curveX;
+            shotPower = power;
+            shotState = 'runup';
+            stateTimer = 0;
+
+            if (power >= 1.18) setBanner('🔥 ПОТУЖНИЙ ПОСТРІЛ!', 'goal');
+            else if (power <= 0.78) setBanner('🎯 ТЕХНІЧНИЙ УДАР!');
+            else setBanner('⚡ УДАР!');
+        }
+
+        function executeKick() {
+            arenaAudio.playKick();
+            shotState = 'flying';
+            shotProgress = 0;
+            shotStart.set(0, BALL_R, SPOT_Z);
+            shotArcY = 0.18 + (1 - Math.min(1, shotTarget.y / GOAL_H)) * 0.34;
+            shotDuration = THREE.MathUtils.clamp(0.72 - shotPower * 0.22, 0.38, 0.74);
+        }
+
+        const aimRaycaster = new THREE.Raycaster();
+        const aimGoalPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -GOAL_Z);
+
+        container.addEventListener('pointerdown', (e) => {
+            arenaAudio.init();
+            if (shotState !== 'ready') return;
+            swipeStart = { x: e.clientX, y: e.clientY, t: performance.now() };
+            swipeCurr = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!swipeStart) return;
+            swipeCurr = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('pointerup', (e) => {
+            if (!swipeStart) return;
+            const dx = e.clientX - swipeStart.x;
+            const dy = swipeStart.y - e.clientY;
+            const elapsed = Math.max(0.04, (performance.now() - swipeStart.t) * 0.001);
+            const swipeDist = Math.hypot(dx, dy);
+            const swipeSpeed = swipeDist / elapsed;
+
+            swipeStart = null;
+            swipeCurr = null;
+            aimCtx.clearRect(0, 0, aimCanvas.width, aimCanvas.height);
+
+            if (shotState !== 'ready') return;
+
+            if (swipeDist < 24 || dy < 10) {
+                setBanner('👆 Проведи пальцем у мішень у воротах!');
+                return;
+            }
+
+            const ndc = new THREE.Vector2(
+                (e.clientX / window.innerWidth) * 2 - 1,
+                -(e.clientY / window.innerHeight) * 2 + 1
+            );
+            aimRaycaster.setFromCamera(ndc, camera);
+            const hitPoint = new THREE.Vector3();
+
+            let tx = 0;
+            let ty = 1.1;
+
+            if (aimRaycaster.ray.intersectPlane(aimGoalPlane, hitPoint)) {
+                tx = THREE.MathUtils.clamp(hitPoint.x, -GOAL_W * 0.68, GOAL_W * 0.68);
+                ty = THREE.MathUtils.clamp(hitPoint.y, BALL_R, GOAL_H * 1.38);
+            } else {
+                const fallbackX = THREE.MathUtils.clamp(dx / (window.innerWidth * 0.28), -1.2, 1.2);
+                const fallbackY = THREE.MathUtils.clamp(dy / (window.innerHeight * 0.36), 0.05, 1.2);
+                tx = fallbackX * (GOAL_W * 0.5);
+                ty = BALL_R + fallbackY * (GOAL_H - BALL_R * 0.4);
+            }
+
+            const speedNorm = THREE.MathUtils.clamp((swipeSpeed - 350) / 1600, 0, 1);
+            const power = 0.78 + speedNorm * 0.58;
+            const heightScale = 0.25 + speedNorm * 0.85;
+            ty = BALL_R + (ty - BALL_R) * heightScale;
+
+            const curve = THREE.MathUtils.clamp(-dx / window.innerWidth, -1, 1) * 0.26;
+            startShotRunup(tx, ty, curve, power);
+        });
+// ==================== КІНЕЦЬ ЧАСТИНИ 8 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 9 з 10 ====================
+        const hitFlashMesh = new THREE.Mesh(
+            new THREE.RingGeometry(0.12, 0.58, 32),
+            new THREE.MeshBasicMaterial({ color: 0xfacc15, transparent: true, opacity: 0, side: THREE.DoubleSide })
+        );
+        scene.add(hitFlashMesh);
+        let hitFlashAlpha = 0;
+
+        function triggerHitFlash(pos, colorHex = 0xfacc15) {
+            hitFlashMesh.material.color.setHex(colorHex);
+            hitFlashMesh.position.copy(pos);
+            hitFlashMesh.position.z += 0.08;
+            hitFlashMesh.scale.setScalar(0.6);
+            hitFlashAlpha = 1.0;
+        }
+
+        function resetForNextShot() {
+            shotState = 'ready';
+            stateTimer = 0;
+            shotProgress = 0;
+            lastShotWasGoal = false;
+
+            ballMesh.position.set(0, BALL_R, SPOT_Z);
+            ballMesh.rotation.set(0, 0, 0);
+            ballShadow.position.set(0, 0.01, SPOT_Z);
+
+            strikerContainer.position.copy(STRIKER_START);
+            strikerContainer.rotation.y = Math.PI - 0.25;
+
+            spawnNewTarget();
+            setBanner(training.combo >= 3
+                ? `🔥 РУХОМА МІШЕНЬ! Серія: ${training.combo}`
+                : '🎯 Влуч у мішень! Проведи пальцем у ворота');
+        }
+
+        function evaluateTrainingShot() {
+            const halfW = GOAL_W / 2;
+            const postR = 0.085;
+            const hitZone = postR + BALL_R * 0.75;
+
+            const distLeft = Math.abs(shotTarget.x + halfW);
+            const distRight = Math.abs(shotTarget.x - halfW);
+            const distTop = Math.abs(shotTarget.y - GOAL_H);
+
+            const hitLeftPost = distLeft <= hitZone && shotTarget.y <= GOAL_H + hitZone;
+            const hitRightPost = distRight <= hitZone && shotTarget.y <= GOAL_H + hitZone;
+            const hitCrossbar = distTop <= hitZone && Math.abs(shotTarget.x) <= halfW + hitZone;
+
+            const isCleanMiss = !hitLeftPost && !hitRightPost && !hitCrossbar &&
+                (Math.abs(shotTarget.x) > halfW || shotTarget.y > GOAL_H);
+
+            if (isCleanMiss) {
+                lastShotWasGoal = false;
+                training.combo = 0;
+                updateTrainingHUD();
+                setBanner(shotTarget.y > GOAL_H ? '🚀 ВИЩЕ ВОРІТ! Серію скинуто' : '❌ МИМО ВОРІТ! Серію скинуто', 'miss');
+                arenaAudio.playCrowd(false);
+                netBounceVel.set(shotCurveX * 0.5, -0.8, -(10 + shotPower * 4));
+                shotState = 'to_net';
+                setTimeout(resetForNextShot, 1750);
+                return;
+            }
+
+            if (hitLeftPost || hitRightPost || hitCrossbar) {
+                lastShotWasGoal = false;
+                training.combo = 0;
+                updateTrainingHUD();
+                arenaAudio.playPost();
+                triggerHitFlash(ballMesh.position, 0xef4444);
+                setBanner(hitCrossbar ? '💥 ПЕРЕКЛАДИНА! Серію скинуто' : '💥 ШТАНГА! Серію скинуто', 'miss');
+                arenaAudio.playCrowd(false);
+
+                const dirInward = hitLeftPost ? 1 : (hitRightPost ? -1 : 0);
+                const outX = dirInward === 0 ? (Math.random() - 0.5) * 3.0 : -dirInward * 2.8;
+                const outY = dirInward === 0 ? 3.5 : 2.1;
+                reboundVel.set(outX, outY, 4.8 + shotPower * 1.5);
+                shotState = 'rebound';
+                setTimeout(resetForNextShot, 1850);
+                return;
+            }
+
+            // Перевіряємо влучання у мішень
+            lastShotWasGoal = true;
+            const distToTarget = Math.hypot(ballMesh.position.x - targetState.x, ballMesh.position.y - targetState.y);
+            const hitRadius = TARGET_RADIUS + BALL_R * 0.9;
+
+            if (distToTarget <= hitRadius) {
+                const isBullseye = distToTarget <= 0.24;
+                training.hits++;
+                training.combo++;
+
+                const baseReward = isBullseye ? 30 : 15;
+                const comboBonus = Math.min(25, Math.floor(training.combo / 2) * 5);
+                const totalReward = baseReward + comboBonus;
+
+                training.points += (isBullseye ? 100 : 50) * Math.max(1, training.combo);
+                coins += totalReward;
+                coinsEl.textContent = `💰 ${coins}`;
+                localStorage.setItem('player_coins', String(coins));
+                updateTrainingHUD();
+
+                targetState.hitFlash = 1.0;
+                arenaAudio.playTargetHit(isBullseye);
+                arenaAudio.playCrowd(true);
+                triggerHitFlash(targetGroup.position, isBullseye ? 0xfacc15 : 0x4ade80);
+
+                if (isBullseye) {
+                    setBanner(`🎯 ЯБЛУЧКО! +${totalReward} 💰 (Серія x${training.combo})`, 'bullseye');
+                } else {
+                    setBanner(`✅ ВЛУЧИВ У МІШЕНЬ! +${totalReward} 💰 (Серія x${training.combo})`, 'goal');
+                }
+            } else {
+                training.combo = 0;
+                updateTrainingHUD();
+                setBanner('⚽ ГОЛ, АЛЕ ПОВЗ МІШЕНЬ! Спробуй влучити в ціль', 'miss');
+            }
+
+            const speedZ = 12 + shotPower * 4.5;
+            netBounceVel.set(shotCurveX * 0.35, (shotTarget.y - ballMesh.position.y) * 2.0, -speedZ);
+            shotState = 'to_net';
+            setTimeout(resetForNextShot, 1750);
+        }
+// ==================== КІНЕЦЬ ЧАСТИНИ 9 з 10 ====================
+// ==================== ПОЧАТОК ЧАСТИНИ 10 з 10 ====================
+        function drawSwipeGuide() {
+            if (!swipeStart || !swipeCurr) return;
+            aimCtx.clearRect(0, 0, aimCanvas.width, aimCanvas.height);
+
+            const grad = aimCtx.createLinearGradient(swipeStart.x, swipeStart.y, swipeCurr.x, swipeCurr.y);
+            grad.addColorStop(0, 'rgba(56, 189, 248, 0.25)');
+            grad.addColorStop(1, 'rgba(34, 197, 94, 0.95)');
+
+            aimCtx.strokeStyle = grad;
+            aimCtx.lineWidth = 6;
+            aimCtx.lineCap = 'round';
+            aimCtx.beginPath();
+            aimCtx.moveTo(swipeStart.x, swipeStart.y);
+            aimCtx.lineTo(swipeCurr.x, swipeCurr.y);
+            aimCtx.stroke();
+
+            aimCtx.fillStyle = '#4ade80';
+            aimCtx.beginPath();
+            aimCtx.arc(swipeCurr.x, swipeCurr.y, 9, 0, Math.PI * 2);
+            aimCtx.fill();
+        }
+
+        const getBone = (map, part) => {
+            const key = Object.keys(map).find(k => k.includes(part));
+            return key ? map[key] : null;
+        };
+
+        function updateStrikerAnim(dt) {
+            if (strikerMixer) strikerMixer.update(dt);
+
+            if (shotState === 'runup') {
+                stateTimer += dt;
+                const runDur = 0.56;
+                const p = Math.min(1, stateTimer / runDur);
+                const kickTarget = new THREE.Vector3(-0.22, 0, SPOT_Z + 0.32);
+                strikerContainer.position.lerpVectors(STRIKER_START, kickTarget, p);
+                strikerContainer.rotation.y = THREE.MathUtils.lerp(Math.PI - 0.25, Math.PI - 0.08, p);
+
+                const rUpLeg = getBone(strikerBones, 'rightupleg');
+                const rLeg = getBone(strikerBones, 'rightleg');
+                const lUpLeg = getBone(strikerBones, 'leftupleg');
+                const lLeg = getBone(strikerBones, 'leftleg');
+                const spine = getBone(strikerBones, 'spine');
+                const rArm = getBone(strikerBones, 'rightarm');
+                const lArm = getBone(strikerBones, 'leftarm');
+
+                const stride = Math.sin(p * Math.PI * 3.5);
+                const kickSwing = p > 0.72 ? Math.sin(((p - 0.72) / 0.28) * Math.PI) : 0;
+
+                if (rUpLeg) rUpLeg.rotation.x += stride * 0.55 - kickSwing * 1.15;
+                if (rLeg) rLeg.rotation.x -= Math.max(0, -stride * 0.65) + (p > 0.72 ? (1 - kickSwing) * 0.85 : 0);
+                if (lUpLeg) lUpLeg.rotation.x += -stride * 0.55 + kickSwing * 0.25;
+                if (lLeg) lLeg.rotation.x -= Math.max(0, stride * 0.65);
+                if (spine) spine.rotation.z += -kickSwing * 0.16;
+                if (rArm) rArm.rotation.z -= kickSwing * 0.35;
+                if (lArm) lArm.rotation.z += kickSwing * 0.45;
+
+                if (p >= 1) {
+                    executeKick();
+                }
+            }
+        }
+
+        function updateTargetAnim(dt) {
+            if (targetState.moving && shotState === 'ready') {
+                targetState.movePhase += dt * targetState.moveSpeed;
+                const rangeX = GOAL_W * 0.38;
+                targetState.x = Math.sin(targetState.movePhase) * rangeX;
+                targetGroup.position.x = targetState.x;
+            }
+
+            if (targetState.hitFlash > 0) {
+                targetState.hitFlash = Math.max(0, targetState.hitFlash - dt * 3.2);
+                targetGroup.scale.setScalar(1.0 + Math.sin(targetState.hitFlash * Math.PI) * 0.45);
+            } else {
+                const pulse = 1.0 + Math.sin(performance.now() * 0.006) * 0.04;
+                targetGroup.scale.setScalar(pulse);
+            }
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            rszAim();
+        });
+
+        let lastTime = performance.now();
+        function animate(now) {
+            requestAnimationFrame(animate);
+            const dt = Math.min(0.05, (now - lastTime) * 0.001);
+            lastTime = now;
+
+            updateStrikerAnim(dt);
+            updateTargetAnim(dt);
+
+            if (shotState === 'flying') {
+                shotProgress = Math.min(1, shotProgress + dt / shotDuration);
+                const ease = 1 - Math.pow(1 - shotProgress, 1.55);
+
+                const curX = THREE.MathUtils.lerp(shotStart.x, shotTarget.x, ease) + Math.sin(shotProgress * Math.PI) * shotCurveX;
+                const curY = THREE.MathUtils.lerp(shotStart.y, shotTarget.y, ease) + Math.sin(shotProgress * Math.PI) * shotArcY;
+                const curZ = THREE.MathUtils.lerp(shotStart.z, shotTarget.z, ease);
+
+                ballMesh.position.set(curX, curY, curZ);
+                ballMesh.rotation.x -= dt * 22;
+                ballMesh.rotation.y += shotCurveX * dt * 14;
+
+                if (shotProgress >= 1) {
+                    evaluateTrainingShot();
+                }
+            } else if (shotState === 'to_net') {
+                ballMesh.position.addScaledVector(netBounceVel, dt);
+                ballMesh.rotation.x -= dt * 15;
+
+                if (!lastShotWasGoal) {
+                    netBounceVel.y -= 9.8 * dt;
+                    if (ballMesh.position.y < BALL_R) {
+                        ballMesh.position.y = BALL_R;
+                        netBounceVel.y *= -0.35;
+                        netBounceVel.z *= 0.85;
+                    }
+                } else {
+                    const maxInX = GOAL_W / 2 - BALL_R * 1.2;
+                    if (Math.abs(ballMesh.position.x) > maxInX) {
+                        ballMesh.position.x = Math.sign(ballMesh.position.x) * maxInX;
+                        netBounceVel.x *= -0.3;
+                    }
+
+                    const softPocketZ = GOAL_Z - GOAL_D - 0.28;
+                    if (ballMesh.position.z <= softPocketZ) {
+                        ballMesh.position.z = softPocketZ;
+
+                        netImpact.active = true;
+                        netImpact.x = THREE.MathUtils.clamp(ballMesh.position.x, -GOAL_W * 0.45, GOAL_W * 0.45);
+                        netImpact.y = THREE.MathUtils.clamp(ballMesh.position.y, 0.2, GOAL_H - 0.1);
+                        netImpact.amp = 0.85 + shotPower * 0.45;
+                        netImpact.phase = 0;
+
+                        reboundVel.set((Math.random() - 0.5) * 0.6, 0.2, 1.45);
+                        shotState = 'rebound';
+                    }
+                }
+            } else if (shotState === 'rebound') {
+                ballMesh.position.addScaledVector(reboundVel, dt);
+                reboundVel.y -= 9.8 * dt;
+                if (ballMesh.position.y < BALL_R) {
+                    ballMesh.position.y = BALL_R;
+                    reboundVel.y *= -0.32;
+                    reboundVel.x *= 0.84;
+                    reboundVel.z *= 0.84;
+                }
+                ballMesh.rotation.x += reboundVel.z * dt * 5;
+                ballMesh.rotation.z -= reboundVel.x * dt * 5;
+            }
+
+            if (hitFlashAlpha > 0) {
+                hitFlashAlpha = Math.max(0, hitFlashAlpha - dt * 2.8);
+                hitFlashMesh.material.opacity = hitFlashAlpha;
+                hitFlashMesh.scale.addScalar(dt * 3.5);
+            }
+
+            ballShadow.position.set(ballMesh.position.x, 0.01, ballMesh.position.z);
+            const shScale = Math.max(0.35, 1 - (ballMesh.position.y - BALL_R) * 0.28);
+            ballShadow.scale.setScalar(shScale);
+
+            deformGoalNet(dt);
+            bannerTex.offset.x += dt * 0.08;
+            drawSwipeGuide();
+            renderer.render(scene, camera);
+        }
+
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 10 з 10 ==================== -->
