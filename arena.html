@@ -1909,7 +1909,6 @@
 
             let diveAmt = 0;
             let crouchAmt = 0;
-            let clipDropY = 0;
 
             const hasActiveDiveClip = gkClipStarted && (gkActiveAction === gkDiveLowAction);
 
@@ -1928,13 +1927,11 @@
                 const easeX = 1 - Math.pow(1 - p, 2.1);
 
                 gkState.x = THREE.MathUtils.lerp(0, gkState.targetX, easeX);
+                gkState.y = 0;
 
                 if (hasActiveDiveClip) {
-                    gkState.y = 0;
                     gkState.diveAngle = 0;
-                    clipDropY = -0.72 * Math.min(1, p * 1.6);
                 } else {
-                    gkState.y = 0;
                     gkState.diveAngle = -gkState.diveDir * 1.48 * Math.min(1, p * 1.35);
                 }
                 diveAmt = Math.min(1, p * 1.4);
@@ -1951,12 +1948,7 @@
 
             else if (gkState.mode === 'land') {
                 gkState.y = 0;
-                if (hasActiveDiveClip) {
-                    gkState.diveAngle = 0;
-                    clipDropY = -0.72;
-                } else {
-                    gkState.diveAngle = -gkState.diveDir * 1.54;
-                }
+                gkState.diveAngle = hasActiveDiveClip ? 0 : -gkState.diveDir * 1.54;
                 diveAmt = 0.85;
 
                 if (gkState.modeTime >= 0.45) {
@@ -1967,13 +1959,7 @@
                 const p = Math.min(1, gkState.modeTime / 0.65);
                 const ease = p * p * (3 - 2 * p);
                 gkState.y = 0;
-
-                if (hasActiveDiveClip) {
-                    gkState.diveAngle = 0;
-                    clipDropY = -0.72 * (1 - ease);
-                } else {
-                    gkState.diveAngle = THREE.MathUtils.lerp(-gkState.diveDir * 1.54, 0, ease);
-                }
+                gkState.diveAngle = hasActiveDiveClip ? 0 : THREE.MathUtils.lerp(-gkState.diveDir * 1.54, 0, ease);
 
                 if (p >= 1) {
                     resetGKToIdleClip();
@@ -1983,12 +1969,11 @@
             } else if (gkState.mode === 'react') {
                 gkState.y = 0;
                 gkState.diveAngle = 0;
-                clipDropY = 0;
             }
 
             const crouchSink = hasActiveDiveClip ? 0 : crouchAmt * 0.14;
             const lieLift = hasActiveDiveClip ? 0 : (Math.abs(gkState.diveAngle) / 1.54) * 0.22;
-            const finalY = hasActiveDiveClip ? (gkState.y + clipDropY) : Math.max(0, gkState.y + lieLift - crouchSink);
+            const finalY = hasActiveDiveClip ? 0 : Math.max(0, gkState.y + lieLift - crouchSink);
 
             gkContainer.position.set(gkState.x, finalY, GOAL_Z);
             gkContainer.rotation.z = gkState.diveAngle;
