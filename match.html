@@ -1,4 +1,4 @@
-/* ==================== ПОЧАТОК ЧАСТИНИ 1 з 12 ==================== */
+<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 12 ==================== -->
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -1001,6 +1001,7 @@
             resetKickoff('you');
         });
 /* ==================== КІНЕЦЬ ЧАСТИНИ 9 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 10 з 12 ==================== */
         function animatePlayerLegs(p, speed, dt) {
             if (p.mixer) p.mixer.update(dt);
             if (!p.bones) return;
@@ -1034,6 +1035,120 @@
             }
         }
 
+        function movePlayerToward(p, tx, tz, maxSpeed, dt) {
+            const dx = tx - p.mesh.position.x;
+            const dz = tz - p.mesh.position.z;
+            const dist = Math.hypot(dx, dz);
+            if (dist < 0.08) {
+                animatePlayerLegs(p, 0, dt);
+                return;
+            }
+            const step = Math.min(dist, maxSpeed * dt);
+            const vx = (dx / dist) * step;
+            const vz = (dz / dist) * step;
+
+            p.mesh.position.x = THREE.MathUtils.clamp(p.mesh.position.x + vx, -HALF_L + 0.5, HALF_L - 0.5);
+            p.mesh.position.z = THREE.MathUtils.clamp(p.mesh.position.z + vz, -HALF_W + 0.5, HALF_W - 0.5);
+
+            const targetYaw = Math.atan2(dx, dz);
+            p.mesh.rotation.y = targetYaw;
+            animatePlayerLegs(p, maxSpeed, dt);
+        }
+
+        function updatePlayersAndAI(dt) {
+            if (!players.length) return;
+
+            if (ballOwner && ballOwner.team === 'you' && ballOwner.role !== 'gk') {
+                controlledPlayer = ballOwner;
+            }
+
+            const oppChaser = players
+                .filter(p => p.team === 'opp' && p.role !== 'gk')
+                .sort((a, b) => a.mesh.position.distanceTo(ballMesh.position) - b.mesh.position.distanceTo(ballMesh.position)).at(0);
+
+            players.forEach((p) => {
+                if (p.cooldown > 0) p.cooldown = Math.max(0, p.cooldown - dt);
+
+                if (p.role === 'gk') {
+                    const goalX = p.team === 'you' ? -HALF_L + 1.1 : HALF_L - 1.1;
+                    const desiredZ = THREE.MathUtils.clamp(ballMesh.position.z * 0.75, -GOAL_W * 0.42, GOAL_W * 0.42);
+                    movePlayerToward(p, goalX, desiredZ, 6.2, dt);
+                    p.mesh.rotation.y = p.team === 'you' ? Math.PI / 2 : -Math.PI / 2;
+
+                    if (p.cooldown <= 0 && p.mesh.position.distanceTo(ballMesh.position) < 1.15 && ballMesh.position.y < 2.1) {
+                        ballOwner = p;
+                        lastTouchTeam = p.team;
+                        p.cooldown = 0.6;
+                        setTimeout(() => {
+                            if (ballOwner === p && !matchState.over) {
+                                const kickDir = p.team === 'you' ? 1 : -1;
+                                kickBallTowards(new THREE.Vector3(kickDir * 8, 0, (Math.random() - 0.5) * 14), 18, 2.6);
+                            }
+                        }, 650);
+                    }
+                    return;
+                }
+
+                if (p === controlledPlayer && matchState.goalPauseTimer <= 0) {
+                    if (isPressingOpponent && (!ballOwner || ballOwner.team === 'opp')) {
+                        movePlayerToward(p, ballMesh.position.x, ballMesh.position.z, 8.8, dt);
+                    } else {
+                        const spd = inputState.sprint ? 9.4 : 6.8;
+                        const mx = inputState.moveX;
+                        const mz = inputState.moveZ;
+                        if (Math.hypot(mx, mz) > 0.05) {
+                            p.mesh.position.x = THREE.MathUtils.clamp(p.mesh.position.x + mx * spd * dt, -HALF_L + 0.5, HALF_L - 0.5);
+                            p.mesh.position.z = THREE.MathUtils.clamp(p.mesh.position.z + mz * spd * dt, -HALF_W + 0.5, HALF_W - 0.5);
+                            p.mesh.rotation.y = Math.atan2(mx, mz);
+                            animatePlayerLegs(p, spd, dt);
+                        } else {
+                            animatePlayerLegs(p, 0, dt);
+                        }
+                    }
+                } else if (p.team === 'you') {
+                    const attackShift = (ballMesh.position.x + HALF_L) * 0.35;
+                    const tx = THREE.MathUtils.clamp(p.homeX + attackShift, -HALF_L + 3, HALF_L - 3);
+                    const tz = p.homeZ + Math.sin(performance.now() * 0.002 + p.runPhase) * 1.8;
+                    movePlayerToward(p, tx, tz, 5.6, dt);
+                } else if (p.team === 'opp') {
+                    if (ballOwner === p && matchState.goalPauseTimer <= 0) {
+                        movePlayerToward(p, -HALF_L + 4, p.homeZ * 0.4, 6.6, dt);
+                        if (p.mesh.position.x < -HALF_L + 13 && Math.random() < dt * 2.2) {
+                            p.cooldown = 0.4;
+                            lastTouchTeam = 'opp';
+                            const aimZ = (Math.random() - 0.5) * GOAL_W * 0.85;
+                            kickBallTowards(new THREE.Vector3(-HALF_L - 0.5, 0, aimZ), 21, 1.5);
+                        } else if (Math.random() < dt * 0.75) {
+                            const mate = players.find(m => m.team === 'opp' && m !== p && m.role !== 'gk');
+                            if (mate) {
+                                p.cooldown = 0.35;
+                                lastTouchTeam = 'opp';
+                                kickBallTowards(mate.mesh.position, 16, 0.3);
+                            }
+                        }
+                    } else if (p === oppChaser) {
+                        movePlayerToward(p, ballMesh.position.x, ballMesh.position.z, 6.9, dt);
+                    } else {
+                        const shift = (ballMesh.position.x - HALF_L) * 0.32;
+                        const tx = THREE.MathUtils.clamp(p.homeX + shift, -HALF_L + 4, HALF_L - 3);
+                        movePlayerToward(p, tx, p.homeZ, 5.3, dt);
+                    }
+                }
+
+                if (p.cooldown <= 0 && matchState.goalPauseTimer <= 0 && ballMesh.position.y < 1.35) {
+                    const dist = p.mesh.position.distanceTo(ballMesh.position);
+                    if (!ballOwner && dist < 0.92) {
+                        ballOwner = p;
+                        lastTouchTeam = p.team;
+                    } else if (ballOwner && ballOwner.team !== p.team && dist < 0.78 && Math.random() < dt * 4.5) {
+                        ballOwner.cooldown = 0.45;
+                        ballOwner = p;
+                        lastTouchTeam = p.team;
+                    }
+                }
+            });
+        }
+/* ==================== КІНЕЦЬ ЧАСТИНИ 10 з 12 ==================== */
 /* ==================== ПОЧАТОК ЧАСТИНИ 11 з 12 ==================== */
         function updateBallPhysics(dt) {
             if (ballOwner) {
