@@ -542,6 +542,92 @@
         let ballOwner = null;
         let lastTouchTeam = 'you';
 /* ==================== КІНЕЦЬ ЧАСТИНИ 5 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 6 з 12 ==================== */
+        const activeRing = new THREE.Mesh(
+            new THREE.RingGeometry(0.45, 0.62, 28),
+            new THREE.MeshBasicMaterial({ color: 0x4ade80, side: THREE.DoubleSide })
+        );
+        activeRing.rotation.x = -Math.PI / 2;
+        activeRing.position.y = 0.03;
+        scene.add(activeRing);
+
+        const players = [];
+        let controlledPlayer = null;
+
+        function createJerseyTex(c1, c2) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 256;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = c1; ctx.fillRect(0, 0, 256, 256);
+            ctx.fillStyle = c2;
+            for (let x = 0; x < 256; x += 32) ctx.fillRect(x, 0, 16, 256);
+            const t = new THREE.CanvasTexture(c);
+            t.flipY = false; t.colorSpace = THREE.SRGBColorSpace;
+            return t;
+        }
+
+        function hideLoader() {
+            const el = document.getElementById('loader-screen');
+            if (el && el.style.display !== 'none') {
+                el.style.opacity = '0';
+                setTimeout(() => { el.style.display = 'none'; }, 350);
+            }
+        }
+        setTimeout(hideLoader, 3500);
+
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('./libs/');
+        const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+
+        function buildTeams() {
+            const jId = localStorage.getItem('eq_jerseys') || 'j1';
+            const sId = localStorage.getItem('eq_shorts') || 's1';
+            const youJersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
+            const youShort = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
+
+            const youShirtMat = new THREE.MeshStandardMaterial({ map: createJerseyTex(youJersey.c1, youJersey.c2), roughness: 0.7 });
+            const youShortMat = new THREE.MeshStandardMaterial({ color: youShort.c1, roughness: 0.75 });
+            const youGkMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.65 });
+
+            const oppShirtMat = new THREE.MeshStandardMaterial({ map: createJerseyTex('#f8fafc', '#dc2626'), roughness: 0.7 });
+            const oppShortMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.75 });
+            const oppGkMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.65 });
+
+            const formations = [
+                { team: 'you', role: 'gk', homeX: -HALF_L + 1.1, homeZ: 0 },
+                { team: 'you', role: 'def', homeX: -14, homeZ: -7 },
+                { team: 'you', role: 'def', homeX: -14, homeZ: 7 },
+                { team: 'you', role: 'fwd', homeX: -4, homeZ: -5 },
+                { team: 'you', role: 'fwd', homeX: -1.5, homeZ: 0 },
+                { team: 'opp', role: 'gk', homeX: HALF_L - 1.1, homeZ: 0 },
+                { team: 'opp', role: 'def', homeX: 14, homeZ: -7 },
+                { team: 'opp', role: 'def', homeX: 14, homeZ: 7 },
+                { team: 'opp', role: 'fwd', homeX: 5, homeZ: -5 },
+                { team: 'opp', role: 'fwd', homeX: 5, homeZ: 5 }
+            ];
+
+            let loadedCount = 0;
+
+            formations.forEach((cfg, idx) => {
+                const root = new THREE.Group();
+                root.position.set(cfg.homeX, 0, cfg.homeZ);
+                root.rotation.y = cfg.team === 'you' ? Math.PI / 2 : -Math.PI / 2;
+                scene.add(root);
+
+                const pObj = {
+                    team: cfg.team,
+                    role: cfg.role,
+                    homeX: cfg.homeX,
+                    homeZ: cfg.homeZ,
+                    mesh: root,
+                    bones: {},
+                    mixer: null,
+                    runPhase: Math.random() * 6.28,
+                    cooldown: 0
+                };
+                players.push(pObj);
+
                 loader.load(`player.glb?v=m${idx}`, (gltf) => {
                     const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
                     if (model) {
@@ -578,6 +664,15 @@
                     loadedCount++;
                     if (loadedCount >= formations.length) hideLoader();
                 });
+            });
+
+            controlledPlayer = players.find(p => p.team === 'you' && p.role === 'fwd' && p.homeZ === 0) || players.at(0);
+            resetKickoff('you');
+        }
+
+        buildTeams();
+/* ==================== КІНЕЦЬ ЧАСТИНИ 6 з 12 ==================== */
+
 /* ==================== ПОЧАТОК ЧАСТИНИ 7 з 12 ==================== */
         // Керування: сенсорний джойстик + клавіатура (WASD / Стрілки)
         const joyZone = document.getElementById('joystick-zone');
