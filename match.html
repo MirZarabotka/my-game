@@ -588,6 +588,16 @@
         activeRing.position.y = 0.03;
         scene.add(activeRing);
 
+        // Синє кільце під партнером, якому піде пас
+        const passTargetRing = new THREE.Mesh(
+            new THREE.RingGeometry(0.42, 0.58, 28),
+            new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide })
+        );
+        passTargetRing.rotation.x = -Math.PI / 2;
+        passTargetRing.position.y = 0.03;
+        passTargetRing.visible = false;
+        scene.add(passTargetRing);
+
         const players = [];
         let controlledPlayer = null;
 
@@ -606,18 +616,15 @@
         function createLightweightPlayer(shirtMat, shortMat, bootMat, skinMat, hairMat) {
             const root = new THREE.Group();
 
-            // Корпус (футболка)
             const torso = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.56, 0.26), shirtMat);
             torso.position.y = 1.06;
             torso.castShadow = true;
             root.add(torso);
 
-            // Шорти
             const pelvis = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.24, 0.25), shortMat);
             pelvis.position.y = 0.68;
             root.add(pelvis);
 
-            // Голова та зачіска
             const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), skinMat);
             head.position.y = 1.52;
             head.castShadow = true;
@@ -625,7 +632,6 @@
             hair.position.y = 1.54;
             root.add(head, hair);
 
-            // Окремі рухомі ноги (опорні точки в стегнах)
             const legGeo = new THREE.BoxGeometry(0.15, 0.52, 0.16);
             const bootGeo = new THREE.BoxGeometry(0.16, 0.11, 0.26);
 
@@ -641,7 +647,6 @@
             const rBoot = new THREE.Mesh(bootGeo, bootMat); rBoot.position.set(0, -0.52, 0.04);
             rightLegPivot.add(rShin, rBoot);
 
-            // Окремі рухомі руки (опущені вздовж тіла)
             const armGeo = new THREE.BoxGeometry(0.12, 0.46, 0.13);
             const leftArmPivot = new THREE.Group();
             leftArmPivot.position.set(-0.31, 1.28, 0);
@@ -718,11 +723,15 @@
                     mesh: rig.mesh,
                     rig,
                     runPhase: Math.random() * 6.28,
-                    cooldown: 0
+                    cooldown: 0,
+                    slideTimer: 0,
+                    slideDirX: 0,
+                    slideDirZ: 0,
+                    stunTimer: 0
                 });
             });
 
-            controlledPlayer = players.find(p => p.team === 'you' && p.role === 'fwd' && p.homeZ === 0) || players[0];
+            controlledPlayer = players.find(p => p.team === 'you' && p.role === 'fwd' && p.homeZ === 0) || players;
             resetKickoff('you');
 
             const el = document.getElementById('loader-screen');
@@ -834,6 +843,51 @@
         const powerFill = document.getElementById('power-bar-fill');
 
         let isPressingOpponent = false;
+        let currentPassTarget = null;
+
+        // Пошук найкращого партнера для пасу з урахуванням напрямку джойстика
+        function findBestPassReceiver() {
+            if (!controlledPlayer) return null;
+            const mates = players.filter(p => p.team === 'you' && p !== controlledPlayer);
+            if (!mates.length) return null;
+
+            const hasStick = Math.hypot(inputState.moveX, inputState.moveZ) > 0.15;
+            const aimDirX = hasStick ? inputState.moveX : Math.sin(controlledPlayer.mesh.rotation.y);
+            const aimDirZ = hasStick ? inputState.moveZ : Math.cos(controlledPlayer.mesh.rotation.y);
+            const aimLen = Math.hypot(aimDirX, aimDirZ) || 1;
+            const nx = aimDirX / aimLen;
+            const nz = aimDirZ / aimLen;
+
+            let bestMate = null;
+            let bestScore = -999;
+
+            mates.forEach((m) => {
+                const dx = m.mesh.position.x - controlledPlayer.mesh.position.x;
+                const dz = m.mesh.position.z - controlledPlayer.mesh.position.z;
+                const dist = Math.hypot(dx, dz);
+                if (dist < 2.0 || dist > 42) return;
+
+                // Косинус кута між напрямком джойстика і партнером (від -1 до +1)
+                const dot = (dx * nx + dz * nz) / dist;
+                // Штрафуємо пас назад, якщо гравець не тягне джойстик назад
+                if (!hasStick && dot < -0.15) return;
+                if (hasStick && dot < 0.25) return;
+
+                const forwardBonus = dx > 0 ? 0.25 : 0;
+                const score = dot * 3.2 + forwardBonus - dist * 0.04;
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMate = m;
+                }
+            });
+
+            // Якщо в напрямку джойстика нікого немає — беремо найближчого попереду
+            if (!bestMate) {
+                mates.sort((a, b) => a.mesh.position.distanceTo(controlledPlayer.mesh.position) - b.mesh.position.distanceTo(controlledPlayer.mesh.position));
+                bestMate = mates.find(m => m.role !== 'gk') || mates;
+            }
+            return bestMate;
+        }
 
         function updateActionButtonsMode() {
             const weHaveBall = ballOwner && ballOwner.team === 'you';
@@ -841,17 +895,30 @@
             const inAttack = weHaveBall || freeBall;
 
             btnShoot.textContent = inAttack ? 'УДАР' : 'ПРЕСИНГ';
-            btnPass.textContent = inAttack ? 'ПАС' : 'ВІДБІР';
+            btnPass.textContent = inAttack ? 'ПАС' : 'ПІДКАТ';
+
+            if (weHaveBall && ballOwner === controlledPlayer) {
+                currentPassTarget = findBestPassReceiver();
+                if (currentPassTarget) {
+                    passTargetRing.visible = true;
+                    passTargetRing.position.set(currentPassTarget.mesh.position.x, 0.03, currentPassTarget.mesh.position.z);
+                } else {
+                    passTargetRing.visible = false;
+                }
+            } else {
+                currentPassTarget = null;
+                passTargetRing.visible = false;
+            }
         }
 
         function switchControlledPlayer() {
             const teammates = players.filter(p => p.team === 'you' && p.role !== 'gk');
             if (!teammates.length) return;
             teammates.sort((a, b) => a.mesh.position.distanceTo(ballMesh.position) - b.mesh.position.distanceTo(ballMesh.position));
-            if (teammates[0] === controlledPlayer && teammates.length > 1) {
-                controlledPlayer = teammates[1];
+            if (teammates === controlledPlayer && teammates.length > 1) {
+                controlledPlayer = teammates;
             } else {
-                controlledPlayer = teammates[0];
+                controlledPlayer = teammates;
             }
         }
 
@@ -865,37 +932,55 @@
             matchAudio.playKick(speed / 24);
         }
 
+        function triggerSlideTackle(player) {
+            if (!player || player.slideTimer > 0 || player.stunTimer > 0) return;
+
+            // Напрямок підкату: до м'яча, якщо він поруч, або по курсу бігу
+            const toBall = ballMesh.position.clone().sub(player.mesh.position);
+            toBall.y = 0;
+            if (toBall.length() > 0.2 && toBall.length() < 6.5) {
+                toBall.normalize();
+                player.slideDirX = toBall.x;
+                player.slideDirZ = toBall.z;
+            } else {
+                player.slideDirX = Math.sin(player.mesh.rotation.y);
+                player.slideDirZ = Math.cos(player.mesh.rotation.y);
+            }
+
+            player.mesh.rotation.y = Math.atan2(player.slideDirX, player.slideDirZ);
+            player.slideTimer = 0.46;
+            matchAudio.playKick(0.45);
+        }
+
         function handlePassAction() {
             matchAudio.init();
             if (!matchState.started || matchState.over || matchState.goalPauseTimer > 0) return;
 
             if (ballOwner && ballOwner === controlledPlayer) {
-                const mates = players.filter(p => p.team === 'you' && p !== controlledPlayer);
-                let bestMate = null;
-                let bestScore = -999;
-                mates.forEach((m) => {
-                    const dist = m.mesh.position.distanceTo(controlledPlayer.mesh.position);
-                    if (dist < 2.5 || dist > 38) return;
-                    const forwardBonus = (m.mesh.position.x - controlledPlayer.mesh.position.x) * 0.4;
-                    const score = forwardBonus - dist * 0.25;
-                    if (score > bestScore) { bestScore = score; bestMate = m; }
-                });
+                const receiver = currentPassTarget || findBestPassReceiver();
+                let targetPos;
 
-                const targetPos = bestMate
-                    ? bestMate.mesh.position.clone()
-                    : controlledPlayer.mesh.position.clone().add(new THREE.Vector3(10, 0, 0));
-
-                controlledPlayer.cooldown = 0.28;
-                lastTouchTeam = 'you';
-                kickBallTowards(targetPos, 17.5, 0.35);
-            } else if (!ballOwner || ballOwner.team === 'opp') {
-                if (!controlledPlayer) return;
-                const distToBall = controlledPlayer.mesh.position.distanceTo(ballMesh.position);
-                if (distToBall < 2.1) {
-                    ballOwner = controlledPlayer;
-                    lastTouchTeam = 'you';
-                    matchAudio.playKick(0.6);
+                if (receiver) {
+                    // Даємо пас з легким випередженням на хід партнеру
+                    targetPos = receiver.mesh.position.clone();
+                    if (receiver.role !== 'gk') targetPos.x += 1.4;
+                    // Заздалегідь перемикаємо керування на того, кому віддали пас!
+                    controlledPlayer = receiver;
+                } else {
+                    const fx = Math.sin(controlledPlayer.mesh.rotation.y);
+                    const fz = Math.cos(controlledPlayer.mesh.rotation.y);
+                    targetPos = controlledPlayer.mesh.position.clone().add(new THREE.Vector3(fx * 12, 0, fz * 12));
                 }
+
+                const dist = targetPos.distanceTo(ballMesh.position);
+                const passSpeed = THREE.MathUtils.clamp(13.5 + dist * 0.45, 14.5, 23.5);
+
+                ballOwner.cooldown = 0.32;
+                lastTouchTeam = 'you';
+                kickBallTowards(targetPos, passSpeed, 0.22);
+            } else {
+                // Виконуємо ПІДКАТ
+                triggerSlideTackle(controlledPlayer);
             }
         }
 
@@ -1042,6 +1127,21 @@
 /* ==================== ПОЧАТОК ЧАСТИНИ 10 з 12 ==================== */
         function animatePlayerLegs(p, speed, dt) {
             if (!p.rig) return;
+
+            // Анімація підкату (гравець стелиться по газону)
+            if (p.slideTimer > 0) {
+                p.mesh.position.y = -0.35;
+                p.mesh.rotation.x = -1.25;
+                p.rig.rightLeg.rotation.x = -0.55;
+                p.rig.leftLeg.rotation.x = 0.65;
+                p.rig.leftArm.rotation.x = 0.8;
+                p.rig.rightArm.rotation.x = -0.6;
+                return;
+            } else {
+                p.mesh.position.y = THREE.MathUtils.lerp(p.mesh.position.y, 0, dt * 12);
+                p.mesh.rotation.x = THREE.MathUtils.lerp(p.mesh.rotation.x, 0, dt * 12);
+            }
+
             if (speed > 0.3) {
                 p.runPhase += dt * (7.5 + speed * 0.7);
                 const s = Math.sin(p.runPhase);
@@ -1085,10 +1185,42 @@
 
             const oppChaser = players
                 .filter(p => p.team === 'opp' && p.role !== 'gk')
-                .sort((a, b) => a.mesh.position.distanceTo(ballMesh.position) - b.mesh.position.distanceTo(ballMesh.position))[0];
+                .sort((a, b) => a.mesh.position.distanceTo(ballMesh.position) - b.mesh.position.distanceTo(ballMesh.position));
 
             players.forEach((p) => {
                 if (p.cooldown > 0) p.cooldown = Math.max(0, p.cooldown - dt);
+                if (p.stunTimer > 0) p.stunTimer = Math.max(0, p.stunTimer - dt);
+
+                // Обробка активного підкату
+                if (p.slideTimer > 0) {
+                    p.slideTimer = Math.max(0, p.slideTimer - dt);
+                    const slideSpeed = 12.2 * (0.45 + p.slideTimer);
+                    p.mesh.position.x = THREE.MathUtils.clamp(p.mesh.position.x + p.slideDirX * slideSpeed * dt, -HALF_L + 0.5, HALF_L - 0.5);
+                    p.mesh.position.z = THREE.MathUtils.clamp(p.mesh.position.z + p.slideDirZ * slideSpeed * dt, -HALF_W + 0.5, HALF_W - 0.5);
+                    animatePlayerLegs(p, slideSpeed, dt);
+
+                    // Перевірка влучання підкатом у м'яч або суперника
+                    const distBall = p.mesh.position.distanceTo(ballMesh.position);
+                    if (distBall < 1.35 && ballMesh.position.y < 1.2) {
+                        if (ballOwner && ballOwner.team !== p.team) {
+                            ballOwner.stunTimer = 0.85;
+                            ballOwner.cooldown = 0.9;
+                        }
+                        ballOwner = p;
+                        lastTouchTeam = p.team;
+                        p.slideTimer = 0;
+                        matchAudio.playKick(0.8);
+                    } else if (p.slideTimer === 0) {
+                        // Промахнувся підкатом — коротка пауза на підйом
+                        p.stunTimer = 0.42;
+                    }
+                    return;
+                }
+
+                if (p.stunTimer > 0) {
+                    animatePlayerLegs(p, 0, dt);
+                    return;
+                }
 
                 if (p.role === 'gk') {
                     const goalX = p.team === 'you' ? -HALF_L + 1.1 : HALF_L - 1.1;
@@ -1156,13 +1288,14 @@
                     }
                 }
 
+                // Підбір вільного м'яча або м'який відбір у ближньому бою
                 if (p.cooldown <= 0 && matchState.goalPauseTimer <= 0 && ballMesh.position.y < 1.35) {
                     const dist = p.mesh.position.distanceTo(ballMesh.position);
-                    if (!ballOwner && dist < 0.92) {
+                    if (!ballOwner && dist < 1.05) {
                         ballOwner = p;
                         lastTouchTeam = p.team;
-                    } else if (ballOwner && ballOwner.team !== p.team && dist < 0.78 && Math.random() < dt * 4.5) {
-                        ballOwner.cooldown = 0.45;
+                    } else if (ballOwner && ballOwner.team !== p.team && dist < 0.75 && Math.random() < dt * 3.0) {
+                        ballOwner.cooldown = 0.5;
                         ballOwner = p;
                         lastTouchTeam = p.team;
                     }
