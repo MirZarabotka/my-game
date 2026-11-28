@@ -1,18 +1,13 @@
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 1 з 15 ==================== -->
+/* ==================== ПОЧАТОК ЧАСТИНИ 1 з 13 ==================== */
 <!DOCTYPE html>
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Penalty 3D — Головна</title>
-    <script src="https://telegram.org"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; }
-        body {
-            overflow: hidden;
-            background: #071326;
-            color: #ffffff;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { overflow: hidden; background: #071326; color: #ffffff; }
         #canvas-container { width: 100vw; height: 100vh; display: block; cursor: grab; }
         #canvas-container:active { cursor: grabbing; }
 
@@ -20,129 +15,282 @@
             position: absolute;
             inset: 0;
             pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .top-hud {
-            position: absolute;
-            top: 18px;
-            right: 18px;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(7, 19, 38, 0.88) 0%, rgba(7, 19, 38, 0) 100%);
+            pointer-events: auto;
+            z-index: 15;
+        }
+        .profile-box {
             display: flex;
             align-items: center;
             gap: 10px;
-            pointer-events: auto;
-        }
-        .sound-btn {
-            background: rgba(15, 23, 42, 0.78);
+            background: rgba(15, 23, 42, 0.82);
             backdrop-filter: blur(10px);
-            color: #f8fafc;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 1.1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+            border: 1.5px solid rgba(56, 189, 248, 0.45);
+            padding: 5px 14px 5px 6px;
+            border-radius: 14px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
         }
-        .coins-pill {
-            background: rgba(15, 23, 42, 0.78);
-            backdrop-filter: blur(10px);
-            color: #facc15;
-            padding: 8px 16px;
-            border-radius: 30px;
-            border: 1px solid rgba(250, 204, 21, 0.45);
-            font-weight: 800;
-            font-size: 1rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.45);
-        }
-
-        .menu-actions {
-            position: absolute;
-            left: 16px;
-            top: 52%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 11px;
-            pointer-events: auto;
-            z-index: 10;
-        }
-        /* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 15 ==================== */
-   /* ==================== ПОЧАТОК ЧАСТИНИ 2 з 13 ==================== */
-        .nav-card {
-            text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            background: rgba(15, 23, 42, 0.74);
-            backdrop-filter: blur(12px);
-            padding: 11px 15px 11px 14px;
-            border-radius: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 11px;
-            min-width: 164px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.42);
-            transition: transform 0.2s, border-color 0.2s, background 0.2s;
-        }
-
-        .nav-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 16%;
-            bottom: 16%;
-            width: 4px;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .nav-card.trening-card::before { background: #a855f7; box-shadow: 0 0 12px #a855f7; }
-        .nav-card.play-card::before { background: #22c55e; box-shadow: 0 0 12px #22c55e; }
-        .nav-card.shop-card::before { background: #38bdf8; box-shadow: 0 0 12px #38bdf8; }
-        .nav-card.settings-card::before { background: #f59e0b; box-shadow: 0 0 12px #f59e0b; }
-
-        .nav-card:hover {
-            transform: translateX(5px);
-            background: rgba(30, 41, 59, 0.9);
-        }
-        .nav-card.trening-card:hover { border-color: rgba(168, 85, 247, 0.65); }
-        .nav-card.play-card:hover { border-color: rgba(34, 197, 94, 0.65); }
-        .nav-card.shop-card:hover { border-color: rgba(56, 189, 248, 0.65); }
-        .nav-card.settings-card:hover { border-color: rgba(245, 158, 11, 0.65); }
-
-        .nav-icon {
+        .avatar-badge {
             width: 36px;
             height: 36px;
-            border-radius: 11px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #2563eb, #38bdf8);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            flex-shrink: 0;
+            font-size: 1.25rem;
+            border: 1.5px solid #fde047;
         }
-        .trening-card .nav-icon { background: rgba(168, 85, 247, 0.2); }
-        .play-card .nav-icon { background: rgba(34, 197, 94, 0.2); }
-        .shop-card .nav-icon { background: rgba(56, 189, 248, 0.2); }
-        .settings-card .nav-icon { background: rgba(245, 158, 11, 0.2); }
-
-        .nav-text {
+        .profile-info {
             display: flex;
             flex-direction: column;
-            text-align: left;
+            gap: 2px;
         }
-        .nav-title {
-            font-size: 0.9rem;
+        .profile-name {
+            font-size: 0.82rem;
+            font-weight: 900;
+            color: #4ade80;
+            letter-spacing: 0.3px;
+        }
+        .xp-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.68rem;
             font-weight: 800;
+            color: #cbd5e1;
+        }
+        .xp-bar {
+            width: 58px;
+            height: 6px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .xp-fill {
+            width: 45%;
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #facc15);
+        }
+
+        .top-right-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .coins-pill {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            color: #facc15;
+            padding: 7px 14px;
+            border-radius: 14px;
+            border: 1.5px solid rgba(250, 204, 21, 0.5);
+            font-weight: 900;
+            font-size: 0.92rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+        }
+        .icon-circle-btn {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            color: #f8fafc;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            border: 1.5px solid rgba(255, 255, 255, 0.22);
+            font-size: 1.05rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+            transition: transform 0.15s;
+        }
+        .icon-circle-btn:active { transform: scale(0.92); }
+/* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 2 з 13 ==================== */
+        .dashboard-wrap {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 6px 20px;
+        }
+        .cards-grid {
+            width: min(64vw, 660px);
+            display: grid;
+            grid-template-columns: 1.35fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 11px;
+            pointer-events: auto;
+        }
+
+        .mode-card {
+            text-decoration: none;
+            border-radius: 16px;
+            padding: 14px 16px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1.5px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+            cursor: pointer;
+            text-align: left;
+            transition: transform 0.18s, filter 0.18s;
+        }
+        .mode-card:hover { transform: translateY(-2px) scale(1.01); filter: brightness(1.08); }
+        .mode-card:active { transform: scale(0.97); }
+
+        .card-arena {
+            background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 55%, #1d4ed8 100%);
+            min-height: 156px;
+        }
+        .card-arena .card-title {
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: #fde047;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .card-sub {
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-top: 2px;
+        }
+        .badges-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .mini-crest {
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(255,255,255,0.28);
+            border-radius: 10px;
+            padding: 5px 9px;
+            font-size: 0.7rem;
+            font-weight: 900;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .right-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+        }
+        .card-trening {
+            background: linear-gradient(135deg, #0369a1 0%, #0284c7 60%, #38bdf8 100%);
+            flex: 1;
+        }
+        .card-quick {
+            background: linear-gradient(135deg, #991b1b 0%, #dc2626 60%, #ea580c 100%);
+            flex: 1;
+        }
+
+        .bottom-cards-row {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 11px;
+        }
+        .card-shop {
+            background: linear-gradient(135deg, #15803d 0%, #16a34a 60%, #65a30d 100%);
+            min-height: 82px;
+        }
+        .card-stats {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 60%, #0f766e 100%);
+            min-height: 82px;
+        }
+
+        .card-title-sm {
+            font-size: 1.05rem;
+            font-weight: 900;
             color: #ffffff;
+            text-transform: uppercase;
             letter-spacing: 0.4px;
         }
-        .nav-sub {
-            font-size: 0.66rem;
-            font-weight: 600;
-            color: #94a3b8;
+        .card-deco {
+            position: absolute;
+            right: 12px;
+            bottom: 8px;
+            font-size: 2.1rem;
+            opacity: 0.9;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.45));
+            pointer-events: none;
+        }
+
+        .bottom-nav {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: rgba(10, 22, 44, 0.94);
+            backdrop-filter: blur(12px);
+            border-top: 1.5px solid rgba(56, 189, 248, 0.35);
+            pointer-events: auto;
+            z-index: 15;
+        }
+        .bnav-item {
+            text-decoration: none;
+            background: transparent;
+            border: none;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            color: #f8fafc;
+            padding: 10px 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 900;
+            font-size: 0.78rem;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .bnav-item:last-child { border-right: none; }
+        .bnav-item:hover { background: rgba(56, 189, 248, 0.15); }
+        .bnav-item span.ico { font-size: 1.2rem; }
+        .bnav-item.bonus-ready { color: #fde047; }
+
+        @media (max-width: 720px) {
+            .dashboard-wrap {
+                align-items: flex-end;
+                justify-content: center;
+                padding: 8px 12px 10px;
+            }
+            .cards-grid {
+                width: 100%;
+                grid-template-columns: 1fr 1fr;
+            }
+            .card-arena {
+                grid-column: span 2;
+                min-height: 112px;
+            }
+            .right-stack {
+                grid-column: span 2;
+                flex-direction: row;
+            }
+            .bnav-item {
+                flex-direction: column;
+                gap: 2px;
+                font-size: 0.66rem;
+                padding: 7px 4px;
+            }
         }
 
         #settings-modal {
@@ -168,7 +316,7 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.65);
         }
 /* ==================== КІНЕЦЬ ЧАСТИНИ 2 з 13 ==================== */
-        /* ==================== ПОЧАТОК ЧАСТИНИ 3 з 15 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 3 з 13 ==================== */
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -253,39 +401,82 @@
 
     <div class="ui-layer">
         <div class="top-hud">
-            <button class="sound-btn" id="quick-sound-btn" title="Звук трибун">🔊</button>
-            <div class="coins-pill" id="home-coins">💰 500</div>
+            <div class="profile-box">
+                <div class="avatar-badge">⚽</div>
+                <div class="profile-info">
+                    <div class="profile-name" id="profile-player-name">Гравець #10</div>
+                    <div class="xp-row">
+                        <span>🏆</span>
+                        <div class="xp-bar"><div class="xp-fill"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="top-right-group">
+                <div class="coins-pill" id="home-coins">💰 500</div>
+                <button class="icon-circle-btn" id="quick-sound-btn" title="Звук трибун">🔊</button>
+                <button class="icon-circle-btn" id="settings-btn" title="Налаштування">⚙️</button>
+            </div>
         </div>
 
-        <div class="menu-actions">
-            <a href="trening.html" class="nav-card trening-card">
-                <div class="nav-icon">🎯</div>
-                <div class="nav-text">
-                    <span class="nav-title">ТРЕНУВАННЯ</span>
-                    <span class="nav-sub">Удари по мішенях</span>
+        <div class="dashboard-wrap">
+            <div class="cards-grid">
+                <button class="mode-card card-arena" id="start-btn">
+                    <div>
+                        <div class="card-title">СЕРІЯ ПЕНАЛЬТІ</div>
+                        <div class="card-sub">Змагайся на арені та перемагай суперників</div>
+                    </div>
+                    <div class="badges-row">
+                        <div class="mini-crest">🏆 КУБОК</div>
+                        <div class="mini-crest">🔥 1 НА 1</div>
+                        <div class="mini-crest">⚡ ТОП-ЛІГА</div>
+                    </div>
+                    <div class="card-deco">🏟️</div>
+                </button>
+
+                <div class="right-stack">
+                    <a href="trening.html" class="mode-card card-trening">
+                        <div>
+                            <div class="card-title-sm">ТРЕНУВАННЯ</div>
+                            <div class="card-sub">Удари по мішенях та комбо</div>
+                        </div>
+                        <div class="card-deco">🎯</div>
+                    </a>
+
+                    <a href="game.html" class="mode-card card-quick">
+                        <div>
+                            <div class="card-title-sm">ШВИДКИЙ МАТЧ</div>
+                            <div class="card-sub">Миттєвий вихід на поле</div>
+                        </div>
+                        <div class="card-deco">⚡</div>
+                    </a>
                 </div>
-            </a>
-            <button class="nav-card play-card" id="start-btn">
-                <div class="nav-icon">⚽</div>
-                <div class="nav-text">
-                    <span class="nav-title">ГРАТИ</span>
-                    <span class="nav-sub">Серія пенальті</span>
+
+                <div class="bottom-cards-row">
+                    <a href="shop.html" class="mode-card card-shop">
+                        <div>
+                            <div class="card-title-sm">ГАРДЕРОБ</div>
+                            <div class="card-sub">Форма, бутси, рукавиці та м'ячі</div>
+                        </div>
+                        <div class="card-deco">👕</div>
+                    </a>
+
+                    <a href="statustuka.html" class="mode-card card-stats">
+                        <div>
+                            <div class="card-title-sm">СТАТИСТИКА</div>
+                            <div class="card-sub">Твої голи, сейви та рекорди</div>
+                        </div>
+                        <div class="card-deco">📊</div>
+                    </a>
                 </div>
-            </button>
-            <a href="shop.html" class="nav-card shop-card">
-                <div class="nav-icon">👕</div>
-                <div class="nav-text">
-                    <span class="nav-title">ГАРДЕРОБ</span>
-                    <span class="nav-sub">Форма та бутси</span>
-                </div>
-            </a>
-            <button class="nav-card settings-card" id="settings-btn">
-                <div class="nav-icon">⚙️</div>
-                <div class="nav-text">
-                    <span class="nav-title">НАЛАШТУВАННЯ</span>
-                    <span class="nav-sub">Звук та графіка</span>
-                </div>
-            </button>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <a href="shop.html" class="bnav-item"><span class="ico">⚽</span>М'ЯЧІ ТА СІНИ</a>
+            <button class="bnav-item bonus-ready" id="daily-bonus-btn"><span class="ico">🎁</span>БОНУС +100 💰</button>
+            <a href="statustuka.html" class="bnav-item"><span class="ico">📈</span>РЕКОРДИ</a>
+            <a href="trening.html" class="bnav-item"><span class="ico">🎯</span>МІШЕНІ</a>
         </div>
     </div>
 
@@ -315,8 +506,8 @@
             }
         }
     </script>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 3 з 15 ==================== -->
-<!-- ==================== ПОЧАТОК ЧАСТИНИ 4 з 15 ==================== -->
+/* ==================== КІНЕЦЬ ЧАСТИНИ 3 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 4 з 13 ==================== */
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
@@ -328,6 +519,8 @@
             localStorage.setItem('player_coins', '500');
         }
         document.getElementById('home-coins').innerText = `💰 ${localStorage.getItem('player_coins')}`;
+        const savedNum = localStorage.getItem('eq_number') || '10';
+        document.getElementById('profile-player-name').innerText = `Гравець #${savedNum}`;
 
         class StadiumChantAudio {
             constructor() {
@@ -432,8 +625,8 @@
                 stadiumAudio.ctx.resume();
             }
         }, { once: true });
-        // ==================== КІНЕЦЬ ЧАСТИНИ 4 з 15 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 5 з 15 ====================
+/* ==================== КІНЕЦЬ ЧАСТИНИ 4 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 5 з 13 ==================== */
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x071326);
@@ -561,8 +754,8 @@
         }
         stadiumGroup.add(createGoal(-29.8, 0));
         stadiumGroup.add(createGoal(29.8, Math.PI));
-        // ==================== КІНЕЦЬ ЧАСТИНИ 5 з 15 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 6 з 15 ====================
+/* ==================== КІНЕЦЬ ЧАСТИНИ 5 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 6 з 13 ==================== */
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
         const roofMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.6, roughness: 0.35 });
         const railMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
@@ -660,8 +853,8 @@
                     fanPositions.push({ x: fx, y: rowY, z: zDist - 0.08, rotY: Math.PI, phase: Math.random() * 6.28, hasPhone: false, hasScarf: false });
                 }
             }
-            // ==================== КІНЕЦЬ ЧАСТИНИ 6 з 15 ====================
-            // ==================== ПОЧАТОК ЧАСТИНИ 7 з 15 ====================
+/* ==================== КІНЕЦЬ ЧАСТИНИ 6 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 7 з 13 ==================== */
             const xDist = 25.4 + r * 1.02;
             const stepL = 66 + r * 2;
             const stepGeoX = new THREE.BoxGeometry(rowDepth, 0.68, stepL);
@@ -721,8 +914,8 @@
         });
         seatsInstanced.instanceMatrix.needsUpdate = true;
         stadiumGroup.add(seatsInstanced);
-        // ==================== КІНЕЦЬ ЧАСТИНИ 7 з 15 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 8 з 15 ====================
+/* ==================== КІНЕЦЬ ЧАСТИНИ 7 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 8 з 13 ==================== */
         const count = fanPositions.length;
         const torsoGeo = new THREE.CapsuleGeometry(0.21, 0.34, 6, 10);
         const headGeo = new THREE.SphereGeometry(0.135, 12, 12);
@@ -832,8 +1025,8 @@
             panel.lookAt(0, 0, 0);
             stadiumGroup.add(pole, panel);
         });
-        // ==================== КІНЕЦЬ ЧАСТИНИ 8 з 15 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 9 з 15 ====================
+/* ==================== КІНЕЦЬ ЧАСТИНИ 8 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 9 з 13 ==================== */
         const ballMesh = new THREE.Mesh(
             new THREE.SphereGeometry(0.103, 24, 24),
             new THREE.MeshStandardMaterial({ roughness: 0.4 })
@@ -848,7 +1041,8 @@
         controls.minDistance = 2.2;
         controls.maxDistance = 5.2;
         controls.maxPolarAngle = Math.PI / 2 - 0.02;
-        controls.target.set(-0.32, 0.95, 0);
+        const isLandscape = window.innerWidth > window.innerHeight;
+        controls.target.set(isLandscape ? 0.95 : 0.0, isLandscape ? 0.92 : 0.65, 0);
         controls.update();
 
         function walkModel(obj, callback) {
@@ -995,8 +1189,8 @@
             unit.rotation.y = pickLeft ? Math.PI : 0;
             return unit;
         }
-        // ==================== КІНЕЦЬ ЧАСТИНИ 9 з 15 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 10 з 15 ====================
+/* ==================== КІНЕЦЬ ЧАСТИНИ 9 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 10 з 13 ==================== */
         function attachToSleeveEnd(holder, foreArmBone, handBone) {
             const armBone = foreArmBone || (handBone && handBone.parent);
             if (!armBone) return;
@@ -1036,60 +1230,61 @@
             glovesLoaded = true;
         }
 
-        function createJerseyTexture(jersey, num, numCol, backUv) {
+        function createJerseyTexture(jersey) {
             const canvas = document.createElement('canvas');
-            canvas.width = 1024;
-            canvas.height = 1024;
+            canvas.width = 512;
+            canvas.height = 512;
             const ctx = canvas.getContext('2d');
 
             ctx.fillStyle = jersey.c1;
-            ctx.fillRect(0, 0, 1024, 1024);
+            ctx.fillRect(0, 0, 512, 512);
 
             ctx.fillStyle = jersey.c2;
             if (jersey.pattern === 'stripes') {
-                for (let x = 0; x < 1024; x += 88) ctx.fillRect(x, 0, 44, 1024);
+                for (let x = 0; x < 512; x += 44) ctx.fillRect(x, 0, 22, 512);
             } else if (jersey.pattern === 'hoops') {
-                for (let y = 0; y < 1024; y += 88) ctx.fillRect(0, y, 1024, 44);
+                for (let y = 0; y < 512; y += 44) ctx.fillRect(0, y, 512, 22);
             } else if (jersey.pattern === 'half') {
-                ctx.fillRect(210, 0, 120, 1024);
-                ctx.fillRect(530, 0, 170, 1024);
+                ctx.fillRect(105, 0, 60, 512);
+                ctx.fillRect(265, 0, 85, 512);
             } else if (jersey.pattern === 'centerBand') {
-                ctx.fillRect(170, 0, 90, 1024);
-                ctx.fillRect(490, 0, 90, 1024);
+                ctx.fillRect(85, 0, 45, 512);
+                ctx.fillRect(245, 0, 45, 512);
             } else if (jersey.pattern === 'chestBand') {
-                ctx.fillRect(0, 320, 1024, 260);
+                ctx.fillRect(0, 160, 512, 130);
             } else if (jersey.pattern === 'sash') {
                 ctx.beginPath();
-                ctx.moveTo(0, 0); ctx.lineTo(240, 0); ctx.lineTo(1024, 1024); ctx.lineTo(784, 1024);
+                ctx.moveTo(0, 0); ctx.lineTo(120, 0); ctx.lineTo(512, 512); ctx.lineTo(392, 512);
                 ctx.closePath(); ctx.fill();
             } else if (jersey.pattern === 'sleeves') {
-                ctx.fillRect(406, 0, 44, 1024);
-                ctx.fillRect(796, 0, 228, 1024);
-            }
-
-            if (num && backUv) {
-                const px = backUv.u * 1024;
-                const py = backUv.v * 1024;
-                const sizePx = Math.max(70, Math.min(240, backUv.scale || 135));
-
-                ctx.save();
-                ctx.translate(px, py);
-                if (backUv.flipX) ctx.scale(-1, 1);
-                if (backUv.flipY) ctx.scale(1, -1);
-                ctx.fillStyle = numCol || '#ffffff';
-                ctx.strokeStyle = (numCol === '#000000') ? '#ffffff' : '#000000';
-                ctx.lineWidth = Math.max(6, sizePx * 0.08);
-                ctx.lineJoin = 'round';
-                ctx.font = `900 ${Math.round(sizePx)}px "Segoe UI", sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.strokeText(String(num), 0, 0);
-                ctx.fillText(String(num), 0, 0);
-                ctx.restore();
+                ctx.fillRect(203, 0, 22, 512);
+                ctx.fillRect(398, 0, 114, 512);
             }
 
             const tex = new THREE.CanvasTexture(canvas);
             tex.flipY = false;
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.needsUpdate = true;
+            return tex;
+        }
+
+        function createBackNumberTexture(num, numCol) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 256, 256);
+
+            ctx.fillStyle = numCol;
+            ctx.strokeStyle = numCol === '#000000' ? '#ffffff' : '#000000';
+            ctx.lineWidth = 10;
+            ctx.font = '900 165px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeText(num, 128, 128);
+            ctx.fillText(num, 128, 128);
+
+            const tex = new THREE.CanvasTexture(canvas);
             tex.colorSpace = THREE.SRGBColorSpace;
             tex.needsUpdate = true;
             return tex;
@@ -1123,6 +1318,7 @@
         const skeletonBones = {};
         const baseBoneRot = {};
         let idleTimer = 0;
+        let jugBlend = 0;
         let jugPhase = 0;
 
         const resetIdle = () => { idleTimer = 0; };
@@ -1138,67 +1334,8 @@
             }
         }
         setTimeout(hideLoader, 2500);
-        // ==================== КІНЕЦЬ ЧАСТИНИ 10 з 15 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 11 з 15 ====================
-        function detectShirtBackUV(model) {
-            model.updateMatrixWorld(true);
-            const shirtMeshes = [];
-            model.traverse((c) => {
-                if (!c.isMesh || !c.geometry || !c.geometry.attributes.uv) return;
-                const n = (c.name || '').toLowerCase();
-                if (n.includes('shirt') || n.includes('top') || n.includes('jersey') || n.includes('torso')) {
-                    shirtMeshes.push(c);
-                }
-            });
-            const targets = shirtMeshes.length ? shirtMeshes : [];
-            if (!targets.length) {
-                model.traverse((c) => { if (c.isMesh && c.geometry && c.geometry.attributes.uv) targets.push(c); });
-            }
-
-            const box = new THREE.Box3().setFromObject(model);
-            const center = new THREE.Vector3();
-            const size = new THREE.Vector3();
-            box.getCenter(center);
-            box.getSize(size);
-
-            const ray = new THREE.Raycaster();
-            const origin = new THREE.Vector3(center.x, box.min.y + size.y * 0.68, box.min.z - 1.5);
-            const dir = new THREE.Vector3(0, 0, 1);
-            ray.set(origin, dir);
-
-            const hits = ray.intersectObjects(targets, false);
-            if (hits.length > 0 && hits.at(0).uv) {
-                const hit = hits.at(0);
-                const originRight = origin.clone().add(new THREE.Vector3(0.06, 0, 0));
-                ray.set(originRight, dir);
-                const hitsR = ray.intersectObjects(targets, false);
-
-                const originUp = origin.clone().add(new THREE.Vector3(0, 0.06, 0));
-                ray.set(originUp, dir);
-                const hitsU = ray.intersectObjects(targets, false);
-
-                let flipX = false;
-                let flipY = false;
-                let scale = 135;
-
-                if (hitsR.length > 0 && hitsR.at(0).uv) {
-                    const du = hitsR.at(0).uv.x - hit.uv.x;
-                    if (du > 0) flipX = true;
-                    const pxPerUnit = (Math.abs(du) * 1024) / 0.06;
-                    if (pxPerUnit > 80 && pxPerUnit < 3000) {
-                        scale = pxPerUnit * 0.19;
-                    }
-                }
-                if (hitsU.length > 0 && hitsU.at(0).uv) {
-                    const dv = hitsU.at(0).uv.y - hit.uv.y;
-                    if (dv > 0) flipY = true;
-                }
-
-                return { u: hit.uv.x, v: hit.uv.y, flipX, flipY, scale };
-            }
-            return { u: 0.75, v: 0.35, flipX: false, flipY: false, scale: 135 };
-        }
-
+/* ==================== КІНЕЦЬ ЧАСТИНИ 10 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 11 з 13 ==================== */
         loader.load('player.glb', (gltf) => {
             const playerModel = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
             if (!playerModel) {
@@ -1214,17 +1351,17 @@
             const num = localStorage.getItem('eq_number') || '10';
             const numCol = localStorage.getItem('eq_numColor') || '#ffffff';
 
-            const jersey = (CATALOG.jerseys || []).find(x => x.id === jId) || CATALOG.jerseys.at(0);
-            const shortItem = (CATALOG.shorts || []).find(x => x.id === sId) || CATALOG.shorts.at(0);
-            const bootItem = (CATALOG.boots || []).find(x => x.id === bId) || CATALOG.boots.at(0);
-            const gloveItem = (CATALOG.gloves || []).find(x => x.id === gId) || CATALOG.gloves.at(0);
-            const ballItem = (CATALOG.balls || []).find(x => x.id === ballId) || CATALOG.balls.at(0);
+            const jersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
+            const shortItem = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
+            const bootItem = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
+            const gloveItem = CATALOG.gloves.find(x => x.id === gId) || CATALOG.gloves.at(0);
+            const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
 
             ballMesh.material.map = createBallTexture(ballItem.c1, ballItem.c2);
             ballMesh.material.needsUpdate = true;
 
-            const backUv = detectShirtBackUV(playerModel);
-            const jerseyTex = createJerseyTexture(jersey, num, numCol, backUv);
+            const jerseyTex = createJerseyTexture(jersey);
+            let spineBone = null;
 
             walkModel(playerModel, (child) => {
                 if (child.isBone && child.name) {
@@ -1240,6 +1377,10 @@
                     }
                     if (n.includes('hand') && n.includes('right') && !n.includes('middle') && !n.includes('index') && !n.includes('ring') && !n.includes('pinky') && !n.includes('thumb')) {
                         rightHandBone = child;
+                    }
+
+                    if (n.includes('spine2') || (!spineBone && n.includes('spine1'))) {
+                        spineBone = child;
                     }
                 }
 
@@ -1271,9 +1412,29 @@
                 }
             });
 
+            const backNumberMat = new THREE.MeshBasicMaterial({
+                map: createBackNumberTexture(num, numCol),
+                transparent: true,
+                side: THREE.DoubleSide,
+                polygonOffset: true,
+                polygonOffsetFactor: -4
+            });
+            const backNumberMesh = new THREE.Mesh(new THREE.PlaneGeometry(34, 34), backNumberMat);
+
+            if (spineBone) {
+                backNumberMesh.position.set(0, 1.5, -11.3);
+                backNumberMesh.rotation.set(0, Math.PI, 0);
+                spineBone.add(backNumberMesh);
+            } else {
+                backNumberMesh.scale.set(0.01, 0.01, 0.01);
+                backNumberMesh.position.set(0, 1.21, -0.113);
+                backNumberMesh.rotation.y = Math.PI;
+                playerModel.add(backNumberMesh);
+            }
+
             scene.add(playerModel);
-            // ==================== КІНЕЦЬ ЧАСТИНИ 11 з 15 ====================
-            // ==================== ПОЧАТОК ЧАСТИНИ 12 з 15 ====================
+/* ==================== КІНЕЦЬ ЧАСТИНИ 11 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 12 з 13 ==================== */
             loader.load(
                 './glove.glb?v=3',
                 (gloveGltf) => {
@@ -1302,6 +1463,22 @@
 
         document.getElementById('start-btn').addEventListener('click', () => {
             window.location.href = 'game.html';
+        });
+
+        const bonusBtn = document.getElementById('daily-bonus-btn');
+        const todayKey = new Date().toDateString();
+        if (localStorage.getItem('daily_bonus_date') === todayKey) {
+            bonusBtn.innerHTML = '<span class="ico">✅</span>БОНУС ОТРИМАНО';
+            bonusBtn.classList.remove('bonus-ready');
+        }
+        bonusBtn.addEventListener('click', () => {
+            if (localStorage.getItem('daily_bonus_date') === todayKey) return;
+            localStorage.setItem('daily_bonus_date', todayKey);
+            const curCoins = Number(localStorage.getItem('player_coins') || 500) + 100;
+            localStorage.setItem('player_coins', String(curCoins));
+            document.getElementById('home-coins').innerText = `💰 ${curCoins}`;
+            bonusBtn.innerHTML = '<span class="ico">✅</span>+100 💰 ОТРИМАНО!';
+            bonusBtn.classList.remove('bonus-ready');
         });
 
         const settingsModal = document.getElementById('settings-modal');
@@ -1350,33 +1527,19 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-        // ==================== КІНЕЦЬ ЧАСТИНИ 12 з 15 ====================
-        // ==================== ПОЧАТОК ЧАСТИНИ 13 з 15 ====================
+/* ==================== КІНЕЦЬ ЧАСТИНИ 12 з 13 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 13А ==================== */
         let lastTime = performance.now();
         const worldAxisX = new THREE.Vector3(1, 0, 0);
         const worldAxisY = new THREE.Vector3(0, 1, 0);
         const worldAxisZ = new THREE.Vector3(0, 0, 1);
-
-        const REST_BALL_POS = new THREE.Vector3(0.34, 0.103, 0.24);
-        const startBouncePos = new THREE.Vector3();
+        const startBouncePos = new THREE.Vector3(0.34, 0.103, 0.24);
         const targetBouncePos = new THREE.Vector3();
-        const rollStartPos = new THREE.Vector3();
         let lastStepIndex = -1;
 
         let playerAction = 'idle';
         let actionTimer = 0;
         let waveBlend = 0;
-
-        const JUG_SPEED = 2.6;
-        const T_FLICK_UP = 0.42; // Коротке підведення носочка лівої бутси під м'яч (м'яч ще не підпригує!)
-        const JUG_BEATS = 6;     // 6 ударів: права -> ліва -> права -> ліва -> права -> ліва
-        const T_JUG_END = T_FLICK_UP + (JUG_BEATS * Math.PI) / JUG_SPEED;
-        const T_ROLL_END = T_JUG_END + 1.05;
-
-        function smooth01(x) {
-            const c = Math.max(0, Math.min(1, x));
-            return c * c * (3 - 2 * c);
-        }
 
         function rotateBoneWorldAxis(bone, worldAxis, angleRad) {
             if (!bone || !bone.parent) return;
@@ -1432,7 +1595,7 @@
                 }
             } else if (playerAction === 'juggling') {
                 actionTimer += dt;
-                if (actionTimer >= T_ROLL_END) {
+                if (actionTimer >= 6.0) {
                     playerAction = 'waving';
                     actionTimer = 0;
                 }
@@ -1445,7 +1608,9 @@
                 }
             }
 
+            const targetJug = playerAction === 'juggling' ? 1.0 : 0.0;
             const targetWave = playerAction === 'waving' ? 1.0 : 0.0;
+            jugBlend += (targetJug - jugBlend) * Math.min(1, dt * 3.2);
             waveBlend += (targetWave - waveBlend) * Math.min(1, dt * 3.8);
 
             const getBone = (part, exclude = '') => {
@@ -1469,149 +1634,92 @@
             const rForeArm = getBone('rightforearm');
             const lArm = getBone('leftarm');
 
-            if (playerAction === 'juggling') {
-                let rUpX = 0, rUpZ = 0, rKneeX = 0, rFootX = 0;
-                let lUpX = 0, lUpZ = 0, lKneeX = 0, lFootX = 0;
-                let spineZ = 0;
+            if (jugBlend > 0.005) {
+                jugPhase += dt * 3.4;
+                const stepIndex = Math.floor(jugPhase / Math.PI);
+                const localT = (jugPhase % Math.PI) / Math.PI;
+                const isRightTarget = stepIndex % 2 === 0;
 
-                if (actionTimer < T_FLICK_UP) {
-                    // Ліва нога лише підводить носочок знизу під м'яч на землі — без зайвого підскоку м'яча!
-                    const p = smooth01(actionTimer / T_FLICK_UP);
-                    lUpX = -0.34 * p;
-                    lUpZ = 0.14 * p;
-                    lKneeX = 0.44 * p;
-                    lFootX = 0.28 * p;
-                    spineZ = 0.03 * p;
+                const dropProgress = Math.min(1, localT / 0.45);
+                const dropCurve = Math.cos(dropProgress * Math.PI * 0.5);
 
-                    if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisX, lUpX);
-                    if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisZ, lUpZ);
-                    if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lKneeX);
-                    if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, lFootX);
-                    playerModelUpdateMatrix(rFoot, lFoot);
+                const riseProgress = Math.max(0, (localT - 0.55) / 0.45);
+                const riseCurve = Math.sin(riseProgress * Math.PI * 0.5);
 
-                    ballMesh.position.copy(REST_BALL_POS);
-                    lastStepIndex = -1;
-                }
-                // ==================== КІНЕЦЬ ЧАСТИНИ 13 з 15 ====================
-                // ==================== ПОЧАТОК ЧАСТИНИ 14 з 15 ====================
-                else if (actionTimer < T_JUG_END) {
-                    jugPhase = (actionTimer - T_FLICK_UP) * JUG_SPEED;
-                    const stepIndex = Math.min(JUG_BEATS - 1, Math.floor(jugPhase / Math.PI));
-                    const localT = (jugPhase - stepIndex * Math.PI) / Math.PI;
-                    const isLeftTarget = stepIndex % 2 === 1;
+                const prevLegLift = stepIndex === 0 ? 0 : dropCurve;
 
-                    const dropProgress = Math.min(1, localT / 0.45);
-                    const dropCurve = Math.cos(dropProgress * Math.PI * 0.5);
-                    const riseProgress = Math.max(0, (localT - 0.55) / 0.45);
-                    const riseCurve = Math.sin(riseProgress * Math.PI * 0.5);
-                    const prevLegLift = stepIndex === 0 ? 0 : dropCurve;
+                const rLift = isRightTarget ? riseCurve : prevLegLift;
+                const lLift = !isRightTarget ? riseCurve : prevLegLift;
 
-                    const lLift = isLeftTarget ? riseCurve : prevLegLift;
-                    const rLift = !isLeftTarget ? riseCurve : prevLegLift;
+                if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisX, -rLift * 0.78 * jugBlend);
+                if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rLift * 0.98 * jugBlend);
+                if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, -rLift * 0.22 * jugBlend);
 
-                    rUpX = -rLift * 0.78;
-                    rKneeX = rLift * 0.98;
-                    rFootX = -rLift * 0.22;
+                if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisX, -lLift * 0.78 * jugBlend);
+                if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lLift * 0.98 * jugBlend);
+                if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, -lLift * 0.22 * jugBlend);
 
-                    lUpX = -lLift * 0.78;
-                    lKneeX = lLift * 0.98;
-                    lFootX = -lLift * 0.22;
+                const balanceWave = isRightTarget ? -riseCurve : riseCurve;
+                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + balanceWave * 0.05 * jugBlend;
+                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.16 * jugBlend;
+                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.16 * jugBlend;
 
-                    spineZ = isLeftTarget ? riseCurve * 0.05 : -riseCurve * 0.05;
+                playerModelUpdateMatrix(rFoot, lFoot);
 
-                    if (rUpLeg) rotateBoneWorldAxis(rUpLeg, worldAxisX, rUpX);
-                    if (rLeg) rotateBoneWorldAxis(rLeg, worldAxisX, rKneeX);
-                    if (rFoot) rotateBoneWorldAxis(rFoot, worldAxisX, rFootX);
-                    if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisX, lUpX);
-                    if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lKneeX);
-                    if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, lFootX);
-                    playerModelUpdateMatrix(rFoot, lFoot);
+                const currentTargetPos = isRightTarget
+                    ? getFootStrikePos(rToe, rFoot, true)
+                    : getFootStrikePos(lToe, lFoot, false);
 
-                    const currentTargetPos = isLeftTarget
-                        ? getFootStrikePos(lToe, lFoot, false)
-                        : getFootStrikePos(rToe, rFoot, true);
-
-                    if (stepIndex !== lastStepIndex) {
+                if (stepIndex !== lastStepIndex) {
+                    if (lastStepIndex === -1) {
                         startBouncePos.copy(ballMesh.position);
-                        lastStepIndex = stepIndex;
-                    }
-                    targetBouncePos.copy(currentTargetPos);
-
-                    const arcWave = Math.sin(localT * Math.PI);
-                    ballMesh.position.lerpVectors(startBouncePos, targetBouncePos, localT);
-                    ballMesh.position.y += arcWave * 0.64;
-                    ballMesh.position.z = Math.max(ballMesh.position.z, 0.36) + arcWave * 0.12;
-                    ballMesh.rotation.x -= dt * 3.8;
-                    ballMesh.rotation.z += (isLeftTarget ? 1 : -1) * dt * 1.4;
-                    rollStartPos.copy(ballMesh.position);
-                } else {
-                    const p = smooth01((actionTimer - T_JUG_END) / (T_ROLL_END - T_JUG_END));
-                    const footDownPhase = Math.min(1, p / 0.45);
-                    const legRemain = 1 - smooth01(footDownPhase);
-
-                    lUpX = -0.78 * legRemain;
-                    lKneeX = 0.98 * legRemain;
-                    lFootX = -0.22 * legRemain + 0.18 * Math.sin(footDownPhase * Math.PI);
-                    spineZ = 0.05 * legRemain;
-
-                    if (lUpLeg) rotateBoneWorldAxis(lUpLeg, worldAxisX, lUpX);
-                    if (lLeg) rotateBoneWorldAxis(lLeg, worldAxisX, lKneeX);
-                    if (lFoot) rotateBoneWorldAxis(lFoot, worldAxisX, lFootX);
-                    playerModelUpdateMatrix(rFoot, lFoot);
-
-                    const leftToeDropPos = getFootStrikePos(lToe, lFoot, false);
-                    leftToeDropPos.y = Math.max(0.103, leftToeDropPos.y);
-
-                    const prevX = ballMesh.position.x;
-                    const prevZ = ballMesh.position.z;
-
-                    if (p < 0.45) {
-                        const sub = smooth01(p / 0.45);
-                        ballMesh.position.lerpVectors(rollStartPos, leftToeDropPos, sub);
                     } else {
-                        const sub = smooth01((p - 0.45) / 0.55);
-                        ballMesh.position.lerpVectors(leftToeDropPos, REST_BALL_POS, sub);
-                        ballMesh.position.y = 0.103;
+                        startBouncePos.copy(targetBouncePos);
                     }
-
-                    const dx = ballMesh.position.x - prevX;
-                    const dz = ballMesh.position.z - prevZ;
-                    ballMesh.rotation.x += dz / 0.103;
-                    ballMesh.rotation.z -= dx / 0.103;
+                    lastStepIndex = stepIndex;
                 }
+                targetBouncePos.copy(currentTargetPos);
 
-                if (spine) spine.rotation.z = (baseBoneRot[spine.name.toLowerCase()]?.z || 0) + spineZ;
-                if (rArm) rArm.rotation.z = (baseBoneRot[rArm.name.toLowerCase()]?.z || 0) - 0.15;
-                if (lArm) lArm.rotation.z = (baseBoneRot[lArm.name.toLowerCase()]?.z || 0) + 0.15;
+                const arcWave = Math.sin(localT * Math.PI);
+                const jugPos = new THREE.Vector3().lerpVectors(startBouncePos, targetBouncePos, localT);
+                jugPos.y += arcWave * 0.66;
+                jugPos.z = Math.max(jugPos.z, 0.38) + arcWave * 0.14;
+
+                const restPos = new THREE.Vector3(0.34, 0.103, 0.24);
+                ballMesh.position.lerpVectors(restPos, jugPos, jugBlend);
+
+                ballMesh.rotation.x -= dt * 3.8 * jugBlend;
+                ballMesh.rotation.z += (isRightTarget ? -1 : 1) * dt * 1.4 * jugBlend;
             } else {
                 lastStepIndex = -1;
                 jugPhase = 0;
-                ballMesh.position.lerp(REST_BALL_POS, Math.min(1, dt * 5));
+                ballMesh.position.lerp(new THREE.Vector3(0.34, 0.103, 0.24), Math.min(1, dt * 5));
                 ballMesh.rotation.y += 0.01;
             }
 
-            const wristSwing = waveBlend > 0.05 ? ((1 - Math.cos(actionTimer * 8.0)) * 0.5) * waveBlend : 0;
-
             if (waveBlend > 0.005) {
+                const outwardSwing = (1 - Math.cos(actionTimer * 7.5)) * 0.5;
                 if (rArm) {
-                    rotateBoneWorldAxis(rArm, worldAxisX, -2.42 * waveBlend);
-                    rotateBoneWorldAxis(rArm, worldAxisZ, -0.32 * waveBlend);
+                    rotateBoneWorldAxis(rArm, worldAxisZ, -(1.92 - outwardSwing * 0.18) * waveBlend);
+                    rotateBoneWorldAxis(rArm, worldAxisX, -0.18 * waveBlend);
+                }
+                if (rForeArm) {
+                    rotateBoneWorldAxis(rForeArm, worldAxisZ, -(0.10 + outwardSwing * 0.52) * waveBlend);
+                    rotateBoneWorldAxis(rForeArm, worldAxisY, -1.55 * waveBlend);
                 }
                 if (spine) {
-                    rotateBoneWorldAxis(spine, worldAxisZ, 0.04 * waveBlend);
+                    rotateBoneWorldAxis(spine, worldAxisZ, 0.06 * waveBlend);
                 }
                 if (head) {
-                    rotateBoneWorldAxis(head, worldAxisX, -0.05 * waveBlend);
+                    rotateBoneWorldAxis(head, worldAxisX, -0.07 * waveBlend);
                 }
             }
-
+/* ==================== КІНЕЦЬ ЧАСТИНИ 13А ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 13Б ==================== */
             if (rightGloveHolder.children.length > 0) {
-                const gloveUnit = rightGloveHolder.children.at(0);
-                gloveUnit.rotation.y = -1.69 * waveBlend;
-                gloveUnit.rotation.z = 0.55 * wristSwing;
+                rightGloveHolder.children[0].rotation.y = 0.65 * waveBlend;
             }
-            // ==================== КІНЕЦЬ ЧАСТИНИ 14 з 15 ====================
-            // ==================== ПОЧАТОК ЧАСТИНИ 15 з 15 ====================
+
             if (glovesLoaded) {
                 if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
                 if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
@@ -1694,78 +1802,6 @@
 
         requestAnimationFrame(animate);
     </script>
-
-    <script>
-        (function () {
-            const DB_HOST = 'test-d54a5-default-rtdb.europe-west1.firebasedatabase.app';
-            const FIREBASE_DB_URL = 'https://' + DB_HOST;
-
-            const tg = window.Telegram && window.Telegram.WebApp;
-            if (tg) {
-                tg.ready();
-                tg.expand();
-            }
-
-            if (!localStorage.getItem('first_played_date')) {
-                const d = new Date();
-                localStorage.setItem('first_played_date', `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`);
-            }
-
-            let tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
-            if (!tgUser) {
-                try {
-                    const raw = (window.location.hash || window.location.search || '').replace(/^[#?]/, '');
-                    const webAppData = new URLSearchParams(raw).get('tgWebAppData');
-                    if (webAppData) {
-                        const userStr = new URLSearchParams(webAppData).get('user');
-                        if (userStr) tgUser = JSON.parse(userStr);
-                    }
-                } catch (e) {}
-            }
-
-            let tgId = localStorage.getItem('tg_player_id') || '';
-            let fullName = localStorage.getItem('tg_player_name') || '';
-            let avatarUrl = localStorage.getItem('tg_player_avatar') || '';
-
-            if (tgUser && tgUser.id) {
-                tgId = 'tg_' + String(tgUser.id);
-                const nameParts = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ').trim();
-                const login = tgUser.username ? ('@' + tgUser.username) : '';
-                fullName = nameParts ? (login ? `${nameParts} (${login})` : nameParts) : login;
-                avatarUrl = tgUser.photo_url || '';
-
-                localStorage.setItem('tg_player_id', tgId);
-                if (fullName) localStorage.setItem('tg_player_name', fullName);
-                if (avatarUrl) localStorage.setItem('tg_player_avatar', avatarUrl);
-            }
-
-            if (!tgId) return;
-
-            const payload = {
-                [tgId]: {
-                    id: tgId,
-                    name: fullName || ('Гравець #' + tgId.slice(-4)),
-                    avatar: avatarUrl,
-                    coins: Number(localStorage.getItem('player_coins') || 500),
-                    wins: Number(localStorage.getItem('matches_won') || 0),
-                    joinedAt: localStorage.getItem('first_played_date'),
-                    kit: {
-                        jersey: localStorage.getItem('eq_jerseys') || 'j1',
-                        shorts: localStorage.getItem('eq_shorts') || 's1',
-                        boots: localStorage.getItem('eq_boots') || 'b1',
-                        hair: localStorage.getItem('eq_hair') || 'h1',
-                        number: localStorage.getItem('eq_number') || '10',
-                        numColor: localStorage.getItem('eq_numColor') || '#ffffff'
-                    },
-                    updatedAt: Date.now()
-                }
-            };
-
-            const xhr = new XMLHttpRequest();
-            xhr.open('PATCH', `${FIREBASE_DB_URL}/players.json`, true);
-            xhr.send(JSON.stringify(payload));
-        })();
-    </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 15 з 15 ==================== -->
+/* ==================== КІНЕЦЬ ЧАСТИНИ 13Б ==================== */
