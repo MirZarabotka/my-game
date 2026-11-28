@@ -1,0 +1,1283 @@
+/* ==================== ПОЧАТОК ЧАСТИНИ 1 з 12 ==================== */
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Penalty 3D — Футбольний матч 5x5</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { overflow: hidden; background: #071326; color: #ffffff; touch-action: none; }
+        #canvas-container { width: 100vw; height: 100vh; display: block; }
+
+        .ui-layer { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
+
+        /* ЕКРАН ПОПЕРЕДЖЕННЯ ПРО ПОВОРОТ ТЕЛЕФОНУ */
+        #rotate-overlay {
+            position: fixed; inset: 0;
+            background: rgba(7, 19, 38, 0.96);
+            backdrop-filter: blur(12px);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 24px;
+            z-index: 100;
+            pointer-events: auto;
+        }
+        @media (orientation: portrait) {
+            #rotate-overlay { display: flex; }
+        }
+        .phone-anim {
+            font-size: 4.2rem;
+            margin-bottom: 18px;
+            animation: rotatePhone 1.8s ease-in-out infinite;
+        }
+        @keyframes rotatePhone {
+            0%, 20% { transform: rotate(0deg); }
+            50%, 80% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .rotate-title { font-size: 1.5rem; font-weight: 900; color: #fde047; margin-bottom: 8px; }
+        .rotate-sub { font-size: 0.95rem; color: #cbd5e1; max-width: 300px; line-height: 1.4; }
+
+        /* ВЕРХНЄ ТАБЛО МАТЧУ */
+        .top-hud {
+            position: absolute; top: 10px; left: 14px; right: 14px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .exit-btn {
+            pointer-events: auto; text-decoration: none;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+            color: #f8fafc; padding: 7px 14px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2); font-weight: 800; font-size: 0.82rem;
+        }
+        .scoreboard {
+            background: rgba(10, 20, 40, 0.9); backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(56, 189, 248, 0.55);
+            border-radius: 14px; padding: 5px 16px;
+            display: flex; align-items: center; gap: 14px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.55);
+        }
+        .team-tag { font-weight: 900; font-size: 0.92rem; display: flex; align-items: center; gap: 6px; }
+        .team-you { color: #38bdf8; }
+        .team-opp { color: #f87171; }
+        .score-digits { font-size: 1.2rem; font-weight: 900; color: #ffffff; letter-spacing: 1px; }
+        .match-timer {
+            background: #16a34a; color: #fff; font-weight: 900; font-size: 0.82rem;
+            padding: 3px 8px; border-radius: 8px;
+        }
+        .coins-pill {
+            background: rgba(15, 23, 42, 0.85); color: #facc15;
+            padding: 7px 13px; border-radius: 12px; border: 1px solid rgba(250, 204, 21, 0.45);
+            font-weight: 800; font-size: 0.85rem;
+        }
+/* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 2 з 12 ==================== */
+        /* ВЕЛИКИЙ НАПИС G⚽AL! (як на скріншоті) */
+        #goal-banner {
+            position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%) scale(0.4);
+            font-size: clamp(3rem, 9vw, 5.5rem);
+            font-weight: 900; font-style: italic;
+            color: #ffffff;
+            text-shadow: 0 6px 25px rgba(0,0,0,0.85), 0 0 30px #facc15;
+            letter-spacing: 4px;
+            opacity: 0; pointer-events: none;
+            transition: transform 0.28s cubic-bezier(0.18, 1.35, 0.4, 1), opacity 0.25s;
+            z-index: 30;
+        }
+        #goal-banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+        /* ВІРТУАЛЬНИЙ ДЖОЙСТИК ЗЛІВА ВНИЗУ */
+        #joystick-zone {
+            position: absolute; left: 22px; bottom: 22px;
+            width: 132px; height: 132px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            border: 2.5px solid rgba(255, 255, 255, 0.35);
+            pointer-events: auto;
+            touch-action: none;
+        }
+        #joystick-stick {
+            position: absolute; top: 50%; left: 50%;
+            width: 54px; height: 54px;
+            margin-left: -27px; margin-top: -27px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ffffff, #cbd5e1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.55);
+            pointer-events: none;
+        }
+
+        /* КРУГЛІ КНОПКИ ДІЙ СПРАВА ВНИЗУ (як на скріншоті) */
+        .action-pad {
+            position: absolute; right: 22px; bottom: 20px;
+            width: 215px; height: 185px;
+            pointer-events: auto;
+        }
+        .act-btn {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(6px);
+            border: 3px solid rgba(226, 232, 240, 0.75);
+            color: #ffffff;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.55);
+            cursor: pointer;
+            transition: transform 0.08s, background 0.12s, border-color 0.12s;
+        }
+        .act-btn:active, .act-btn.pressed {
+            transform: scale(0.91);
+            background: rgba(56, 189, 248, 0.45);
+            border-color: #fde047;
+        }
+        /* Велика кнопка SPRINT (правий низ) */
+        #btn-sprint {
+            right: 0; bottom: 0;
+            width: 84px; height: 84px;
+            font-size: 0.85rem;
+            border-color: #38bdf8;
+        }
+        /* Кнопка PASS / TACKLE (лівий низ блоку) */
+        #btn-pass {
+            right: 98px; bottom: 6px;
+            width: 72px; height: 72px;
+            font-size: 0.8rem;
+        }
+        /* Кнопка SHOOT / PRESS (лівий верх блоку) */
+        #btn-shoot {
+            right: 92px; bottom: 92px;
+            width: 74px; height: 74px;
+            font-size: 0.82rem;
+            border-color: #facc15;
+        }
+        /* Кнопка SWITCH / LOB (правий верх блоку) */
+        #btn-switch {
+            right: 6px; bottom: 98px;
+            width: 72px; height: 72px;
+            font-size: 0.78rem;
+        }
+
+        /* ШКАЛА СИЛИ УДАРУ НАД КНОПКАМИ */
+        #power-bar-wrap {
+            position: absolute; right: 24px; bottom: 215px;
+            width: 165px; height: 10px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1.5px solid rgba(255,255,255,0.35);
+            border-radius: 8px; overflow: hidden;
+            opacity: 0; transition: opacity 0.15s;
+        }
+        #power-bar-wrap.active { opacity: 1; }
+        #power-bar-fill {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, #22c55e, #facc15, #ef4444);
+        }
+
+        /* ФІНАЛЬНЕ ВІКНО МАТЧУ */
+        #end-modal {
+            position: fixed; inset: 0;
+            background: rgba(7, 19, 38, 0.88); backdrop-filter: blur(12px);
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 60; pointer-events: auto; text-align: center; padding: 20px;
+        }
+        #end-modal.active { display: flex; }
+        .end-card {
+            background: linear-gradient(160deg, #0f172a, #1e293b);
+            border: 2px solid #38bdf8; border-radius: 24px;
+            padding: 26px 34px; max-width: 380px; width: 100%;
+        }
+        .end-title { font-size: 1.7rem; font-weight: 900; margin-bottom: 6px; }
+        .end-score { font-size: 2.4rem; font-weight: 900; color: #fde047; margin: 8px 0; }
+        .end-reward { font-size: 1rem; font-weight: 800; color: #4ade80; margin-bottom: 20px; }
+        .end-btns { display: flex; gap: 12px; justify-content: center; }
+        .btn-again {
+            background: #22c55e; color: #fff; border: none; padding: 12px 22px;
+            border-radius: 14px; font-weight: 900; font-size: 0.95rem; cursor: pointer;
+        }
+        .btn-home {
+            text-decoration: none; background: #334155; color: #fff;
+            padding: 12px 20px; border-radius: 14px; font-weight: 800; font-size: 0.95rem;
+        }
+
+        #loader-screen {
+            position: fixed; inset: 0; background: #071326;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 80; transition: opacity 0.35s;
+        }
+        .spinner {
+            width: 44px; height: 44px; border: 4px solid rgba(56, 189, 248, 0.25);
+            border-top-color: #38bdf8; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="rotate-overlay">
+        <div class="phone-anim">📱</div>
+        <div class="rotate-title">ПЕРЕВЕРНИ ТЕЛЕФОН</div>
+        <div class="rotate-sub">Для комфортного футбольного матчу 5×5 поверни екран горизонтально</div>
+    </div>
+
+    <div id="loader-screen">
+        <div class="spinner"></div>
+        <div>Вихід команд на поле...</div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div class="ui-layer">
+        <div class="top-hud">
+            <a href="index.html" class="exit-btn">⏸ Вихід</a>
+            <div class="scoreboard">
+                <span class="team-tag team-you">🔵 ВИ</span>
+                <span class="score-digits" id="match-score">0 : 0</span>
+                <span class="team-tag team-opp">🔴 СУПЕРНИК</span>
+                <span class="match-timer" id="match-clock">00:00</span>
+            </div>
+            <div class="coins-pill" id="match-coins">💰 500</div>
+        </div>
+
+        <div id="goal-banner">G⚽AL!</div>
+
+        <div id="joystick-zone">
+            <div id="joystick-stick"></div>
+        </div>
+
+        <div id="power-bar-wrap"><div id="power-bar-fill"></div></div>
+
+        <div class="action-pad">
+            <button class="act-btn" id="btn-shoot">SHOOT</button>
+            <button class="act-btn" id="btn-switch">SWITCH</button>
+            <button class="act-btn" id="btn-pass">PASS</button>
+            <button class="act-btn" id="btn-sprint">SPRINT</button>
+        </div>
+    </div>
+
+    <div id="end-modal">
+        <div class="end-card">
+            <div class="end-title" id="end-title">🏆 ПЕРЕМОГА!</div>
+            <div class="end-score" id="end-score">2 : 1</div>
+            <div class="end-reward" id="end-reward">Нагорода за матч: +100 💰</div>
+            <div class="end-btns">
+                <button class="btn-again" id="btn-rematch">🔄 Ще матч</button>
+                <a href="index.html" class="btn-home">🏠 Меню</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "./libs/three.module.js"
+            }
+        }
+    </script>
+/* ==================== КІНЕЦЬ ЧАСТИНИ 2 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 3 з 12 ==================== */
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from './libs/GLTFLoader.js';
+        import { DRACOLoader } from './libs/DRACOLoader.js';
+        import { SkeletonUtils } from './libs/SkeletonUtils.js';
+        import { CATALOG } from './shop-catalog.js';
+
+        if (localStorage.getItem('player_coins') === null) {
+            localStorage.setItem('player_coins', '500');
+        }
+        let coins = Number(localStorage.getItem('player_coins') || 500);
+        document.getElementById('match-coins').textContent = `💰 ${coins}`;
+
+        const scoreEl = document.getElementById('match-score');
+        const clockEl = document.getElementById('match-clock');
+        const goalBannerEl = document.getElementById('goal-banner');
+
+        const matchState = {
+            youGoals: 0,
+            oppGoals: 0,
+            elapsedRealSec: 0,
+            totalRealSec: 120, // 2 хвилини реального часу = 90 ігрових хвилин
+            paused: false,
+            over: false,
+            goalPauseTimer: 0
+        };
+
+        function triggerGoalBanner() {
+            goalBannerEl.classList.add('show');
+            setTimeout(() => goalBannerEl.classList.remove('show'), 1800);
+        }
+
+        class MatchAudio {
+            constructor() {
+                this.ctx = null;
+                this.enabled = localStorage.getItem('stadium_sound') !== 'off';
+            }
+            init() {
+                if (!this.enabled) return;
+                if (!this.ctx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (AC) this.ctx = new AC();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+            }
+            playKick(power = 1) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(140 + power * 40, now);
+                osc.frequency.exponentialRampToValueAtTime(36, now + 0.13);
+                g.gain.setValueAtTime(0.85, now);
+                g.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                osc.connect(g); g.connect(this.ctx.destination);
+                osc.start(now); osc.stop(now + 0.15);
+            }
+            playWhistle(long = false) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const dur = long ? 0.65 : 0.28;
+                const osc = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(2850, now);
+                osc.frequency.setValueAtTime(2720, now + dur * 0.5);
+                g.gain.setValueAtTime(0.28, now);
+                g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                osc.connect(g); g.connect(this.ctx.destination);
+                osc.start(now); osc.stop(now + dur + 0.02);
+            }
+        }
+        const matchAudio = new MatchAudio();
+/* ==================== КІНЕЦЬ ЧАСТИНИ 3 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 4 з 12 ==================== */
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x071326);
+        scene.fog = new THREE.FogExp2(0x071326, 0.008);
+
+        // Розміри поля (граємо зліва направо, як на скріншоті)
+        const FIELD_LEN = 64; // по осі X: від -32 до +32
+        const FIELD_WID = 40; // по осі Z: від -20 до +20
+        const HALF_L = FIELD_LEN / 2;
+        const HALF_W = FIELD_WID / 2;
+        const GOAL_W = 7.2;
+        const GOAL_H = 2.4;
+        const GOAL_D = 1.8;
+
+        const camera = new THREE.PerspectiveCamera(44, window.innerWidth / window.innerHeight, 0.1, 200);
+        camera.position.set(0, 18.5, 25.5);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xdbeafe, 1.15));
+        const sunLight = new THREE.DirectionalLight(0xffffff, 2.2);
+        sunLight.position.set(14, 28, 16);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.set(2048, 2048);
+        sunLight.shadow.camera.left = -40;
+        sunLight.shadow.camera.right = 40;
+        sunLight.shadow.camera.top = 30;
+        sunLight.shadow.camera.bottom = -30;
+        scene.add(sunLight);
+
+        function createFieldTexture() {
+            const c = document.createElement('canvas');
+            c.width = 1024; c.height = 640;
+            const ctx = c.getContext('2d');
+
+            const stripes = 14;
+            const sw = 1024 / stripes;
+            for (let i = 0; i < stripes; i++) {
+                ctx.fillStyle = i % 2 === 0 ? '#16a34a' : '#15803d';
+                ctx.fillRect(i * sw, 0, sw, 640);
+            }
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 6;
+
+            // Зовнішній контур та центральна лінія
+            ctx.strokeRect(32, 32, 960, 576);
+            ctx.beginPath(); ctx.moveTo(512, 32); ctx.lineTo(512, 608); ctx.stroke();
+            ctx.beginPath(); ctx.arc(512, 320, 74, 0, Math.PI * 2); ctx.stroke();
+            ctx.beginPath(); ctx.arc(512, 320, 6, 0, Math.PI * 2); ctx.fill();
+
+            // Штрафні майданчики (лівий і правий)
+            ctx.strokeRect(32, 145, 145, 350);
+            ctx.strokeRect(32, 230, 55, 180);
+            ctx.beginPath(); ctx.arc(135, 320, 5, 0, Math.PI * 2); ctx.fill();
+
+            ctx.strokeRect(847, 145, 145, 350);
+            ctx.strokeRect(937, 230, 55, 180);
+            ctx.beginPath(); ctx.arc(889, 320, 5, 0, Math.PI * 2); ctx.fill();
+
+            const tex = new THREE.CanvasTexture(c);
+            tex.colorSpace = THREE.SRGBColorSpace;
+            tex.anisotropy = 8;
+            return tex;
+        }
+
+        const pitch = new THREE.Mesh(
+            new THREE.PlaneGeometry(FIELD_LEN + 4, FIELD_WID + 4),
+            new THREE.MeshStandardMaterial({ map: createFieldTexture(), roughness: 0.85 })
+        );
+        pitch.rotation.x = -Math.PI / 2;
+        pitch.receiveShadow = true;
+        scene.add(pitch);
+
+        const stadiumFloor = new THREE.Mesh(
+            new THREE.PlaneGeometry(110, 80),
+            new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 })
+        );
+        stadiumFloor.rotation.x = -Math.PI / 2;
+        stadiumFloor.position.y = -0.02;
+        scene.add(stadiumFloor);
+/* ==================== КІНЕЦЬ ЧАСТИНИ 4 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 5 з 12 ==================== */
+        // Обоє воріт (зліва -X та справа +X)
+        function createSideGoal(xPos, rotY) {
+            const g = new THREE.Group();
+            const postMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25 });
+            const postGeo = new THREE.CylinderGeometry(0.08, 0.08, GOAL_H, 12);
+            const barGeo = new THREE.CylinderGeometry(0.08, 0.08, GOAL_W + 0.16, 12);
+
+            const p1 = new THREE.Mesh(postGeo, postMat); p1.position.set(0, GOAL_H / 2, -GOAL_W / 2);
+            const p2 = new THREE.Mesh(postGeo, postMat); p2.position.set(0, GOAL_H / 2, GOAL_W / 2);
+            const bar = new THREE.Mesh(barGeo, postMat); bar.rotation.x = Math.PI / 2; bar.position.set(0, GOAL_H, 0);
+
+            const netMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc, wireframe: true, transparent: true, opacity: 0.35 });
+            const net = new THREE.Mesh(new THREE.BoxGeometry(GOAL_D, GOAL_H, GOAL_W, 5, 6, 16), netMat);
+            net.position.set(-GOAL_D / 2, GOAL_H / 2, 0);
+
+            g.add(p1, p2, bar, net);
+            g.position.set(xPos, 0, 0);
+            g.rotation.y = rotY;
+            return g;
+        }
+        scene.add(createSideGoal(-HALF_L, 0));
+        scene.add(createSideGoal(HALF_L, Math.PI));
+
+        // Рекламні борти та трибуни вздовж верхнього краю поля
+        function createAdTexture() {
+            const c = document.createElement('canvas');
+            c.width = 1024; c.height = 96;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 1024, 96);
+            ctx.fillStyle = '#38bdf8'; ctx.fillRect(0, 0, 1024, 8); ctx.fillRect(0, 88, 1024, 8);
+            ctx.fillStyle = '#facc15'; ctx.font = '900 42px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('⚽ PENALTY 3D LEAGUE   ★   PRO MATCH 5v5   ★   GOAL!', 512, 50);
+            const tex = new THREE.CanvasTexture(c);
+            tex.wrapS = THREE.RepeatWrapping; tex.repeat.set(4, 1); tex.colorSpace = THREE.SRGBColorSpace;
+            return tex;
+        }
+        const adTex = createAdTexture();
+        const adBoard = new THREE.Mesh(
+            new THREE.BoxGeometry(FIELD_LEN + 8, 1.15, 0.25),
+            new THREE.MeshBasicMaterial({ map: adTex })
+        );
+        adBoard.position.set(0, 0.58, -HALF_W - 2.4);
+        scene.add(adBoard);
+
+        // Швидкі 3D-трибуни з натовпом на задньому плані
+        const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
+        const fanColors = [0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0x0284c7];
+        const fanList = [];
+        for (let r = 0; r < 6; r++) {
+            const step = new THREE.Mesh(new THREE.BoxGeometry(FIELD_LEN + 14, 0.65, 1.0), tierMat);
+            step.position.set(0, 0.9 + r * 0.65, -HALF_W - 3.6 - r * 1.0);
+            scene.add(step);
+            for (let x = -HALF_L - 4; x <= HALF_L + 4; x += 0.95) {
+                if (Math.random() > 0.22) {
+                    fanList.push({ x, y: 1.25 + r * 0.65, z: -HALF_W - 3.55 - r * 1.0, ph: Math.random() * 6.28 });
+                }
+            }
+        }
+        const fansInst = new THREE.InstancedMesh(
+            new THREE.CapsuleGeometry(0.22, 0.36, 4, 8),
+            new THREE.MeshStandardMaterial({ roughness: 0.7 }),
+            fanList.length
+        );
+        const dummy = new THREE.Object3D();
+        const tmpCol = new THREE.Color();
+        fanList.forEach((f, i) => {
+            dummy.position.set(f.x, f.y + 0.32, f.z);
+            dummy.updateMatrix();
+            fansInst.setMatrixAt(i, dummy.matrix);
+            tmpCol.setHex(fanColors[i % fanColors.length]);
+            fansInst.setColorAt(i, tmpCol);
+        });
+        fansInst.instanceMatrix.needsUpdate = true;
+        if (fansInst.instanceColor) fansInst.instanceColor.needsUpdate = true;
+        scene.add(fansInst);
+
+        // М'яч
+        const ballId = localStorage.getItem('eq_balls') || 'ball1';
+        const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
+        const BALL_R = 0.22;
+        const ballMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(BALL_R, 20, 20),
+            new THREE.MeshStandardMaterial({ color: ballItem.c1 || '#ffffff', roughness: 0.35 })
+        );
+        ballMesh.castShadow = true;
+        scene.add(ballMesh);
+
+        const ballVel = new THREE.Vector3();
+        let ballOwner = null;
+        let lastTouchTeam = 'you';
+/* ==================== КІНЕЦЬ ЧАСТИНИ 5 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 6 з 12 ==================== */
+        // Кільце під активним гравцем (як зелене кільце на скріншоті)
+        const activeRing = new THREE.Mesh(
+            new THREE.RingGeometry(0.45, 0.62, 28),
+            new THREE.MeshBasicMaterial({ color: 0x4ade80, side: THREE.DoubleSide })
+        );
+        activeRing.rotation.x = -Math.PI / 2;
+        activeRing.position.y = 0.03;
+        scene.add(activeRing);
+
+        // Команди 5 на 5 (4 польові + 1 воротар)
+        const players = [];
+        let controlledPlayer = null;
+
+        function createJerseyTex(c1, c2) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 256;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = c1; ctx.fillRect(0, 0, 256, 256);
+            ctx.fillStyle = c2;
+            for (let x = 0; x < 256; x += 32) ctx.fillRect(x, 0, 16, 256);
+            const t = new THREE.CanvasTexture(c);
+            t.flipY = false; t.colorSpace = THREE.SRGBColorSpace;
+            return t;
+        }
+
+        function buildTeams(baseGltf) {
+            const jId = localStorage.getItem('eq_jerseys') || 'j1';
+            const sId = localStorage.getItem('eq_shorts') || 's1';
+            const youJersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
+            const youShort = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
+
+            const youShirtMat = new THREE.MeshStandardMaterial({ map: createJerseyTex(youJersey.c1, youJersey.c2), roughness: 0.7 });
+            const youShortMat = new THREE.MeshStandardMaterial({ color: youShort.c1, roughness: 0.75 });
+            const youGkMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.65 });
+
+            const oppShirtMat = new THREE.MeshStandardMaterial({ map: createJerseyTex('#f8fafc', '#dc2626'), roughness: 0.7 });
+            const oppShortMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.75 });
+            const oppGkMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.65 });
+
+            const formations = [
+                // Твоя команда (атакує зліва направо)
+                { team: 'you', role: 'gk', homeX: -HALF_L + 1.1, homeZ: 0 },
+                { team: 'you', role: 'def', homeX: -14, homeZ: -7 },
+                { team: 'you', role: 'def', homeX: -14, homeZ: 7 },
+                { team: 'you', role: 'fwd', homeX: -4, homeZ: -5 },
+                { team: 'you', role: 'fwd', homeX: -1.5, homeZ: 0 },
+                // Суперник (атакує справа наліво)
+                { team: 'opp', role: 'gk', homeX: HALF_L - 1.1, homeZ: 0 },
+                { team: 'opp', role: 'def', homeX: 14, homeZ: -7 },
+                { team: 'opp', role: 'def', homeX: 14, homeZ: 7 },
+                { team: 'opp', role: 'fwd', homeX: 5, homeZ: -5 },
+                { team: 'opp', role: 'fwd', homeX: 5, homeZ: 5 }
+            ];
+
+            formations.forEach((cfg) => {
+                const root = new THREE.Group();
+                root.position.set(cfg.homeX, 0, cfg.homeZ);
+                root.rotation.y = cfg.team === 'you' ? Math.PI / 2 : -Math.PI / 2;
+                scene.add(root);
+
+                let bones = {};
+                if (baseGltf) {
+                    const clone = SkeletonUtils.clone(baseGltf.scene);
+                    clone.traverse((ch) => {
+                        if (ch.isBone && ch.name) bones[ch.name.toLowerCase()] = ch;
+                        if (!ch.isMesh) return;
+                        ch.castShadow = true;
+                        const nm = (ch.name || '').toLowerCase();
+                        if (nm.includes('shirt') || nm.includes('top') || nm.includes('jersey') || nm.includes('torso')) {
+                            if (cfg.role === 'gk') ch.material = cfg.team === 'you' ? youGkMat : oppGkMat;
+                            else ch.material = cfg.team === 'you' ? youShirtMat : oppShirtMat;
+                        } else if (nm.includes('short') || nm.includes('pant')) {
+                            ch.material = cfg.team === 'you' ? youShortMat : oppShortMat;
+                        }
+                    });
+                    root.add(clone);
+                } else {
+                    // Запасна фігурка, якщо модель ще вантажиться
+                    const body = new THREE.Mesh(
+                        new THREE.CapsuleGeometry(0.32, 0.9, 6, 10),
+                        cfg.team === 'you' ? youShirtMat : oppShirtMat
+                    );
+                    body.position.y = 0.85;
+                    body.castShadow = true;
+                    root.add(body);
+                }
+
+                players.push({
+                    team: cfg.team,
+                    role: cfg.role,
+                    homeX: cfg.homeX,
+                    homeZ: cfg.homeZ,
+                    mesh: root,
+                    bones,
+                    runPhase: Math.random() * 6.28,
+                    cooldown: 0
+                });
+            });
+
+            controlledPlayer = players.find(p => p.team === 'you' && p.role === 'fwd' && p.homeZ === 0) || players[4];
+        }
+
+        function hideLoader() {
+            const el = document.getElementById('loader-screen');
+            if (el) { el.style.opacity = '0'; setTimeout(() => { el.style.display = 'none'; }, 350); }
+        }
+
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('./libs/');
+        const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+
+        loader.load('player.glb?v=match', (gltf) => {
+            buildTeams(gltf);
+            resetKickoff('you');
+            hideLoader();
+        }, undefined, () => {
+            buildTeams(null);
+            resetKickoff('you');
+            hideLoader();
+        });
+/* ==================== КІНЕЦЬ ЧАСТИНИ 6 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 7 з 12 ==================== */
+        // Керування: сенсорний джойстик + клавіатура (WASD / Стрілки)
+        const joyZone = document.getElementById('joystick-zone');
+        const joyStick = document.getElementById('joystick-stick');
+        const inputState = {
+            moveX: 0,
+            moveZ: 0,
+            sprint: false,
+            chargingShoot: false,
+            shootPower: 0
+        };
+
+        let joyTouchId = null;
+        const joyCenter = { x: 0, y: 0 };
+        const JOY_MAX_R = 44;
+
+        function updateJoystickFromClient(cx, cy) {
+            const dx = cx - joyCenter.x;
+            const dy = cy - joyCenter.y;
+            const dist = Math.hypot(dx, dy);
+            const clamped = Math.min(JOY_MAX_R, dist);
+            const angle = Math.atan2(dy, dx);
+
+            const sx = Math.cos(angle) * clamped;
+            const sy = Math.sin(angle) * clamped;
+            joyStick.style.transform = `translate(${sx}px, ${sy}px)`;
+
+            if (dist > 8) {
+                inputState.moveX = sx / JOY_MAX_R;
+                inputState.moveZ = sy / JOY_MAX_R;
+            } else {
+                inputState.moveX = 0;
+                inputState.moveZ = 0;
+            }
+        }
+
+        function resetJoystick() {
+            joyTouchId = null;
+            joyStick.style.transform = 'translate(0px, 0px)';
+            inputState.moveX = 0;
+            inputState.moveZ = 0;
+        }
+
+        joyZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            matchAudio.init();
+            const t = e.changedTouches;
+            joyTouchId = t.identifier;
+            const rect = joyZone.getBoundingClientRect();
+            joyCenter.x = rect.left + rect.width / 2;
+            joyCenter.y = rect.top + rect.height / 2;
+            updateJoystickFromClient(t.clientX, t.clientY);
+        }, { passive: false });
+
+        joyZone.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            for (const t of e.changedTouches) {
+                if (t.identifier === joyTouchId) {
+                    updateJoystickFromClient(t.clientX, t.clientY);
+                }
+            }
+        }, { passive: false });
+
+        joyZone.addEventListener('touchend', (e) => {
+            for (const t of e.changedTouches) {
+                if (t.identifier === joyTouchId) resetJoystick();
+            }
+        });
+
+        // Підтримка миші для джойстика на ПК
+        let joyMouseDown = false;
+        joyZone.addEventListener('mousedown', (e) => {
+            matchAudio.init();
+            joyMouseDown = true;
+            const rect = joyZone.getBoundingClientRect();
+            joyCenter.x = rect.left + rect.width / 2;
+            joyCenter.y = rect.top + rect.height / 2;
+            updateJoystickFromClient(e.clientX, e.clientY);
+        });
+        window.addEventListener('mousemove', (e) => {
+            if (joyMouseDown) updateJoystickFromClient(e.clientX, e.clientY);
+        });
+        window.addEventListener('mouseup', () => {
+            if (joyMouseDown) { joyMouseDown = false; resetJoystick(); }
+        });
+
+        // Клавіатура для ПК
+        const keysDown = {};
+        window.addEventListener('keydown', (e) => {
+            const k = e.key.toLowerCase();
+            keysDown[k] = true;
+            if (k === 'shift') inputState.sprint = true;
+            if (k === ' ' || k === 'd') handleShootDown();
+            if (k === 's') handlePassAction();
+            if (k === 'q' || k === 'e') switchControlledPlayer();
+        });
+        window.addEventListener('keyup', (e) => {
+            const k = e.key.toLowerCase();
+            keysDown[k] = false;
+            if (k === 'shift') inputState.sprint = false;
+            if (k === ' ' || k === 'd') handleShootUp();
+        });
+
+        function pollKeyboardAxes() {
+            if (joyTouchId !== null || joyMouseDown) return;
+            let kx = 0, kz = 0;
+            if (keysDown['arrowleft'] || keysDown['a']) kx -= 1;
+            if (keysDown['arrowright']) kx += 1;
+            if (keysDown['arrowup'] || keysDown['w']) kz -= 1;
+            if (keysDown['arrowdown']) kz += 1;
+            const len = Math.hypot(kx, kz);
+            inputState.moveX = len > 0 ? kx / len : 0;
+            inputState.moveZ = len > 0 ? kz / len : 0;
+        }
+/* ==================== КІНЕЦЬ ЧАСТИНИ 7 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 8 з 12 ==================== */
+        const btnShoot = document.getElementById('btn-shoot');
+        const btnPass = document.getElementById('btn-pass');
+        const btnSwitch = document.getElementById('btn-switch');
+        const btnSprint = document.getElementById('btn-sprint');
+        const powerWrap = document.getElementById('power-bar-wrap');
+        const powerFill = document.getElementById('power-bar-fill');
+
+        let isPressingOpponent = false;
+
+        function updateActionButtonsMode() {
+            const weHaveBall = ballOwner && ballOwner.team === 'you';
+            const freeBall = !ballOwner && lastTouchTeam === 'you';
+            const inAttack = weHaveBall || freeBall;
+
+            btnShoot.textContent = inAttack ? 'SHOOT' : 'PRESS';
+            btnPass.textContent = inAttack ? 'PASS' : 'TACKLE';
+        }
+
+        function switchControlledPlayer() {
+            const teammates = players.filter(p => p.team === 'you' && p.role !== 'gk');
+            if (!teammates.length) return;
+            teammates.sort((a, b) => a.mesh.position.distanceTo(ballMesh.position) - b.mesh.position.distanceTo(ballMesh.position));
+            if (teammates === controlledPlayer && teammates.length > 1) {
+                controlledPlayer = teammates;
+            } else {
+                controlledPlayer = teammates;
+            }
+        }
+
+        function kickBallTowards(targetPos, speed, liftY = 0.8) {
+            ballOwner = null;
+            const dir = targetPos.clone().sub(ballMesh.position);
+            dir.y = 0;
+            if (dir.lengthSq() < 0.001) dir.set(1, 0, 0);
+            dir.normalize();
+            ballVel.set(dir.x * speed, liftY, dir.z * speed);
+            matchAudio.playKick(speed / 24);
+        }
+
+        function handlePassAction() {
+            matchAudio.init();
+            if (matchState.over || matchState.goalPauseTimer > 0) return;
+
+            if (ballOwner && ballOwner === controlledPlayer) {
+                // Шукаємо найкращого партнера по команді
+                const mates = players.filter(p => p.team === 'you' && p !== controlledPlayer);
+                let bestMate = null;
+                let bestScore = -999;
+                mates.forEach((m) => {
+                    const dist = m.mesh.position.distanceTo(controlledPlayer.mesh.position);
+                    if (dist < 2.5 || dist > 38) return;
+                    const forwardBonus = (m.mesh.position.x - controlledPlayer.mesh.position.x) * 0.4;
+                    const score = forwardBonus - dist * 0.25;
+                    if (score > bestScore) { bestScore = score; bestMate = m; }
+                });
+
+                const targetPos = bestMate
+                    ? bestMate.mesh.position.clone()
+                    : controlledPlayer.mesh.position.clone().add(new THREE.Vector3(10, 0, 0));
+
+                controlledPlayer.cooldown = 0.28;
+                lastTouchTeam = 'you';
+                kickBallTowards(targetPos, 17.5, 0.35);
+            } else if (!ballOwner || ballOwner.team === 'opp') {
+                // Відбір м'яча (TACKLE) у захисті
+                if (!controlledPlayer) return;
+                const distToBall = controlledPlayer.mesh.position.distanceTo(ballMesh.position);
+                if (distToBall < 1.85) {
+                    ballOwner = controlledPlayer;
+                    lastTouchTeam = 'you';
+                    matchAudio.playKick(0.6);
+                }
+            }
+        }
+
+        function handleShootDown() {
+            matchAudio.init();
+            if (matchState.over || matchState.goalPauseTimer > 0) return;
+
+            if (ballOwner && ballOwner === controlledPlayer) {
+                inputState.chargingShoot = true;
+                inputState.shootPower = 0.25;
+                powerWrap.classList.add('active');
+            } else {
+                isPressingOpponent = true;
+            }
+        }
+
+        function handleShootUp() {
+            isPressingOpponent = false;
+            if (!inputState.chargingShoot) return;
+            inputState.chargingShoot = false;
+            powerWrap.classList.remove('active');
+
+            if (ballOwner && ballOwner === controlledPlayer) {
+                const aimZ = THREE.MathUtils.clamp(
+                    controlledPlayer.mesh.position.z * 0.55 + inputState.moveZ * 3.1,
+                    -GOAL_W * 0.44,
+                    GOAL_W * 0.44
+                );
+                const shotTarget = new THREE.Vector3(HALF_L + 0.5, 0, aimZ);
+                const speed = 19 + inputState.shootPower * 12;
+                const lift = 1.1 + inputState.shootPower * 3.2;
+
+                controlledPlayer.cooldown = 0.35;
+                lastTouchTeam = 'you';
+                kickBallTowards(shotTarget, speed, lift);
+            }
+            inputState.shootPower = 0;
+            powerFill.style.width = '0%';
+        }
+
+        const bindHoldBtn = (el, onDown, onUp) => {
+            el.addEventListener('pointerdown', (e) => { e.preventDefault(); el.classList.add('pressed'); onDown(); });
+            const end = () => { el.classList.remove('pressed'); if (onUp) onUp(); };
+            el.addEventListener('pointerup', end);
+            el.addEventListener('pointerleave', end);
+            el.addEventListener('pointercancel', end);
+        };
+
+        bindHoldBtn(btnShoot, handleShootDown, handleShootUp);
+        bindHoldBtn(btnPass, handlePassAction);
+        bindHoldBtn(btnSwitch, () => { matchAudio.init(); switchControlledPlayer(); });
+        bindHoldBtn(btnSprint, () => { inputState.sprint = true; }, () => { inputState.sprint = false; });
+/* ==================== КІНЕЦЬ ЧАСТИНИ 8 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 9 з 12 ==================== */
+        function resetKickoff(kickoffTeam = 'you') {
+            ballOwner = null;
+            ballVel.set(0, 0, 0);
+            ballMesh.position.set(0, BALL_R, 0);
+            lastTouchTeam = kickoffTeam;
+
+            players.forEach((p) => {
+                p.mesh.position.set(p.homeX, 0, p.homeZ);
+                p.mesh.rotation.y = p.team === 'you' ? Math.PI / 2 : -Math.PI / 2;
+                p.cooldown = 0.3;
+            });
+
+            const centerPlayer = players.find(p => p.team === kickoffTeam && p.role === 'fwd');
+            if (centerPlayer) {
+                centerPlayer.mesh.position.set(kickoffTeam === 'you' ? -0.4 : 0.4, 0, 0);
+                ballOwner = centerPlayer;
+                if (kickoffTeam === 'you') controlledPlayer = centerPlayer;
+            }
+        }
+
+        function registerMatchGoal(scoringTeam) {
+            if (matchState.goalPauseTimer > 0 || matchState.over) return;
+            matchState.goalPauseTimer = 2.2;
+            ballOwner = null;
+
+            if (scoringTeam === 'you') {
+                matchState.youGoals++;
+            } else {
+                matchState.oppGoals++;
+            }
+            scoreEl.textContent = `${matchState.youGoals} : ${matchState.oppGoals}`;
+
+            matchAudio.playWhistle(false);
+            triggerGoalBanner();
+
+            setTimeout(() => {
+                if (!matchState.over) {
+                    resetKickoff(scoringTeam === 'you' ? 'opp' : 'you');
+                }
+            }, 2100);
+        }
+
+        function finishFullMatch() {
+            matchState.over = true;
+            matchAudio.playWhistle(true);
+
+            const titleEl = document.getElementById('end-title');
+            const endScoreEl = document.getElementById('end-score');
+            const rewardEl = document.getElementById('end-reward');
+
+            endScoreEl.textContent = `${matchState.youGoals} : ${matchState.oppGoals}`;
+
+            let reward = 20;
+            if (matchState.youGoals > matchState.oppGoals) {
+                titleEl.textContent = '🏆 ПЕРЕМОГА В МАТЧІ!';
+                titleEl.style.color = '#4ade80';
+                reward = 100;
+            } else if (matchState.youGoals === matchState.oppGoals) {
+                titleEl.textContent = '🤝 БОЙОВА НІЧИЯ';
+                titleEl.style.color = '#38bdf8';
+                reward = 45;
+            } else {
+                titleEl.textContent = '😔 ПОРАЗКА';
+                titleEl.style.color = '#f87171';
+                reward = 15;
+            }
+
+            coins += reward;
+            localStorage.setItem('player_coins', String(coins));
+            document.getElementById('match-coins').textContent = `💰 ${coins}`;
+            rewardEl.textContent = `Нагорода за матч: +${reward} 💰`;
+
+            document.getElementById('end-modal').classList.add('active');
+        }
+
+        document.getElementById('btn-rematch').addEventListener('click', () => {
+            matchState.youGoals = 0;
+            matchState.oppGoals = 0;
+            matchState.elapsedRealSec = 0;
+            matchState.over = false;
+            matchState.goalPauseTimer = 0;
+            scoreEl.textContent = '0 : 0';
+            document.getElementById('end-modal').classList.remove('active');
+            resetKickoff('you');
+        });
+/* ==================== КІНЕЦЬ ЧАСТИНИ 9 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 10 з 12 ==================== */
+        function animatePlayerLegs(p, speed, dt) {
+            if (!p.bones) return;
+            const getB = (part) => {
+                const k = Object.keys(p.bones).find(name => name.includes(part));
+                return k ? p.bones[k] : null;
+            };
+            const rUp = getB('rightupleg');
+            const lUp = getB('leftupleg');
+            const rLeg = getB('rightleg');
+            const lLeg = getB('leftleg');
+
+            if (speed > 0.3) {
+                p.runPhase += dt * (6.5 + speed * 0.65);
+                const s = Math.sin(p.runPhase);
+                if (rUp) rUp.rotation.x = s * 0.65;
+                if (lUp) lUp.rotation.x = -s * 0.65;
+                if (rLeg) rLeg.rotation.x = -Math.max(0, -s) * 0.75;
+                if (lLeg) lLeg.rotation.x = -Math.max(0, s) * 0.75;
+            } else {
+                if (rUp) rUp.rotation.x = THREE.MathUtils.lerp(rUp.rotation.x, 0, dt * 8);
+                if (lUp) lUp.rotation.x = THREE.MathUtils.lerp(lUp.rotation.x, 0, dt * 8);
+                if (rLeg) rLeg.rotation.x = THREE.MathUtils.lerp(rLeg.rotation.x, 0, dt * 8);
+                if (lLeg) lLeg.rotation.x = THREE.MathUtils.lerp(lLeg.rotation.x, 0, dt * 8);
+            }
+        }
+
+        function movePlayerToward(p, tx, tz, maxSpeed, dt) {
+            const dx = tx - p.mesh.position.x;
+            const dz = tz - p.mesh.position.z;
+            const dist = Math.hypot(dx, dz);
+            if (dist < 0.08) {
+                animatePlayerLegs(p, 0, dt);
+                return;
+            }
+            const step = Math.min(dist, maxSpeed * dt);
+            const vx = (dx / dist) * step;
+            const vz = (dz / dist) * step;
+
+            p.mesh.position.x = THREE.MathUtils.clamp(p.mesh.position.x + vx, -HALF_L + 0.5, HALF_L - 0.5);
+            p.mesh.position.z = THREE.MathUtils.clamp(p.mesh.position.z + vz, -HALF_W + 0.5, HALF_W - 0.5);
+
+            const targetYaw = Math.atan2(dx, dz);
+            p.mesh.rotation.y = targetYaw;
+            animatePlayerLegs(p, maxSpeed, dt);
+        }
+
+        function updatePlayersAndAI(dt) {
+            if (!players.length) return;
+
+            // Автоперемикання на гравця, який щойно прийняв пас
+            if (ballOwner && ballOwner.team === 'you' && ballOwner.role !== 'gk') {
+                controlledPlayer = ballOwner;
+            }
+
+            const oppChaser = players
+                .filter(p => p.team === 'opp' && p.role !== 'gk')
+                .sort((a, b) => a.mesh.position.distanceTo(ballMesh.position) - b.mesh.position.distanceTo(ballMesh.position));
+
+            players.forEach((p) => {
+                if (p.cooldown > 0) p.cooldown = Math.max(0, p.cooldown - dt);
+
+                // 1. Логіка воротарів
+                if (p.role === 'gk') {
+                    const goalX = p.team === 'you' ? -HALF_L + 1.1 : HALF_L - 1.1;
+                    const desiredZ = THREE.MathUtils.clamp(ballMesh.position.z * 0.75, -GOAL_W * 0.42, GOAL_W * 0.42);
+                    movePlayerToward(p, goalX, desiredZ, 6.2, dt);
+                    p.mesh.rotation.y = p.team === 'you' ? Math.PI / 2 : -Math.PI / 2;
+
+                    // Воротар ловить або відбиває м'яч поблизу
+                    if (p.cooldown <= 0 && p.mesh.position.distanceTo(ballMesh.position) < 1.15 && ballMesh.position.y < 2.1) {
+                        ballOwner = p;
+                        lastTouchTeam = p.team;
+                        p.cooldown = 0.6;
+                        setTimeout(() => {
+                            if (ballOwner === p && !matchState.over) {
+                                const kickDir = p.team === 'you' ? 1 : -1;
+                                kickBallTowards(new THREE.Vector3(kickDir * 8, 0, (Math.random() - 0.5) * 14), 18, 2.6);
+                            }
+                        }, 650);
+                    }
+                    return;
+                }
+
+                // 2. Гравець під керуванням користувача
+                if (p === controlledPlayer && matchState.goalPauseTimer <= 0) {
+                    if (isPressingOpponent && (!ballOwner || ballOwner.team === 'opp')) {
+                        movePlayerToward(p, ballMesh.position.x, ballMesh.position.z, 8.8, dt);
+                    } else {
+                        const spd = inputState.sprint ? 9.4 : 6.8;
+                        const mx = inputState.moveX;
+                        const mz = inputState.moveZ;
+                        if (Math.hypot(mx, mz) > 0.05) {
+                            p.mesh.position.x = THREE.MathUtils.clamp(p.mesh.position.x + mx * spd * dt, -HALF_L + 0.5, HALF_L - 0.5);
+                            p.mesh.position.z = THREE.MathUtils.clamp(p.mesh.position.z + mz * spd * dt, -HALF_W + 0.5, HALF_W - 0.5);
+                            p.mesh.rotation.y = Math.atan2(mx, mz);
+                            animatePlayerLegs(p, spd, dt);
+                        } else {
+                            animatePlayerLegs(p, 0, dt);
+                        }
+                    }
+                }
+                // 3. Партнери по твоїй команді (відкриваються під пас)
+                else if (p.team === 'you') {
+                    const attackShift = (ballMesh.position.x + HALF_L) * 0.35;
+                    const tx = THREE.MathUtils.clamp(p.homeX + attackShift, -HALF_L + 3, HALF_L - 3);
+                    const tz = p.homeZ + Math.sin(performance.now() * 0.002 + p.runPhase) * 1.8;
+                    movePlayerToward(p, tx, tz, 5.6, dt);
+                }
+                // 4. Гравці суперника (ШІ)
+                else if (p.team === 'opp') {
+                    if (ballOwner === p && matchState.goalPauseTimer <= 0) {
+                        // Суперник веде м'яч до твоїх воріт (-HALF_L)
+                        movePlayerToward(p, -HALF_L + 4, p.homeZ * 0.4, 6.6, dt);
+                        // Якщо близько до воріт — б'є!
+                        if (p.mesh.position.x < -HALF_L + 13 && Math.random() < dt * 2.2) {
+                            p.cooldown = 0.4;
+                            lastTouchTeam = 'opp';
+                            const aimZ = (Math.random() - 0.5) * GOAL_W * 0.85;
+                            kickBallTowards(new THREE.Vector3(-HALF_L - 0.5, 0, aimZ), 21, 1.5);
+                        } else if (Math.random() < dt * 0.75) {
+                            // Іноді віддає пас партнеру
+                            const mate = players.find(m => m.team === 'opp' && m !== p && m.role !== 'gk');
+                            if (mate) {
+                                p.cooldown = 0.35;
+                                lastTouchTeam = 'opp';
+                                kickBallTowards(mate.mesh.position, 16, 0.3);
+                            }
+                        }
+                    } else if (p === oppChaser) {
+                        // Найближчий суперник біжить на м'яч
+                        movePlayerToward(p, ballMesh.position.x, ballMesh.position.z, 6.9, dt);
+                    } else {
+                        const shift = (ballMesh.position.x - HALF_L) * 0.32;
+                        const tx = THREE.MathUtils.clamp(p.homeX + shift, -HALF_L + 4, HALF_L - 3);
+                        movePlayerToward(p, tx, p.homeZ, 5.3, dt);
+                    }
+                }
+
+                // Підбір вільного м'яча або перехоплення
+                if (p.cooldown <= 0 && matchState.goalPauseTimer <= 0 && ballMesh.position.y < 1.35) {
+                    const dist = p.mesh.position.distanceTo(ballMesh.position);
+                    if (!ballOwner && dist < 0.92) {
+                        ballOwner = p;
+                        lastTouchTeam = p.team;
+                    } else if (ballOwner && ballOwner.team !== p.team && dist < 0.78 && Math.random() < dt * 4.5) {
+                        ballOwner.cooldown = 0.45;
+                        ballOwner = p;
+                        lastTouchTeam = p.team;
+                    }
+                }
+            });
+        }
+/* ==================== КІНЕЦЬ ЧАСТИНИ 10 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 11 з 12 ==================== */
+        function updateBallPhysics(dt) {
+            if (ballOwner) {
+                // М'яч котиться перед ногами гравця, який ним володіє
+                const forwardX = Math.sin(ballOwner.mesh.rotation.y);
+                const forwardZ = Math.cos(ballOwner.mesh.rotation.y);
+                const dribbleOffset = 0.55 + Math.abs(Math.sin(ballOwner.runPhase)) * 0.18;
+
+                ballMesh.position.set(
+                    ballOwner.mesh.position.x + forwardX * dribbleOffset,
+                    BALL_R,
+                    ballOwner.mesh.position.z + forwardZ * dribbleOffset
+                );
+                ballMesh.rotation.x += forwardZ * dt * 10;
+                ballMesh.rotation.z -= forwardX * dt * 10;
+                ballVel.set(0, 0, 0);
+            } else {
+                // Вільний політ або котіння м'яча
+                ballMesh.position.addScaledVector(ballVel, dt);
+                ballVel.y -= 9.8 * dt;
+
+                if (ballMesh.position.y <= BALL_R) {
+                    ballMesh.position.y = BALL_R;
+                    if (Math.abs(ballVel.y) > 1.2) {
+                        ballVel.y = -ballVel.y * 0.45;
+                    } else {
+                        ballVel.y = 0;
+                    }
+                    // Тертя об газон
+                    const friction = Math.pow(0.42, dt);
+                    ballVel.x *= friction;
+                    ballVel.z *= friction;
+                }
+
+                ballMesh.rotation.x += ballVel.z * dt * 3.5;
+                ballMesh.rotation.z -= ballVel.x * dt * 3.5;
+            }
+
+            // Перевірка голу в праві ворота (забиваєш ти!)
+            if (ballMesh.position.x > HALF_L && Math.abs(ballMesh.position.z) < GOAL_W * 0.48 && ballMesh.position.y < GOAL_H) {
+                registerMatchGoal('you');
+                return;
+            }
+
+            // Перевірка голу в ліві ворота (забиває суперник)
+            if (ballMesh.position.x < -HALF_L && Math.abs(ballMesh.position.z) < GOAL_W * 0.48 && ballMesh.position.y < GOAL_H) {
+                registerMatchGoal('opp');
+                return;
+            }
+
+            // Відскок від бокових меж та лицьової лінії (щоб м'яч не вилітав у безкінечність)
+            if (Math.abs(ballMesh.position.z) > HALF_W) {
+                ballMesh.position.z = Math.sign(ballMesh.position.z) * HALF_W;
+                ballVel.z *= -0.55;
+            }
+            if (Math.abs(ballMesh.position.x) > HALF_L && Math.abs(ballMesh.position.z) >= GOAL_W * 0.48) {
+                ballMesh.position.x = Math.sign(ballMesh.position.x) * HALF_L;
+                ballVel.x *= -0.45;
+            }
+        }
+/* ==================== КІНЕЦЬ ЧАСТИНИ 11 з 12 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 12 з 12 ==================== */
+        const camLook = new THREE.Vector3();
+
+        function updateBroadcastCamera(dt) {
+            // Камера плавно слідує за м'ячем збоку (як у телетрансляції)
+            const targetCamX = THREE.MathUtils.clamp(ballMesh.position.x * 0.68, -18, 18);
+            const targetCamZ = 24.5 + ballMesh.position.z * 0.28;
+            const desiredPos = new THREE.Vector3(targetCamX, 17.8, targetCamZ);
+
+            camera.position.lerp(desiredPos, Math.min(1, dt * 4.5));
+            const desiredLook = new THREE.Vector3(ballMesh.position.x * 0.85, 0.5, ballMesh.position.z * 0.55);
+            camLook.lerp(desiredLook, Math.min(1, dt * 6.0));
+            camera.lookAt(camLook);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        let lastTime = performance.now();
+        function animate(now) {
+            requestAnimationFrame(animate);
+            const dt = Math.min(0.05, (now - lastTime) * 0.001);
+            lastTime = now;
+
+            // Перевіряємо, чи телефон у горизонтальному положенні
+            const isPortrait = window.innerHeight > window.innerWidth;
+            if (isPortrait || matchState.over) {
+                renderer.render(scene, camera);
+                return;
+            }
+
+            if (matchState.goalPauseTimer > 0) {
+                matchState.goalPauseTimer = Math.max(0, matchState.goalPauseTimer - dt);
+            } else {
+                matchState.elapsedRealSec += dt;
+                const gameMinutes = Math.min(90, Math.floor((matchState.elapsedRealSec / matchState.totalRealSec) * 90));
+                const minsStr = String(gameMinutes).padStart(2, '0');
+                clockEl.textContent = `${minsStr}:00`;
+
+                if (matchState.elapsedRealSec >= matchState.totalRealSec) {
+                    finishFullMatch();
+                }
+            }
+
+            if (inputState.chargingShoot) {
+                inputState.shootPower = Math.min(1.0, inputState.shootPower + dt * 1.35);
+                powerFill.style.width = `${Math.round(inputState.shootPower * 100)}%`;
+            }
+
+            pollKeyboardAxes();
+            updateActionButtonsMode();
+            updatePlayersAndAI(dt);
+            updateBallPhysics(dt);
+            updateBroadcastCamera(dt);
+
+            if (controlledPlayer) {
+                activeRing.position.set(controlledPlayer.mesh.position.x, 0.03, controlledPlayer.mesh.position.z);
+                activeRing.scale.setScalar(1.0 + Math.sin(now * 0.008) * 0.08);
+            }
+
+            adTex.offset.x += dt * 0.06;
+            renderer.render(scene, camera);
+        }
+
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 12 з 12 ==================== */
