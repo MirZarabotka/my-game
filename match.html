@@ -544,7 +544,7 @@
 /* ==================== КІНЕЦЬ ЧАСТИНИ 5 з 12 ==================== */
 /* ==================== ПОЧАТОК ЧАСТИНИ 6 з 12 ==================== */
         const activeRing = new THREE.Mesh(
-            new THREE.RingGeometry(0.45, 0.62, 28),
+            new THREE.RingGeometry(0.45, 0.64, 28),
             new THREE.MeshBasicMaterial({ color: 0x4ade80, side: THREE.DoubleSide })
         );
         activeRing.rotation.x = -Math.PI / 2;
@@ -556,43 +556,97 @@
 
         function createJerseyTex(c1, c2) {
             const c = document.createElement('canvas');
-            c.width = 256; c.height = 256;
+            c.width = 128; c.height = 128;
             const ctx = c.getContext('2d');
-            ctx.fillStyle = c1; ctx.fillRect(0, 0, 256, 256);
+            ctx.fillStyle = c1; ctx.fillRect(0, 0, 128, 128);
             ctx.fillStyle = c2;
-            for (let x = 0; x < 256; x += 32) ctx.fillRect(x, 0, 16, 256);
+            for (let x = 0; x < 128; x += 24) ctx.fillRect(x, 0, 12, 128);
             const t = new THREE.CanvasTexture(c);
-            t.flipY = false; t.colorSpace = THREE.SRGBColorSpace;
+            t.colorSpace = THREE.SRGBColorSpace;
             return t;
         }
 
-        function hideLoader() {
-            const el = document.getElementById('loader-screen');
-            if (el && el.style.display !== 'none') {
-                el.style.opacity = '0';
-                setTimeout(() => { el.style.display = 'none'; }, 350);
-            }
-        }
-        setTimeout(hideLoader, 3500);
+        function createLightweightPlayer(shirtMat, shortMat, bootMat, skinMat, hairMat) {
+            const root = new THREE.Group();
 
-        const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('./libs/');
-        const loader = new GLTFLoader();
-        loader.setDRACOLoader(dracoLoader);
+            // Корпус (футболка)
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.56, 0.26), shirtMat);
+            torso.position.y = 1.06;
+            torso.castShadow = true;
+            root.add(torso);
+
+            // Шорти
+            const pelvis = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.24, 0.25), shortMat);
+            pelvis.position.y = 0.68;
+            root.add(pelvis);
+
+            // Голова та зачіска
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), skinMat);
+            head.position.y = 1.52;
+            head.castShadow = true;
+            const hair = new THREE.Mesh(new THREE.SphereGeometry(0.168, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat);
+            hair.position.y = 1.54;
+            root.add(head, hair);
+
+            // Окремі рухомі ноги (опорні точки в стегнах)
+            const legGeo = new THREE.BoxGeometry(0.15, 0.52, 0.16);
+            const bootGeo = new THREE.BoxGeometry(0.16, 0.11, 0.26);
+
+            const leftLegPivot = new THREE.Group();
+            leftLegPivot.position.set(-0.13, 0.60, 0);
+            const lShin = new THREE.Mesh(legGeo, skinMat); lShin.position.y = -0.26;
+            const lBoot = new THREE.Mesh(bootGeo, bootMat); lBoot.position.set(0, -0.52, 0.04);
+            leftLegPivot.add(lShin, lBoot);
+
+            const rightLegPivot = new THREE.Group();
+            rightLegPivot.position.set(0.13, 0.60, 0);
+            const rShin = new THREE.Mesh(legGeo, skinMat); rShin.position.y = -0.26;
+            const rBoot = new THREE.Mesh(bootGeo, bootMat); rBoot.position.set(0, -0.52, 0.04);
+            rightLegPivot.add(rShin, rBoot);
+
+            // Окремі рухомі руки (опущені вздовж тіла)
+            const armGeo = new THREE.BoxGeometry(0.12, 0.46, 0.13);
+            const leftArmPivot = new THREE.Group();
+            leftArmPivot.position.set(-0.31, 1.28, 0);
+            const lArm = new THREE.Mesh(armGeo, skinMat); lArm.position.y = -0.22;
+            leftArmPivot.add(lArm);
+
+            const rightArmPivot = new THREE.Group();
+            rightArmPivot.position.set(0.31, 1.28, 0);
+            const rArm = new THREE.Mesh(armGeo, skinMat); rArm.position.y = -0.22;
+            rightArmPivot.add(rArm);
+
+            root.add(leftLegPivot, rightLegPivot, leftArmPivot, rightArmPivot);
+
+            return {
+                mesh: root,
+                leftLeg: leftLegPivot,
+                rightLeg: rightLegPivot,
+                leftArm: leftArmPivot,
+                rightArm: rightArmPivot
+            };
+        }
 
         function buildTeams() {
             const jId = localStorage.getItem('eq_jerseys') || 'j1';
             const sId = localStorage.getItem('eq_shorts') || 's1';
+            const bId = localStorage.getItem('eq_boots') || 'b1';
             const youJersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
             const youShort = CATALOG.shorts.find(x => x.id === sId) || CATALOG.shorts.at(0);
+            const youBoot = CATALOG.boots.find(x => x.id === bId) || CATALOG.boots.at(0);
 
             const youShirtMat = new THREE.MeshStandardMaterial({ map: createJerseyTex(youJersey.c1, youJersey.c2), roughness: 0.7 });
             const youShortMat = new THREE.MeshStandardMaterial({ color: youShort.c1, roughness: 0.75 });
+            const youBootMat = new THREE.MeshStandardMaterial({ color: youBoot.c1, roughness: 0.4 });
             const youGkMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.65 });
 
             const oppShirtMat = new THREE.MeshStandardMaterial({ map: createJerseyTex('#f8fafc', '#dc2626'), roughness: 0.7 });
             const oppShortMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.75 });
+            const oppBootMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.4 });
             const oppGkMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.65 });
+
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.6 });
+            const hairMat = new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.85 });
 
             const formations = [
                 { team: 'you', role: 'gk', homeX: -HALF_L + 1.1, homeZ: 0 },
@@ -607,74 +661,40 @@
                 { team: 'opp', role: 'fwd', homeX: 5, homeZ: 5 }
             ];
 
-            let loadedCount = 0;
+            formations.forEach((cfg) => {
+                const sMat = cfg.role === 'gk'
+                    ? (cfg.team === 'you' ? youGkMat : oppGkMat)
+                    : (cfg.team === 'you' ? youShirtMat : oppShirtMat);
+                const shMat = cfg.team === 'you' ? youShortMat : oppShortMat;
+                const btMat = cfg.team === 'you' ? youBootMat : oppBootMat;
 
-            formations.forEach((cfg, idx) => {
-                const root = new THREE.Group();
-                root.position.set(cfg.homeX, 0, cfg.homeZ);
-                root.rotation.y = cfg.team === 'you' ? Math.PI / 2 : -Math.PI / 2;
-                scene.add(root);
+                const rig = createLightweightPlayer(sMat, shMat, btMat, skinMat, hairMat);
+                rig.mesh.position.set(cfg.homeX, 0, cfg.homeZ);
+                rig.mesh.rotation.y = cfg.team === 'you' ? Math.PI / 2 : -Math.PI / 2;
+                scene.add(rig.mesh);
 
-                const pObj = {
+                players.push({
                     team: cfg.team,
                     role: cfg.role,
                     homeX: cfg.homeX,
                     homeZ: cfg.homeZ,
-                    mesh: root,
-                    bones: {},
-                    mixer: null,
+                    mesh: rig.mesh,
+                    rig,
                     runPhase: Math.random() * 6.28,
                     cooldown: 0
-                };
-                players.push(pObj);
-
-                loader.load(`player.glb?v=m${idx}`, (gltf) => {
-                    const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
-                    if (model) {
-                        const firstAnim = gltf.animations && gltf.animations.at(0);
-                        if (firstAnim) {
-                            const m = new THREE.AnimationMixer(model);
-                            m.clipAction(firstAnim).play();
-                            m.update(0.01);
-                            pObj.mixer = m;
-                        }
-                        model.traverse((ch) => {
-                            if (ch.isBone && ch.name) pObj.bones[ch.name.toLowerCase()] = ch;
-                            if (!ch.isMesh) return;
-                            ch.castShadow = true;
-                            const nm = (ch.name || '').toLowerCase();
-                            if (nm.includes('shirt') || nm.includes('top') || nm.includes('jersey') || nm.includes('torso')) {
-                                if (cfg.role === 'gk') ch.material = cfg.team === 'you' ? youGkMat : oppGkMat;
-                                else ch.material = cfg.team === 'you' ? youShirtMat : oppShirtMat;
-                            } else if (nm.includes('short') || nm.includes('pant')) {
-                                ch.material = cfg.team === 'you' ? youShortMat : oppShortMat;
-                            }
-                        });
-                        root.add(model);
-                    }
-                    loadedCount++;
-                    if (loadedCount >= formations.length) hideLoader();
-                }, undefined, () => {
-                    const body = new THREE.Mesh(
-                        new THREE.CapsuleGeometry(0.32, 0.9, 6, 10),
-                        cfg.team === 'you' ? youShirtMat : oppShirtMat
-                    );
-                    body.position.y = 0.85;
-                    root.add(body);
-                    loadedCount++;
-                    if (loadedCount >= formations.length) hideLoader();
                 });
             });
 
-            controlledPlayer = players.find(p => p.team === 'you' && p.role === 'fwd' && p.homeZ === 0) || players.at(0);
+            controlledPlayer = players.find(p => p.team === 'you' && p.role === 'fwd' && p.homeZ === 0) || players[0];
             resetKickoff('you');
+
+            const el = document.getElementById('loader-screen');
+            if (el) el.style.display = 'none';
         }
 
         buildTeams();
 /* ==================== КІНЕЦЬ ЧАСТИНИ 6 з 12 ==================== */
-
 /* ==================== ПОЧАТОК ЧАСТИНИ 7 з 12 ==================== */
-        // Керування: сенсорний джойстик + клавіатура (WASD / Стрілки)
         const joyZone = document.getElementById('joystick-zone');
         const joyStick = document.getElementById('joystick-stick');
         const inputState = {
@@ -685,9 +705,9 @@
             shootPower: 0
         };
 
-        let joyTouchId = null;
+        let activePointerId = null;
         const joyCenter = { x: 0, y: 0 };
-        const JOY_MAX_R = 44;
+        const JOY_MAX_R = 46;
 
         function updateJoystickFromClient(cx, cy) {
             const dx = cx - joyCenter.x;
@@ -700,7 +720,7 @@
             const sy = Math.sin(angle) * clamped;
             joyStick.style.transform = `translate(${sx}px, ${sy}px)`;
 
-            if (dist > 8) {
+            if (dist > 6) {
                 inputState.moveX = sx / JOY_MAX_R;
                 inputState.moveZ = sy / JOY_MAX_R;
             } else {
@@ -710,54 +730,34 @@
         }
 
         function resetJoystick() {
-            joyTouchId = null;
+            activePointerId = null;
             joyStick.style.transform = 'translate(0px, 0px)';
             inputState.moveX = 0;
             inputState.moveZ = 0;
         }
 
-        joyZone.addEventListener('touchstart', (e) => {
+        joyZone.addEventListener('pointerdown', (e) => {
             e.preventDefault();
             matchAudio.init();
-            const t = e.changedTouches;
-            joyTouchId = t.identifier;
-            const rect = joyZone.getBoundingClientRect();
-            joyCenter.x = rect.left + rect.width / 2;
-            joyCenter.y = rect.top + rect.height / 2;
-            updateJoystickFromClient(t.clientX, t.clientY);
-        }, { passive: false });
-
-        joyZone.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            for (const t of e.changedTouches) {
-                if (t.identifier === joyTouchId) {
-                    updateJoystickFromClient(t.clientX, t.clientY);
-                }
-            }
-        }, { passive: false });
-
-        joyZone.addEventListener('touchend', (e) => {
-            for (const t of e.changedTouches) {
-                if (t.identifier === joyTouchId) resetJoystick();
-            }
-        });
-
-        // Підтримка миші для джойстика на ПК
-        let joyMouseDown = false;
-        joyZone.addEventListener('mousedown', (e) => {
-            matchAudio.init();
-            joyMouseDown = true;
+            activePointerId = e.pointerId;
+            joyZone.setPointerCapture(e.pointerId);
             const rect = joyZone.getBoundingClientRect();
             joyCenter.x = rect.left + rect.width / 2;
             joyCenter.y = rect.top + rect.height / 2;
             updateJoystickFromClient(e.clientX, e.clientY);
         });
-        window.addEventListener('mousemove', (e) => {
-            if (joyMouseDown) updateJoystickFromClient(e.clientX, e.clientY);
+
+        joyZone.addEventListener('pointermove', (e) => {
+            if (e.pointerId !== activePointerId) return;
+            e.preventDefault();
+            updateJoystickFromClient(e.clientX, e.clientY);
         });
-        window.addEventListener('mouseup', () => {
-            if (joyMouseDown) { joyMouseDown = false; resetJoystick(); }
-        });
+
+        const endJoyPointer = (e) => {
+            if (e.pointerId === activePointerId) resetJoystick();
+        };
+        joyZone.addEventListener('pointerup', endJoyPointer);
+        joyZone.addEventListener('pointercancel', endJoyPointer);
 
         // Клавіатура для ПК
         const keysDown = {};
@@ -765,7 +765,7 @@
             const k = e.key.toLowerCase();
             keysDown[k] = true;
             if (k === 'shift') inputState.sprint = true;
-            if (k === ' ' || k === 'd') handleShootDown();
+            if (k === ' ') handleShootDown();
             if (k === 's') handlePassAction();
             if (k === 'q' || k === 'e') switchControlledPlayer();
         });
@@ -773,14 +773,14 @@
             const k = e.key.toLowerCase();
             keysDown[k] = false;
             if (k === 'shift') inputState.sprint = false;
-            if (k === ' ' || k === 'd') handleShootUp();
+            if (k === ' ') handleShootUp();
         });
 
         function pollKeyboardAxes() {
-            if (joyTouchId !== null || joyMouseDown) return;
+            if (activePointerId !== null) return;
             let kx = 0, kz = 0;
             if (keysDown['arrowleft'] || keysDown['a']) kx -= 1;
-            if (keysDown['arrowright']) kx += 1;
+            if (keysDown['arrowright'] || keysDown['d']) kx += 1;
             if (keysDown['arrowup'] || keysDown['w']) kz -= 1;
             if (keysDown['arrowdown']) kz += 1;
             const len = Math.hypot(kx, kz);
@@ -811,10 +811,10 @@
             const teammates = players.filter(p => p.team === 'you' && p.role !== 'gk');
             if (!teammates.length) return;
             teammates.sort((a, b) => a.mesh.position.distanceTo(ballMesh.position) - b.mesh.position.distanceTo(ballMesh.position));
-            if (teammates === controlledPlayer && teammates.length > 1) {
-                controlledPlayer = teammates;
+            if (teammates[0] === controlledPlayer && teammates.length > 1) {
+                controlledPlayer = teammates[1];
             } else {
-                controlledPlayer = teammates;
+                controlledPlayer = teammates[0];
             }
         }
 
@@ -833,7 +833,6 @@
             if (matchState.over || matchState.goalPauseTimer > 0) return;
 
             if (ballOwner && ballOwner === controlledPlayer) {
-                // Шукаємо найкращого партнера по команді
                 const mates = players.filter(p => p.team === 'you' && p !== controlledPlayer);
                 let bestMate = null;
                 let bestScore = -999;
@@ -853,10 +852,9 @@
                 lastTouchTeam = 'you';
                 kickBallTowards(targetPos, 17.5, 0.35);
             } else if (!ballOwner || ballOwner.team === 'opp') {
-                // Відбір м'яча (TACKLE) у захисті
                 if (!controlledPlayer) return;
                 const distToBall = controlledPlayer.mesh.position.distanceTo(ballMesh.position);
-                if (distToBall < 1.85) {
+                if (distToBall < 2.1) {
                     ballOwner = controlledPlayer;
                     lastTouchTeam = 'you';
                     matchAudio.playKick(0.6);
@@ -1003,35 +1001,19 @@
 /* ==================== КІНЕЦЬ ЧАСТИНИ 9 з 12 ==================== */
 /* ==================== ПОЧАТОК ЧАСТИНИ 10 з 12 ==================== */
         function animatePlayerLegs(p, speed, dt) {
-            if (p.mixer) p.mixer.update(dt);
-            if (!p.bones) return;
-            const getB = (part) => {
-                const k = Object.keys(p.bones).find(name => name.includes(part));
-                return k ? p.bones[k] : null;
-            };
-            const rUp = getB('rightupleg');
-            const lUp = getB('leftupleg');
-            const rLeg = getB('rightleg');
-            const lLeg = getB('leftleg');
-            const rArm = getB('rightarm');
-            const lArm = getB('leftarm');
-
+            if (!p.rig) return;
             if (speed > 0.3) {
-                p.runPhase += dt * (6.5 + speed * 0.65);
+                p.runPhase += dt * (7.5 + speed * 0.7);
                 const s = Math.sin(p.runPhase);
-                if (rUp) rUp.rotation.x = s * 0.65;
-                if (lUp) lUp.rotation.x = -s * 0.65;
-                if (rLeg) rLeg.rotation.x = -Math.max(0, -s) * 0.75;
-                if (lLeg) lLeg.rotation.x = -Math.max(0, s) * 0.75;
-                if (rArm) { rArm.rotation.z = -1.15; rArm.rotation.x = -s * 0.45; }
-                if (lArm) { lArm.rotation.z = 1.15; lArm.rotation.x = s * 0.45; }
+                p.rig.leftLeg.rotation.x = s * 0.72;
+                p.rig.rightLeg.rotation.x = -s * 0.72;
+                p.rig.leftArm.rotation.x = -s * 0.55;
+                p.rig.rightArm.rotation.x = s * 0.55;
             } else {
-                if (rUp) rUp.rotation.x = THREE.MathUtils.lerp(rUp.rotation.x, 0, dt * 8);
-                if (lUp) lUp.rotation.x = THREE.MathUtils.lerp(lUp.rotation.x, 0, dt * 8);
-                if (rLeg) rLeg.rotation.x = THREE.MathUtils.lerp(rLeg.rotation.x, 0, dt * 8);
-                if (lLeg) lLeg.rotation.x = THREE.MathUtils.lerp(lLeg.rotation.x, 0, dt * 8);
-                if (rArm) { rArm.rotation.z = THREE.MathUtils.lerp(rArm.rotation.z, -1.25, dt * 8); rArm.rotation.x = THREE.MathUtils.lerp(rArm.rotation.x, 0, dt * 8); }
-                if (lArm) { lArm.rotation.z = THREE.MathUtils.lerp(lArm.rotation.z, 1.25, dt * 8); lArm.rotation.x = THREE.MathUtils.lerp(lArm.rotation.x, 0, dt * 8); }
+                p.rig.leftLeg.rotation.x = THREE.MathUtils.lerp(p.rig.leftLeg.rotation.x, 0, dt * 10);
+                p.rig.rightLeg.rotation.x = THREE.MathUtils.lerp(p.rig.rightLeg.rotation.x, 0, dt * 10);
+                p.rig.leftArm.rotation.x = THREE.MathUtils.lerp(p.rig.leftArm.rotation.x, 0, dt * 10);
+                p.rig.rightArm.rotation.x = THREE.MathUtils.lerp(p.rig.rightArm.rotation.x, 0, dt * 10);
             }
         }
 
@@ -1050,8 +1032,7 @@
             p.mesh.position.x = THREE.MathUtils.clamp(p.mesh.position.x + vx, -HALF_L + 0.5, HALF_L - 0.5);
             p.mesh.position.z = THREE.MathUtils.clamp(p.mesh.position.z + vz, -HALF_W + 0.5, HALF_W - 0.5);
 
-            const targetYaw = Math.atan2(dx, dz);
-            p.mesh.rotation.y = targetYaw;
+            p.mesh.rotation.y = Math.atan2(dx, dz);
             animatePlayerLegs(p, maxSpeed, dt);
         }
 
@@ -1064,7 +1045,7 @@
 
             const oppChaser = players
                 .filter(p => p.team === 'opp' && p.role !== 'gk')
-                .sort((a, b) => a.mesh.position.distanceTo(ballMesh.position) - b.mesh.position.distanceTo(ballMesh.position)).at(0);
+                .sort((a, b) => a.mesh.position.distanceTo(ballMesh.position) - b.mesh.position.distanceTo(ballMesh.position))[0];
 
             players.forEach((p) => {
                 if (p.cooldown > 0) p.cooldown = Math.max(0, p.cooldown - dt);
