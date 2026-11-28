@@ -1531,15 +1531,12 @@
 /* ==================== ПОЧАТОК ЧАСТИНИ 13А ==================== */
         let lastTime = performance.now();
         const worldAxisX = new THREE.Vector3(1, 0, 0);
-        const worldAxisY = new THREE.Vector3(0, 1, 0);
-        const worldAxisZ = new THREE.Vector3(0, 0, 1);
         const startBouncePos = new THREE.Vector3(0.34, 0.103, 0.24);
         const targetBouncePos = new THREE.Vector3();
         let lastStepIndex = -1;
 
         let playerAction = 'idle';
         let actionTimer = 0;
-        let waveBlend = 0;
 
         function rotateBoneWorldAxis(bone, worldAxis, angleRad) {
             if (!bone || !bone.parent) return;
@@ -1596,12 +1593,6 @@
             } else if (playerAction === 'juggling') {
                 actionTimer += dt;
                 if (actionTimer >= 6.0) {
-                    playerAction = 'waving';
-                    actionTimer = 0;
-                }
-            } else if (playerAction === 'waving') {
-                actionTimer += dt;
-                if (actionTimer >= 5.0) {
                     playerAction = 'idle';
                     actionTimer = 0;
                     idleTimer = 0;
@@ -1609,9 +1600,7 @@
             }
 
             const targetJug = playerAction === 'juggling' ? 1.0 : 0.0;
-            const targetWave = playerAction === 'waving' ? 1.0 : 0.0;
             jugBlend += (targetJug - jugBlend) * Math.min(1, dt * 3.2);
-            waveBlend += (targetWave - waveBlend) * Math.min(1, dt * 3.8);
 
             const getBone = (part, exclude = '') => {
                 const key = Object.keys(skeletonBones).find(k => k.includes(part) && (!exclude || !k.includes(exclude)));
@@ -1629,9 +1618,7 @@
             const lToe = getBone('lefttoebase') || getBone('lefttoe');
 
             const spine = getBone('spine');
-            const head = getBone('head');
             const rArm = getBone('rightarm');
-            const rForeArm = getBone('rightforearm');
             const lArm = getBone('leftarm');
 
             if (jugBlend > 0.005) {
@@ -1696,30 +1683,8 @@
                 ballMesh.position.lerp(new THREE.Vector3(0.34, 0.103, 0.24), Math.min(1, dt * 5));
                 ballMesh.rotation.y += 0.01;
             }
-
-            if (waveBlend > 0.005) {
-                const outwardSwing = (1 - Math.cos(actionTimer * 7.5)) * 0.5;
-                if (rArm) {
-                    rotateBoneWorldAxis(rArm, worldAxisZ, -(1.92 - outwardSwing * 0.18) * waveBlend);
-                    rotateBoneWorldAxis(rArm, worldAxisX, -0.18 * waveBlend);
-                }
-                if (rForeArm) {
-                    rotateBoneWorldAxis(rForeArm, worldAxisZ, -(0.10 + outwardSwing * 0.52) * waveBlend);
-                    rotateBoneWorldAxis(rForeArm, worldAxisY, -1.55 * waveBlend);
-                }
-                if (spine) {
-                    rotateBoneWorldAxis(spine, worldAxisZ, 0.06 * waveBlend);
-                }
-                if (head) {
-                    rotateBoneWorldAxis(head, worldAxisX, -0.07 * waveBlend);
-                }
-            }
 /* ==================== КІНЕЦЬ ЧАСТИНИ 13А ==================== */
 /* ==================== ПОЧАТОК ЧАСТИНИ 13Б ==================== */
-            if (rightGloveHolder.children.length > 0) {
-                rightGloveHolder.children[0].rotation.y = 0.65 * waveBlend;
-            }
-
             if (glovesLoaded) {
                 if (leftHandBone) leftHandBone.scale.setScalar(0.0001);
                 if (rightHandBone) rightHandBone.scale.setScalar(0.0001);
@@ -1804,4 +1769,3 @@
     </script>
 </body>
 </html>
-/* ==================== КІНЕЦЬ ЧАСТИНИ 13Б ==================== */
