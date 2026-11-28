@@ -271,16 +271,19 @@
             youGoals: 0, oppGoals: 0,
             elapsedRealSec: 0, totalRealSec: 120,
             started: false, over: false,
+            waitingKickoff: false,
             stoppageTimer: 0, stoppageType: 'none',
             restartTeam: 'you', restartPos: new THREE.Vector3()
         };
 
         let eventHideTimeout = null;
-        function showMatchEvent(text, isFoul = false) {
+        function showMatchEvent(text, isFoul = false, sticky = false) {
             eventBannerEl.textContent = text;
             eventBannerEl.className = 'show' + (isFoul ? ' foul' : '');
             if (eventHideTimeout) clearTimeout(eventHideTimeout);
-            eventHideTimeout = setTimeout(() => eventBannerEl.classList.remove('show'), 2200);
+            if (!sticky) {
+                eventHideTimeout = setTimeout(() => eventBannerEl.classList.remove('show'), 2200);
+            }
         }
         function triggerGoalBanner() {
             goalBannerEl.classList.add('show');
@@ -406,7 +409,7 @@
         stadiumFloor.rotation.x = -Math.PI / 2; stadiumFloor.position.y = -0.02;
         scene.add(stadiumFloor);
 /* ==================== КІНЕЦЬ ЧАСТИНИ 7 з 16 ==================== */
-/* ==================== ПОЧАТОК ЧАСТИНИ 8 з 16 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 8А ==================== */
         function createSideGoal(xPos, rotY) {
             const g = new THREE.Group();
             const postMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25 });
@@ -446,27 +449,192 @@
         adBoard.position.set(0, 0.58, -HALF_W - 3.2);
         scene.add(adBoard);
 
+        const eqJId = localStorage.getItem('eq_jerseys') || 'j1';
+        const eqJ = CATALOG.jerseys.find(x => x.id === eqJId) || CATALOG.jerseys.at(0);
+        const clubCol1 = new THREE.Color(eqJ.c1 || '#2563eb');
+        const clubCol2 = new THREE.Color(eqJ.c2 || '#facc15');
+
         const tierMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
-        const fanColors = [0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc, 0x0284c7];
+        const fanColors = [clubCol1.getHex(), clubCol2.getHex(), 0xdc2626, 0x2563eb, 0xeab308, 0x16a34a, 0xf8fafc];
+        const skinColors = [0xffdbac, 0xf1c27d, 0xe0ac69, 0xc68642];
         const fanList = [];
+
         for (let r = 0; r < 6; r++) {
             const step = new THREE.Mesh(new THREE.BoxGeometry(FIELD_LEN + 16, 0.65, 1.0), tierMat);
             step.position.set(0, 0.9 + r * 0.65, -HALF_W - 4.4 - r * 1.0);
             scene.add(step);
-            for (let x = -HALF_L - 6; x <= HALF_L + 6; x += 1.05) {
-                if (Math.random() > 0.25) fanList.push({ x, y: 1.25 + r * 0.65, z: -HALF_W - 4.35 - r * 1.0 });
+            for (let x = -HALF_L - 6; x <= HALF_L + 6; x += 1.0) {
+                if (Math.random() > 0.22) {
+                    fanList.push({
+                        x: x + (Math.random() - 0.5) * 0.15,
+                        y: 1.25 + r * 0.65,
+                        z: -HALF_W - 4.35 - r * 1.0,
+                        ph: Math.random() * 6.28,
+                        hasScarf: Math.random() > 0.82
+                    });
+                }
             }
         }
-        const fansInst = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.22, 0.36, 4, 8), new THREE.MeshStandardMaterial({ roughness: 0.7 }), fanList.length);
+
+        const fCnt = fanList.length;
         const dummy = new THREE.Object3D(), tmpCol = new THREE.Color();
+        const torsosInst = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.22, 0.34, 4, 8), new THREE.MeshStandardMaterial({ roughness: 0.72 }), fCnt);
+        const headsInst = new THREE.InstancedMesh(new THREE.SphereGeometry(0.14, 8, 8), new THREE.MeshStandardMaterial({ roughness: 0.55 }), fCnt);
+        const armsInst = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.05, 0.34, 4, 6), new THREE.MeshStandardMaterial({ roughness: 0.55 }), fCnt * 2);
+
         fanList.forEach((f, i) => {
-            dummy.position.set(f.x, f.y + 0.32, f.z); dummy.updateMatrix();
-            fansInst.setMatrixAt(i, dummy.matrix);
-            tmpCol.setHex(fanColors[i % fanColors.length]); fansInst.setColorAt(i, tmpCol);
+            tmpCol.setHex(fanColors[i % fanColors.length]);
+            torsosInst.setColorAt(i, tmpCol);
+            tmpCol.setHex(skinColors[i % skinColors.length]);
+            headsInst.setColorAt(i, tmpCol);
+            armsInst.setColorAt(i * 2, tmpCol);
+            armsInst.setColorAt(i * 2 + 1, tmpCol);
         });
-        fansInst.instanceMatrix.needsUpdate = true;
-        if (fansInst.instanceColor) fansInst.instanceColor.needsUpdate = true;
-        scene.add(fansInst);
+        [torsosInst, headsInst, armsInst].forEach(m => { if (m.instanceColor) m.instanceColor.needsUpdate = true; scene.add(m); });
+/* ==================== КІНЕЦЬ ЧАСТИНИ 8А ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 8Б ==================== */
+        const scarfCanvas = document.createElement('canvas'); scarfCanvas.width = 128; scarfCanvas.height = 32;
+        const sCtx = scarfCanvas.getContext('2d');
+        for (let i = 0; i < 8; i++) { sCtx.fillStyle = i % 2 === 0 ? eqJ.c1 : eqJ.c2; sCtx.fillRect(i * 16, 0, 16, 32); }
+        const scarfTex = new THREE.CanvasTexture(scarfCanvas); scarfTex.colorSpace = THREE.SRGBColorSpace;
+        const scarfFans = fanList.filter(f => f.hasScarf);
+        const scarfsInst = new THREE.InstancedMesh(new THREE.BoxGeometry(0.76, 0.13, 0.04), new THREE.MeshStandardMaterial({ map: scarfTex }), Math.max(1, scarfFans.length));
+        scene.add(scarfsInst);
+
+        const flagCanvas = document.createElement('canvas'); flagCanvas.width = 128; flagCanvas.height = 80;
+        const fCtx = flagCanvas.getContext('2d');
+        fCtx.fillStyle = eqJ.c1; fCtx.fillRect(0, 0, 128, 40); fCtx.fillStyle = eqJ.c2; fCtx.fillRect(0, 40, 128, 40);
+        const flagTex = new THREE.CanvasTexture(flagCanvas); flagTex.colorSpace = THREE.SRGBColorSpace;
+        const flagMat = new THREE.MeshStandardMaterial({ map: flagTex, side: THREE.DoubleSide });
+        const poleMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0 });
+        const stadiumFlags = [];
+        for (let i = 0; i < 12; i++) {
+            const fan = fanList[Math.floor(((i + 0.5) / 12) * fCnt)];
+            if (!fan) continue;
+            const piv = new THREE.Group();
+            piv.position.set(fan.x + 0.25, fan.y + 0.55, fan.z + 0.1);
+            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.4, 6), poleMat); pole.position.y = 0.65;
+            const cloth = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.65, 6, 3), flagMat); cloth.position.set(0.52, 1.05, 0);
+            piv.add(pole, cloth); scene.add(piv);
+            stadiumFlags.push({ piv, cloth, ph: Math.random() * 6.28 });
+        }
+
+        const cameraFlashes = [];
+        for (let i = 0; i < 28; i++) {
+            const m = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.45), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+            scene.add(m);
+            cameraFlashes.push({ mesh: m, timer: Math.random() * 4.0, life: 0 });
+        }
+        const flares = [], smokeParticles = [], smokeGeo = new THREE.SphereGeometry(0.32, 6, 6);
+        for (let i = 0; i < 10; i++) {
+            const fan = fanList[Math.floor(((i + 0.5) / 10) * fCnt)];
+            const flMesh = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffedd5 }));
+            flMesh.position.set(fan ? fan.x : 0, fan ? fan.y + 1.05 : 2.5, fan ? fan.z + 0.25 : -HALF_W - 5);
+            flMesh.visible = false; scene.add(flMesh);
+            flares.push({ mesh: flMesh, activeTimer: 0, accum: 0, col: i % 2 === 0 ? clubCol1.getHex() : 0xff5722 });
+        }
+
+        let crowdCheerTimer = 0;
+        function triggerCrowdGoalCelebration() {
+            crowdCheerTimer = 3.5;
+            flares.forEach(fl => { fl.activeTimer = 3.6; fl.mesh.visible = true; });
+            cameraFlashes.forEach(cf => {
+                const f = fanList[Math.floor(Math.random() * fCnt)];
+                if (f) cf.mesh.position.set(f.x, f.y + 0.85, f.z + 0.35);
+                cf.life = 0.25;
+            });
+        }
+
+        function updateLiveStadiumCrowd(dt, nowSec) {
+            if (crowdCheerTimer > 0) crowdCheerTimer = Math.max(0, crowdCheerTimer - dt);
+            const boost = crowdCheerTimer > 0 ? 1.0 : 0.0;
+
+            for (let i = 0; i < fCnt; i++) {
+                const f = fanList[i];
+                const wave = Math.sin(nowSec * (3.4 + boost * 5.5) + f.ph);
+                const jumpY = boost > 0 ? Math.abs(wave) * 0.25 : Math.max(0, wave) * 0.05;
+
+                dummy.scale.set(1.15, 1.0, 0.68);
+                dummy.position.set(f.x, f.y + 0.34 + jumpY, f.z);
+                dummy.rotation.set(0, 0, 0);
+                dummy.updateMatrix();
+                torsosInst.setMatrixAt(i, dummy.matrix);
+
+                dummy.scale.set(0.95, 1.08, 0.98);
+                dummy.position.set(f.x, f.y + 0.76 + jumpY, f.z);
+                dummy.updateMatrix();
+                headsInst.setMatrixAt(i, dummy.matrix);
+
+                const raise = f.hasScarf || boost > 0 || (i % 4 === 0 && wave > 0.45);
+                const ang = f.hasScarf ? 2.85 : (raise ? 2.65 + Math.sin(nowSec * 10 + f.ph) * 0.22 : 0.18);
+                const armY = f.y + (raise ? 0.68 : 0.36) + jumpY;
+
+                dummy.scale.set(1, 1, 1);
+                dummy.position.set(f.x - 0.27, armY, f.z); dummy.rotation.set(0, 0, ang); dummy.updateMatrix();
+                armsInst.setMatrixAt(i * 2, dummy.matrix);
+                dummy.position.set(f.x + 0.27, armY, f.z); dummy.rotation.set(0, 0, -ang); dummy.updateMatrix();
+                armsInst.setMatrixAt(i * 2 + 1, dummy.matrix);
+            }
+            torsosInst.instanceMatrix.needsUpdate = true;
+            headsInst.instanceMatrix.needsUpdate = true;
+            armsInst.instanceMatrix.needsUpdate = true;
+
+            for (let i = 0; i < scarfFans.length; i++) {
+                const f = scarfFans[i];
+                const wave = Math.sin(nowSec * (3.4 + boost * 5.5) + f.ph);
+                const jumpY = boost > 0 ? Math.abs(wave) * 0.25 : Math.max(0, wave) * 0.05;
+                dummy.position.set(f.x, f.y + 1.05 + jumpY, f.z + 0.05);
+                dummy.rotation.set(0, 0, Math.sin(nowSec * 4.5 + f.ph) * 0.08);
+                dummy.scale.set(1, 1, 1); dummy.updateMatrix();
+                scarfsInst.setMatrixAt(i, dummy.matrix);
+            }
+            scarfsInst.instanceMatrix.needsUpdate = true;
+
+            stadiumFlags.forEach(fl => {
+                fl.piv.rotation.z = Math.sin(nowSec * (3.5 + boost * 4.5) + fl.ph) * 0.22;
+                fl.cloth.rotation.y = Math.sin(nowSec * 6.0 + fl.ph) * 0.25;
+            });
+
+            cameraFlashes.forEach(cf => {
+                if (cf.life > 0) {
+                    cf.life -= dt;
+                    cf.mesh.material.opacity = Math.max(0, cf.life / 0.22);
+                    cf.mesh.scale.setScalar(0.8 + (0.22 - cf.life) * 3.2);
+                } else {
+                    cf.mesh.material.opacity = 0;
+                    cf.timer -= dt * (1 + boost * 3.5);
+                    if (cf.timer <= 0) {
+                        cf.timer = 1.5 + Math.random() * 4.5;
+                        const f = fanList[Math.floor(Math.random() * fCnt)];
+                        if (f) cf.mesh.position.set(f.x, f.y + 0.85, f.z + 0.35);
+                        cf.life = 0.18;
+                    }
+                }
+            });
+
+            flares.forEach(fl => {
+                if (fl.activeTimer > 0) {
+                    fl.activeTimer -= dt;
+                    fl.accum += dt;
+                    if (fl.accum >= 0.09) {
+                        fl.accum = 0;
+                        const sm = new THREE.Mesh(smokeGeo, new THREE.MeshBasicMaterial({ color: fl.col, transparent: true, opacity: 0.6, depthWrite: false }));
+                        sm.position.copy(fl.mesh.position);
+                        scene.add(sm);
+                        smokeParticles.push({ mesh: sm, vx: (Math.random() - 0.5) * 0.7, vy: 1.4 + Math.random() * 0.8, life: 1.7 });
+                    }
+                    if (fl.activeTimer <= 0) fl.mesh.visible = false;
+                }
+            });
+
+            for (let i = smokeParticles.length - 1; i >= 0; i--) {
+                const sp = smokeParticles[i]; sp.life -= dt;
+                sp.mesh.position.x += sp.vx * dt; sp.mesh.position.y += sp.vy * dt;
+                sp.mesh.scale.addScalar(dt * 1.6);
+                sp.mesh.material.opacity = Math.max(0, (sp.life / 1.7) * 0.55);
+                if (sp.life <= 0) { scene.remove(sp.mesh); sp.mesh.material.dispose(); smokeParticles.splice(i, 1); }
+            }
+        }
 
         const ballId = localStorage.getItem('eq_balls') || 'ball1';
         const ballItem = CATALOG.balls.find(x => x.id === ballId) || CATALOG.balls.at(0);
@@ -477,7 +645,7 @@
 
         const ballVel = new THREE.Vector3();
         let ballOwner = null, lastTouchTeam = 'you', lastTouchPlayer = null, goalScoredInNet = false;
-/* ==================== КІНЕЦЬ ЧАСТИНИ 8 з 16 ==================== */
+/* ==================== КІНЕЦЬ ЧАСТИНИ 8Б ==================== */
 /* ==================== ПОЧАТОК ЧАСТИНИ 9 з 16 ==================== */
         const activeRing = new THREE.Mesh(
             new THREE.RingGeometry(0.45, 0.64, 28),
@@ -815,6 +983,10 @@
 
         function kickBallTowards(targetPos, speed, liftY = 0.8) {
             ballOwner = null;
+            if (matchState.waitingKickoff) {
+                matchState.waitingKickoff = false;
+                eventBannerEl.classList.remove('show');
+            }
             const dir = targetPos.clone().sub(ballMesh.position);
             dir.y = 0;
             if (dir.lengthSq() < 0.001) dir.set(1, 0, 0);
@@ -909,6 +1081,7 @@
             ballOwner = null; goalScoredInNet = false;
             ballVel.set(0, 0, 0); ballMesh.position.set(0, BALL_R, 0);
             lastTouchTeam = kickoffTeam;
+            matchState.waitingKickoff = true;
 
             players.forEach((p) => {
                 if (p.sentOff) return;
@@ -923,7 +1096,19 @@
             if (centerPlayer) {
                 centerPlayer.mesh.position.set(kickoffTeam === 'you' ? -0.4 : 0.4, 0, 0);
                 ballOwner = centerPlayer; lastTouchPlayer = centerPlayer;
-                if (kickoffTeam === 'you') controlledPlayer = centerPlayer;
+                if (kickoffTeam === 'you') {
+                    controlledPlayer = centerPlayer;
+                    showMatchEvent('⚽ ВІДДАЙ ПАС З ЦЕНТРУ, ЩОБ РОЗПОЧАТИ', false, true);
+                } else {
+                    showMatchEvent(`⚽ РОЗІГРАШ З ЦЕНТРУ (${selectedOpp.name})`, false, true);
+                    setTimeout(() => {
+                        if (matchState.waitingKickoff && ballOwner === centerPlayer && !matchState.over) {
+                            const mate = players.find(m => m.team === 'opp' && !m.sentOff && m !== centerPlayer && m.role !== 'gk');
+                            centerPlayer.cooldown = 0.35;
+                            kickBallTowards(mate ? mate.mesh.position : new THREE.Vector3(12, 0, 0), 15.5, 0.25);
+                        }
+                    }, 1250);
+                }
             }
         }
 
@@ -1010,6 +1195,7 @@
             if (scoringTeam === 'you') matchState.youGoals++; else matchState.oppGoals++;
             scoreEl.textContent = `${matchState.youGoals} : ${matchState.oppGoals}`;
             matchAudio.playWhistle(false); triggerGoalBanner();
+            triggerCrowdGoalCelebration();
             setTimeout(() => { if (!matchState.over) resetKickoff(scoringTeam === 'you' ? 'opp' : 'you'); }, 2100);
         }
 
@@ -1028,13 +1214,13 @@
         }
 
         document.getElementById('btn-rematch').addEventListener('click', () => {
-            matchState.started = false; matchState.over = false; matchState.stoppageTimer = 0;
+            matchState.started = false; matchState.over = false; matchState.stoppageTimer = 0; matchState.waitingKickoff = false;
             clockEl.textContent = '00:00';
             document.getElementById('end-modal').classList.remove('active');
             setupModalEl.classList.add('active');
         });
 /* ==================== КІНЕЦЬ ЧАСТИНИ 14 з 16 ==================== */
-/* ==================== ПОЧАТОК ЧАСТИНИ 15 з 16 ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 15А ==================== */
         function animatePlayerLegs(p, speed, dt) {
             if (!p.rig) return;
             if (p.slideTimer > 0) {
@@ -1042,10 +1228,9 @@
                 p.rig.rightLeg.rotation.x = -0.55; p.rig.leftLeg.rotation.x = 0.65;
                 p.rig.leftArm.rotation.x = 0.8; p.rig.rightArm.rotation.x = -0.6;
                 return;
-            } else {
-                p.mesh.position.y = THREE.MathUtils.lerp(p.mesh.position.y, 0, dt * 12);
-                p.mesh.rotation.x = THREE.MathUtils.lerp(p.mesh.rotation.x, 0, dt * 12);
             }
+            p.mesh.position.y = THREE.MathUtils.lerp(p.mesh.position.y, 0, dt * 12);
+            p.mesh.rotation.x = THREE.MathUtils.lerp(p.mesh.rotation.x, 0, dt * 12);
             if (speed > 0.3) {
                 p.runPhase += dt * (7.5 + speed * 0.7);
                 const s = Math.sin(p.runPhase);
@@ -1082,9 +1267,11 @@
             const targetZ = THREE.MathUtils.clamp(ballMesh.position.z - 6.5, -HALF_W + 2, HALF_W - 2);
             movePlayerToward(refereeObj, targetX, targetZ, 5.8, dt);
         }
-
+/* ==================== КІНЕЦЬ ЧАСТИНИ 15А ==================== */
+/* ==================== ПОЧАТОК ЧАСТИНИ 15Б ==================== */
         function updatePlayersAndAI(dt) {
             if (!players.length) return;
+            if (matchState.waitingKickoff) { players.forEach(p => animatePlayerLegs(p, 0, dt)); return; }
             if (ballOwner && ballOwner.team === 'you' && ballOwner.role !== 'gk' && !ballOwner.sentOff) controlledPlayer = ballOwner;
 
             const oppChasers = players
@@ -1110,7 +1297,7 @@
                         if (distToVictim < 1.15) {
                             const dotBehind = p.slideDirX * Math.sin(ballOwner.mesh.rotation.y) + p.slideDirZ * Math.cos(ballOwner.mesh.rotation.y);
                             if (dotBehind > 0.45 && distToVictim < distToBall) { p.slideTimer = 0; registerFoul(p, ballOwner); return; }
-                            else { ballOwner.stunTimer = 0.7; ballOwner.cooldown = 0.8; ballOwner = p; lastTouchTeam = p.team; lastTouchPlayer = p; p.slideTimer = 0; matchAudio.playKick(0.8); return; }
+                            ballOwner.stunTimer = 0.7; ballOwner.cooldown = 0.8; ballOwner = p; lastTouchTeam = p.team; lastTouchPlayer = p; p.slideTimer = 0; matchAudio.playKick(0.8); return;
                         }
                     } else if (!ballOwner && p.mesh.position.distanceTo(ballMesh.position) < 1.25 && ballMesh.position.y < 1.1) {
                         ballOwner = p; lastTouchTeam = p.team; lastTouchPlayer = p; p.slideTimer = 0;
@@ -1174,12 +1361,11 @@
                 }
             });
         }
-/* ==================== КІНЕЦЬ ЧАСТИНИ 15 з 16 ==================== */
+/* ==================== КІНЕЦЬ ЧАСТИНИ 15Б ==================== */
 /* ==================== ПОЧАТОК ЧАСТИНИ 16 з 16 ==================== */
         function updateBallPhysics(dt) {
             if (ballOwner) {
-                const forwardX = Math.sin(ballOwner.mesh.rotation.y);
-                const forwardZ = Math.cos(ballOwner.mesh.rotation.y);
+                const forwardX = Math.sin(ballOwner.mesh.rotation.y), forwardZ = Math.cos(ballOwner.mesh.rotation.y);
                 const dribbleOffset = 0.55 + Math.abs(Math.sin(ballOwner.runPhase)) * 0.18;
                 ballMesh.position.set(ballOwner.mesh.position.x + forwardX * dribbleOffset, BALL_R, ballOwner.mesh.position.z + forwardZ * dribbleOffset);
                 ballMesh.rotation.x += forwardZ * dt * 10; ballMesh.rotation.z -= forwardX * dt * 10;
@@ -1189,7 +1375,6 @@
 
             ballMesh.position.addScaledVector(ballVel, dt);
             ballVel.y -= 9.8 * dt;
-
             if (ballMesh.position.y <= BALL_R) {
                 ballMesh.position.y = BALL_R;
                 ballVel.y = Math.abs(ballVel.y) > 1.2 ? -ballVel.y * 0.45 : 0;
@@ -1198,9 +1383,7 @@
             }
             ballMesh.rotation.x += ballVel.z * dt * 3.5; ballMesh.rotation.z -= ballVel.x * dt * 3.5;
 
-            const inGoalMouthZ = Math.abs(ballMesh.position.z) < GOAL_W * 0.48;
-            const underCrossbar = ballMesh.position.y < GOAL_H;
-
+            const inGoalMouthZ = Math.abs(ballMesh.position.z) < GOAL_W * 0.48, underCrossbar = ballMesh.position.y < GOAL_H;
             if (ballMesh.position.x > HALF_L && inGoalMouthZ && underCrossbar) {
                 if (!goalScoredInNet) registerMatchGoal('you');
                 if (ballMesh.position.x > HALF_L + GOAL_D - BALL_R) { ballMesh.position.x = HALF_L + GOAL_D - BALL_R; ballVel.x *= -0.22; ballVel.z *= 0.4; }
@@ -1211,7 +1394,6 @@
                 if (ballMesh.position.x < -HALF_L - GOAL_D + BALL_R) { ballMesh.position.x = -HALF_L - GOAL_D + BALL_R; ballVel.x *= -0.22; ballVel.z *= 0.4; }
                 return;
             }
-
             if (matchState.stoppageTimer > 0) return;
 
             if (Math.abs(ballMesh.position.z) > HALF_W + 0.35) {
@@ -1220,25 +1402,21 @@
             }
             if (ballMesh.position.x > HALF_L + 0.35 && !inGoalMouthZ) {
                 const cornerZ = Math.sign(ballMesh.position.z) * (HALF_W - 0.3);
-                if (lastTouchTeam === 'opp') triggerSetPiece('corner', 'you', new THREE.Vector3(HALF_L - 0.3, BALL_R, cornerZ));
-                else triggerSetPiece('goalkick', 'opp', new THREE.Vector3(HALF_L - 3.5, BALL_R, 0));
+                triggerSetPiece(lastTouchTeam === 'opp' ? 'corner' : 'goalkick', lastTouchTeam === 'opp' ? 'you' : 'opp', new THREE.Vector3(lastTouchTeam === 'opp' ? HALF_L - 0.3 : HALF_L - 3.5, BALL_R, lastTouchTeam === 'opp' ? cornerZ : 0));
                 return;
             }
             if (ballMesh.position.x < -HALF_L - 0.35 && !inGoalMouthZ) {
                 const cornerZ = Math.sign(ballMesh.position.z) * (HALF_W - 0.3);
-                if (lastTouchTeam === 'you') triggerSetPiece('corner', 'opp', new THREE.Vector3(-HALF_L + 0.3, BALL_R, cornerZ));
-                else triggerSetPiece('goalkick', 'you', new THREE.Vector3(-HALF_L + 3.5, BALL_R, 0));
+                triggerSetPiece(lastTouchTeam === 'you' ? 'corner' : 'goalkick', lastTouchTeam === 'you' ? 'opp' : 'you', new THREE.Vector3(lastTouchTeam === 'you' ? -HALF_L + 0.3 : -HALF_L + 3.5, BALL_R, lastTouchTeam === 'you' ? cornerZ : 0));
             }
         }
 
         const camLook = new THREE.Vector3();
         function updateBroadcastCamera(dt) {
-            const desiredPos = new THREE.Vector3(THREE.MathUtils.clamp(ballMesh.position.x * 0.72, -26, 26), 19.5, 29.5 + ballMesh.position.z * 0.32);
-            camera.position.lerp(desiredPos, Math.min(1, dt * 4.5));
+            camera.position.lerp(new THREE.Vector3(THREE.MathUtils.clamp(ballMesh.position.x * 0.72, -26, 26), 19.5, 29.5 + ballMesh.position.z * 0.32), Math.min(1, dt * 4.5));
             camLook.lerp(new THREE.Vector3(ballMesh.position.x * 0.88, 0.5, ballMesh.position.z * 0.58), Math.min(1, dt * 6.0));
             camera.lookAt(camLook);
         }
-
         window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
 
         let lastTime = performance.now();
@@ -1246,21 +1424,19 @@
             requestAnimationFrame(animate);
             const dt = Math.min(0.05, (now - lastTime) * 0.001);
             lastTime = now;
-
             if (window.innerHeight > window.innerWidth || !matchState.started || matchState.over) { renderer.render(scene, camera); return; }
 
             if (matchState.stoppageTimer > 0) matchState.stoppageTimer = Math.max(0, matchState.stoppageTimer - dt);
-            else {
+            else if (!matchState.waitingKickoff) {
                 matchState.elapsedRealSec += dt;
                 clockEl.textContent = `${String(Math.min(90, Math.floor((matchState.elapsedRealSec / matchState.totalRealSec) * 90))).padStart(2, '0')}:00`;
                 if (matchState.elapsedRealSec >= matchState.totalRealSec) finishFullMatch();
             }
 
             if (inputState.chargingShoot) { inputState.shootPower = Math.min(1.0, inputState.shootPower + dt * 1.35); powerFill.style.width = `${Math.round(inputState.shootPower * 100)}%`; }
-
             pollKeyboardAxes(); updateActionButtonsMode(); updateRefereeAI(dt); updatePlayersAndAI(dt); updateBallPhysics(dt); updateBroadcastCamera(dt);
-
             if (controlledPlayer) { activeRing.position.set(controlledPlayer.mesh.position.x, 0.03, controlledPlayer.mesh.position.z); activeRing.scale.setScalar(1.0 + Math.sin(now * 0.008) * 0.08); }
+            updateLiveStadiumCrowd(dt, now * 0.001);
             adTex.offset.x += dt * 0.06;
             renderer.render(scene, camera);
         }
