@@ -75,7 +75,6 @@
         }
 /* ==================== КІНЕЦЬ ЧАСТИНИ 1 з 12 ==================== */
 /* ==================== ПОЧАТОК ЧАСТИНИ 2 з 12 ==================== */
-        /* ВЕЛИКИЙ НАПИС G⚽AL! (як на скріншоті) */
         #goal-banner {
             position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%) scale(0.4);
             font-size: clamp(3rem, 9vw, 5.5rem);
@@ -89,7 +88,6 @@
         }
         #goal-banner.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
-        /* ВІРТУАЛЬНИЙ ДЖОЙСТИК ЗЛІВА ВНИЗУ */
         #joystick-zone {
             position: absolute; left: 22px; bottom: 22px;
             width: 132px; height: 132px;
@@ -109,21 +107,20 @@
             pointer-events: none;
         }
 
-        /* КРУГЛІ КНОПКИ ДІЙ СПРАВА ВНИЗУ (як на скріншоті) */
         .action-pad {
             position: absolute; right: 22px; bottom: 20px;
-            width: 215px; height: 185px;
+            width: 222px; height: 190px;
             pointer-events: auto;
         }
         .act-btn {
             position: absolute;
             border-radius: 50%;
-            background: rgba(15, 23, 42, 0.72);
+            background: rgba(15, 23, 42, 0.76);
             backdrop-filter: blur(6px);
-            border: 3px solid rgba(226, 232, 240, 0.75);
+            border: 3px solid rgba(226, 232, 240, 0.78);
             color: #ffffff;
             font-weight: 900;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             box-shadow: 0 8px 20px rgba(0,0,0,0.55);
@@ -135,34 +132,29 @@
             background: rgba(56, 189, 248, 0.45);
             border-color: #fde047;
         }
-        /* Велика кнопка SPRINT (правий низ) */
         #btn-sprint {
             right: 0; bottom: 0;
             width: 84px; height: 84px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             border-color: #38bdf8;
         }
-        /* Кнопка PASS / TACKLE (лівий низ блоку) */
         #btn-pass {
-            right: 98px; bottom: 6px;
-            width: 72px; height: 72px;
-            font-size: 0.8rem;
-        }
-        /* Кнопка SHOOT / PRESS (лівий верх блоку) */
-        #btn-shoot {
-            right: 92px; bottom: 92px;
+            right: 100px; bottom: 6px;
             width: 74px; height: 74px;
-            font-size: 0.82rem;
+            font-size: 0.76rem;
+        }
+        #btn-shoot {
+            right: 94px; bottom: 94px;
+            width: 76px; height: 76px;
+            font-size: 0.74rem;
             border-color: #facc15;
         }
-        /* Кнопка SWITCH / LOB (правий верх блоку) */
         #btn-switch {
-            right: 6px; bottom: 98px;
-            width: 72px; height: 72px;
-            font-size: 0.78rem;
+            right: 6px; bottom: 100px;
+            width: 74px; height: 74px;
+            font-size: 0.76rem;
         }
 
-        /* ШКАЛА СИЛИ УДАРУ НАД КНОПКАМИ */
         #power-bar-wrap {
             position: absolute; right: 24px; bottom: 215px;
             width: 165px; height: 10px;
@@ -177,20 +169,38 @@
             background: linear-gradient(90deg, #22c55e, #facc15, #ef4444);
         }
 
-        /* ФІНАЛЬНЕ ВІКНО МАТЧУ */
-        #end-modal {
+        /* МОДАЛЬНІ ВІКНА (ВИБІР ЧАСУ МАТЧУ ТА ФІНАЛ) */
+        .modal-overlay {
             position: fixed; inset: 0;
             background: rgba(7, 19, 38, 0.88); backdrop-filter: blur(12px);
             display: none; flex-direction: column; justify-content: center; align-items: center;
             z-index: 60; pointer-events: auto; text-align: center; padding: 20px;
         }
-        #end-modal.active { display: flex; }
+        .modal-overlay.active { display: flex; }
         .end-card {
             background: linear-gradient(160deg, #0f172a, #1e293b);
             border: 2px solid #38bdf8; border-radius: 24px;
-            padding: 26px 34px; max-width: 380px; width: 100%;
+            padding: 24px 30px; max-width: 420px; width: 100%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.75);
         }
-        .end-title { font-size: 1.7rem; font-weight: 900; margin-bottom: 6px; }
+        .end-title { font-size: 1.55rem; font-weight: 900; margin-bottom: 8px; color: #fde047; }
+        .setup-sub { font-size: 0.9rem; color: #cbd5e1; margin-bottom: 18px; }
+        .time-options {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px;
+        }
+        .time-btn {
+            background: rgba(30, 41, 59, 0.95);
+            border: 2px solid rgba(56, 189, 248, 0.5);
+            color: #ffffff; padding: 13px 10px; border-radius: 16px;
+            font-weight: 900; font-size: 0.95rem; cursor: pointer;
+            transition: transform 0.12s, background 0.15s, border-color 0.15s;
+        }
+        .time-btn:hover, .time-btn:active {
+            background: #16a34a; border-color: #86efac; transform: scale(1.03);
+        }
+        .time-btn span { display: block; font-size: 0.72rem; font-weight: 600; color: #94a3b8; margin-top: 2px; }
+        .time-btn:hover span { color: #dcfce7; }
+
         .end-score { font-size: 2.4rem; font-weight: 900; color: #fde047; margin: 8px 0; }
         .end-reward { font-size: 1rem; font-weight: 800; color: #4ade80; margin-bottom: 20px; }
         .end-btns { display: flex; gap: 12px; justify-content: center; }
@@ -242,7 +252,7 @@
             <div class="coins-pill" id="match-coins">💰 500</div>
         </div>
 
-        <div id="goal-banner">G⚽AL!</div>
+        <div id="goal-banner">Г⚽Л!</div>
 
         <div id="joystick-zone">
             <div id="joystick-stick"></div>
@@ -251,14 +261,28 @@
         <div id="power-bar-wrap"><div id="power-bar-fill"></div></div>
 
         <div class="action-pad">
-            <button class="act-btn" id="btn-shoot">SHOOT</button>
-            <button class="act-btn" id="btn-switch">SWITCH</button>
-            <button class="act-btn" id="btn-pass">PASS</button>
-            <button class="act-btn" id="btn-sprint">SPRINT</button>
+            <button class="act-btn" id="btn-shoot">УДАР</button>
+            <button class="act-btn" id="btn-switch">ЗМІНА</button>
+            <button class="act-btn" id="btn-pass">ПАС</button>
+            <button class="act-btn" id="btn-sprint">РИВОК</button>
         </div>
     </div>
 
-    <div id="end-modal">
+    <!-- ВІКНО ВИБОРУ ТРИВАЛОСТІ МАТЧУ -->
+    <div id="setup-modal" class="modal-overlay active">
+        <div class="end-card">
+            <div class="end-title">⏱️ ТРИВАЛІСТЬ МАТЧУ</div>
+            <div class="setup-sub">Обери, скільки реального часу триватиме гра:</div>
+            <div class="time-options">
+                <button class="time-btn" data-sec="60">⚡ 1 ХВИЛИНА<span>Швидкий бліц</span></button>
+                <button class="time-btn" data-sec="120">⚽ 2 ХВИЛИНИ<span>Стандартний матч</span></button>
+                <button class="time-btn" data-sec="180">🔥 3 ХВИЛИНИ<span>Напружена гра</span></button>
+                <button class="time-btn" data-sec="300">🏆 5 ХВИЛИН<span>Повний фінал</span></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="end-modal" class="modal-overlay">
         <div class="end-card">
             <div class="end-title" id="end-title">🏆 ПЕРЕМОГА!</div>
             <div class="end-score" id="end-score">2 : 1</div>
@@ -294,16 +318,29 @@
         const scoreEl = document.getElementById('match-score');
         const clockEl = document.getElementById('match-clock');
         const goalBannerEl = document.getElementById('goal-banner');
+        const setupModalEl = document.getElementById('setup-modal');
 
         const matchState = {
             youGoals: 0,
             oppGoals: 0,
             elapsedRealSec: 0,
             totalRealSec: 120,
-            paused: false,
+            started: false,
             over: false,
             goalPauseTimer: 0
         };
+
+        setupModalEl.querySelectorAll('.time-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                matchAudio.init();
+                matchState.totalRealSec = Number(btn.dataset.sec) || 120;
+                matchState.elapsedRealSec = 0;
+                matchState.started = true;
+                matchState.over = false;
+                setupModalEl.classList.remove('active');
+                matchAudio.playWhistle(false);
+            });
+        });
 
         function triggerGoalBanner() {
             goalBannerEl.classList.add('show');
@@ -803,8 +840,8 @@
             const freeBall = !ballOwner && lastTouchTeam === 'you';
             const inAttack = weHaveBall || freeBall;
 
-            btnShoot.textContent = inAttack ? 'SHOOT' : 'PRESS';
-            btnPass.textContent = inAttack ? 'PASS' : 'TACKLE';
+            btnShoot.textContent = inAttack ? 'УДАР' : 'ПРЕСИНГ';
+            btnPass.textContent = inAttack ? 'ПАС' : 'ВІДБІР';
         }
 
         function switchControlledPlayer() {
@@ -830,7 +867,7 @@
 
         function handlePassAction() {
             matchAudio.init();
-            if (matchState.over || matchState.goalPauseTimer > 0) return;
+            if (!matchState.started || matchState.over || matchState.goalPauseTimer > 0) return;
 
             if (ballOwner && ballOwner === controlledPlayer) {
                 const mates = players.filter(p => p.team === 'you' && p !== controlledPlayer);
@@ -864,7 +901,7 @@
 
         function handleShootDown() {
             matchAudio.init();
-            if (matchState.over || matchState.goalPauseTimer > 0) return;
+            if (!matchState.started || matchState.over || matchState.goalPauseTimer > 0) return;
 
             if (ballOwner && ballOwner === controlledPlayer) {
                 inputState.chargingShoot = true;
@@ -992,10 +1029,13 @@
             matchState.youGoals = 0;
             matchState.oppGoals = 0;
             matchState.elapsedRealSec = 0;
+            matchState.started = false;
             matchState.over = false;
             matchState.goalPauseTimer = 0;
             scoreEl.textContent = '0 : 0';
+            clockEl.textContent = '00:00';
             document.getElementById('end-modal').classList.remove('active');
+            setupModalEl.classList.add('active');
             resetKickoff('you');
         });
 /* ==================== КІНЕЦЬ ЧАСТИНИ 9 з 12 ==================== */
@@ -1195,7 +1235,6 @@
         const camLook = new THREE.Vector3();
 
         function updateBroadcastCamera(dt) {
-            // Камера плавно слідує за м'ячем збоку (як у телетрансляції)
             const targetCamX = THREE.MathUtils.clamp(ballMesh.position.x * 0.68, -18, 18);
             const targetCamZ = 24.5 + ballMesh.position.z * 0.28;
             const desiredPos = new THREE.Vector3(targetCamX, 17.8, targetCamZ);
@@ -1218,9 +1257,8 @@
             const dt = Math.min(0.05, (now - lastTime) * 0.001);
             lastTime = now;
 
-            // Перевіряємо, чи телефон у горизонтальному положенні
             const isPortrait = window.innerHeight > window.innerWidth;
-            if (isPortrait || matchState.over) {
+            if (isPortrait || !matchState.started || matchState.over) {
                 renderer.render(scene, camera);
                 return;
             }
@@ -1262,4 +1300,4 @@
     </script>
 </body>
 </html>
-<!-- ==================== КІНЕЦЬ ЧАСТИНИ 12 з 12 ==================== */
+<!-- ==================== КІНЕЦЬ ЧАСТИНИ 12 з 12 ==================== -->
