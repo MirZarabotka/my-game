@@ -283,7 +283,6 @@
         import * as THREE from 'three';
         import { GLTFLoader } from './libs/GLTFLoader.js';
         import { DRACOLoader } from './libs/DRACOLoader.js';
-        import { SkeletonUtils } from './libs/SkeletonUtils.js';
         import { CATALOG } from './shop-catalog.js';
 
         if (localStorage.getItem('player_coins') === null) {
@@ -300,7 +299,7 @@
             youGoals: 0,
             oppGoals: 0,
             elapsedRealSec: 0,
-            totalRealSec: 120, // 2 хвилини реального часу = 90 ігрових хвилин
+            totalRealSec: 120,
             paused: false,
             over: false,
             goalPauseTimer: 0
@@ -544,7 +543,6 @@
         let lastTouchTeam = 'you';
 /* ==================== КІНЕЦЬ ЧАСТИНИ 5 з 12 ==================== */
 /* ==================== ПОЧАТОК ЧАСТИНИ 6 з 12 ==================== */
-        // Кільце під активним гравцем (як зелене кільце на скріншоті)
         const activeRing = new THREE.Mesh(
             new THREE.RingGeometry(0.45, 0.62, 28),
             new THREE.MeshBasicMaterial({ color: 0x4ade80, side: THREE.DoubleSide })
@@ -553,7 +551,6 @@
         activeRing.position.y = 0.03;
         scene.add(activeRing);
 
-        // Команди 5 на 5 (4 польові + 1 воротар)
         const players = [];
         let controlledPlayer = null;
 
@@ -569,7 +566,21 @@
             return t;
         }
 
-        function buildTeams(baseGltf) {
+        function hideLoader() {
+            const el = document.getElementById('loader-screen');
+            if (el && el.style.display !== 'none') {
+                el.style.opacity = '0';
+                setTimeout(() => { el.style.display = 'none'; }, 350);
+            }
+        }
+        setTimeout(hideLoader, 3500);
+
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('./libs/');
+        const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+
+        function buildTeams() {
             const jId = localStorage.getItem('eq_jerseys') || 'j1';
             const sId = localStorage.getItem('eq_shorts') || 's1';
             const youJersey = CATALOG.jerseys.find(x => x.id === jId) || CATALOG.jerseys.at(0);
@@ -584,13 +595,11 @@
             const oppGkMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.65 });
 
             const formations = [
-                // Твоя команда (атакує зліва направо)
                 { team: 'you', role: 'gk', homeX: -HALF_L + 1.1, homeZ: 0 },
                 { team: 'you', role: 'def', homeX: -14, homeZ: -7 },
                 { team: 'you', role: 'def', homeX: -14, homeZ: 7 },
                 { team: 'you', role: 'fwd', homeX: -4, homeZ: -5 },
                 { team: 'you', role: 'fwd', homeX: -1.5, homeZ: 0 },
-                // Суперник (атакує справа наліво)
                 { team: 'opp', role: 'gk', homeX: HALF_L - 1.1, homeZ: 0 },
                 { team: 'opp', role: 'def', homeX: 14, homeZ: -7 },
                 { team: 'opp', role: 'def', homeX: 14, homeZ: 7 },
@@ -598,73 +607,62 @@
                 { team: 'opp', role: 'fwd', homeX: 5, homeZ: 5 }
             ];
 
-            formations.forEach((cfg) => {
+            let loadedCount = 0;
+
+            formations.forEach((cfg, idx) => {
                 const root = new THREE.Group();
                 root.position.set(cfg.homeX, 0, cfg.homeZ);
                 root.rotation.y = cfg.team === 'you' ? Math.PI / 2 : -Math.PI / 2;
                 scene.add(root);
 
-                let bones = {};
-                if (baseGltf) {
-                    const clone = SkeletonUtils.clone(baseGltf.scene);
-                    clone.traverse((ch) => {
-                        if (ch.isBone && ch.name) bones[ch.name.toLowerCase()] = ch;
-                        if (!ch.isMesh) return;
-                        ch.castShadow = true;
-                        const nm = (ch.name || '').toLowerCase();
-                        if (nm.includes('shirt') || nm.includes('top') || nm.includes('jersey') || nm.includes('torso')) {
-                            if (cfg.role === 'gk') ch.material = cfg.team === 'you' ? youGkMat : oppGkMat;
-                            else ch.material = cfg.team === 'you' ? youShirtMat : oppShirtMat;
-                        } else if (nm.includes('short') || nm.includes('pant')) {
-                            ch.material = cfg.team === 'you' ? youShortMat : oppShortMat;
-                        }
-                    });
-                    root.add(clone);
-                } else {
-                    // Запасна фігурка, якщо модель ще вантажиться
-                    const body = new THREE.Mesh(
-                        new THREE.CapsuleGeometry(0.32, 0.9, 6, 10),
-                        cfg.team === 'you' ? youShirtMat : oppShirtMat
-                    );
-                    body.position.y = 0.85;
-                    body.castShadow = true;
-                    root.add(body);
-                }
-
-                players.push({
+                const pObj = {
                     team: cfg.team,
                     role: cfg.role,
                     homeX: cfg.homeX,
                     homeZ: cfg.homeZ,
                     mesh: root,
-                    bones,
+                    bones: {},
                     runPhase: Math.random() * 6.28,
                     cooldown: 0
+                };
+                players.push(pObj);
+
+                loader.load(`player.glb?v=m${idx}`, (gltf) => {
+                    const model = gltf.scene || (gltf.scenes && gltf.scenes.at(0));
+                    if (model) {
+                        model.traverse((ch) => {
+                            if (ch.isBone && ch.name) pObj.bones[ch.name.toLowerCase()] = ch;
+                            if (!ch.isMesh) return;
+                            ch.castShadow = true;
+                            const nm = (ch.name || '').toLowerCase();
+                            if (nm.includes('shirt') || nm.includes('top') || nm.includes('jersey') || nm.includes('torso')) {
+                                if (cfg.role === 'gk') ch.material = cfg.team === 'you' ? youGkMat : oppGkMat;
+                                else ch.material = cfg.team === 'you' ? youShirtMat : oppShirtMat;
+                            } else if (nm.includes('short') || nm.includes('pant')) {
+                                ch.material = cfg.team === 'you' ? youShortMat : oppShortMat;
+                            }
+                        });
+                        root.add(model);
+                    }
+                    loadedCount++;
+                    if (loadedCount >= formations.length) hideLoader();
+                }, undefined, () => {
+                    const body = new THREE.Mesh(
+                        new THREE.CapsuleGeometry(0.32, 0.9, 6, 10),
+                        cfg.team === 'you' ? youShirtMat : oppShirtMat
+                    );
+                    body.position.y = 0.85;
+                    root.add(body);
+                    loadedCount++;
+                    if (loadedCount >= formations.length) hideLoader();
                 });
             });
 
-            controlledPlayer = players.find(p => p.team === 'you' && p.role === 'fwd' && p.homeZ === 0) || players[4];
+            controlledPlayer = players.find(p => p.team === 'you' && p.role === 'fwd' && p.homeZ === 0) || players.at(0);
+            resetKickoff('you');
         }
 
-        function hideLoader() {
-            const el = document.getElementById('loader-screen');
-            if (el) { el.style.opacity = '0'; setTimeout(() => { el.style.display = 'none'; }, 350); }
-        }
-
-        const dracoLoader = new DRACOLoader();
-        dracoLoader.setDecoderPath('./libs/');
-        const loader = new GLTFLoader();
-        loader.setDRACOLoader(dracoLoader);
-
-        loader.load('player.glb?v=match', (gltf) => {
-            buildTeams(gltf);
-            resetKickoff('you');
-            hideLoader();
-        }, undefined, () => {
-            buildTeams(null);
-            resetKickoff('you');
-            hideLoader();
-        });
+        buildTeams();
 /* ==================== КІНЕЦЬ ЧАСТИНИ 6 з 12 ==================== */
 /* ==================== ПОЧАТОК ЧАСТИНИ 7 з 12 ==================== */
         // Керування: сенсорний джойстик + клавіатура (WASD / Стрілки)
